@@ -1,0 +1,59 @@
+{
+    "name": "wecodemore/wpstarter",
+    "description": "Easily bootstrap whole site Composer packages for WordPress.",
+    "type": "library",
+    "keywords": [
+        "composer",
+        "wordpress",
+        "wp",
+        "wp-config",
+        "config",
+        "env"
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Giuseppe Mazzapica",
+            "email": "giuseppe.mazzapica@gmail.com",
+            "homepage": "http://gm.zoomlab.it",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/wecodemore/wpstarter/issues",
+        "source": "https://github.com/wecodemore/wpstarter"
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://wpackagist.org"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.2",
+        "vlucas/phpdotenv": "~1.0",
+        "johnpbloch/wordpress": ">=3.9"
+    },
+    "replace": {
+        "wecodemore/wp-composer-config":"*"
+    },
+    "autoload": {
+        "psr-4": {
+            "WCM\\WPStarter\\": "src/"
+        }
+    },
+    "scripts": {
+        "post-install-cmd": "WCM\\WPStarter\\Setup::runAsRoot"
+    },
+    "extra": {
+        "wordpress-install-dir": "wp",
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
