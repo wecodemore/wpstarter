@@ -329,8 +329,8 @@ class Builder
         $msg = array_shift($args);
         $txt = $messages[$msg];
         if ($msg === 'done') {
-            $space = '  <bg=green>'.str_repeat(' ', 55).'</bg=green>';
-            $txt = $space.PHP_EOL."  <bg=green;fg=black>{$txt}</bg=green;fg=black>".PHP_EOL.$space;
+            $space = PHP_EOL.'  <bg=green>'.str_repeat(' ', 55).'</bg=green>';
+            $txt = $space.PHP_EOL."  <bg=green;fg=black>{$txt}</bg=green;fg=black>".$space.PHP_EOL;
         }
         $this->io->write(vsprintf($txt, $args));
 
