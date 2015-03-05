@@ -224,6 +224,12 @@ class Builder
         if (! is_dir(dirname($paths['content']))) {
             return $this->error('bad_path', 'content');
         }
+        $from = $paths['wp'].DIRECTORY_SEPARATOR.'wp-content';
+        if ($from === $paths['content']) {
+            $this->progress('same_content_folder');
+
+            return false;
+        }
         if (! is_dir($paths['content']) && ! mkdir($paths['content'], 0755)) {
             return $this->error('create', $paths['content']);
         }
@@ -244,7 +250,6 @@ class Builder
 
             return false;
         }
-        $from = $paths['wp'].DIRECTORY_SEPARATOR.'wp-content';
 
         return $this->moveItems(glob($from.'/*'), $from, $paths['content']);
     }
@@ -314,15 +319,16 @@ class Builder
     private function progress()
     {
         $messages = array(
-            'start'         => '<comment>WP Starter is going to start installation...</comment>',
-            'paths_checked' => '  - <info>OK</info> all paths recognized properly',
-            'file_done'     => '  - <info>OK</info> <comment>%s</comment> generated and saved.',
-            'env_done'      => '  - <info>OK</info> <comment>.env sample file</comment> copied in'
+            'start'               => '<comment>WP Starter is going to start installation...</comment>',
+            'paths_checked'       => '  - <info>OK</info> all paths recognized properly',
+            'file_done'           => '  - <info>OK</info> <comment>%s</comment> generated and saved.',
+            'env_done'            => '  - <info>OK</info> <comment>.env sample file</comment> copied in'
                 .' project root folder.',
-            'move_done'     => '  - <info>OK</info> WordPress content directory moved.',
-            'skip_content'  => '  - <comment>WordPress content directory move skipped.</comment>',
-            'done'          => '  WP Starter finished successfully!'.str_repeat(' ', 20),
-            'end'           => '  <comment>Remember you need an .env file with -at least- DB settings'
+            'move_done'           => '  - <info>OK</info> WordPress content directory moved.',
+            'skip_content'        => '  - <comment>WordPress content directory move skipped.</comment>',
+            'same_content_folder' => '  - <comment>Your content folder is WP content folder.</comment>',
+            'done'                => '  WP Starter finished successfully!'.str_repeat(' ', 20),
+            'end'                 => '  <comment>Remember you need an .env file with -at least- DB settings'
                 .PHP_EOL.'  to make your site fully functional.</comment>',
         );
         $args = func_get_args();
