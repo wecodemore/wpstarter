@@ -12,7 +12,7 @@
 /**
  * Composer autoload.
  */
-require_once '{{{VENDOR_PATH}}}/autoload.php';
+require_once realpath(__DIR__.'/{{{VENDOR_PATH}}}/autoload.php');
 
 /**
  * Configuration constants.
@@ -62,7 +62,7 @@ if (! isset($table_prefix) || empty($table_prefix)) {
  * If available, environment name is mixed to keys so they become unique per environment.
  */
 global $environment;
-$pre  = $environment ? substr($environment, 0, 5)  : substr('{{{AUTH_KEY}}}', 0, 5);
+$pre = $environment  ? substr($environment, 0, 5)  : substr('{{{AUTH_KEY}}}', 0, 5);
 $post = $environment ? substr($environment, -5, 5) : substr('{{{SECURE_AUTH_KEY}}}', 0, 5);
 defined('AUTH_KEY')         or define('AUTH_KEY',         $pre.'{{{AUTH_KEY}}}'.$post);
 defined('SECURE_AUTH_KEY')  or define('SECURE_AUTH_KEY',  $pre.'{{{SECURE_AUTH_KEY}}}'.$post);
@@ -114,10 +114,10 @@ if (! defined('WP_HOME')) {
             : 'http://'
         ).$server['SERVER_NAME']);
 }
-defined('ABSPATH')        or define('ABSPATH',        '{{{WP_INSTALL_PATH}}}');
-defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', __DIR__.'/{{{WP_CONTENT_SUBDIR}}}');
-defined('WP_SITEURL')     or define('WP_SITEURL',     rtrim(WP_HOME, '/').'/{{{WP_INSTALL_SUBDIR}}}');
-defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_SUBDIR}}}');
+defined('ABSPATH')        or define('ABSPATH',        realpath(__DIR__.'/{{{WP_INSTALL_PATH}}}'));
+defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath(__DIR__.'/{{{WP_CONTENT_PATH}}}'));
+defined('WP_SITEURL')     or define('WP_SITEURL',     rtrim(WP_HOME, '/').'/{{{WP_INSTALL_PATH}}}');
+defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_PATH}}}');
 
 /**
  * Clean up.

@@ -29,7 +29,7 @@ class Builder
     /**
      * @var string[] Keys of the path object that must be checked
      */
-    private static $paths = array('root', 'vendor', 'wp', 'starter');
+    private static $paths = array('vendor', 'wp', 'starter');
 
     /**
      * @var \Composer\IO\IOInterface
@@ -81,6 +81,9 @@ class Builder
             return $this->error('error');
         }
         foreach (self::$files as $file) {
+            if ($file === '.gitignore' && is_file($paths['root'].DIRECTORY_SEPARATOR.$file)) {
+                continue;
+            }
             if ($this->saveFile($this->buildFile($paths, $file), $paths['root'], $file)) {
                 $this->progress('file_done', $file);
             }
@@ -106,11 +109,14 @@ class Builder
     private function checkPaths(ArrayAccess $paths)
     {
         foreach (self::$paths as $key) {
-            if (! isset($paths[$key]) || ! is_dir($paths[$key])) {
+            $path = isset($paths[$key]) ?
+                realpath($paths['root'].DIRECTORY_SEPARATOR.$paths[$key])
+                : false;
+            if (! $path) {
                 return $this->error('bad_path', $key);
             } elseif (
                 $key === 'wp'
-                && ! file_exists($paths[$key].DIRECTORY_SEPARATOR.'wp-settings.php')
+                && ! file_exists($path.DIRECTORY_SEPARATOR.'wp-settings.php')
             ) {
                 return $this->error('bad_wp');
             }
@@ -133,23 +139,23 @@ class Builder
         static $vars;
         if (is_null($vars)) {
             $vars = array(
-                'VENDOR_PATH'        => $paths['vendor'],
-                'WP_INSTALL_PATH'    => $paths['wp'],
-                'WP_INSTALL_SUBDIR'  => $this->subdir($paths['root'], $paths['wp']),
-                'VENDOR_PATH_SUBDIR' => $this->subdir($paths['root'], $paths['vendor']),
-                'WP_CONTENT_SUBDIR'  => is_string($paths['content'])
-                    ? $this->subdir($paths['root'], $paths['content'])
-                    : 'wp-content',
+                'VENDOR_PATH'     => $paths['vendor'],
+                'WP_INSTALL_PATH' => $paths['wp'],
+                'WP_CONTENT_PATH' => $paths['content'],
             );
         }
-        $templateFile = implode(DIRECTORY_SEPARATOR,
-            array($paths['starter'], 'templates', $fileName));
-        if (! is_readable($templateFile)) {
+        $template = implode(
+            DIRECTORY_SEPARATOR,
+            array($paths['root'], $paths['starter'], 'templates', $fileName)
+        );
+        if (! is_readable($template)) {
             return $this->error('create', $fileName);
         }
-        $template = file_get_contents($templateFile);
         /** @var string $content */
-        $content = $this->renderer->render($template, array_merge($this->salter->keys(), $vars));
+        $content = $this->renderer->render(
+            file_get_contents($template),
+            array_merge($this->salter->keys(), $vars)
+        );
         if (empty($content)) {
             return $this->error('create', $fileName);
         }
@@ -193,6 +199,7 @@ class Builder
     private function copy(ArrayAccess $paths, $files, $base = 'starter')
     {
         $pieces = $base === 'starter' ? array($paths[$base], 'templates') : array($paths[$base]);
+        array_unshift($pieces, $paths['root']);
         $done = true;
         foreach ((array) $files as $file) {
             $source = implode(DIRECTORY_SEPARATOR, array_merge($pieces, array($file)));
@@ -221,26 +228,24 @@ class Builder
         if (empty($paths['content'])) {
             return false;
         }
-        if (! is_dir(dirname($paths['content']))) {
-            return $this->error('bad_path', 'content');
-        }
-        $from = $paths['wp'].DIRECTORY_SEPARATOR.'wp-content';
-        if ($from === $paths['content']) {
+        $from = str_replace(array('/', '\\'), '/', $paths['wp'].'/wp-content');
+        $to = str_replace(array('/', '\\'), '/', $paths['content']);
+        if ($from === $to) {
             $this->progress('same_content_folder');
 
             return false;
         }
-        if (! is_dir($paths['content']) && ! mkdir($paths['content'], 0755)) {
-            return $this->error('create', $paths['content']);
+        if (! is_dir($to) && ! mkdir($to, 0755)) {
+            return $this->error('create', $to);
         }
         $space = str_repeat(' ', 55);
-        $len = strlen($paths['content']);
+        $len = strlen($to);
         $lines = array(
             '  <question>'.$space,
             '  QUESTION                                             ',
             '  Do you want to move default plugins and themes from  ',
             '  WordPress package wp-content dir to content folder:  ',
-            '  "'.$paths['content'].'"'.str_repeat(' ', $len < 51 ? 51 - $len : 0),
+            '  "'.$to.'"'.str_repeat(' ', $len < 51 ? 51 - $len : 0),
             $space.'</question>',
         );
         $question = PHP_EOL.implode('</question>'.PHP_EOL.'  <question>', $lines);
@@ -251,7 +256,7 @@ class Builder
             return false;
         }
 
-        return $this->moveItems(glob($from.'/*'), $from, $paths['content']);
+        return $this->moveItems(glob($from.'/*'), $from, $to);
     }
 
     /**
@@ -373,21 +378,5 @@ class Builder
         $this->io->writeError(PHP_EOL.$text);
 
         return false;
-    }
-
-    /**
-     * Takes 2 absolute paths, one contained in the other) and return the relative part.
-     * Remove leading and trailing slashes.
-     *
-     * @param  string $root containing path
-     * @param  string $path contained path
-     * @return string relative path
-     */
-    private function subdir($root, $path)
-    {
-        $normRoot = trim(realpath($root));
-        $normPath = trim(realpath($path));
-
-        return trim(str_replace($normRoot, '', $normPath), '/\\');
     }
 }

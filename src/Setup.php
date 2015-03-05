@@ -82,10 +82,10 @@ class Setup
             : 'wp-content';
         $this->paths = new ArrayObject($this->normalisePaths(array(
             'root'    => $rootPath,
-            'vendor'  => $composer->getConfig()->get('vendor-dir'),
-            'wp'      => $rootPath.DIRECTORY_SEPARATOR.$wpSubdir,
-            'content' => $wpContent ? $rootPath.DIRECTORY_SEPARATOR.$wpContent : false,
-            'starter' => dirname(__DIR__),
+            'vendor'  => $this->subdir($rootPath, $composer->getConfig()->get('vendor-dir')),
+            'wp'      => $wpSubdir,
+            'content' => $wpContent,
+            'starter' => $this->subdir($rootPath, dirname(__DIR__)),
         )), ArrayObject::STD_PROP_LIST);
     }
 
@@ -108,9 +108,16 @@ class Setup
     private function normalisePaths(array $paths)
     {
         array_walk($paths, function (&$path) {
-            $path = is_string($path) ? realpath($path) : $path;
+            $path = is_string($path)
+                ? str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $path)
+                : $path;
         });
 
         return $paths;
+    }
+
+    private function subdir($root, $path)
+    {
+        return trim(preg_replace('|^'.preg_quote(realpath($root)).'|', '', realpath($path)), '\\/');
     }
 }
