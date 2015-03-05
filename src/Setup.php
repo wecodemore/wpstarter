@@ -36,9 +36,7 @@ class Setup
      */
     public static function run(Event $event)
     {
-        /** @var \Composer\IO\IOInterface $io */
-        $io = $event->getIO();
-        $instance = new static($event->getComposer(), new Builder($io));
+        $instance = new static($event->getComposer(), new Builder($event->getIO()));
         $instance->install();
     }
 
