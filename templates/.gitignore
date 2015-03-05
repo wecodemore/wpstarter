@@ -125,3 +125,4 @@ sftp-config.json
 .env.development
 .env.production
 .env.staging
+/wp-config.php
