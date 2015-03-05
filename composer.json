@@ -37,7 +37,7 @@
         "johnpbloch/wordpress": ">=3.9"
     },
     "replace": {
-        "wecodemore/wp-composer-config":"*"
+        "wecodemore/wp-composer-config": "*"
     },
     "autoload": {
         "psr-4": {
