@@ -117,12 +117,10 @@ sftp-config.json
 ### Vagrant
 .vagrant/
 
-### Composer
-{{{VENDOR_PATH_SUBDIR}}}/
-
-### DO NOT REMOVE FOLLOWING LINES
+### GENERATED FILES
 .env
-.env.development
-.env.production
-.env.staging
 /wp-config.php
+{{{VENDOR_PATH_IGNORE}}}
+{{{THEMES_PATH_IGNORE}}}
+{{{PLUGINS_PATH_IGNORE}}}
+{{{MUPLUGINS_PATH_IGNORE}}}
