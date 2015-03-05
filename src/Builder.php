@@ -379,9 +379,9 @@ class Builder
      */
     private function subdir($root, $path)
     {
-        $normRoot = trim(str_replace('\\', '/', $root), '/');
-        $normPath = trim(str_replace('\\', '/', $path), '/');
+        $normRoot = trim(realpath($root));
+        $normPath = trim(realpath($path));
 
-        return trim(str_replace($normRoot, '', $normPath), '/');
+        return trim(str_replace($normRoot, '', $normPath), '/\\');
     }
 }

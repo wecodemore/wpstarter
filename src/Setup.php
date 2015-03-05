@@ -108,9 +108,7 @@ class Setup
     private function normalisePaths(array $paths)
     {
         array_walk($paths, function (&$path) {
-            $path = is_string($path)
-                ? str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $path)
-                : $path;
+            $path = is_string($path) ? realpath($path) : $path;
         });
 
         return $paths;
