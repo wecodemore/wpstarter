@@ -30,11 +30,13 @@ It explains things good and concisely.
    so being able to have their own `composer.json` file, they can be managed via Composer just like regular plugins.
  - generates and puts in root folder a `.env.example` file that contains a cheat sheet of all the available
    configuration variables for WordPress, but only three of them are required (database settings).
- - generates and puts in root folder a `.gitignore` file that makes Git ignore
+ - optionally generates and puts in root folder a `.gitignore` file that makes Git ignore
     - `.env` file (that contains sensitive information)
+    - generated `wp-config.php` that may contains sensitive information as well
     - vendor folder (whose path is generated dynamically based on Composer settings)
+    - WordPress folder (whose path is generated dynamically based on Composer settings)
     - a bunch of common-to-ignore files like IDE specific files, OSX and Windows files like `.DS_Store` or `Thumbs.db`
-    - generated `wp-config.php` that may contains ensitive information as well
+    - default themes and plugins folders
    
 
 # What does it mean?
