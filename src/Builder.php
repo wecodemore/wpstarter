@@ -181,22 +181,15 @@ class Builder
             ' - WordPress package folder',
             ' - wp-content folder',
         );
-        if (! $this->io->ask($lines, true)) {
+        if ($this->io->ask($lines, true)) {
+            $content = $this->gitignoreBuildVars($paths, $root);
+            $gitignore = trim($this->buildFile($paths, '.gitignore').PHP_EOL.$content);
+            if ($this->saveFile($gitignore, $root, '.gitignore')) {
+                $this->gitignoreDone = true;
+                $this->progress('file_done', '.gitignore');
+            }
+        } else {
             $this->progress('gitignore_skipped');
-
-            return;
-        }
-        $wp = $this->gitignorePath($paths['wp'], $root);
-        $vendor = $this->gitignorePath($paths['vendor'], $root);
-        $this->vars['WP_PATH_IGNORE'] = $wp;
-        $this->vars['VENDOR_PATH_IGNORE'] = $vendor;
-        $gitignore = $this->buildFile($paths, '.gitignore');
-        $content = $paths['content'] ? $this->gitignorePath($paths['content'], $root) : false;
-        $already = $content && strpos($wp, $content) !== 0 && strpos($vendor, $content) !== 0;
-        $gitignore .= $already ? PHP_EOL.$content : '';
-        if ($this->saveFile($gitignore, $root, '.gitignore')) {
-            $this->gitignoreDone = true;
-            $this->progress('file_done', '.gitignore');
         }
     }
 
@@ -371,6 +364,61 @@ class Builder
     }
 
     /**
+     * Build variables to be used in .gitignore and returns wp-content path when needs to be added.
+     *
+     * @param  \ArrayAccess $paths
+     * @param  string       $root
+     * @return string
+     */
+    private function gitignoreBuildVars(ArrayAccess $paths, $root)
+    {
+        $vars = array(
+            'wp'     => $this->gitignorePath($paths['wp'], $root),
+            'vendor' => $this->gitignorePath($paths['vendor'], $root),
+        );
+        if ($vars['wp'] === $vars['vendor'] || strpos($vars['vendor'], $vars['wp']) === 0) {
+            unset($vars['vendor']);         // vendor is inside wp folder, or they are equal
+        } elseif (strpos($vars['wp'], $vars['vendor']) === 0) {
+            unset($vars['wp']);             // wp folder is inside vendor
+        }
+        $content = $paths['content'] ? $this->gitignorePath($paths['content'], $root) : '';
+        $add = ! empty($content);
+        if ($add) {
+            foreach ($vars as $key => $dir) {
+                if (strpos($content, $dir) === 0 || $dir === $content) {
+                    $add = false;          // wp-content is inside or is equal one of wp and vendor
+                    break;
+                } elseif (strpos($dir, $content) === 0) {
+                    $add = false;
+                    $vars[$key] = $content; // wp and/or vendor are inside wp-content
+                }
+            }
+        }
+        if (count($vars) === 2 && $vars['wp'] === $vars['vendor']) {
+            unset($vars['vendor']);         // both wp and vendor are inside wp-content
+        }
+        $this->vars['WP_PATH_IGNORE'] = isset($vars['wp']) ? $vars['wp'] : '';
+        $this->vars['VENDOR_PATH_IGNORE'] = isset($vars['vendor']) ? $vars['vendor'] : '';
+
+        return $add ? $content : '';       // return content if it not contains nor is contained
+    }
+
+    /**
+     * Prepare a path to be used in .gitignore
+     *
+     * @param  string $path
+     * @param  string $root
+     * @return string
+     */
+    private function gitignorePath($path, $root)
+    {
+        $real = realpath($root.DIRECTORY_SEPARATOR.$path);
+        $rel = trim(preg_replace('|^'.preg_quote($root).'[^\\/]|', '', $real), '\\/');
+
+        return str_replace(array('\\', '/'), '/', $rel).'/';
+    }
+
+    /**
      * Print progress messages to console.
      *
      * @return bool always true
@@ -473,20 +521,5 @@ class Builder
             );
             $this->io->block($lines, 'yellow', false);
         }
-    }
-
-    /**
-     * Prepare a path to be used in .gitignore
-     *
-     * @param  string $path
-     * @param  string $root
-     * @return string
-     */
-    private function gitignorePath($path, $root)
-    {
-        $real = realpath($root.DIRECTORY_SEPARATOR.$path);
-        $rel = trim(preg_replace('|^'.preg_quote($root).'[^\\/]|', '', $real), '\\/');
-
-        return str_replace(array('\\', '/'), '/', $rel).'/';
     }
 }
