@@ -36,13 +36,14 @@ class Setup
      */
     public static function run(Event $event)
     {
-        $instance = new static($event->getComposer(), new Builder($event->getIO()));
+        $io = new IO($event->getIO());
+        $instance = new static($event->getComposer(), new Builder($io, self::$isRoot));
         $instance->install();
     }
 
     /**
-     * Method that should be used as "post-install-cmd" and "post-update-cmd" script setting in
-     * project composer.json when WP Starter is used as root package.
+     * Method that should be used as "post-install-cmd" Composer script
+     * when WP Starter is used as root package.
      *
      * @param \Composer\Script\Event $event
      * @see https://getcomposer.org/doc/articles/scripts.md
@@ -85,7 +86,7 @@ class Setup
             'vendor'  => $this->subdir($rootPath, $composer->getConfig()->get('vendor-dir')),
             'wp'      => $wpSubdir,
             'content' => $wpContent,
-            'starter' => $this->subdir($rootPath, dirname(__DIR__)),
+            'starter' => self::$isRoot ? $rootPath : $this->subdir($rootPath, dirname(__DIR__)),
         )), ArrayObject::STD_PROP_LIST);
     }
 
@@ -116,6 +117,13 @@ class Setup
         return $paths;
     }
 
+    /**
+     * Strips a parent folder from child.
+     *
+     * @param  string $root
+     * @param  string $path
+     * @return string string
+     */
     private function subdir($root, $path)
     {
         return trim(preg_replace('|^'.preg_quote(realpath($root)).'|', '', realpath($path)), '\\/');

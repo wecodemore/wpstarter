@@ -121,6 +121,4 @@ sftp-config.json
 .env
 /wp-config.php
 {{{VENDOR_PATH_IGNORE}}}
-{{{THEMES_PATH_IGNORE}}}
-{{{PLUGINS_PATH_IGNORE}}}
-{{{MUPLUGINS_PATH_IGNORE}}}
+{{{WP_PATH_IGNORE}}}

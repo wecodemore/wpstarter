@@ -10,7 +10,6 @@
 
 namespace WCM\WPStarter;
 
-use Composer\IO\IOInterface;
 use ArrayAccess;
 use Exception;
 
@@ -22,17 +21,7 @@ use Exception;
 class Builder
 {
     /**
-     * @var string[] Files that have to build using templates and variables
-     */
-    private static $files = array('wp-config.php', 'index.php', '.gitignore');
-
-    /**
-     * @var string[] Keys of the path object that must be checked
-     */
-    private static $paths = array('vendor', 'wp', 'starter');
-
-    /**
-     * @var \Composer\IO\IOInterface
+     * @var \WCM\WPStarter\IO
      */
     private $io;
 
@@ -52,22 +41,36 @@ class Builder
     private $salter;
 
     /**
+     * @var bool
+     */
+    private $isRoot;
+
+    /**
+     * @var array $vars
+     */
+    private $vars;
+
+    /**
      * @var bool|int
      */
     private $gitignoreDone = false;
 
     /**
-     * Construct. Just for DI.
-     *
-     * @param \Composer\IO\IOInterface $io
-     * @param \WCM\WPStarter\Renderer  $renderer
-     * @param \WCM\WPStarter\Salter    $salter
+     * @param \WCM\WPStarter\IO       $io
+     * @param bool                    $isRoot
+     * @param \WCM\WPStarter\Renderer $renderer
+     * @param \WCM\WPStarter\Salter   $salter
      */
-    public function __construct(IOInterface $io, Renderer $renderer = null, Salter $salter = null)
-    {
+    public function __construct(
+        IO $io,
+        $isRoot = false,
+        Renderer $renderer = null,
+        Salter $salter = null
+    ) {
         $this->io = $io;
         $this->renderer = $renderer ?: new Renderer();
         $this->salter = $salter ?: new Salter();
+        $this->isRoot = $isRoot;
     }
 
     /**
@@ -75,38 +78,24 @@ class Builder
      * Also copies additional file if in installation mode.
      *
      * @param  \ArrayAccess $paths
-     * @return bool         true on success, false on failure
+     * @return bool
      */
     public function build(ArrayAccess $paths)
     {
         $this->progress('start');
-        if ($this->checkPaths($paths)) {
-            $this->progress('paths_checked');
-        } else {
+        if (! $this->checkPaths($paths)) {
             return $this->error('error');
         }
-        if ($this->moveContent($paths) === true) {
-            $this->progress('move_done');
-        }
-        foreach (self::$files as $file) {
-            if ($file === '.gitignore' && is_file($paths['root'].DIRECTORY_SEPARATOR.$file)) {
-                $this->gitignoreDone = 0;
-                continue;
-            }
-            if ($this->saveFile($this->buildFile($paths, $file), $paths['root'], $file)) {
-                if ($file === '.gitignore') {
-                    $this->gitignoreDone = true;
-                }
-                $this->progress('file_done', $file);
-            }
-        }
-        if ($this->copy($paths, '.env.example')) {
-            $this->progress('env_done');
-        }
+        $this->progress('paths_checked');
+        $this->moveContent($paths) and $this->progress('move_done');
+        $this->buildGitIgnore($paths);
+        $this->buildIndex($paths);
+        $this->buildWpConfig($paths);
+        $this->copy($paths, '.env.example') and $this->progress('env_done');
+        $this->gitignoreWarning();
+        $this->envWarning($paths['root']);
 
-        return $this->errors > 0
-            ? $this->error($this->errors === 1 ? 'error' : 'errors')
-            : ($this->progress('done') and $this->progress('end'));
+        return $this->finalMessage();
     }
 
     /**
@@ -117,126 +106,27 @@ class Builder
      */
     private function checkPaths(ArrayAccess $paths)
     {
-        foreach (self::$paths as $key) {
+        $keys = array('vendor', 'wp');
+        if (! $this->isRoot) {
+            $keys[] = 'starter';
+        }
+        foreach ($keys as $key) {
             $path = isset($paths[$key]) ?
                 realpath($paths['root'].DIRECTORY_SEPARATOR.$paths[$key])
                 : false;
             if (! $path) {
                 return $this->error('bad_path', $key);
-            } elseif (
-                $key === 'wp'
-                && ! file_exists($path.DIRECTORY_SEPARATOR.'wp-settings.php')
-            ) {
+            } elseif ($key === 'wp' && ! file_exists($path.DIRECTORY_SEPARATOR.'wp-settings.php')) {
                 return $this->error('bad_wp');
             }
         }
+        $this->vars = array(
+            'VENDOR_PATH'     => $paths['vendor'],
+            'WP_INSTALL_PATH' => $paths['wp'],
+            'WP_CONTENT_PATH' => $paths['content'],
+        );
 
         return true;
-    }
-
-    /**
-     * Build a file content starting form a template and a set of replacement variables.
-     * Part of those variables (salt keys) are generated using Salter class.
-     * Templater class is used to apply the replacements.
-     *
-     * @param  \ArrayAccess $paths
-     * @param  string       $fileName
-     * @return string|bool  file content on success, false on failure
-     */
-    private function buildFile(ArrayAccess $paths, $fileName)
-    {
-        static $vars;
-        if (is_null($vars)) {
-            $vars = array(
-                'VENDOR_PATH'        => $paths['vendor'],
-                'WP_INSTALL_PATH'    => $paths['wp'],
-                'WP_CONTENT_PATH'    => $paths['content'],
-                'VENDOR_PATH_IGNORE' => str_replace(array('\\', '/'), '/', $paths['vendor']).'/',
-            );
-            if ($paths['content']) {
-                $content = str_replace(array('\\', '/'), '/', $paths['content']).'/';
-                $vars['THEMES_PATH_IGNORE'] = is_dir($paths['root'].'/'.$content.'/themes')
-                    ? $content.'themes/'
-                    : '';
-                $vars['PLUGINS_PATH_IGNORE'] = is_dir($paths['root'].'/'.$content.'/plugins')
-                    ? $content.'plugins/'
-                    : '';
-                $vars['MUPLUGINS_PATH_IGNORE'] = is_dir($paths['root'].'/'.$content.'/mu-plugins')
-                    ? $content.'mu-plugins/'
-                    : '';
-            }
-        }
-        $template = implode(
-            DIRECTORY_SEPARATOR,
-            array($paths['root'], $paths['starter'], 'templates', $fileName)
-        );
-        if (! is_readable($template)) {
-            return $this->error('create', $fileName);
-        }
-        /** @var string $content */
-        $content = $this->renderer->render(
-            file_get_contents($template),
-            array_merge($this->salter->keys(), $vars)
-        );
-        if (empty($content)) {
-            return $this->error('create', $fileName);
-        }
-
-        return $content;
-    }
-
-    /**
-     * Given a file content as string, dump it to a file in a given folder.
-     *
-     * @param  string $content    file content
-     * @param  string $targetPath target path
-     * @param  string $fileName   target file name
-     * @return bool   true on success, false on failure
-     */
-    private function saveFile($content, $targetPath, $fileName)
-    {
-        if (empty($content)) {
-            return false;
-        }
-        $dest = $targetPath.DIRECTORY_SEPARATOR.$fileName;
-        try {
-            if (file_put_contents($dest, $content) === false) {
-                return $this->error('save', $fileName, 'root folder');
-            }
-        } catch (Exception $e) {
-            return $this->error('save', $fileName, 'root folder');
-        }
-
-        return true;
-    }
-
-    /**
-     * Copy a file from a source path to a root folder.
-     *
-     * @param  \ArrayAccess $paths
-     * @param  string|array $files
-     * @param  string       $base
-     * @return bool         true on success, false on failure
-     */
-    private function copy(ArrayAccess $paths, $files, $base = 'starter')
-    {
-        $pieces = $base === 'starter' ? array($paths[$base], 'templates') : array($paths[$base]);
-        array_unshift($pieces, $paths['root']);
-        $done = true;
-        foreach ((array) $files as $file) {
-            $source = implode(DIRECTORY_SEPARATOR, array_merge($pieces, array($file)));
-            $dest = $paths['root'].DIRECTORY_SEPARATOR.$file;
-            try {
-                if (! copy($source, $dest)) {
-                    $done = $this->error('copy', $source, $dest);
-                }
-            } catch (Exception $e) {
-                $done = $this->error('copy', $source, $dest);
-                break;
-            }
-        }
-
-        return $done;
     }
 
     /**
@@ -252,33 +142,119 @@ class Builder
         }
         $from = str_replace(array('/', '\\'), '/', $paths['wp'].'/wp-content');
         $to = str_replace(array('/', '\\'), '/', $paths['content']);
+        $full = str_replace(array('/', '\\'), '/', $paths['root']).'/'.$to;
         if ($from === $to) {
-            $this->progress('same_content_folder');
-
-            return false;
+            return ! $this->progress('same_content');
         }
         if (! is_dir($to) && ! mkdir($to, 0755)) {
             return $this->error('create', $to);
         }
-        $space = str_repeat(' ', 55);
-        $len = strlen($to);
         $lines = array(
-            '  <question>'.$space,
-            '  QUESTION                                             ',
-            '  Do you want to move default plugins and themes from  ',
-            '  WordPress package wp-content dir to content folder:  ',
-            '  "'.$to.'"'.str_repeat(' ', $len < 51 ? 51 - $len : 0),
-            $space.'</question>',
+            'Do you want to move default plugins and themes from',
+            'WordPress package wp-content dir to content folder:',
+            '"'.$full.'"',
         );
-        $question = PHP_EOL.implode('</question>'.PHP_EOL.'  <question>', $lines);
-        $prompt = PHP_EOL.'    <option=bold>Y</option=bold> or <option=bold>N</option=bold> [Y] ';
-        if (! $this->io->askConfirmation($question.PHP_EOL.$prompt, true)) {
-            $this->progress('skip_content');
-
-            return false;
+        if (! $this->io->ask($lines, true)) {
+            return ! $this->progress('skip_content');
         }
 
         return $this->moveItems(glob($from.'/*'), $from, $to);
+    }
+
+    /**
+     * Builds .gitignore if not already present there
+     *
+     * @param \ArrayAccess $paths
+     */
+    private function buildGitIgnore(ArrayAccess $paths)
+    {
+        $root = $paths['root'];
+        if (! $this->isRoot && is_file($root.DIRECTORY_SEPARATOR.'.gitignore')) {
+            $this->gitignoreDone = 0;
+
+            return;
+        }
+        $lines = array(
+            'Do you want to create a .gitignore file that makes Git ignore',
+            ' - common irrelevant files',
+            ' - files that contain sensible data (wp-config.php, .env)',
+            ' - WordPress package folder',
+            ' - wp-content folder',
+        );
+        if (! $this->io->ask($lines, true)) {
+            $this->progress('gitignore_skipped');
+
+            return;
+        }
+        $wp = $this->gitignorePath($paths['wp'], $root);
+        $vendor = $this->gitignorePath($paths['vendor'], $root);
+        $this->vars['WP_PATH_IGNORE'] = $wp;
+        $this->vars['VENDOR_PATH_IGNORE'] = $vendor;
+        $gitignore = $this->buildFile($paths, '.gitignore');
+        $content = $paths['content'] ? $this->gitignorePath($paths['content'], $root) : false;
+        $already = $content && strpos($wp, $content) !== 0 && strpos($vendor, $content) !== 0;
+        $gitignore .= $already ? PHP_EOL.$content : '';
+        if ($this->saveFile($gitignore, $root, '.gitignore')) {
+            $this->gitignoreDone = true;
+            $this->progress('file_done', '.gitignore');
+        }
+    }
+
+    /**
+     * Builds index.php
+     *
+     * @param \ArrayAccess $paths
+     */
+    private function buildIndex(ArrayAccess $paths)
+    {
+        $build = $this->buildFile($paths, 'index.php');
+        if ($this->saveFile($build, $paths['root'], 'index.php')) {
+            $this->progress('file_done', 'index.php');
+        }
+    }
+
+    /**
+     * Builds wp-config.php
+     *
+     * @param \ArrayAccess $paths
+     */
+    private function buildWpConfig(ArrayAccess $paths)
+    {
+        $build = $this->buildFile($paths, 'wp-config.php');
+        if ($this->saveFile($build, $paths['root'], 'wp-config.php')) {
+            $this->progress('file_done', 'wp-config.php');
+        }
+    }
+
+    /**
+     * Copy a file from a source path to a root folder.
+     *
+     * @param  \ArrayAccess $paths
+     * @param  string|array $files
+     * @param  string       $base
+     * @return bool         true on success, false on failure
+     */
+    private function copy(ArrayAccess $paths, $files, $base = 'starter')
+    {
+        $pieces = $base === 'starter' ? array($paths[$base], 'templates') : array($paths[$base]);
+        if (! $this->isRoot) {
+            array_unshift($pieces, $paths['root']);
+        }
+        $done = true;
+        foreach ((array) $files as $file) {
+            $source = implode(DIRECTORY_SEPARATOR, array_merge($pieces, array($file)));
+            $dest = $paths['root'].DIRECTORY_SEPARATOR.$file;
+            try {
+                if (! copy($source, $dest)) {
+                    $done = $this->error('copy', $source, $dest);
+                }
+            } catch (Exception $e) {
+                $done = $this->error('copy', $source, $dest);
+                break;
+            }
+        }
+
+        return $done;
     }
 
     /**
@@ -339,42 +315,87 @@ class Builder
     }
 
     /**
+     * Build a file content starting form a template and a set of replacement variables.
+     * Part of those variables (salt keys) are generated using Salter class.
+     * Templater class is used to apply the replacements.
+     *
+     * @param  \ArrayAccess $paths
+     * @param  string       $fileName
+     * @return string|bool  file content on success, false on failure
+     */
+    private function buildFile(ArrayAccess $paths, $fileName)
+    {
+        $paths = array($paths['starter'], 'templates', $fileName);
+        if (! $this->isRoot) {
+            array_unshift($paths, $paths['root']);
+        }
+        $template = implode(DIRECTORY_SEPARATOR, $paths);
+        if (! is_readable($template)) {
+            return $this->error('create', $fileName);
+        }
+        /** @var string $content */
+        $content = $this->renderer->render(
+            file_get_contents($template),
+            array_merge($this->salter->keys(), $this->vars)
+        );
+        if (empty($content)) {
+            return $this->error('create', $fileName);
+        }
+
+        return $content;
+    }
+
+    /**
+     * Given a file content as string, dump it to a file in a given folder.
+     *
+     * @param  string $content    file content
+     * @param  string $targetPath target path
+     * @param  string $fileName   target file name
+     * @return bool   true on success, false on failure
+     */
+    private function saveFile($content, $targetPath, $fileName)
+    {
+        if (empty($content)) {
+            return false;
+        }
+        $dest = $targetPath.DIRECTORY_SEPARATOR.$fileName;
+        try {
+            if (file_put_contents($dest, $content) === false) {
+                return $this->error('save', $fileName, 'root folder');
+            }
+        } catch (Exception $e) {
+            return $this->error('save', $fileName, 'root folder');
+        }
+
+        return true;
+    }
+
+    /**
      * Print progress messages to console.
      *
      * @return bool always true
      */
     private function progress()
     {
-        $messages = array(
-            'start'               => '<comment>WP Starter is going to start installation...</comment>',
-            'paths_checked'       => '  - <info>OK</info> all paths recognized properly',
-            'file_done'           => '  - <info>OK</info> <comment>%s</comment> generated and saved.',
-            'env_done'            => '  - <info>OK</info> <comment>.env sample file</comment> copied in'
-                .' project root folder.',
-            'move_done'           => '  - <info>OK</info> WordPress content directory moved.',
-            'skip_content'        => '  - <comment>WordPress content directory move skipped.</comment>',
-            'same_content_folder' => '  - <comment>Your content folder is WP content folder.</comment>',
-            'done'                => '  WP Starter finished successfully!'.str_repeat(' ', 20),
-            'end'                 => '  <comment>Remember you need an .env file with -at least- DB settings'
-                .PHP_EOL.'  to make your site fully functional.</comment>'.PHP_EOL,
+        $comments = array(
+            'start'             => 'WP Starter is going to start installation...',
+            'gitignore_skipped' => ' - .gitignore creation skipped.',
+            'skip_content'      => ' - WordPress content directory move skipped.',
+            'same_content'      => 'Your content folder is WP content folder.',
         );
-        if ($this->gitignoreDone === true) {
-            $messages['end'] .= PHP_EOL.'  <comment>A .gitignore file has been created with common to-be-ignored'.
-                PHP_EOL.'  files and files generated by WP Starter.</comment>';
-        } elseif ($this->gitignoreDone === 0) {
-            $messages['end'] .= PHP_EOL.'  <comment>A .gitignore was found in your project folder, please'.
-                PHP_EOL.'  be sure it contains .env and wp-config.php files.</comment>';
-        }
+        $ok = array(
+            'paths_checked' => 'all paths recognized properly',
+            'file_done'     => '<comment>%s</comment> generated and saved.',
+            'env_done'      => '<comment>.env.example</comment> copied in project root folder.',
+            'move_done'     => 'WordPress content directory moved.',
+        );
         $args = func_get_args();
         $msg = array_shift($args);
-        $txt = $messages[$msg];
-        if ($msg === 'done') {
-            $space = PHP_EOL.'  <bg=green>'.str_repeat(' ', 55).'</bg=green>';
-            $txt = $space.PHP_EOL."  <bg=green;fg=black>{$txt}</bg=green;fg=black>".$space.PHP_EOL;
+        if (array_key_exists($msg, $comments)) {
+            return $this->io->comment($comments[$msg]);
         }
-        $this->io->write(vsprintf($txt, $args));
 
-        return true;
+        return $this->io->ok(vsprintf($ok[$msg], $args));
     }
 
     /**
@@ -391,21 +412,81 @@ class Builder
             'copy'     => 'WP Starter was not able to copy %s to %s.',
             'save'     => 'WP Starter was not able to save %s in %s.',
             'move'     => 'WP Starter was not able to move %s to %s.',
-            'errors'   => 'Some errors occurred during WP Starter install,      </error>'
-                .PHP_EOL.'  <error>  site is not configured properly.                   ',
-            'error'    => 'An error occurred during WP Starter install,         </error>'
-                .PHP_EOL.'  <error>  site might be not configured properly.             ',
         );
         $args = func_get_args();
         $error = array_shift($args);
         $this->errors++;
-        $text = '  <error>  '.vsprintf($errors[$error], $args).'  </error>';
-        if (in_array($error, array('errors', 'error'), true)) {
-            $space = '  <error>'.str_repeat(' ', 55).'</error>';
-            $text = $space.PHP_EOL.$text.PHP_EOL.$space;
-        }
-        $this->io->writeError(PHP_EOL.$text);
 
-        return false;
+        return $this->io->error(vsprintf($errors[$error], $args));
+    }
+
+    /**
+     * Print to console final message.
+     *
+     * @return bool
+     */
+    private function finalMessage()
+    {
+        if (! empty($this->errors)) {
+            $lines = $this->errors === 1
+                ? array(
+                    'An error occurred during WP Starter install,',
+                    'site might be not configured properly.',
+                )
+                : array(
+                    'Some errors occurred during WP Starter install,',
+                    'site is not configured properly.',
+                );
+
+            return $this->io->block($lines, 'red', true);
+        }
+
+        return $this->io->block(array('    WP Starter finished successfully!    '), 'green', false);
+    }
+
+    /**
+     *  Print a warning if a .env was found in installation folder.
+     *
+     * @param string $rootPath
+     */
+    private function envWarning($rootPath)
+    {
+        if (! is_file($rootPath.DIRECTORY_SEPARATOR.'.env')) {
+            $lines = array(
+                'Remember you need an .env file with DB settings',
+                'to make your site fully functional.',
+            );
+
+            $this->io->block($lines, 'yellow', false);
+        }
+    }
+
+    /**
+     * Print a warning if a .gitignore was found in installation folder.
+     */
+    private function gitignoreWarning()
+    {
+        if ($this->gitignoreDone === 0) {
+            $lines = array(
+                'A .gitignore was found in your project folder.',
+                'Be sure to ignore .env and wp-config.php files.',
+            );
+            $this->io->block($lines, 'yellow', false);
+        }
+    }
+
+    /**
+     * Prepare a path to be used in .gitignore
+     *
+     * @param  string $path
+     * @param  string $root
+     * @return string
+     */
+    private function gitignorePath($path, $root)
+    {
+        $real = realpath($root.DIRECTORY_SEPARATOR.$path);
+        $rel = trim(preg_replace('|^'.preg_quote($root).'[^\\/]|', '', $real), '\\/');
+
+        return str_replace(array('\\', '/'), '/', $rel).'/';
     }
 }
