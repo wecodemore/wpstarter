@@ -325,11 +325,11 @@ class Builder
      */
     private function buildFile(ArrayAccess $paths, $fileName)
     {
-        $paths = array($paths['starter'], 'templates', $fileName);
+        $pieces = array($paths['starter'], 'templates', $fileName);
         if (! $this->isRoot) {
-            array_unshift($paths, $paths['root']);
+            array_unshift($pieces, $paths['root']);
         }
-        $template = implode(DIRECTORY_SEPARATOR, $paths);
+        $template = implode(DIRECTORY_SEPARATOR, $pieces);
         if (! is_readable($template)) {
             return $this->error('create', $fileName);
         }
