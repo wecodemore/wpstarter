@@ -39,10 +39,13 @@ class Helpers
      */
     public static function addHook(
         $hook,
-        callable $function_to_add,
+        $function_to_add,
         $priority = 10,
         $accepted_args = 1
     ) {
+        if (! is_callable($function_to_add)) {
+            return;
+        }
         global $wp_filter;
         if (! is_array($wp_filter)) {
             $wp_filter = array();
