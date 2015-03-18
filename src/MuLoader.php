@@ -53,7 +53,11 @@ class MuLoader
      */
     public function __invoke($refresh = false)
     {
-        if (! is_dir(WPMU_PLUGIN_DIR)) {
+        if (
+            ! defined('WPMU_PLUGIN_DIR')
+            || ! is_dir(WPMU_PLUGIN_DIR)
+            || defined('WP_INSTALLING')
+        ) {
             return;
         }
         static $jsonFiles;
