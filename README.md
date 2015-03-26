@@ -102,8 +102,7 @@ Below there is an example of `composer.json` to be used with WP Starter.
     ],
     "require": {
         "wecodemore/wpstarter": "~1.1",
-        "wpackagist-plugin/wp-super-cache": "*",
-        "wcm/wcm-lang-switch": "~1.7"
+        "wpackagist-plugin/wp-super-cache": "*"
     },
     "config": {
         "vendor-dir": "wp-content/vendor"
@@ -119,9 +118,7 @@ Below there is an example of `composer.json` to be used with WP Starter.
 
 This is a minimal example, but is possible to add any plugin or theme.
 
-For plugins and themes that support Composer natively,
-(like [WCM User Language Switcher](https://github.com/wecodemore/wcm_lang_switch) in the example),
-you can just add their package name to the `require` object.
+For plugins and themes that support Composer natively, you can just add their package name to the `require` object.
 
 For plugins and themes that do not support Composer natively but are available in WordPress repository
 (like WP Super Cache in the example) you can use packages provided by [wpackagist](http://wpackagist.org/).
