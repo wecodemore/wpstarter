@@ -49,6 +49,15 @@ class MuLoader
     private $regularLoaded = array();
 
     /**
+     * When using reflection plugins as Query Monitor this class responds with a name as string
+     *
+     * @return string
+     */
+    public function __toString() {
+        return 'WCM\WPStarter\MuLoader';
+    }
+
+    /**
      * Runs on 'muplugins_loaded' hook, with very low priority, and checks for plugins files in
      * subfolder of MU plugin folder. Only plugins that support Composer are taken into account.
      *
