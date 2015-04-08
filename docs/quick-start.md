@@ -34,7 +34,7 @@ That `composer.json` file should contain:
         }
     ],
     "require": {
-        "wecodemore/wpstarter": "~1.1",
+        "wecodemore/wpstarter": "~2.0",
         "wpackagist-plugin/wp-super-cache": "*"
     },
     "config": {
