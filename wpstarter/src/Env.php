@@ -104,7 +104,6 @@ class Env extends Dotenv
     public static function load($path)
     {
         if (! self::$loaded) {
-            parent::makeImmutable();
             parent::load($path);
             self::$loaded = true;
         }
@@ -159,8 +158,8 @@ class Env extends Dotenv
         } elseif (in_array($normName, self::$isBool, true)) {
             $normValue = (bool) filter_var($normName, FILTER_VALIDATE_BOOLEAN);
         } elseif (in_array($normName, self::$isBoolOrInt, true)) {
-            $const = is_numeric($normName) ? FILTER_VALIDATE_INT : FILTER_VALIDATE_BOOLEAN;
-            $normValue = filter_var($normName, $const);
+            $filter = is_numeric($normName) ? FILTER_VALIDATE_INT : FILTER_VALIDATE_BOOLEAN;
+            $normValue = filter_var($normName, $filter);
         } elseif (in_array($normName, self::$isMod, true)) {
             $normValue = self::checkMod($normValue);
         }

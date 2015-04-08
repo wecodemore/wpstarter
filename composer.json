@@ -41,19 +41,37 @@
     },
     "autoload": {
         "psr-4": {
-            "WCM\\WPStarter\\": "src/"
+            "WCM\\WPStarter\\": "wpstarter/src/"
         }
     },
     "scripts": {
-        "post-install-cmd": "WCM\\WPStarter\\Setup::runAsRoot"
-    },
-    "extra": {
-        "wordpress-install-dir": "wp",
-        "branch-alias": {
-            "dev-master": "1.x-dev"
-        }
+        "post-install-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
+        "wpstarter": "WCM\\WPStarter\\Setup::runAsRoot"
     },
     "config": {
+        "vendor-dir": "public/content/vendor",
         "optimize-autoloader": true
+    },
+    "extra": {
+        "wordpress-install-dir": "public/wp",
+        "wordpress-content-dir": "public/content",
+        "wpstarter": {
+            "env-example": true,
+            "prevent-overwrite": false
+        },
+        "installer-paths": {
+            "public/content/plugins/{$name}": [
+                "type:wordpress-plugin"
+            ],
+            "public/content/mu-plugins/{$name}": [
+                "type:wordpress-muplugin"
+            ],
+            "public/content/themes/{$name}": [
+                "type:wordpress-theme"
+            ]
+        },
+        "branch-alias": {
+            "dev-master": "2.x-dev"
+        }
     }
 }

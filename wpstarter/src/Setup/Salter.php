@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace WCM\WPStarter;
+namespace WCM\WPStarter\Setup;
 
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
@@ -30,6 +30,11 @@ class Salter
 
     private $result;
 
+    /**
+     * Build random keys.
+     *
+     * @return array
+     */
     public function keys()
     {
         if (! is_array($this->result)) {
@@ -42,6 +47,12 @@ class Salter
         return $this->result;
     }
 
+    /**
+     * Build random key.
+     *
+     * @param  int    $length
+     * @return string
+     */
     private function buildKey($length)
     {
         $chars = '=,.;:/?|abcdefghijklmnopqrstuvwxyz!@#$%^&*()ABCDEFGHIJKLMNOPQRSTUVWXYZ-_[]{}<>~`+0123456789';

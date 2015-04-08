@@ -10,6 +10,13 @@
 
 namespace WCM\WPStarter;
 
+/**
+ * Helpers functions.
+ *
+ * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
+ * @license http://opensource.org/licenses/MIT MIT
+ * @package WPStarter
+ */
 class Helpers
 {
     private static $env_loaded = false;
@@ -33,17 +40,13 @@ class Helpers
      * Add an action/filter before WordPress environment is loaded.
      *
      * @param string   $hook
-     * @param callable $function_to_add
+     * @param callable $callable
      * @param int      $priority
-     * @param int      $accepted_args
+     * @param int      $argsNum
      */
-    public static function addHook(
-        $hook,
-        $function_to_add,
-        $priority = 10,
-        $accepted_args = 1
-    ) {
-        if (! is_callable($function_to_add)) {
+    public static function addHook($hook, $callable, $priority = 10, $argsNum = 1)
+    {
+        if (! is_callable($callable) || function_exists('add_action')) {
             return;
         }
         global $wp_filter;
@@ -57,15 +60,26 @@ class Helpers
             $wp_filter[$hook][$priority] = array();
         }
         /** @var \Closure|object $function */
-        $function = is_object($function_to_add)
-            ? $function_to_add
-            : function () use ($function_to_add) {
-                return call_user_func_array($function_to_add, func_get_args());
+        $function = is_object($callable)
+            ? $callable
+            : function () use ($callable) {
+                return call_user_func_array($callable, func_get_args());
             };
-        $id = spl_object_hash($function);
-        $wp_filter[$hook][$priority][$id] = array(
+        $wp_filter[$hook][$priority][spl_object_hash($function)] = array(
             'function'      => $function,
-            'accepted_args' => $accepted_args,
+            'accepted_args' => $argsNum,
         );
+    }
+
+    /**
+     * Register default themes inside WordPress package wp-content folder.
+     *
+     * @param bool $register
+     */
+    public static function loadThemeFolder($register = true)
+    {
+        if (defined('ABSPATH') && $register) {
+            register_theme_directory(ABSPATH.'wp-content/themes');
+        }
     }
 }

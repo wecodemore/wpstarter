@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace WCM\WPStarter;
+namespace WCM\WPStarter\Setup;
 
 use Composer\IO\IOInterface;
 
@@ -25,13 +25,20 @@ class IO
     private $io;
 
     /**
+     * @var int
+     */
+    private $verbosity;
+
+    /**
      * Constructor.
      *
      * @param \Composer\IO\IOInterface $io
+     * @param int                      $verbosity
      */
-    public function __construct(IOInterface $io)
+    public function __construct(IOInterface $io, $verbosity = 2)
     {
         $this->io = $io;
+        $this->verbosity = $verbosity;
     }
 
     /**
@@ -42,11 +49,14 @@ class IO
      */
     public function error($message)
     {
-        $tag = 'bg=red;fg=white;option=bold>';
-        $lines = $this->ensureLength($message);
-        $this->io->write('');
-        foreach ($lines as $line) {
-            $this->io->writeError("  <{$tag}  ".$line."  </{$tag}");
+        if ($message && $this->verbosity > 0) {
+            $tag = 'bg=red;fg=white;option=bold>';
+            $lines = $this->ensureLength($message);
+            $this->io->write('');
+            foreach ($lines as $line) {
+                $this->io->writeError("  <{$tag}  ".$line."  </{$tag}");
+            }
+            $this->io->write('');
         }
 
         return false;
@@ -60,12 +70,14 @@ class IO
      */
     public function ok($message)
     {
-        $lines = $this->ensureLength($message);
-        foreach ($lines as $i => $line) {
-            if ($i === 0) {
-                $this->io->write('  - <info>OK</info> '.$line);
-            } else {
-                $this->io->write('   '.$line);
+        if ($message && $this->verbosity > 1) {
+            $lines = $this->ensureLength($message);
+            foreach ($lines as $i => $line) {
+                if ($i === 0) {
+                    $this->io->write('  - <info>OK</info> '.$line);
+                } else {
+                    $this->io->write('   '.$line);
+                }
             }
         }
 
@@ -80,9 +92,11 @@ class IO
      */
     public function comment($message)
     {
-        $lines = $this->ensureLength($message);
-        foreach ($lines as $line) {
-            $this->io->write('  <comment>'.$line.'</comment>');
+        if ($message && $this->verbosity > 1) {
+            $lines = $this->ensureLength($message);
+            foreach ($lines as $line) {
+                $this->io->write('  <comment>'.$line.'</comment>');
+            }
         }
 
         return true;
@@ -98,6 +112,9 @@ class IO
      */
     public function ask(array $lines, $default = true)
     {
+        if ($this->verbosity < 1) {
+            return $default;
+        }
         array_unshift($lines, 'QUESTION');
         $length = max(array_map('strlen', $lines));
         array_walk($lines, function (&$line) use ($length) {
@@ -127,6 +144,10 @@ class IO
      */
     public function block(array $lines, $background = 'green', $is_error = false)
     {
+        $severity = $background === 'green' ? 2 : 1;
+        if ($this->verbosity < $severity) {
+            return ! $is_error;
+        }
         $length = max(array_map('strlen', $lines));
         array_walk($lines, function (&$line) use ($length) {
             $len = strlen($line);
