@@ -54,7 +54,7 @@ class MuLoader
      * @return string
      */
     public function __toString() {
-        return 'WCM\WPStarter\MuLoader';
+        return __CLASS__;
     }
 
     /**
