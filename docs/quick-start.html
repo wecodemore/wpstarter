@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Giuseppe Mazzapica">
+    <title>Quick Start - WP Starter</title>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300|Source+Code+Pro:400' rel='stylesheet' type='text/css'>
+    <link href="http://wecodemore.github.io/wpstarter/css/theme.min.css" rel="stylesheet">
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <div id="sidebar-wrapper">
+
+          <ul class="sidebar-nav">
+                                                      <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/what.html">
+                              What & Why
+                          </a>
+                      </li>
+                                        <li class="active">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/quick-start.html">
+                              Quick Start
+                          </a>
+                      </li>
+                                        <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/complete-example.html">
+                              Complete Usage Example
+                          </a>
+                      </li>
+                                        <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/how.html">
+                              How It Works
+                          </a>
+                      </li>
+                                        <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/options.html">
+                              WP Starter Options
+                          </a>
+                      </li>
+                                          </ul>
+
+      </div>
+      <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="content-wrapper-">
+            <div class="container-fluid">
+                <div class="row">
+                    <div id="content" class="col-lg-11">
+                                                                                <ol class="breadcrumb">
+                              <li><a href="http://wecodemore.github.io/wpstarter">WP Starter</a></li>
+                              <li class="active">Quick Start</li>
+                            </ol>
+                                                                                                        <!--
+currentMenu: quickstart
+title: Quick Start
+-->
+<h1>Quick Start</h1>
+<p>After a system has WP Starter requirements (PHP 5.3.2+, Composer) to install a fully working, Composer-managed WordPress site involves just 3 steps:</p>
+<ol>
+<li>create a <code>composer.json</code> file in an empty folder</li>
+<li>open a console and type: <code>composer install</code></li>
+<li>rename the <code>.env.example</code> file created by WP Starter to <code>.env</code>, open it with a text editor and set, at least, database settings.</li>
+</ol>
+<p>Done :-)</p>
+<p>That <code>composer.json</code> file should contain:</p>
+<ul>
+<li>WP Starter</li>
+<li><code>WCM\WPStarter\Setup::run()</code> set as <code>"post-install-cmd"</code> script</li>
+<li>WordPress package (optional) By explicitly requiring WordPress package is possible to choose WP version to install (min version is WP 3.9+)</li>
+<li>Any desired theme and plugin (optional)</li>
+<li>WP Starter configuration in <code>"extra"</code> setting (optional)</li>
+</ul>
+<h1>A simple <code>composer.json</code></h1>
+<pre><code class="language-json">{
+    "name": "gmazzap/wpstarter-simple-example",
+    "description": "Example project for WordPress + Composer + WP Starter",
+    "type": "project",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://wpackagist.org"
+        }
+    ],
+    "require": {
+        "wecodemore/wpstarter": "~1.1",
+        "wpackagist-plugin/wp-super-cache": "*"
+    },
+    "config": {
+        "vendor-dir": "wp-content/vendor"
+    },
+    "scripts": {
+        "post-install-cmd": "WCM\\WPStarter\\Setup::run"
+    },
+    "extra": {
+        "wordpress-install-dir": "wp"
+    }
+}</code></pre>
+<p>This is a minimal example, but is possible to add any plugin or theme.</p>
+<p>For plugins and themes that support Composer natively, it is possible to just add their package name to the require object.</p>
+<p>For plugins and themes that do not support Composer natively, but are available in WordPress repository (like WP Super Cache in the example) is possible to use packages provided by <a href="http://wpackagist.org">wpackagist</a>. To do that, wpackagist has to be added to <code>"repositories"</code> setting as shown above.</p>
+<p>The <code>config.vendor-dir</code> setting is optional. In the example above is used to have the vendor folder placed inside <code>wp-content</code> folder so that at the end of the installation the folder structure will be something like:</p>
+<ul>
+<li><code>wp/</code>
+<ul>
+<li><code>wp-admin/</code></li>
+<li><code>wp-includes/</code></li>
+<li><code>wp-settings.php</code></li>
+<li><code>wp-blog-header.php</code></li>
+<li><code>wp-load.php</code></li>
+<li><code>wp-login.php</code></li>
+</ul></li>
+<li><code>wp-content/</code>
+<ul>
+<li><code>themes/</code></li>
+<li><code>plugins/</code></li>
+<li><code>vendor/</code></li>
+</ul></li>
+<li><code>wp-config.php</code></li>
+<li><code>index.php</code></li>
+<li><code>.env.example</code></li>
+<li><code>.gitignore</code></li>
+</ul>
+<p><em>(some files in wp folder have been omitted for sake of readability)</em></p>
+<h2>There's More</h2>
+<p>The example in this page shows how simple is to get started with WP Starter. However, by using both general Composer settings and WP Starter specific settings is possible to do more with WP Starter and also to control and customize any aspect of WP Starter flow.</p>
+<p>The <strong><em>"Complete Usage Example"</em></strong> doc page contains a <code>composer.json</code> example code that uses all WP Starter power by making use of all the configurations available.</p>
+<p>WP Starter flow is what goes from a <code>composer.json</code> to a fully functional WordPress site. What happen in between is that Composer install all packages and, after that, WP Starter performs different operations to configure the WordPress site.</p>
+<p>All these operations are called <em>steps</em> and are described one by one in the <strong><em>"How It Works"</em></strong> doc page.</p>
+<p>Moreover, the way every WP Starter step works can be configured with settings in the <code>composer.json</code> file. The <strong><em>"WP Starter Options"</em></strong> doc page describes all the available configuration.</p>
+                                            </div>
+                </div>
+            </div>
+        </div>
+        <!-- /#page-content-wrapper -->
+
+                    <a href="https://github.com/wecodemore/wpstarter">
+                <img style="position:fixed; top:0; right:0; border:0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png">
+            </a>
+                <a href="#" id="menu-toggle" title="Toggle Menu"><i class="fa fa-bars"></i></a>
+
+
+    </div>
+    <!-- /#wrapper -->
+
+    <footer class="footer hidden-xs hidden-sm">
+      Made by hands by
+      <a href="http://gm.zoomlab.it/" title="Giuseppe Mazzapica Home Page" target="_blank">Giuseppe Mazzapica</a>, with
+      <a href="http://couscous.io/" title="Couscous" target="_blank">Couscous</a>,
+      <a href="http://getbootstrap.com/" title="Bootstrap" target="_blank">Bootstrap</a> &amp;
+      <a href="https://highlightjs.org/" title="highlight.js" target="_blank">highlight.js</a>
+
+      <span class="socials">
+        <a href="https://github.com/Giuseppe-Mazzapica" title="GitHub" target="_blank"><i class="fa fa-github-alt"></i></a>
+        <a href="https://twitter.com/gmazzap" title="Twitter" target="_blank"><i class="fa fa-twitter"></i></a>
+        <a href="http://wordpress.stackexchange.com/users/35541/" title="Stack Exchange" target="_blank"><i class="fa fa-stack-exchange"></i></a>
+      </span>
+
+    </footer>
+
+    <a href="#wrapper" class="hidden-xs hidden-sm" id="back-top" title="Back to top"><i class="fa fa-long-arrow-up"></i></a>
+    <script src="http://yandex.st/highlightjs/7.5/highlight.min.js"></script>
+    <script src="http://wecodemore.github.io/wpstarter/js/theme.min.js"></script>
+</body>
+
+</html>

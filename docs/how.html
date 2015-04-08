@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Giuseppe Mazzapica">
+    <title>How WP Starter Works? - WP Starter</title>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300|Source+Code+Pro:400' rel='stylesheet' type='text/css'>
+    <link href="http://wecodemore.github.io/wpstarter/css/theme.min.css" rel="stylesheet">
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <div id="sidebar-wrapper">
+
+          <ul class="sidebar-nav">
+                                                      <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/what.html">
+                              What & Why
+                          </a>
+                      </li>
+                                        <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/quick-start.html">
+                              Quick Start
+                          </a>
+                      </li>
+                                        <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/complete-example.html">
+                              Complete Usage Example
+                          </a>
+                      </li>
+                                        <li class="active">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/how.html">
+                              How It Works
+                          </a>
+                      </li>
+                                        <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/options.html">
+                              WP Starter Options
+                          </a>
+                      </li>
+                                          </ul>
+
+      </div>
+      <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="content-wrapper-">
+            <div class="container-fluid">
+                <div class="row">
+                    <div id="content" class="col-lg-11">
+                                                                                <ol class="breadcrumb">
+                              <li><a href="http://wecodemore.github.io/wpstarter">WP Starter</a></li>
+                              <li class="active">How WP Starter Works?</li>
+                            </ol>
+                                                                                                        <!--
+currentMenu: how
+title: How WP Starter Works?
+-->
+<h1>How WP Starter Works</h1>
+<p>The WP Starter flow starts with a <code>composer.json</code> file and ends with a fully working WordPress site, ready to work with multiple environments.</p>
+<p>In the middle there are just and only two words: <code>composer install</code> typed in a console.</p>
+<p>WP Starter uses a <a href="https://getcomposer.org/doc/articles/scripts.html">Composer <code>post-install-cmd</code> script</a>. That script is ran by Composer after all packages have been installed and performs some operations that configure the just installed WordPress site.</p>
+<h2>The "Steps"</h2>
+<p>Every operation performed by WP Starter is called "step". Some of them are always performed, other are optional.</p>
+<p>Below there is the list of all WP Starter steps.</p>
+<h3>1. <code>wp-config.php</code> step</h3>
+<p>This is the <em>core</em> WP Starter step. It generates a <code>wp-config.php</code> that:</p>
+<ul>
+<li>requires <strong>Composer autoload file</strong> (its path is retrieved dynamically from Composer settings)</li>
+<li>provides an environment-based configuration for WordPress: configuration constants that traditionally go in <code>wp-config.php</code> are set in a <code>.env</code> file, and then automatically imported from there. This allows multi-environment settings. Three environments: "production", "development" and "staging" are supported out of the box.</li>
+<li>contains paths and urls settings to work with a <code>wp-content</code> folder placed outside main WP directory</li>
+<li>contains the code to register theme folder inside WordPress installation folder as additional theme folder, in this way is possible to use default themes that are shipped with WordPress package.</li>
+<li>contains the code that allows WordPress to load MU plugins located in sub folders</li>
+<li>contains the code needed to setup WordPress to work in its own subdirectory, while maintaining top level urls. Paths and urls are dynamically resolved from <code>composer.json</code> settings</li>
+</ul>
+<h3>2. <code>index.php</code> step</h3>
+<p>During this step WP Starter generates an <code>index.php</code> that is the first file always loaded for all the frontend pages, and that loads WordPress environment. Creation of this file is required when WordPress is placed in its own directory to maintain top level urls. The path to be used in this file is dynamically resolved from <code>composer.json</code> settings.</p>
+<h3>3. Content folder step</h3>
+<p>This step is optional, and by default it is disabled. It moves the <code>wp-content</code> folder shipped with WordPress package to project content folder. This step was active by default in version 1 of WP Starter, but starting from v2, instead of moving the content folder, WP Starter registers it as additional theme folder. It is possible to enable this step in version 2 via <code>composer.json</code> settings.</p>
+<h3>4. Dropins step</h3>
+<p>Dropins are files that can be used to override core components of WordPress. Example of these files are <code>db.php</code> (used to customize database access), <code>advanced-cache.php</code> (used to customize WordPress cache system) and different others. In this category may be included locale files, PHP files named like a WordPress locale, e.g. <code>en_US.php</code>, that are loaded by WordPress when that locale is used.</p>
+<p>To make use of these files, they must be placed in the content folder, without sub folders. WP Starter can copy this files in the proper location using as source a path or an url.</p>
+<h3>5. Sample <code>.env</code> step</h3>
+<p>WP Starter provides an environment-based configuration for WordPress. All configuration constants that in standard WordPress installations go in <code>wp-config.php</code> are set in a <code>.env</code> file.</p>
+<p>In addition to standard WordPress constants, WP Starter supports an additional configuration: <code>WORDPRESS_ENV</code> that is used to set the environment to which all constants refers, e.g. "development", "production" or "staging".</p>
+<p>The well known <a href="https://github.com/vlucas/phpdotenv">Dotenv package</a> is then used to load all configurations from the <code>.env</code> file and register them as WordPress configuration constants. In this way is possible to easily setup multiple WordPress environments with easy.</p>
+<p>This step puts in project folder a file named <code>.env.example</code> that contains a template to be used as base for <code>.env</code> file. This step can be disabled and customized using <code>composer.json</code> settings.</p>
+<h3>6. <code>.gitignore</code> step</h3>
+<p>When using a version control system (VCS) it is important to keep out from it files that contains critical informations. For WP Starter installations it mostly means the <code>.env</code> file. Moreover, files that are managed via Composer should be keep out of version control as well.</p>
+<p>This step creates in project folder a <code>.gitignore</code> file that makes the popular Git VCS ignore <code>.env</code> file and all the Composer dependencies (including WordPress package). This step can be disabled and customized using <code>composer.json</code> settings.</p>
+                                            </div>
+                </div>
+            </div>
+        </div>
+        <!-- /#page-content-wrapper -->
+
+                    <a href="https://github.com/wecodemore/wpstarter">
+                <img style="position:fixed; top:0; right:0; border:0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png">
+            </a>
+                <a href="#" id="menu-toggle" title="Toggle Menu"><i class="fa fa-bars"></i></a>
+
+
+    </div>
+    <!-- /#wrapper -->
+
+    <footer class="footer hidden-xs hidden-sm">
+      Made by hands by
+      <a href="http://gm.zoomlab.it/" title="Giuseppe Mazzapica Home Page" target="_blank">Giuseppe Mazzapica</a>, with
+      <a href="http://couscous.io/" title="Couscous" target="_blank">Couscous</a>,
+      <a href="http://getbootstrap.com/" title="Bootstrap" target="_blank">Bootstrap</a> &amp;
+      <a href="https://highlightjs.org/" title="highlight.js" target="_blank">highlight.js</a>
+
+      <span class="socials">
+        <a href="https://github.com/Giuseppe-Mazzapica" title="GitHub" target="_blank"><i class="fa fa-github-alt"></i></a>
+        <a href="https://twitter.com/gmazzap" title="Twitter" target="_blank"><i class="fa fa-twitter"></i></a>
+        <a href="http://wordpress.stackexchange.com/users/35541/" title="Stack Exchange" target="_blank"><i class="fa fa-stack-exchange"></i></a>
+      </span>
+
+    </footer>
+
+    <a href="#wrapper" class="hidden-xs hidden-sm" id="back-top" title="Back to top"><i class="fa fa-long-arrow-up"></i></a>
+    <script src="http://yandex.st/highlightjs/7.5/highlight.min.js"></script>
+    <script src="http://wecodemore.github.io/wpstarter/js/theme.min.js"></script>
+</body>
+
+</html>

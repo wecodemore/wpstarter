@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Giuseppe Mazzapica">
+    <title>Complete Usage Example - WP Starter</title>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300|Source+Code+Pro:400' rel='stylesheet' type='text/css'>
+    <link href="http://wecodemore.github.io/wpstarter/css/theme.min.css" rel="stylesheet">
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <div id="sidebar-wrapper">
+
+          <ul class="sidebar-nav">
+                                                      <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/what.html">
+                              What & Why
+                          </a>
+                      </li>
+                                        <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/quick-start.html">
+                              Quick Start
+                          </a>
+                      </li>
+                                        <li class="active">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/complete-example.html">
+                              Complete Usage Example
+                          </a>
+                      </li>
+                                        <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/how.html">
+                              How It Works
+                          </a>
+                      </li>
+                                        <li class="">
+                          <a href="http://wecodemore.github.io/wpstarter/docs/options.html">
+                              WP Starter Options
+                          </a>
+                      </li>
+                                          </ul>
+
+      </div>
+      <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="content-wrapper-">
+            <div class="container-fluid">
+                <div class="row">
+                    <div id="content" class="col-lg-11">
+                                                                                <ol class="breadcrumb">
+                              <li><a href="http://wecodemore.github.io/wpstarter">WP Starter</a></li>
+                              <li class="active">Complete Usage Example</li>
+                            </ol>
+                                                                                                        <!--
+currentMenu: completeexample
+title:  Complete Usage Example
+-->
+<h1>Complete Usage Example</h1>
+<p>Sometimes out-of-the-box settings for WP Starter may be fine, sometimes not. In this page there's an usage example that will make use of
+all WP Starter configuration. Explanation is provided below in this page.</p>
+<h1>A <em>fully-equipped</em> <code>composer.json</code></h1>
+<pre><code class="language-json">{
+    "name": "gmazzap/wpstarter-complete-example",
+    "description": "Example project for WordPress + Composer + WP Starter",
+    "type": "project",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://wpackagist.org"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gist.github.com/Giuseppe-Mazzapica/e8c8e4dfc8e65f1903ac.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://gist.github.com/Giuseppe-Mazzapica/9939793dfb2a2361cd0f.git"
+        }
+    ],
+    "require": {
+        "wecodemore/wpstarter": "~2.0",
+        "johnpbloch/wordpress": "4.1.*",
+        "gmazzap/wpstarter-example-files": "*"
+    },
+    "require-dev": {
+        "wpackagist-plugin/query-monitor": "2.7.*",
+        "wpackagist-plugin/debug-bar": "*",
+        "rarst/laps": "~1.2",
+        "wpackagist-plugin/plugin-profiler": "~1.0",
+        "gmazzap/plugin-profiler-mu": "*"
+    },
+    "config": {
+        "vendor-dir": "public/content/vendor",
+        "optimize-autoloader": true
+    },
+    "scripts": {
+        "post-install-cmd": "WCM\\WPStarter\\Setup::run",
+        "post-update-cmd": "WCM\\WPStarter\\Setup::run",
+        "wpstarter": "WCM\\WPStarter\\Setup::run"
+    },
+    "extra": {
+        "wordpress-install-dir": "public/wp",
+        "wordpress-content-dir": "public/content",
+        "wpstarter": {
+            "dropins": {
+                "it_IT.php": "public/content/vendor/gmazzap/wpstarter-example-files/it_IT.php",
+                "object-cache.php": "public/content/vendor/gmazzap/wpstarter-example-files/object-cache.php"
+            },
+            "prevent-overwrite": [
+                ".gitignore",
+                "public/wp-config.php",
+                "public/index.php"
+            ],
+            "env-example": "public/content/vendor/gmazzap/wpstarter-example-files/.env.example",
+            "gitignore": {
+                "wp": true,
+                "wp-content": true,
+                "vendor": true,
+                "common": true,
+                "custom": [
+                    "*.log",
+                    ".htaccess",
+                    "sitemap.xml",
+                    "sitemap.xml.gz"
+                ]
+            }
+        },
+        "installer-paths": {
+            "public/content/plugins/{$name}": [
+                "type:wordpress-plugin"
+            ],
+            "public/content/mu-plugins/{$name}": [
+                "type:wordpress-muplugin"
+            ],
+            "public/content/themes/{$name}": [
+                "type:wordpress-theme"
+            ]
+        }
+    }
+}</code></pre>
+<h2>Example Explained</h2>
+<p>The example above may be a little scary, but reality is that great majority of WP Starter installations don't need a so much detailed configuration. E.g. the <code>composer.json</code> provided in the <em>"Quick Start"</em> docs section is a lot less complex and still perfectly functional.</p>
+<p>Only reason to publish a so hardly customized <code>composer.json</code> is to show how WP Starter configuration allows a full control on any aspect of its work, but only if required.</p>
+<p>All the configurations used in the example above are explained below, section by section.</p>
+<h3><code>"name"</code>, <code>"description"</code> and <code>"type"</code>  sections</h3>
+<p>This are simple Composer settings. See <a href="https://getcomposer.org/doc/04-schema.html">official docs</a> to know more.</p>
+<h3><code>"minimum-stability"</code> section</h3>
+<p>By default Composer filters packages by stability, only installing one that are tagged as stable.</p>
+<p>By using this setting (<a href="https://getcomposer.org/doc/04-schema.md#minimum-stability">see Compose docs</a>) is possible to tell Composer to also install packages with different stability.</p>
+<p>This is necessary in the example because some packages used are not stable and are added to project pulling them from Git repositories.</p>
+<h3><code>"repositories"</code> section</h3>
+<p>This is <a href="https://getcomposer.org/doc/04-schema.md#repositories">a Composer setting</a> that allows to set custom repositories where to search for packages.</p>
+<p>I've added 3 entries.</p>
+<p>The first is <a href="http://wpackagist.org">wpackagist</a>. It is a mirror of the official WordPress plugin and theme directories as a Composer repository. In short, it allows to install all the plugins and themes available in official WordPress repository as Composer packages, no matter if they <em>natively</em> support Composer or not.</p>
+<p>The other two repositories are Gist of mine. They were created to show in this example how to use custom packages to collect files that you want to share among WP Starter projects. More on this below.</p>
+<h3><code>"require"</code> section</h3>
+<p>There are 3 packages required, and first of them is WP Starter. It is required, of course.</p>
+<p>The second is WordPress package. Even if WP Starter requires WordPress, but it is explicitly required to have a better control on the WordPress version that will be installed.</p>
+<p>The third package required is <code>"gmazzap/wpstarter-example-files"</code>. It is a package I created for this example to show how to use a custom package (in this case saved in a Gist) to collect files to be shared among WP Starter projects. Files contained in this package will be used in the example for various purposes.</p>
+<h3><code>"require-dev"</code> section</h3>
+<p>There are five packages required for development purposes.</p>
+<p>First two, "query-monitor" and "debug-bar", are popular plugins for debugging. They are both available in WordPress repository and required via wpackagist.</p>
+<p>Third package is <a href="https://github.com/Rarst/laps">"Laps"</a>, a profiler plugin by <a href="http://t.co/dTX2awK3Qv">@Rarst</a> (Andrey Savchenko) that supports Composer natively and is available on Packagist.</p>
+<p>The fourth package is <a href="https://wordpress.org/plugins/plugin-profiler/">"plugin-profiler"</a>, a profiler for plugins, it is available in WordPress repository and required via wpackagist.</p>
+<p>By reading its <a href="https://wordpress.org/plugins/plugin-profiler/installation/">installation instructions</a> you'll see that one of the installation options is to create a MU plugin that loads the regular plugin file.</p>
+<p>For the purpose of this example I created a very simple MU plugin that just does that, and that is the fifth package required. It is located in <a href="https://gist.github.com/Giuseppe-Mazzapica/9939793dfb2a2361cd0f">a Gist</a> listed in <code>"repositories"</code> to be accessible to Composer.</p>
+<p>This MU plugin will be placed in its own folder inside <code>mu-plugin</code> folder, but WordPress will be still capable to load thanks to WP Starter loader.</p>
+<h3><code>"config"</code> section</h3>
+<p>This is a <a href="https://getcomposer.org/doc/04-schema.md#config">Composer setting</a>.</p>
+<p>In the example above it is used to tell Composer to create optimized autoloader files and to use a specific vendor folder.</p>
+<h3><code>"scripts"</code> section</h3>
+<p>The first entry in this section adds the method <code>WCM\WPStarter\Setup::run()</code> as <code>"post-install-cmd"</code> script. (See <a href="https://getcomposer.org/doc/articles/scripts.html">Composer docs</a>). This is the only mandatory entry.</p>
+<p>The second entry adds the same method as <code>"post-update-cmd"</code> script. This makes Composer to run again WP Starter routine after any update. The reason is that files copied by WP Starter via "dropins" configuration (see below) may be updated, so the updated file should be copied again in content folder.</p>
+<p>The third entry, adds the same method using a custom name. This will never run automatically by Composer, but if there is the need to run WP Starter routine manually, this alias will simplify that task: <code>composer run wpstarter</code> is easier to type, to remember and more intuitive of <code>composer run post-install-cmd</code>.</p>
+<h3><code>"extra"</code> section</h3>
+<p><code>"wordpress-install-dir"</code> tells Composer where to place WordPress package. This is not a WP Starter configuration, but is defined by <a href="https://github.com/johnpbloch/wordpress-core-installer">WordPress core installer</a>. This setting is optional and when not used, "wordpress" is used as default.</p>
+<p><code>"wordpress-content-dir"</code> informs WP Starter where the content folder is located. This configuration is optional and when not used, "wp-content" is used as default.</p>
+<p>Please note that this option will <strong>not</strong> make Composer to place plugins and themes into the given directory.</p>
+<p>This option is required only if the content folder is not the standard one and only if WP Starter needs to know where content folder is located, that is, when the <code>"dropins"</code> and/or the <code>"gitignore"</code> WP Starter configuration are used.</p>
+<p><code>"wpstarter"</code> is the object where take place all the WP Starter configurations. All the available settings are documented in the <em>"WP Starter Options"</em> documentation page.</p>
+<p>In the example above I used:</p>
+<ul>
+<li>
+<p><code>"dropins"</code> to tell WP Starter to move two files from their package folder (where Composer placed them) to the project content folder. This is required because WordPress recognize these specific files only if they are placed there.</p>
+<p><code>object-cache.php</code> is a dropin to manage object cache using Memcached PECL extension (it's a slightly modified version of <a href="https://github.com/tollmanz/wordpress-pecl-memcached-object-cache">this file</a>) and <code>it_IT.php</code> is a locale file (italian). Both needs to be placed in content folder to work. WP Starter copies them to content folder from the package I saved in a Gist. (see <code>require</code> section above).</p>
+</li>
+<li>
+<p><code>"prevent-overwrite"</code> is used to tell WP Starter to don't overwrite some files, specifically, <code>wp-config.php</code>, <code>index.php</code> and <code>.gitignore</code>.</p>
+<p>This is especially useful because WP Starter routine is set to be run after any update (see <code>"scripts"</code> section above) so any customization to any of these files that happened between installation and update would be lost if WP Starter is not instructed to not overwrite them.</p>
+</li>
+<li>
+<p><code>env-example</code> is used to tell WP Starter which file to copy as <code>.env.example</code> in project folder. The source used is the same Gist that contains <code>it_IT.php</code> file and is used to show how to use a custom package to collect files that you want to share among WP Starter projects.</p>
+</li>
+<li><code>gitignore</code> is used to tell WP Starter what to put in the <code>.gitignore</code> file that will be created in project folder. The configuration tells to ignore WordPress, content and vendor folders, a set of common to-be-ignored files and a list of three custom entries.</li>
+</ul>
+<p>For more details about any of the WP Starter configuration have a look to <em>"WP Starter Options"</em> documentation page.</p>
+<h3><code>"installer-paths"</code> section</h3>
+<p>This is a configuration section introduced by <a href="https://github.com/composer/installers">composer/installers</a>.</p>
+<p>Using this configuration is possible to tell Composer where to place packages of specific types (see <a href="https://getcomposer.org/doc/faqs/how-do-i-install-a-package-to-a-custom-path-for-my-framework.html">Composer docs</a>).</p>
+<p>This option is necessary here because I want to use <code>public/content</code> instead of default <code>wp-content</code> as project content folder, that is the installation target folder for plugins and themes.</p>
+                                            </div>
+                </div>
+            </div>
+        </div>
+        <!-- /#page-content-wrapper -->
+
+                    <a href="https://github.com/wecodemore/wpstarter">
+                <img style="position:fixed; top:0; right:0; border:0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png">
+            </a>
+                <a href="#" id="menu-toggle" title="Toggle Menu"><i class="fa fa-bars"></i></a>
+
+
+    </div>
+    <!-- /#wrapper -->
+
+    <footer class="footer hidden-xs hidden-sm">
+      Made by hands by
+      <a href="http://gm.zoomlab.it/" title="Giuseppe Mazzapica Home Page" target="_blank">Giuseppe Mazzapica</a>, with
+      <a href="http://couscous.io/" title="Couscous" target="_blank">Couscous</a>,
+      <a href="http://getbootstrap.com/" title="Bootstrap" target="_blank">Bootstrap</a> &amp;
+      <a href="https://highlightjs.org/" title="highlight.js" target="_blank">highlight.js</a>
+
+      <span class="socials">
+        <a href="https://github.com/Giuseppe-Mazzapica" title="GitHub" target="_blank"><i class="fa fa-github-alt"></i></a>
+        <a href="https://twitter.com/gmazzap" title="Twitter" target="_blank"><i class="fa fa-twitter"></i></a>
+        <a href="http://wordpress.stackexchange.com/users/35541/" title="Stack Exchange" target="_blank"><i class="fa fa-stack-exchange"></i></a>
+      </span>
+
+    </footer>
+
+    <a href="#wrapper" class="hidden-xs hidden-sm" id="back-top" title="Back to top"><i class="fa fa-long-arrow-up"></i></a>
+    <script src="http://yandex.st/highlightjs/7.5/highlight.min.js"></script>
+    <script src="http://wecodemore.github.io/wpstarter/js/theme.min.js"></script>
+</body>
+
+</html>
