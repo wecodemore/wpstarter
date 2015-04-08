@@ -49,7 +49,8 @@ class Config implements ArrayAccess
      * @use \WCM\WPStarter\Setup\Config::validateGitignore()
      * @use \WCM\WPStarter\Setup\Config::validateBoolOrAskOrUrl()
      * @use \WCM\WPStarter\Setup\Config::validateBoolOrAsk()
-     * @use \WCM\WPStarter\Setup\Config::validateBool()
+     * @use \WCM\WPStarter\Setup\Config::validatePathArray()
+     * @use \WCM\WPStarter\Setup\Config::validateOverwrite()
      * @use \WCM\WPStarter\Setup\Config::validateVerbosity()
      */
     private function validate($configs)
@@ -136,7 +137,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
-     * @return int|void
+     * @return array
      */
     private function validatePathArray($value)
     {
@@ -147,6 +148,8 @@ class Config implements ArrayAccess
 
             return array_unique(array_filter($value));
         }
+
+        return array();
     }
 
     /**
@@ -190,7 +193,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
-     * @return bool|null
+     * @return bool
      */
     private function validateBool($value)
     {
@@ -198,6 +201,8 @@ class Config implements ArrayAccess
         if (in_array(is_string($value) ? strtolower($value) : $value, $booleans, true)) {
             return filter_var($value, FILTER_VALIDATE_BOOLEAN);
         }
+
+        return false;
     }
 
     /**
