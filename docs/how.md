@@ -53,6 +53,6 @@ This step puts in project folder a file named `.env.example` that contains a tem
 
 ### 6. `.gitignore` step
 
-When using a version control system (VCS) it is important to keep out from it files that contains critical informations. For WP Starter installations it mostly means the `.env` file. Moreover, files that are managed via Composer should be keep out of version control as well.
+When using a version control system (VCS) it is important to keep out from it files that contains critical information. For WP Starter installations it mostly means the `.env` file. Moreover, files that are managed via Composer should be keep out of version control as well.
 
 This step creates in project folder a `.gitignore` file that makes the popular Git VCS ignore `.env` file and all the Composer dependencies (including WordPress package). This step can be disabled and customized using `composer.json` settings.

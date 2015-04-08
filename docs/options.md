@@ -27,7 +27,7 @@ The possible values are:
 {
   "extra": {
       "wpstarter": {
-          "prevent-overwite": [".gitignore", "*.php"]
+          "prevent-overwrite": [".gitignore", "*.php"]
       }
   }
 }
@@ -38,7 +38,7 @@ Settings above make WP Starter prevent the overwrite of all the PHP files and of
 The default behavior of this setting is:
 
 ```json
-"prevent-overwite": [".gitignore"]
+"prevent-overwrite": [".gitignore"]
 ```
 
 So, by default, if a `.gitignore` file is found in target folder it is not overwritten.
@@ -102,7 +102,7 @@ The *source* of these files can be:
  - a file path relative to project root
  - an url
 
-Informations, warning and and tips regarding usage of this kind of WP Starter options are provided in the *"About paths and urls sources"* section below in this page.
+Information, warning and and tips regarding usage of this kind of WP Starter options are provided in the *"About paths and urls sources"* section below in this page.
 
 An example:
 

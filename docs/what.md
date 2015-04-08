@@ -33,7 +33,7 @@ It is a mirror of the WordPress plugin and theme directories as a Composer repos
 
 # Why WP Starter
 
-So the main issues about using Composer for WordPress whole-site stacks have already been solved, but there are issues left unsolved, that requires *manual* work, or that various developers have solved on their own with custom scripts and workflows.
+So the main issues about using Composer for WordPress whole-site stacks have already been solved, but there are issues left unsolved, that requires *manual* work, or that various developers have solved on their own with custom scripts and workflow.
 
 Main aim of WP Starter is to give a way to address this issues in an automatic and reusable way.
 
