@@ -154,12 +154,12 @@ class Env extends Dotenv
             return array(null, null);
         }
         if (in_array($normName, self::$isInt, true)) {
-            $normValue = (int) filter_var($normName, FILTER_VALIDATE_INT);
+            $normValue = (int) filter_var($normValue, FILTER_VALIDATE_INT);
         } elseif (in_array($normName, self::$isBool, true)) {
-            $normValue = (bool) filter_var($normName, FILTER_VALIDATE_BOOLEAN);
+            $normValue = (bool) filter_var($normValue, FILTER_VALIDATE_BOOLEAN);
         } elseif (in_array($normName, self::$isBoolOrInt, true)) {
-            $filter = is_numeric($normName) ? FILTER_VALIDATE_INT : FILTER_VALIDATE_BOOLEAN;
-            $normValue = filter_var($normName, $filter);
+            $filter = is_numeric($normValue) ? FILTER_VALIDATE_INT : FILTER_VALIDATE_BOOLEAN;
+            $normValue = filter_var($normValue, $filter);
         } elseif (in_array($normName, self::$isMod, true)) {
             $normValue = self::checkMod($normValue);
         }
