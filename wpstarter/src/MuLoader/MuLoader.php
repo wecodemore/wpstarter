@@ -171,7 +171,6 @@ class MuLoader
      *
      * @param  string $jsonFile Full path of composer.json of mu plugin file
      * @return void
-     * @uses \GM\MuPluginsComposer\FileLoader\findFileInJson()
      */
     private function findFile($jsonFile)
     {

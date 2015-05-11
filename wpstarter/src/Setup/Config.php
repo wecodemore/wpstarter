@@ -46,12 +46,12 @@ class Config implements ArrayAccess
     /**
      * @param  array $configs
      * @return array
-     * @use \WCM\WPStarter\Setup\Config::validateGitignore()
-     * @use \WCM\WPStarter\Setup\Config::validateBoolOrAskOrUrl()
-     * @use \WCM\WPStarter\Setup\Config::validateBoolOrAsk()
-     * @use \WCM\WPStarter\Setup\Config::validatePathArray()
-     * @use \WCM\WPStarter\Setup\Config::validateOverwrite()
-     * @use \WCM\WPStarter\Setup\Config::validateVerbosity()
+     * @see \WCM\WPStarter\Setup\Config::validateGitignore()
+     * @see \WCM\WPStarter\Setup\Config::validateBoolOrAskOrUrl()
+     * @see \WCM\WPStarter\Setup\Config::validateBoolOrAsk()
+     * @see \WCM\WPStarter\Setup\Config::validatePathArray()
+     * @see \WCM\WPStarter\Setup\Config::validateOverwrite()
+     * @see \WCM\WPStarter\Setup\Config::validateVerbosity()
      */
     private function validate($configs)
     {

@@ -144,8 +144,6 @@ class Env extends Dotenv
      * @param  string $name
      * @param  string $value
      * @return array
-     * @uses \WCM\WPStarter\Env::checkCollate()
-     * @uses \WCM\WPStarter\Env::checkMod()
      */
     private static function normalise($name, $value)
     {
