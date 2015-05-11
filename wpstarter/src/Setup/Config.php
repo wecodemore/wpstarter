@@ -55,7 +55,7 @@ class Config implements ArrayAccess
      */
     private function validate($configs)
     {
-        $valid = array('is-root' => $configs['is-root'], 'wp-version' => $configs['is-root']);
+        $valid = array('is-root' => $configs['is-root'], 'wp-version' => $configs['wp-version']);
         $map = array(
             'gitignore'             => array($this, 'validateGitignore'),
             'env-example'           => array($this, 'validateBoolOrAskOrUrl'),
