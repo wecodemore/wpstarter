@@ -59,7 +59,7 @@ class IndexStep implements FileStepInterface, BlockingStepInterface
      */
     public function targetPath(ArrayAccess $paths)
     {
-        return rtrim($paths['root'].'/'.$paths['site-dir'], '/').'/index.php';
+        return rtrim($paths['root'].'/'.$paths['wp-parent'], '/').'/index.php';
     }
 
     /**
@@ -67,7 +67,9 @@ class IndexStep implements FileStepInterface, BlockingStepInterface
      */
     public function run(ArrayAccess $paths)
     {
-        $this->vars = array('WP_INSTALL_PATH' => $paths['wp']);
+        $n = count(explode('/', str_replace('\\', '/', $paths['wp']))) - 1;
+        $rootPathRel = str_repeat('dirname(', $n).'__DIR__'.str_repeat(')', $n);
+        $this->vars = array('BOOTSTRAP_PATH' => $rootPathRel.".'/{$paths['wp']}/wp-blog-header.php'");
         $build = $this->builder->build($paths, 'index.example', $this->vars);
         if (! $this->builder->save($build, dirname($this->targetPath($paths)), 'index.php')) {
             $this->error = 'Error on create index.php.';

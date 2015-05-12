@@ -149,7 +149,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
             $lines = array(
                 '.gitignore was saved in your project folder,',
                 'feel free to edit it, but be sure to ignore',
-                 '.env and wp-config.php files.',
+                '.env and wp-config.php files.',
             );
         }
         $lines and $io->block($lines, 'yellow', false);
@@ -232,11 +232,15 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     private function create(ArrayAccess $paths)
     {
         $toDo = is_array($this->config) ? $this->config : self::$default;
-        $filePaths = array_unique(array_filter(array_merge(
-            array('.env', $paths['site-dir'].'/wp-config.php'),
-            $toDo['custom'],
-            $this->paths($toDo, $paths)
-        )));
+        $filePaths = array_unique(
+            array_filter(
+                array_merge(
+                    array('.env', $paths['wp-parent'].'/wp-config.php'),
+                    $toDo['custom'],
+                    $this->paths($toDo, $paths)
+                )
+            )
+        );
         $content = '### WP Starter'.PHP_EOL.implode(PHP_EOL, $filePaths).PHP_EOL;
         if ($toDo['common']) {
             $common = trim($this->builder->build($paths, '.gitignore.example'));
@@ -259,10 +263,14 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     private function paths(array $toDo, ArrayAccess $paths)
     {
         $parsedPaths = array();
-        $subDir = $paths['site-dir'] ? $paths['site-dir'].'/' : '';
-        foreach (array('wp', 'vendor', 'wp-content') as $key) {
+        $toCheck = array(
+            'wp',
+            'wp-content',
+            'vendor',
+        );
+        foreach ($toCheck as $key) {
             if ($toDo[$key]) {
-                $parsedPaths = $this->maybeAdd($subDir.$paths[$key], $parsedPaths);
+                $parsedPaths = $this->maybeAdd($paths[$key], $parsedPaths);
             }
         }
 
@@ -278,21 +286,24 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
      */
     private function maybeAdd($path, array $parsedPaths)
     {
-        $rel = trim(str_replace('\\', '/', $path), '/').'/';
+        $rel = trim(str_replace(array('\\', '//'), '/', $path), '/').'/';
         $targets = $parsedPaths;
+        $add = null;
         foreach ($targets as $key => $target) {
             if ($target === $rel || strpos($rel, $target) === 0) {
+                $add = false;
                 // given path is equal or contained in one of the already added paths
                 continue;
             }
             if (strpos($target, $rel) === 0) {
+                is_null($add) and $add = true;
                 // given path contains one of the already added paths
                 unset($parsedPaths[$key]);
                 $parsedPaths[] = $rel;
             }
         }
-        $parsedPaths[] = $rel;
+        ($add !== false) and $parsedPaths[] = $rel;
 
-        return array_unique($parsedPaths);
+        return array_values(array_unique($parsedPaths));
     }
 }

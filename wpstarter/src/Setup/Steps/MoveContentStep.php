@@ -65,7 +65,7 @@ class MoveContentStep implements OptionalStepInterface
         if ($config['move-content'] !== 'ask') {
             return true;
         }
-        $to = str_replace('\\', '/', $this->paths['site-dir'].'/'.$this->paths['wp-content']);
+        $to = str_replace('\\', '/', $this->paths['wp-content']);
         $full = str_replace('\\', '/', $this->paths['root']).'/'.ltrim($to, '/');
         $lines = array(
             'Do you want to move default plugins and themes from',
@@ -81,9 +81,8 @@ class MoveContentStep implements OptionalStepInterface
      */
     public function run(ArrayAccess $paths)
     {
-        $full = rtrim($paths['root'].'/'.$paths['site-dir'], '/');
-        $from = str_replace('\\', '/', $full.'/'.$paths['wp'].'/wp-content');
-        $to = str_replace('\\', '/', $full.'/'.$paths['wp-content']);
+        $from = str_replace('\\', '/', $paths['root'].'/'.$paths['wp'].'/wp-content');
+        $to = str_replace('\\', '/', $paths['root'].'/'.$paths['wp-content']);
         if ($from === $to) {
             return self::NONE;
         }

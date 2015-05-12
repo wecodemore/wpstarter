@@ -148,20 +148,20 @@ class Setup
     private function paths(Composer $composer, array $extra)
     {
         $cwd = getcwd();
-        $wpDir = $cwd.DIRECTORY_SEPARATOR.$extra['wordpress-install-dir'];
-        $subDir = dirname($wpDir) === $cwd ? '' : '/'.$this->subdir($cwd, dirname($wpDir));
-        $wpSubdir = isset($extra['wordpress-install-dir'])
-            ? $this->subdir($cwd.$subDir, $wpDir)
+        $wpInstallDir = isset($extra['wordpress-install-dir'])
+            ? $extra['wordpress-install-dir']
             : 'wordpress';
+        $wpFullDir = $cwd.DIRECTORY_SEPARATOR.$wpInstallDir;
+        $wpSubdir = $this->subdir($cwd, $wpFullDir);
         $wpContent = isset($extra['wordpress-content-dir'])
-            ? $this->subdir($cwd.$subDir, $cwd.DIRECTORY_SEPARATOR.$extra['wordpress-content-dir'])
+            ? $this->subdir($cwd, $cwd.DIRECTORY_SEPARATOR.$extra['wordpress-content-dir'])
             : 'wp-content';
 
         return new ArrayObject($this->normalisePaths(array(
             'root'       => $cwd,
-            'site-dir'   => trim($subDir, '/'),
-            'vendor'     => $this->subdir($cwd.$subDir, $composer->getConfig()->get('vendor-dir')),
+            'vendor'     => $this->subdir($cwd, $composer->getConfig()->get('vendor-dir')),
             'wp'         => $wpSubdir,
+            'wp-parent'  => $this->subdir($cwd, dirname($wpFullDir)),
             'wp-content' => $wpContent,
             'starter'    => $this->subdir($cwd, dirname(__DIR__)),
         )), ArrayObject::STD_PROP_LIST);

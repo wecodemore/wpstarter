@@ -77,7 +77,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
      */
     public function targetPath(ArrayAccess $paths)
     {
-        return rtrim($paths['root'].'/'.$paths['site-dir'], '/').'/wp-config.php';
+        return rtrim($paths['root'].'/'.$paths['wp-parent'], '/').'/wp-config.php';
     }
 
     /**
@@ -89,16 +89,22 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
         if ($register === 'ask') {
             $register = $this->ask();
         }
-        $siteDir = $paths['site-dir'] ? str_replace('\\', '/', $paths['site-dir']) : false;
-        $n = $siteDir ? substr_count(trim($siteDir, '/'), '/')+1 : 0;
-        $envRelPath = str_repeat('dirname(', $n).'__DIR__'.str_repeat(')', $n);
+        $n = count(explode('/', str_replace('\\', '/', $paths['wp']))) - 1;
+        $rootPathRel = str_repeat('dirname(', $n).'__DIR__'.str_repeat(')', $n);
+        $relUrl = function ($path) use ($paths) {
+            return $paths['wp-parent']
+                ? trim(substr($path, strlen($paths['wp-parent'])), '\\/')
+                : trim($path, '\\/');
+        };
         $vars = array_merge(
             array(
-                'VENDOR_PATH'        => $paths['vendor'],
-                'WP_INSTALL_PATH'    => $paths['wp'],
-                'WP_CONTENT_PATH'    => $paths['wp-content'],
+                'VENDOR_PATH'        => $rootPathRel.".'/{$paths['vendor']}'",
+                'ENV_REL_PATH'       => $rootPathRel,
+                'WP_INSTALL_PATH'    => $rootPathRel.".'/{$paths['wp']}'",
+                'WP_CONTENT_PATH'    => $rootPathRel.".'/{$paths['wp-content']}'",
+                'WP_SITEURL'         => $relUrl($paths['wp']),
+                'WP_CONTENT_URL'     => $relUrl($paths['wp-content']),
                 'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
-                'ENV_REL_PATH'       => $envRelPath,
             ),
             $this->salter->keys()
         );

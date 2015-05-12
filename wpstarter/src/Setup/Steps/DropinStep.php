@@ -125,9 +125,7 @@ class DropinStep implements FileStepInterface
      */
     public function targetPath(ArrayAccess $paths)
     {
-        $full = $paths['root'].'/'.$paths['site-dir'];
-
-        return rtrim($full, '/').'/'.$paths['wp-content'].'/'.$this->name;
+        return $paths['root'].'/'.$paths['wp-content'].'/'.$this->name;
     }
 
     /**

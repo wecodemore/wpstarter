@@ -12,7 +12,7 @@
 /**
  * Composer autoload.
  */
-require_once realpath(__DIR__.'/{{{VENDOR_PATH}}}/autoload.php');
+require_once realpath({{{VENDOR_PATH}}}.'/autoload.php');
 
 /**
  * Configuration constants.
@@ -114,10 +114,10 @@ if (! defined('WP_HOME')) {
             : 'http://'
         ).$server['SERVER_NAME']);
 }
-defined('ABSPATH')        or define('ABSPATH',        realpath(__DIR__.'/{{{WP_INSTALL_PATH}}}'));
-defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath(__DIR__.'/{{{WP_CONTENT_PATH}}}'));
-defined('WP_SITEURL')     or define('WP_SITEURL',     rtrim(WP_HOME, '/').'/{{{WP_INSTALL_PATH}}}');
-defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_PATH}}}');
+defined('ABSPATH')        or define('ABSPATH',        realpath({{{WP_INSTALL_PATH}}}));
+defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath({{{WP_CONTENT_PATH}}}));
+defined('WP_SITEURL')     or define('WP_SITEURL',     rtrim(WP_HOME, '/').'/{{{WP_SITEURL}}}');
+defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_URL}}}');
 
 /**
  * Clean up.

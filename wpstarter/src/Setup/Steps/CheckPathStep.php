@@ -60,22 +60,31 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     public function run(ArrayAccess $paths)
     {
         $this->paths = $paths;
-        $fullPath = rtrim($paths['root'].'/'.$paths['site-dir'], '/').'/';
         $toCheck = array(
-            realpath($fullPath.$paths['vendor']),
-            realpath($fullPath.$paths['wp']),
             realpath($paths['root'].'/'.$paths['starter']),
-            realpath($fullPath.$paths['wp'].'/wp-settings.php'),
+            realpath($paths['root'].'/'.$paths['vendor'].'/autoload.php'),
+            realpath($paths['root'].'/'.$paths['wp'].'/wp-settings.php'),
         );
         if (array_filter($toCheck) !== $toCheck) {
-            $this->error = 'WP Starter was not able to find a valid folder settings.';
+            $this->error = 'WP Starter was not able to find valid folder settings.';
+
+            return self::ERROR;
+        }
+        if (
+            $paths['wp-content']
+            && $paths['wp-parent']
+            && strpos(trim($paths['wp-content'], '\\/'), trim($paths['wp-parent'], '\\/')) !== 0
+        ) {
+            $this->error =
+                'Content folder must share parent folder with WP folder, or be contained in it.'
+                .' Use the "wordpress-content-dir" setting to properly set it';
 
             return self::ERROR;
         }
         // no love for this, but https://core.trac.wordpress.org/ticket/31620 makes it necessary
         if ($paths['wp-content'] && $this->config['move-content'] !== true) {
             try {
-                $dir = $fullPath.$paths['wp-content'].'/themes';
+                $dir = $paths['root'].'/'.$paths['wp-content'].'/themes';
                 $this->themeDir = is_dir($dir) || mkdir($dir, 0755, true);
             } catch (Exception $e) {
                 $this->themeDir = false;
