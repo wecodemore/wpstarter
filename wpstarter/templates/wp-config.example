@@ -99,6 +99,17 @@ switch ($environment) {
 }
 
 /**
+ * Fix HTTPS behind load balancers.
+ *
+ * @link https://core.trac.wordpress.org/ticket/31288
+ * @link https://github.com/wecodemore/wpstarter/issues/7
+ */
+if ( isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
+	&& 'https' === strtolower( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ) {
+	$_SERVER[ 'HTTPS' ] = 'on';
+}
+
+/**
  * Set WordPress paths and urls if not set via .env file.
  */
 if (! defined('WP_HOME')) {
