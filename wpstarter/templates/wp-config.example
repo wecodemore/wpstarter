@@ -28,10 +28,6 @@ require_once realpath({{{VENDOR_PATH}}}.'/autoload.php');
 $env = WCM\WPStarter\Helpers::settings({{{ENV_REL_PATH}}});
 array_walk($env, function ($value, $name) {
     switch ($name) {
-        case 'WORDPRESS_ENV':
-            // NOT one more global variable for WP: it will be unset before this file ends
-            $GLOBALS['environment'] = $value;
-            break;
         case 'DB_TABLE_PREFIX':
             $GLOBALS['table_prefix'] = preg_replace('#[^\w]#', '', $value);
             break;
@@ -61,7 +57,7 @@ if (! isset($table_prefix) || empty($table_prefix)) {
  * Set unique authentication keys if not already set via .env file.
  * If available, environment name is mixed to keys so they become unique per environment.
  */
-global $environment;
+$environment = getenv('WORDPRESS_ENV');
 $pre = $environment  ? substr($environment, 0, 5)  : substr('{{{AUTH_KEY}}}', 0, 5);
 $post = $environment ? substr($environment, -5, 5) : substr('{{{SECURE_AUTH_KEY}}}', 0, 5);
 defined('AUTH_KEY')         or define('AUTH_KEY',         $pre.'{{{AUTH_KEY}}}'.$post);
@@ -74,7 +70,7 @@ defined('LOGGED_IN_SALT')   or define('LOGGED_IN_SALT',   $pre.'{{{LOGGED_IN_SAL
 defined('NONCE_SALT')       or define('NONCE_SALT',       $pre.'{{{NONCE_SALT}}}'.$post);
 
 /**
- * Environment aware settings. Be creative, but avoid to set sensitive settings here.
+ * Environment-aware settings. Be creative, but avoid to set sensitive settings here.
  */
 switch ($environment) {
 
@@ -82,12 +78,15 @@ switch ($environment) {
         defined('WP_DEBUG')         or define('WP_DEBUG',         true);
         defined('WP_DEBUG_DISPLAY') or define('WP_DEBUG_DISPLAY', true);
         defined('WP_DEBUG_LOG')     or define('WP_DEBUG_LOG',     false);
+        defined('SAVEQUERIES')      or define('SAVEQUERIES',      true);
+        defined('SCRIPT_DEBUG')     or define('SCRIPT_DEBUG',     true);
         break;
 
     case 'staging':
         defined('WP_DEBUG')         or define('WP_DEBUG',         true);
         defined('WP_DEBUG_DISPLAY') or define('WP_DEBUG_DISPLAY', false);
         defined('WP_DEBUG_LOG')     or define('WP_DEBUG_LOG',     true);
+        defined('SCRIPT_DEBUG')     or define('SCRIPT_DEBUG',     true);
         break;
 
     case 'production':
@@ -95,6 +94,7 @@ switch ($environment) {
         defined('WP_DEBUG')         or define('WP_DEBUG',         false);
         defined('WP_DEBUG_DISPLAY') or define('WP_DEBUG_DISPLAY', false);
         defined('WP_DEBUG_LOG')     or define('WP_DEBUG_LOG',     false);
+        defined('SCRIPT_DEBUG')     or define('SCRIPT_DEBUG',     false);
         break;
 }
 
@@ -104,8 +104,10 @@ switch ($environment) {
  * @link https://core.trac.wordpress.org/ticket/31288
  * @link https://github.com/wecodemore/wpstarter/issues/7
  */
-if ( isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
-	&& 'https' === strtolower( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) ) {
+if (
+    isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
+	&& 'https' === strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'])
+) {
 	$_SERVER[ 'HTTPS' ] = 'on';
 }
 
@@ -118,12 +120,10 @@ if (! defined('WP_HOME')) {
         'SERVER_PORT' => FILTER_SANITIZE_NUMBER_INT,
         'SERVER_NAME' => FILTER_SANITIZE_URL,
     ));
-    define('WP_HOME', (
-        (! empty($server['HTTPS']) && in_array((string) $server['HTTPS'], array('on', '1'), true))
-        || (int) $server['SERVER_PORT'] === 443
-            ? 'https://'
-            : 'http://'
-        ).$server['SERVER_NAME']);
+    $secure = in_array((string) $server['HTTPS'], array('on', '1'), true);
+    $scheme = $secure ? 'https://' : 'http://';
+    $name   = $server['SERVER_NAME'] ? : 'localhost';
+    define('WP_HOME', $scheme.$name);
 }
 defined('ABSPATH')        or define('ABSPATH',        realpath({{{WP_INSTALL_PATH}}}));
 defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath({{{WP_CONTENT_PATH}}}));
@@ -133,7 +133,7 @@ defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{W
 /**
  * Clean up.
  */
-unset($env, $environment, $pre, $post, $server);
+unset($env, $environment, $pre, $post, $server, $secure, $scheme, $name);
 
 /**
  * Allows to load MU plugins in subfolders.
@@ -155,4 +155,4 @@ WCM\WPStarter\Helpers::addHook('plugins_loaded', function () {
 /**
  * Sets up WordPress vars and included files.
  */
-require_once ABSPATH.'/wp-settings.php';
+require_once ABSPATH.DIRECTORY_SEPARATOR.'wp-settings.php';
