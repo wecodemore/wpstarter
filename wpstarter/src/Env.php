@@ -68,7 +68,6 @@ class Env extends Dotenv
         'WP_DEBUG',
         'WP_DEBUG_DISPLAY',
         'WP_DEBUG_LOG',
-        'WP_POST_REVISIONS',
         'WPMU_ACCEL_REDIRECT',
         'WPMU_SENDFILE',
     );
@@ -88,6 +87,68 @@ class Env extends Dotenv
         'WP_PROXY_PORT',
     );
 
+    private static $isString = array(
+        "ADMIN_COOKIE_PATH",
+        "AUTH_COOKIE",
+        "BLOGUPLOADDIR",
+        "COOKIEHASH",
+        "COOKIEPATH",
+        "COOKIE_DOMAIN",
+        "CUSTOM_USER_META_TABLE",
+        "CUSTOM_USER_TABLE",
+        "DB_CHARSET",
+        "DB_COLLATE",
+        "DB_HOST",
+        "DB_NAME",
+        "DB_PASSWORD",
+        "DB_TABLE_PREFIX",
+        "DB_USER",
+        "DOMAIN_CURRENT_SITE",
+        "ERRORLOGFILE",
+        "FS_METHOD",
+        "FTP_BASE",
+        "FTP_CONTENT_DIR",
+        "FTP_HOST",
+        "FTP_PASS",
+        "FTP_PLUGIN_DIR",
+        "FTP_PRIKEY",
+        "FTP_PUBKEY",
+        "FTP_SSH",
+        "FTP_SSL",
+        "FTP_USER",
+        "LOGGED_IN_COOKIE",
+        "MU_BASE",
+        "NOBLOGREDIRECT",
+        "PASS_COOKIE",
+        "PATH_CURRENT_SITE",
+        "PLUGINS_COOKIE_PATH",
+        "SECURE_AUTH_COOKIE",
+        "SITECOOKIEPATH",
+        "TEST_COOKIE",
+        "UPLOADBLOGSDIR",
+        "UPLOADS",
+        "USER_COOKIE",
+        "WPLANG",
+        "WPMU_PLUGIN_DIR",
+        "WPMU_PLUGIN_URL",
+        "WP_ACCESSIBLE_HOSTS",
+        "WP_ACCESSIBLE_HOSTS",
+        "WP_CONTENT_DIR",
+        "WP_CONTENT_URL",
+        "WP_DEFAULT_THEME",
+        "WP_LANG_DIR",
+        "WP_MAX_MEMORY_LIMIT",
+        "WP_MEMORY_LIMIT",
+        "WP_PLUGIN_DIR",
+        "WP_PLUGIN_URL",
+        "WP_PROXY_BYPASS_HOSTS",
+        "WP_PROXY_HOST",
+        "WP_PROXY_PASSWORD",
+        "WP_PROXY_USERNAME",
+        "WP_SITEURL",
+        "WP_TEMP_DIR",
+    );
+
     /**
      * @var array
      */
@@ -99,11 +160,25 @@ class Env extends Dotenv
     private static $isMod = array('FS_CHMOD_DIR', 'FS_CHMOD_FILE');
 
     /**
+     * @var array
+     */
+    private static $all;
+
+    /**
      * @inheritdoc
      */
     public static function load($path)
     {
         if (! self::$loaded) {
+            if (is_null(self::$all)) {
+                self::$all = array_merge(
+                    self::$isBool,
+                    self::$isBoolOrInt,
+                    self::$isInt,
+                    self::$isMod,
+                    self::$isString
+                );
+            }
             parent::load($path);
             self::$loaded = true;
         }
@@ -120,10 +195,11 @@ class Env extends Dotenv
     public static function setEnvironmentVariable($name, $value = null)
     {
         list($normName, $normValue) = self::normalise($name, $value);
+
         if (! is_null($normName) && ! is_null($normValue) && ! isset(self::$set[$normName])) {
             putenv("{$normName}={$normValue}");
             $_ENV[$normName] = $normValue;
-            self::$set[$normName] = $normValue;
+            in_array($normName, self::$all, true) and self::$set[$normName] = $normValue;
         }
     }
 
@@ -148,21 +224,33 @@ class Env extends Dotenv
     private static function normalise($name, $value)
     {
         list($normName, $normValue) = parent::normaliseEnvironmentVariable($name, $value);
+
         if (empty($normName) || is_null($normValue)) {
             return array(null, null);
         }
-        if (in_array($normName, self::$isInt, true)) {
-            $normValue = (int) filter_var($normValue, FILTER_VALIDATE_INT);
-        } elseif (in_array($normName, self::$isBool, true)) {
-            $normValue = (bool) filter_var($normValue, FILTER_VALIDATE_BOOLEAN);
-        } elseif (in_array($normName, self::$isBoolOrInt, true)) {
-            $filter = is_numeric($normValue) ? FILTER_VALIDATE_INT : FILTER_VALIDATE_BOOLEAN;
-            $normValue = filter_var($normValue, $filter);
-        } elseif (in_array($normName, self::$isMod, true)) {
-            $normValue = self::checkMod($normValue);
+
+        switch (true) {
+            case in_array($normName, self::$isInt, true):
+                $filtered = filter_var($normValue, FILTER_VALIDATE_INT);
+                $normValue = $filtered === false ? null : (int) $filtered;
+                break;
+            case in_array($normName, self::$isBool, true):
+                $normValue = (bool) filter_var($normValue, FILTER_VALIDATE_BOOLEAN);
+                break;
+            case in_array($normName, self::$isBoolOrInt, true) :
+                if (is_numeric($normValue)) {
+                    $filtered = filter_var($normValue, FILTER_VALIDATE_INT);
+                    $normValue = $filtered === false ? null : (int) $filtered;
+                    break;
+                }
+                $normValue = (bool) filter_var($normValue, FILTER_VALIDATE_BOOLEAN);
+                break;
+            case in_array($normName, self::$isMod, true) :
+                $normValue = self::checkMod($normValue);
+                break;
         }
 
-        return ! empty($normValue) ? array($normName, $normValue) : array($normName, null);
+        return array($normName, $normValue);
     }
 
     /**
