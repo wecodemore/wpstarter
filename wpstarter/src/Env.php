@@ -149,6 +149,7 @@ class Env extends Dotenv
         "WP_PROXY_USERNAME",
         "WP_SITEURL",
         "WP_TEMP_DIR",
+        "WP_HOME"
     );
 
     /**
