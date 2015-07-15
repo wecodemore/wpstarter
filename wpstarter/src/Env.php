@@ -133,7 +133,6 @@ class Env extends Dotenv
         "WPMU_PLUGIN_DIR",
         "WPMU_PLUGIN_URL",
         "WP_ACCESSIBLE_HOSTS",
-        "WP_ACCESSIBLE_HOSTS",
         "WP_CONTENT_DIR",
         "WP_CONTENT_URL",
         "WP_DEFAULT_THEME",
