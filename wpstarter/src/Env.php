@@ -88,6 +88,7 @@ class Env extends Dotenv
     );
 
     private static $isString = array(
+        "ABSPATH",
         "ADMIN_COOKIE_PATH",
         "AUTH_COOKIE",
         "BLOGUPLOADDIR",
@@ -136,6 +137,7 @@ class Env extends Dotenv
         "WP_CONTENT_DIR",
         "WP_CONTENT_URL",
         "WP_DEFAULT_THEME",
+        "WP_HOME",
         "WP_LANG_DIR",
         "WP_MAX_MEMORY_LIMIT",
         "WP_MEMORY_LIMIT",
