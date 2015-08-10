@@ -168,7 +168,7 @@ class Env extends Dotenv
     /**
      * @inheritdoc
      */
-    public static function load($path)
+    public static function load($path, $path = null)
     {
         if (! self::$loaded) {
             if (is_null(self::$all)) {
@@ -180,7 +180,7 @@ class Env extends Dotenv
                     self::$isString
                 );
             }
-            parent::load($path);
+            parent::load($path, $path);
             self::$loaded = true;
         }
     }
