@@ -19,21 +19,32 @@ namespace WCM\WPStarter;
  */
 class Helpers
 {
-    private static $env_loaded = false;
 
     /**
      * Load all the environment variables using Dotenv class and return them.
      *
-     * @param $dir
+     * @param string $dir
+     * @param string $file
      * @return array
      */
-    public static function settings($dir)
+    public static function settings($dir, $file = '')
     {
-        Env::load($dir);
-        Env::required(array('DB_NAME', 'DB_USER', 'DB_PASSWORD'));
-        self::$env_loaded = true;
+        $env = Env\Env::load($dir, $file);
 
-        return Env::all();
+        $settings = $env->allVars();
+
+        $required = array(
+            'DB_NAME',
+            'DB_USER',
+            'DB_PASSWORD'
+        );
+        $set = array_map('getenv', $required);
+        if (count($set) !== count($required)) {
+            $names = implode(', ', $required);
+            throw new \RuntimeException($names.' environment variables are required.');
+        }
+
+        return $settings;
     }
 
     /**
@@ -46,17 +57,17 @@ class Helpers
      */
     public static function addHook($hook, $callable, $priority = 10, $argsNum = 1)
     {
-        if (! is_callable($callable) || function_exists('add_action')) {
+        if ( ! is_callable($callable) || function_exists('add_action')) {
             return;
         }
         global $wp_filter;
-        if (! is_array($wp_filter)) {
+        if ( ! is_array($wp_filter)) {
             $wp_filter = array();
         }
-        if (! isset($wp_filter[$hook])) {
+        if ( ! isset($wp_filter[$hook])) {
             $wp_filter[$hook] = array();
         }
-        if (! isset($wp_filter[$hook][$priority])) {
+        if ( ! isset($wp_filter[$hook][$priority])) {
             $wp_filter[$hook][$priority] = array();
         }
         /** @var \Closure|object $function */
