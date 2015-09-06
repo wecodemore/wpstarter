@@ -19,7 +19,6 @@ use Dotenv\Loader as DotenvLoader;
  */
 final class Loader extends DotenvLoader
 {
-
     private $allVars = array();
 
     /**
@@ -49,5 +48,4 @@ final class Loader extends DotenvLoader
     {
         return $this->allVars;
     }
-
 }

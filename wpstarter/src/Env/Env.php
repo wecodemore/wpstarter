@@ -10,7 +10,6 @@
 
 namespace WCM\WPStarter\Env;
 
-
 /**
  * Extends Dotenv to load and store all environment variables.
  *
@@ -20,7 +19,6 @@ namespace WCM\WPStarter\Env;
  */
 final class Env
 {
-
     /**
      * @var array
      */
@@ -171,17 +169,16 @@ final class Env
     private $vars;
 
     /**
-     * @param string $path
-     * @param string $file
+     * @param  string                        $path
+     * @param  string                        $file
      * @return \WCM\WPStarter\Env\Env|static
      */
     public static function load($path, $file = '.env')
     {
         if (is_null(self::$loaded)) {
-
             self::wpConstants();
 
-            if ( ! is_string($file)) {
+            if (! is_string($file)) {
                 $file = '.env';
             }
 
@@ -239,24 +236,23 @@ final class Env
         $values = array();
         $constants = self::wpConstants();
         foreach ($vars as $var) {
-
             $value = getenv($var);
             $values[$var] = $value;
 
             if (in_array($var, $constants, true)) {
                 switch (true) {
                     case in_array($var, self::$isInt, true):
-                        $values[$var] = (int)$value;
+                        $values[$var] = (int) $value;
                         break;
                     case in_array($var, self::$isBool, true):
-                        $values[$var] = (bool)filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                        $values[$var] = (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
                         break;
                     case in_array($var, self::$isBoolOrInt, true) :
                         if (is_numeric($value)) {
-                            $values[$var] = (int)$value;
+                            $values[$var] = (int) $value;
                             break;
                         }
-                        $values[$var] = (bool)filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                        $values[$var] = (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
                         break;
                     case in_array($var, self::$isMod, true) :
                         $check = $this->checkMod($value);
@@ -272,7 +268,7 @@ final class Env
     /**
      * Checks that a value is a valid string representation of octal int file permission code.
      *
-     * @param  string $mod
+     * @param  string   $mod
      * @return int|null
      */
     private function checkMod($mod)
@@ -285,5 +281,4 @@ final class Env
             ? octdec($mod)
             : null;
     }
-
 }
