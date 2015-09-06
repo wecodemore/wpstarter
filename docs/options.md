@@ -152,6 +152,11 @@ Default value is `true`.
 It worth noting that if a `.env` file exists in project folder WP Starter just skip the creation of `.env.example`, no matter which value the option has.
 
 
+## "`env-file`"
+
+The default environment file name is `.env`, using this option can be changed to something else. Note that you can specify here only the file name, and not the path.
+
+
 ## "`gitignore`"
 
 This option controls if and how WP Starter has to create a `.gitignore` file for the project.

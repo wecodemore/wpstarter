@@ -25,7 +25,7 @@ require_once realpath({{{VENDOR_PATH}}}.'/autoload.php');
  *
  * @var array $env All the variables stored in .env file
  */
-$env = WCM\WPStarter\Helpers::settings({{{ENV_REL_PATH}}}, '.env');
+$env = WCM\WPStarter\Helpers::settings({{{ENV_REL_PATH}}}, '{{{ENV_FILE_NAME}}}');
 array_walk($env, function ($value, $name) {
     switch ($name) {
         case 'DB_TABLE_PREFIX':
