@@ -33,11 +33,12 @@ class Helpers
         $settings = $env->allVars();
 
         $required = array(
-            'DB_NAME',
-            'DB_USER',
-            'DB_PASSWORD',
+            'DB_NAME'     => '',
+            'DB_USER'     => '',
+            'DB_PASSWORD' => '',
         );
-        $set = array_map('getenv', $required);
+        
+        $set = array_filter(array_intersect_key($required, $settings));
         if (count($set) !== count($required)) {
             $names = implode(', ', $required);
             throw new \RuntimeException($names.' environment variables are required.');
