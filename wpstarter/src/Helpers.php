@@ -38,10 +38,11 @@ class Helpers
             'DB_PASSWORD' => '',
         );
 
-        $set = array_filter(array_intersect_key($required, $settings));
-        if (count($set) !== count($required)) {
-            $names = implode(', ', $required);
-            throw new \RuntimeException($names.' environment variables are required.');
+        foreach ($required as $key) {
+            if (! isset($settings[$key]) || empty($settings[$key])) {
+                $names = implode(', ', $required);
+                throw new \RuntimeException($names.' environment variables are required.');
+            }
         }
 
         return $settings;
