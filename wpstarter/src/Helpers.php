@@ -26,7 +26,7 @@ class Helpers
      * @param  string $file
      * @return array
      */
-    public static function settings($dir, $file = '')
+    public static function settings($dir, $file = '.env')
     {
         $env = Env\Env::load($dir, $file);
 
@@ -37,7 +37,7 @@ class Helpers
             'DB_USER'     => '',
             'DB_PASSWORD' => '',
         );
-        
+
         $set = array_filter(array_intersect_key($required, $settings));
         if (count($set) !== count($required)) {
             $names = implode(', ', $required);
