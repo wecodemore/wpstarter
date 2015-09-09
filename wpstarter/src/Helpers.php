@@ -33,9 +33,9 @@ class Helpers
         $settings = $env->allVars();
 
         $required = array(
-            'DB_NAME'     => '',
-            'DB_USER'     => '',
-            'DB_PASSWORD' => '',
+            'DB_NAME',
+            'DB_USER',
+            'DB_PASSWORD',
         );
 
         foreach ($required as $key) {
