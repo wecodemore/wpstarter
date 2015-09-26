@@ -43,6 +43,11 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     private $config;
 
     /**
+     * @var string
+     */
+    private $env;
+
+    /**
      * @var \WCM\WPStarter\Setup\IO
      */
     private $io;
@@ -78,6 +83,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     public function allowed(Config $config, ArrayAccess $paths)
     {
         $this->config = $config['gitignore'];
+        $this->env = $config['env-file'];
         $this->found = is_file($this->targetPath($paths));
 
         return $this->config !== false;
@@ -235,7 +241,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
         $filePaths = array_unique(
             array_filter(
                 array_merge(
-                    array('.env', $paths['wp-parent'].'/wp-config.php'),
+                    array($this->env, $paths['wp-parent'].'/wp-config.php'),
                     $toDo['custom'],
                     $this->paths($toDo, $paths)
                 )
