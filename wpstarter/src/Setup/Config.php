@@ -23,6 +23,7 @@ class Config implements ArrayAccess
     private static $defaults = array(
         'gitignore'             => true,
         'env-example'           => true,
+        'env-file'              => '.env',
         'move-content'          => false,
         'register-theme-folder' => true,
         'prevent-overwrite'     => array('.gitignore'),
@@ -52,6 +53,7 @@ class Config implements ArrayAccess
      * @see \WCM\WPStarter\Setup\Config::validatePathArray()
      * @see \WCM\WPStarter\Setup\Config::validateOverwrite()
      * @see \WCM\WPStarter\Setup\Config::validateVerbosity()
+     * @see \WCM\WPStarter\Setup\Config::validateFilename()
      */
     private function validate($configs)
     {
@@ -59,6 +61,7 @@ class Config implements ArrayAccess
         $map = array(
             'gitignore'             => array($this, 'validateGitignore'),
             'env-example'           => array($this, 'validateBoolOrAskOrUrl'),
+            'env-file'              => array($this, 'validateFilename'),
             'register-theme-folder' => array($this, 'validateBoolOrAsk'),
             'move-content'          => array($this, 'validateBoolOrAsk'),
             'dropins'               => array($this, 'validatePathArray'),
@@ -189,6 +192,17 @@ class Config implements ArrayAccess
     private function validateUrl($value)
     {
         return filter_var($value, FILTER_SANITIZE_URL) ?: null;
+    }
+
+    /**
+     * @param $value
+     * @return string|null
+     */
+    private function validateFilename($value)
+    {
+        $filtered = filter_var($value, FILTER_SANITIZE_URL) ?: null;
+
+        return $filtered ? basename($filtered) : null;
     }
 
     /**

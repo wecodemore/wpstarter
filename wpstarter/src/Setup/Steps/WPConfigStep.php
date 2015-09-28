@@ -87,7 +87,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
     {
         $register = $this->config['register-theme-folder'];
         if ($register === 'ask') {
-            $register = $this->ask();
+            $register = $this->askForRegister();
         }
         $n = count(explode('/', str_replace('\\', '/', $paths['wp']))) - 1;
         $rootPathRel = str_repeat('dirname(', $n).'__DIR__'.str_repeat(')', $n);
@@ -105,6 +105,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
                 'WP_SITEURL'         => $relUrl($paths['wp']),
                 'WP_CONTENT_URL'     => $relUrl($paths['wp-content']),
                 'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
+                'ENV_FILE_NAME'      => $this->config['env-file'],
             ),
             $this->salter->keys()
         );
@@ -137,7 +138,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
     /**
      * @return bool
      */
-    private function ask()
+    private function askForRegister()
     {
         $lines = array(
             'Do you want to register WordPress package wp-content folder',

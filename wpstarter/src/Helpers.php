@@ -19,21 +19,33 @@ namespace WCM\WPStarter;
  */
 class Helpers
 {
-    private static $env_loaded = false;
-
     /**
      * Load all the environment variables using Dotenv class and return them.
      *
-     * @param $dir
+     * @param  string $dir
+     * @param  string $file
      * @return array
      */
-    public static function settings($dir)
+    public static function settings($dir, $file = '.env')
     {
-        Env::load($dir);
-        Env::required(array('DB_NAME', 'DB_USER', 'DB_PASSWORD'));
-        self::$env_loaded = true;
+        $env = Env\Env::load($dir, $file);
 
-        return Env::all();
+        $settings = $env->allVars();
+
+        $required = array(
+            'DB_NAME',
+            'DB_USER',
+            'DB_PASSWORD',
+        );
+
+        foreach ($required as $key) {
+            if (! isset($settings[$key]) || empty($settings[$key])) {
+                $names = implode(', ', $required);
+                throw new \RuntimeException($names.' environment variables are required.');
+            }
+        }
+
+        return $settings;
     }
 
     /**

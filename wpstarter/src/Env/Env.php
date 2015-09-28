@@ -8,9 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace WCM\WPStarter;
-
-use Dotenv;
+namespace WCM\WPStarter\Env;
 
 /**
  * Extends Dotenv to load and store all environment variables.
@@ -19,7 +17,7 @@ use Dotenv;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WP Starter
  */
-class Env extends Dotenv
+final class Env
 {
     /**
      * @var array
@@ -27,9 +25,9 @@ class Env extends Dotenv
     private static $set = array();
 
     /**
-     * @var bool
+     * @var static
      */
-    private static $loaded = false;
+    private static $loaded;
 
     /**
      * @var array
@@ -166,42 +164,57 @@ class Env extends Dotenv
     private static $all;
 
     /**
-     * @inheritdoc
+     * @var array
      */
-    public static function load($path, $path = null)
+    private $vars;
+
+    /**
+     * @param  string                        $path
+     * @param  string                        $file
+     * @return \WCM\WPStarter\Env\Env|static
+     */
+    public static function load($path, $file = '.env')
     {
-        if (! self::$loaded) {
-            if (is_null(self::$all)) {
-                self::$all = array_merge(
-                    self::$isBool,
-                    self::$isBoolOrInt,
-                    self::$isInt,
-                    self::$isMod,
-                    self::$isString
-                );
+        if (is_null(self::$loaded)) {
+            self::wpConstants();
+
+            if (! is_string($file)) {
+                $file = '.env';
             }
-            parent::load($path, $path);
-            self::$loaded = true;
+
+            $filePath = rtrim($path, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$file;
+            $loader = new Loader($filePath, true);
+            $loader->load();
+            self::$loaded = new static($loader->allVarNames());
         }
+
+        return self::$loaded;
     }
 
     /**
-     * Set a variable using putenv() and $_ENV.
-     *
-     * The environment variable value is stripped of single and double quotes.
-     *
-     * @param string      $name
-     * @param string|null $value
+     * @return array
      */
-    public static function setEnvironmentVariable($name, $value = null)
+    public static function wpConstants()
     {
-        list($normName, $normValue) = self::normalise($name, $value);
-
-        if (! is_null($normName) && ! is_null($normValue) && ! isset(self::$set[$normName])) {
-            putenv("{$normName}={$normValue}");
-            $_ENV[$normName] = $normValue;
-            in_array($normName, self::$all, true) and self::$set[$normName] = $normValue;
+        if (is_null(self::$all)) {
+            self::$all = array_merge(
+                self::$isBool,
+                self::$isBoolOrInt,
+                self::$isInt,
+                self::$isMod,
+                self::$isString
+            );
         }
+
+        return self::$all;
+    }
+
+    /**
+     * @param array $vars
+     */
+    public function __construct(array $vars)
+    {
+        $this->vars = $this->process($vars);
     }
 
     /**
@@ -209,49 +222,47 @@ class Env extends Dotenv
      *
      * @return array
      */
-    public static function all()
+    public function allVars()
     {
-        return self::$set;
+        return $this->vars;
     }
 
     /**
-     * Check constants values and return a 2 items array name/value.
-     * Invalid values are returned as null.
-     *
-     * @param  string $name
-     * @param  string $value
+     * @param  array array
      * @return array
      */
-    private static function normalise($name, $value)
+    private function process(array $vars)
     {
-        list($normName, $normValue) = parent::normaliseEnvironmentVariable($name, $value);
+        $values = array();
+        $constants = self::wpConstants();
+        foreach ($vars as $var) {
+            $value = getenv($var);
+            $values[$var] = $value;
 
-        if (empty($normName) || is_null($normValue)) {
-            return array(null, null);
-        }
-
-        switch (true) {
-            case in_array($normName, self::$isInt, true):
-                $filtered = filter_var($normValue, FILTER_VALIDATE_INT);
-                $normValue = $filtered === false ? null : (int) $filtered;
-                break;
-            case in_array($normName, self::$isBool, true):
-                $normValue = (bool) filter_var($normValue, FILTER_VALIDATE_BOOLEAN);
-                break;
-            case in_array($normName, self::$isBoolOrInt, true) :
-                if (is_numeric($normValue)) {
-                    $filtered = filter_var($normValue, FILTER_VALIDATE_INT);
-                    $normValue = $filtered === false ? null : (int) $filtered;
-                    break;
+            if (in_array($var, $constants, true)) {
+                switch (true) {
+                    case in_array($var, self::$isInt, true):
+                        $values[$var] = (int) $value;
+                        break;
+                    case in_array($var, self::$isBool, true):
+                        $values[$var] = (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                        break;
+                    case in_array($var, self::$isBoolOrInt, true) :
+                        if (is_numeric($value)) {
+                            $values[$var] = (int) $value;
+                            break;
+                        }
+                        $values[$var] = (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                        break;
+                    case in_array($var, self::$isMod, true) :
+                        $check = $this->checkMod($value);
+                        is_null($check) or $values[$var] = $check;
+                        break;
                 }
-                $normValue = (bool) filter_var($normValue, FILTER_VALIDATE_BOOLEAN);
-                break;
-            case in_array($normName, self::$isMod, true) :
-                $normValue = self::checkMod($normValue);
-                break;
+            }
         }
 
-        return array($normName, $normValue);
+        return $values;
     }
 
     /**
@@ -260,7 +271,7 @@ class Env extends Dotenv
      * @param  string   $mod
      * @return int|null
      */
-    private static function checkMod($mod)
+    private function checkMod($mod)
     {
         if ($mod[0] === '0') {
             $mod = substr($mod, 1);

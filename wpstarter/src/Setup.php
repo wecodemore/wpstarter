@@ -212,6 +212,8 @@ class Setup
      */
     private function subdir($root, $path)
     {
-        return trim(preg_replace('|^'.preg_quote(realpath($root)).'|', '', realpath($path)), '\\/');
+        $paths = $this->normalisePaths(array($root, $path));
+
+        return trim(preg_replace('|^'.preg_quote($paths[0]).'|', '', $paths[1]), '\\/');
     }
 }
