@@ -153,4 +153,4 @@ WCM\WPStarter\Helpers::addHook('plugins_loaded', function () {
 /**
  * Sets up WordPress vars and included files.
  */
-require_once ABSPATH.DIRECTORY_SEPARATOR.'wp-settings.php';
+require_once ABSPATH.'/wp-settings.php';

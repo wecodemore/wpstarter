@@ -68,7 +68,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     {
         $this->config = $config;
         $this->paths = $paths;
-        $env = $paths['root'].DIRECTORY_SEPARATOR.'.env';
+        $env = $paths['root'].'/.env';
 
         return $config['env-example'] !== false && ! is_file($env);
     }
@@ -78,7 +78,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
      */
     public function targetPath(ArrayAccess $paths)
     {
-        return $paths['root'].DIRECTORY_SEPARATOR.'.env.example';
+        return $paths['root'].'/.env.example';
     }
 
     /**
@@ -125,7 +125,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
      */
     public function postProcess(IO $io)
     {
-        if (! is_file($this->paths['root'].DIRECTORY_SEPARATOR.'.env')) {
+        if (! is_file($this->paths['root'].'/.env')) {
             $lines = array(
                 'Remember you need a .env file with DB settings',
                 'to make your site fully functional.',
@@ -175,7 +175,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
             if (! $this->config['is-root']) {
                 array_unshift($pieces, $paths['root']);
             }
-            $source = implode(DIRECTORY_SEPARATOR, array_merge($pieces, array('.env.example')));
+            $source = implode('/', array_merge($pieces, array('.env.example')));
         }
         try {
             if (copy($source, $dest)) {

@@ -94,7 +94,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
      */
     public function targetPath(ArrayAccess $paths)
     {
-        return $paths['root'].DIRECTORY_SEPARATOR.'.gitignore';
+        return $paths['root'].'/.gitignore';
     }
 
     /**

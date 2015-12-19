@@ -85,7 +85,7 @@ class Stepper implements StepperInterface, PostProcessStepInterface
     public function allowed(Config $config, ArrayAccess $paths)
     {
         $this->config = $config;
-        $wp_config = $paths['root'].DIRECTORY_SEPARATOR.'wp-config.php';
+        $wp_config = $paths['root'].'/wp-config.php';
 
         return $config['prevent-overwrite'] !== 'hard' || ! is_file($wp_config);
     }

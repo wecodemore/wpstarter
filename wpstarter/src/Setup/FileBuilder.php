@@ -49,7 +49,7 @@ class FileBuilder
         if (! $this->isRoot) {
             array_unshift($pieces, $paths['root']);
         }
-        $template = implode(DIRECTORY_SEPARATOR, $pieces);
+        $template = implode('/', $pieces);
         if (! is_readable($template)) {
             return false;
         }
@@ -75,9 +75,8 @@ class FileBuilder
         if (empty($content)) {
             return false;
         }
-        $dest = $targetPath.DIRECTORY_SEPARATOR.$fileName;
         try {
-            return file_put_contents($dest, $content) > 0;
+            return file_put_contents("{$targetPath}/{$fileName}", $content) > 0;
         } catch (Exception $e) {
             return false;
         }

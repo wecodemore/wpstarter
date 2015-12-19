@@ -182,7 +182,7 @@ final class Env
                 $file = '.env';
             }
 
-            $filePath = rtrim($path, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$file;
+            $filePath = rtrim(str_replace('\\', '/', $path), '/').'/'.$file;
             $loader = new Loader($filePath, true);
             $loader->load();
             self::$loaded = new static($loader->allVarNames());
