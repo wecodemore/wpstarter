@@ -151,10 +151,10 @@ class Setup
         $wpInstallDir = isset($extra['wordpress-install-dir'])
             ? $extra['wordpress-install-dir']
             : 'wordpress';
-        $wpFullDir = $cwd.DIRECTORY_SEPARATOR.$wpInstallDir;
+        $wpFullDir = "{$cwd}/{$wpInstallDir}";
         $wpSubdir = $this->subdir($cwd, $wpFullDir);
         $wpContent = isset($extra['wordpress-content-dir'])
-            ? $this->subdir($cwd, $cwd.DIRECTORY_SEPARATOR.$extra['wordpress-content-dir'])
+            ? $this->subdir($cwd, $cwd.'/'.$extra['wordpress-content-dir'])
             : 'wp-content';
 
         return new ArrayObject($this->normalisePaths(array(
@@ -195,9 +195,7 @@ class Setup
     private function normalisePaths(array $paths)
     {
         array_walk($paths, function (&$path) {
-            $path = is_string($path)
-                ? str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $path)
-                : $path;
+            is_string($path) and $path = str_replace('\\', '/', $path);
         });
 
         return $paths;

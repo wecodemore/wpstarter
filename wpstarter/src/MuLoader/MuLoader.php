@@ -184,8 +184,8 @@ class MuLoader
             return;
         }
         $isRegular = $json['type'] === 'wordpress-plugin';
-        $basedir = dirname(str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $jsonFile));
-        $pluginFile = $basedir.DIRECTORY_SEPARATOR.basename($basedir).'.php';
+        $basedir = dirname(str_replace('\\', '/', $jsonFile));
+        $pluginFile = $basedir.'/'.basename($basedir).'.php';
         if (file_exists($pluginFile)) {
             $this->plugins[] = $pluginFile;
             $isRegular and $this->regular[] = $pluginFile;
@@ -208,9 +208,9 @@ class MuLoader
         // check "extra.wordpress-plugin-main-file" in composer.json
         $main = isset($json['extra']) && isset($json['extra'][self::EXTRA_KEY]) ?
             $json['extra'][self::EXTRA_KEY]
-            : str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $json['extra'][self::EXTRA_KEY]);
+            : str_replace('\\', '/', $json['extra'][self::EXTRA_KEY]);
         if ($main) {
-            $path = $basedir.DIRECTORY_SEPARATOR.$main;
+            $path = "{$basedir}/{$main}";
             $this->plugins[] = $path;
             $isRegular and $this->regular[] = $path;
         }
