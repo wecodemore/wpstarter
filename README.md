@@ -22,6 +22,16 @@ MIT. See LICENSE file.
  - John P. Bloch [WordPress package](https://github.com/johnpbloch/wordpress)
  - [Dotenv](https://github.com/vlucas/phpdotenv) by Vance Lucas
 
+# Contributing
+
+Contributions are very welcome.
+
+Suggested flow:
+
+ - Open an issue to discuss the fix / improvement. Might not be needed for trivial things.
+ - Fork the repo and create a feature/bug-fix branch from `dev` branch. For trivial changes you might want to work directly on forked `dev` branch.
+ - Send a PR to `dev` branch
+
 # Security Issues
 
 If you have identified a security issue, please email **giuseppe.mazzapica [at] gmail.com** and do not
