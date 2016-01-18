@@ -207,8 +207,8 @@ class MuLoader
     {
         // check "extra.wordpress-plugin-main-file" in composer.json
         $main = isset($json['extra']) && isset($json['extra'][self::EXTRA_KEY]) ?
-            $json['extra'][self::EXTRA_KEY]
-            : str_replace('\\', '/', $json['extra'][self::EXTRA_KEY]);
+            str_replace('\\', '/', $json['extra'][self::EXTRA_KEY])
+            : false;
         if ($main) {
             $path = "{$basedir}/{$main}";
             $this->plugins[] = $path;
