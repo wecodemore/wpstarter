@@ -30,7 +30,7 @@ That `composer.json` file should contain:
     "repositories": [
         {
             "type": "composer",
-            "url": "http://wpackagist.org"
+            "url": "https://wpackagist.org"
         }
     ],
     "require": {
@@ -53,7 +53,7 @@ This is a minimal example, but is possible to add any plugin or theme.
 
 For plugins and themes that support Composer natively, it is possible to just add their package name to the require object.
 
-For plugins and themes that do not support Composer natively, but are available in WordPress repository (like WP Super Cache in the example) is possible to use packages provided by [wpackagist](http://wpackagist.org). To do that, wpackagist has to be added to `"repositories"` setting as shown above.
+For plugins and themes that do not support Composer natively, but are available in WordPress repository (like WP Super Cache in the example) is possible to use packages provided by [wpackagist](https://wpackagist.org). To do that, wpackagist has to be added to `"repositories"` setting as shown above.
 
 The `config.vendor-dir` setting is optional. In the example above is used to have the vendor folder placed inside `wp-content` folder so that at the end of the installation the folder structure will be something like:
 
