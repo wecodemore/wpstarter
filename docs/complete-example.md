@@ -19,7 +19,7 @@ all WP Starter configuration. Explanation is provided below in this page.
     "repositories": [
         {
             "type": "composer",
-            "url": "http://wpackagist.org"
+            "url": "https://wpackagist.org"
         },
         {
             "type": "vcs",
@@ -120,7 +120,7 @@ This is [a Composer setting](https://getcomposer.org/doc/04-schema.md#repositori
 
 I've added 3 entries.
 
-The first is [wpackagist](http://wpackagist.org). It is a mirror of the official WordPress plugin and theme directories as a Composer repository. In short, it allows to install all the plugins and themes available in official WordPress repository as Composer packages, no matter if they *natively* support Composer or not.
+The first is [wpackagist](https://wpackagist.org). It is a mirror of the official WordPress plugin and theme directories as a Composer repository. In short, it allows to install all the plugins and themes available in official WordPress repository as Composer packages, no matter if they *natively* support Composer or not.
 
 The other two repositories are Gist of mine. They were created to show in this example how to use custom packages to collect files that you want to share among WP Starter projects. More on this below.
 

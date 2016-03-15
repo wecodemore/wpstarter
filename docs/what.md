@@ -27,7 +27,7 @@ with its dozen of thousands of installations.
 ## Themes & Plugins Packages
 
 The second issue that arises using WordPress with Composer is the ability to use WordPress plugins and themes as Composer packages.
-This issue has been resolved thank to the work [outlandish](http://outlandish.com/) did creating [wpackagist](http://wpackagist.org/).
+This issue has been resolved thank to the work [outlandish](http://outlandish.com/) did creating [wpackagist](https://wpackagist.org/).
 
 It is a mirror of the WordPress plugin and theme directories as a Composer repository.
 
