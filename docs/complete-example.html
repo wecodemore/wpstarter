@@ -5,11 +5,12 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="author" content="Giuseppe Mazzapica">
-    <title>Complete Usage Example - WP Starter</title>
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300|Source+Code+Pro:400' rel='stylesheet'
+            <meta name="description"
+              content="Brain Monkey is mocking utility for PHP functions and WordPress plugin API.">    <meta name="author" content="Giuseppe Mazzapica">
+    <title>WP Starter: Easy Full-Stack WordPress Composer Packages</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300|Source+Code+Pro:400' rel='stylesheet'
           type='text/css'>
-    <link href="http://wecodemore.github.io/wpstarter/css/theme.min.css" rel="stylesheet">
+    <link href="https://wecodemore.github.io/wpstarter/css/theme.min.css" rel="stylesheet">
     <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
     <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
@@ -26,27 +27,27 @@
 
         <ul class="sidebar-nav">
                                                 <li class="">
-                        <a href="http://wecodemore.github.io/wpstarter/docs/what.html">
+                        <a href="https://wecodemore.github.io/wpstarter/docs/what.html">
                             What & Why
                         </a>
                     </li>
                                     <li class="">
-                        <a href="http://wecodemore.github.io/wpstarter/docs/quick-start.html">
+                        <a href="https://wecodemore.github.io/wpstarter/docs/quick-start.html">
                             Quick Start
                         </a>
                     </li>
-                                    <li class="active">
-                        <a href="http://wecodemore.github.io/wpstarter/docs/complete-example.html">
+                                    <li class="">
+                        <a href="https://wecodemore.github.io/wpstarter/docs/complete-example.html">
                             Complete Usage Example
                         </a>
                     </li>
                                     <li class="">
-                        <a href="http://wecodemore.github.io/wpstarter/docs/how.html">
+                        <a href="https://wecodemore.github.io/wpstarter/docs/how.html">
                             How It Works
                         </a>
                     </li>
                                     <li class="">
-                        <a href="http://wecodemore.github.io/wpstarter/docs/options.html">
+                        <a href="https://wecodemore.github.io/wpstarter/docs/options.html">
                             WP Starter Options
                         </a>
                     </li>
@@ -60,18 +61,14 @@
         <div class="container-fluid">
             <div class="row">
                 <div id="content" class="col-lg-11">
-                                                                        <ol class="breadcrumb">
-                                <li><a href="http://wecodemore.github.io/wpstarter">WP Starter</a></li>
-                                <li class="active">Complete Usage Example</li>
-                            </ol>
-                                                                                        <!--
+                                                                                                            <!--
 currentMenu: completeexample
 title:  Complete Usage Example
 -->
-<h1>Complete Usage Example</h1>
+<h1 id="complete-usage-example">Complete Usage Example</h1>
 <p>Sometimes out-of-the-box settings for WP Starter may be fine, sometimes not. In this page there's an usage example that will make use of
 all WP Starter configuration. Explanation is provided below in this page.</p>
-<h1>A <em>fully-equipped</em> <code>composer.json</code></h1>
+<h1 id="a">A <em>fully-equipped</em> <code>composer.json</code></h1>
 <pre><code class="language-json">{
     "name": "gmazzap/wpstarter-complete-example",
     "description": "Example project for WordPress + Composer + WP Starter",
@@ -153,18 +150,18 @@ all WP Starter configuration. Explanation is provided below in this page.</p>
         }
     }
 }</code></pre>
-<h2>Example Explained</h2>
-<p>The example above may be a little scary, but reality is that great majority of WP Starter installations don't need a so much detailed configuration. E.g. the <code>composer.json</code> provided in the <em>"Quick Start"</em> docs section is a lot less complex and still perfectly functional.</p>
+<h2 id="example-explained">Example Explained</h2>
+<p>The example above may be a little scary, but reality is that great majority of WP Starter installations don't need a so much detailed configuration. E.g. the <code>composer.json</code> provided in the <em>&quot;Quick Start&quot;</em> docs section is a lot less complex and still perfectly functional.</p>
 <p>Only reason to publish a so hardly customized <code>composer.json</code> is to show how WP Starter configuration allows a full control on any aspect of its work, but only if required.</p>
 <p>All the configurations used in the example above are explained below, section by section.</p>
 <h3><code>"name"</code>, <code>"description"</code> and <code>"type"</code>  sections</h3>
 <p>This are simple Composer settings. See <a href="https://getcomposer.org/doc/04-schema.html">official docs</a> to know more.</p>
 <h3><code>"minimum-stability"</code> section</h3>
 <p>By default Composer filters packages by stability, only installing one that are tagged as stable.</p>
-<p>By using this setting (<a href="https://getcomposer.org/doc/04-schema.md#minimum-stability">see Compose docs</a>) is possible to tell Composer to also install packages with different stability.</p>
+<p>By using this setting (<a href="https://getcomposer.org/doc/04-schema.html#minimum-stability">see Compose docs</a>) is possible to tell Composer to also install packages with different stability.</p>
 <p>This is necessary in the example because some packages used are not stable and are added to project pulling them from Git repositories.</p>
 <h3><code>"repositories"</code> section</h3>
-<p>This is <a href="https://getcomposer.org/doc/04-schema.md#repositories">a Composer setting</a> that allows to set custom repositories where to search for packages.</p>
+<p>This is <a href="https://getcomposer.org/doc/04-schema.html#repositories">a Composer setting</a> that allows to set custom repositories where to search for packages.</p>
 <p>I've added 3 entries.</p>
 <p>The first is <a href="http://wpackagist.org">wpackagist</a>. It is a mirror of the official WordPress plugin and theme directories as a Composer repository. In short, it allows to install all the plugins and themes available in official WordPress repository as Composer packages, no matter if they <em>natively</em> support Composer or not.</p>
 <p>The other two repositories are Gist of mine. They were created to show in this example how to use custom packages to collect files that you want to share among WP Starter projects. More on this below.</p>
@@ -174,25 +171,25 @@ all WP Starter configuration. Explanation is provided below in this page.</p>
 <p>The third package required is <code>"gmazzap/wpstarter-example-files"</code>. It is a package I created for this example to show how to use a custom package (in this case saved in a Gist) to collect files to be shared among WP Starter projects. Files contained in this package will be used in the example for various purposes.</p>
 <h3><code>"require-dev"</code> section</h3>
 <p>There are five packages required for development purposes.</p>
-<p>First two, "query-monitor" and "debug-bar", are popular plugins for debugging. They are both available in WordPress repository and required via wpackagist.</p>
-<p>Third package is <a href="https://github.com/Rarst/laps">"Laps"</a>, a profiler plugin by <a href="http://t.co/dTX2awK3Qv">@Rarst</a> (Andrey Savchenko) that supports Composer natively and is available on Packagist.</p>
-<p>The fourth package is <a href="https://wordpress.org/plugins/plugin-profiler/">"plugin-profiler"</a>, a profiler for plugins, it is available in WordPress repository and required via wpackagist.</p>
+<p>First two, &quot;query-monitor&quot; and &quot;debug-bar&quot;, are popular plugins for debugging. They are both available in WordPress repository and required via wpackagist.</p>
+<p>Third package is <a href="https://github.com/Rarst/laps">&quot;Laps&quot;</a>, a profiler plugin by <a href="http://t.co/dTX2awK3Qv">@Rarst</a> (Andrey Savchenko) that supports Composer natively and is available on Packagist.</p>
+<p>The fourth package is <a href="https://wordpress.org/plugins/plugin-profiler/">&quot;plugin-profiler&quot;</a>, a profiler for plugins, it is available in WordPress repository and required via wpackagist.</p>
 <p>By reading its <a href="https://wordpress.org/plugins/plugin-profiler/installation/">installation instructions</a> you'll see that one of the installation options is to create a MU plugin that loads the regular plugin file.</p>
 <p>For the purpose of this example I created a very simple MU plugin that just does that, and that is the fifth package required. It is located in <a href="https://gist.github.com/Giuseppe-Mazzapica/9939793dfb2a2361cd0f">a Gist</a> listed in <code>"repositories"</code> to be accessible to Composer.</p>
 <p>This MU plugin will be placed in its own folder inside <code>mu-plugin</code> folder, but WordPress will be still capable to load thanks to WP Starter loader.</p>
 <h3><code>"config"</code> section</h3>
-<p>This is a <a href="https://getcomposer.org/doc/04-schema.md#config">Composer setting</a>.</p>
+<p>This is a <a href="https://getcomposer.org/doc/04-schema.html#config">Composer setting</a>.</p>
 <p>In the example above it is used to tell Composer to create optimized autoloader files and to use a specific vendor folder.</p>
 <h3><code>"scripts"</code> section</h3>
 <p>The first entry in this section adds the method <code>WCM\WPStarter\Setup::run()</code> as <code>"post-install-cmd"</code> script. (See <a href="https://getcomposer.org/doc/articles/scripts.html">Composer docs</a>). This is the only mandatory entry.</p>
-<p>The second entry adds the same method as <code>"post-update-cmd"</code> script. This makes Composer to run again WP Starter routine after any update. The reason is that files copied by WP Starter via "dropins" configuration (see below) may be updated, so the updated file should be copied again in content folder.</p>
+<p>The second entry adds the same method as <code>"post-update-cmd"</code> script. This makes Composer to run again WP Starter routine after any update. The reason is that files copied by WP Starter via &quot;dropins&quot; configuration (see below) may be updated, so the updated file should be copied again in content folder.</p>
 <p>The third entry, adds the same method using a custom name. This will never run automatically by Composer, but if there is the need to run WP Starter routine manually, this alias will simplify that task: <code>composer run wpstarter</code> is easier to type, to remember and more intuitive of <code>composer run post-install-cmd</code>.</p>
 <h3><code>"extra"</code> section</h3>
-<p><code>"wordpress-install-dir"</code> tells Composer where to place WordPress package. This is not a WP Starter configuration, but is defined by <a href="https://github.com/johnpbloch/wordpress-core-installer">WordPress core installer</a>. This setting is optional and when not used, "wordpress" is used as default.</p>
-<p><code>"wordpress-content-dir"</code> informs WP Starter where the content folder is located. This configuration is optional and when not used, "wp-content" is used as default.</p>
+<p><code>"wordpress-install-dir"</code> tells Composer where to place WordPress package. This is not a WP Starter configuration, but is defined by <a href="https://github.com/johnpbloch/wordpress-core-installer">WordPress core installer</a>. This setting is optional and when not used, &quot;wordpress&quot; is used as default.</p>
+<p><code>"wordpress-content-dir"</code> informs WP Starter where the content folder is located. This configuration is optional and when not used, &quot;wp-content&quot; is used as default.</p>
 <p>Please note that this option will <strong>not</strong> make Composer to place plugins and themes into the given directory.</p>
 <p>This option is required only if the content folder is not the standard one and only if WP Starter needs to know where content folder is located, that is, when the <code>"dropins"</code> and/or the <code>"gitignore"</code> WP Starter configuration are used.</p>
-<p><code>"wpstarter"</code> is the object where take place all the WP Starter configurations. All the available settings are documented in the <em>"WP Starter Options"</em> documentation page.</p>
+<p><code>"wpstarter"</code> is the object where take place all the WP Starter configurations. All the available settings are documented in the <em>&quot;WP Starter Options&quot;</em> documentation page.</p>
 <p>In the example above I used:</p>
 <ul>
 <li>
@@ -208,7 +205,7 @@ all WP Starter configuration. Explanation is provided below in this page.</p>
 </li>
 <li><code>gitignore</code> is used to tell WP Starter what to put in the <code>.gitignore</code> file that will be created in project folder. The configuration tells to ignore WordPress, content and vendor folders, a set of common to-be-ignored files and a list of three custom entries.</li>
 </ul>
-<p>For more details about any of the WP Starter configuration have a look to <em>"WP Starter Options"</em> documentation page.</p>
+<p>For more details about any of the WP Starter configuration have a look to <em>&quot;WP Starter Options&quot;</em> documentation page.</p>
 <h3><code>"installer-paths"</code> section</h3>
 <p>This is a configuration section introduced by <a href="https://github.com/composer/installers">composer/installers</a>.</p>
 <p>Using this configuration is possible to tell Composer where to place packages of specific types (see <a href="https://getcomposer.org/doc/faqs/how-do-i-install-a-package-to-a-custom-path-for-my-framework.html">Composer docs</a>).</p>
@@ -235,21 +232,21 @@ all WP Starter configuration. Explanation is provided below in this page.</p>
     Made by hands by
     <a href="http://gm.zoomlab.it/" title="Giuseppe Mazzapica Home Page" target="_blank">Giuseppe Mazzapica</a>, with
     <a href="http://couscous.io/" title="Couscous" target="_blank">Couscous</a>,
-    <a href="http://getbootstrap.com/" title="Bootstrap" target="_blank">Bootstrap</a> &amp;
+    <a href="https://getbootstrap.com/" title="Bootstrap" target="_blank">Bootstrap</a> &amp;
     <a href="https://highlightjs.org/" title="highlight.js" target="_blank">highlight.js</a>
 
       <span class="socials">
         <a href="https://github.com/Giuseppe-Mazzapica" title="GitHub" target="_blank"><i class="fa fa-github-alt"></i></a>
         <a href="https://twitter.com/gmazzap" title="Twitter" target="_blank"><i class="fa fa-twitter"></i></a>
-        <a href="http://wordpress.stackexchange.com/users/35541/" title="Stack Exchange" target="_blank"><i
+        <a href="https://wordpress.stackexchange.com/users/35541/" title="Stack Exchange" target="_blank"><i
                     class="fa fa-stack-exchange"></i></a>
       </span>
 
 </footer>
 
 <a href="#wrapper" class="hidden-xs hidden-sm" id="back-top" title="Back to top"><i class="fa fa-long-arrow-up"></i></a>
-<script src="http://yandex.st/highlightjs/7.5/highlight.min.js"></script>
-<script src="http://wecodemore.github.io/wpstarter/js/theme.min.js"></script>
+<script src="https://yandex.st/highlightjs/7.5/highlight.min.js"></script>
+<script src="https://wecodemore.github.io/wpstarter/js/theme.min.js"></script>
 </body>
 
 </html>

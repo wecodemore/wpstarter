@@ -5,11 +5,12 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="author" content="Giuseppe Mazzapica">
-    <title>WP Starter Options - WP Starter</title>
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300|Source+Code+Pro:400' rel='stylesheet'
+            <meta name="description"
+              content="Brain Monkey is mocking utility for PHP functions and WordPress plugin API.">    <meta name="author" content="Giuseppe Mazzapica">
+    <title>WP Starter: Easy Full-Stack WordPress Composer Packages</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300|Source+Code+Pro:400' rel='stylesheet'
           type='text/css'>
-    <link href="http://wecodemore.github.io/wpstarter/css/theme.min.css" rel="stylesheet">
+    <link href="https://wecodemore.github.io/wpstarter/css/theme.min.css" rel="stylesheet">
     <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
     <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
@@ -26,27 +27,27 @@
 
         <ul class="sidebar-nav">
                                                 <li class="">
-                        <a href="http://wecodemore.github.io/wpstarter/docs/what.html">
+                        <a href="https://wecodemore.github.io/wpstarter/docs/what.html">
                             What & Why
                         </a>
                     </li>
                                     <li class="">
-                        <a href="http://wecodemore.github.io/wpstarter/docs/quick-start.html">
+                        <a href="https://wecodemore.github.io/wpstarter/docs/quick-start.html">
                             Quick Start
                         </a>
                     </li>
                                     <li class="">
-                        <a href="http://wecodemore.github.io/wpstarter/docs/complete-example.html">
+                        <a href="https://wecodemore.github.io/wpstarter/docs/complete-example.html">
                             Complete Usage Example
                         </a>
                     </li>
                                     <li class="">
-                        <a href="http://wecodemore.github.io/wpstarter/docs/how.html">
+                        <a href="https://wecodemore.github.io/wpstarter/docs/how.html">
                             How It Works
                         </a>
                     </li>
-                                    <li class="active">
-                        <a href="http://wecodemore.github.io/wpstarter/docs/options.html">
+                                    <li class="">
+                        <a href="https://wecodemore.github.io/wpstarter/docs/options.html">
                             WP Starter Options
                         </a>
                     </li>
@@ -60,17 +61,13 @@
         <div class="container-fluid">
             <div class="row">
                 <div id="content" class="col-lg-11">
-                                                                        <ol class="breadcrumb">
-                                <li><a href="http://wecodemore.github.io/wpstarter">WP Starter</a></li>
-                                <li class="active">WP Starter Options</li>
-                            </ol>
-                                                                                        <!--
+                                                                                                            <!--
 currentMenu: options
 title: WP Starter Options
 -->
-<h1>WP Starter Options</h1>
+<h1 id="wp-starter-options">WP Starter Options</h1>
 <p>A lot of aspects of how WP Starter works can be customized using setting in the project <code>composer.json</code> file.</p>
-<p>Moreover, is possible to add or skip some "steps" from default WP Starter flow.</p>
+<p>Moreover, is possible to add or skip some &quot;steps&quot; from default WP Starter flow.</p>
 <p>All the WP Starter options are set using an object named <code>"wpstarter"</code> inside the <code>"extra"</code> setting.</p>
 <p>Below there is the full list of all supported options, their possible values and the explanation of what they do.</p>
 <h2><code>"prevent-overwrite"</code></h2>
@@ -119,7 +116,7 @@ title: WP Starter Options
 <li><code>false</code> (boolean), option is disabled, default <code>wp-content</code> folder is not moved to project content folder</li>
 </ul>
 <p>Default value is <code>false</code>.</p>
-<h2>"<code>dropins</code>"</h2>
+<h2 id="quot">&quot;<code>dropins</code>&quot;</h2>
 <p>Dropins are specific-named files that can be used to override specific parts of WordPress core. They <strong>must</strong> be placed in content folder, or WordPress can't use them.</p>
 <p>Among most popular dropins there are:</p>
 <ul>
@@ -129,13 +126,13 @@ title: WP Starter Options
 <li><code>'object-cache.php'</code> Used to implement a custom object cache system</li>
 </ul>
 <p>There are different other dropins, moreover, locale files can be considered dropins as well. Locale files are PHP files named after WordPress locales, e.g. <code>"it_IT.php"</code> (for italian locale) or <code>"de_DE.php"</code> (for german locale). WordPress loads any of these files found in content folder when the related locale is used.</p>
-<p>WP Starter can be configured via "<code>dropins</code>" option to move to project content folder any dropin or locale file.</p>
+<p>WP Starter can be configured via &quot;<code>dropins</code>&quot; option to move to project content folder any dropin or locale file.</p>
 <p>The <em>source</em> of these files can be:</p>
 <ul>
 <li>a file path relative to project root</li>
 <li>an url</li>
 </ul>
-<p>Information, warning and and tips regarding usage of this kind of WP Starter options are provided in the <em>"About paths and urls sources"</em> section below in this page.</p>
+<p>Information, warning and and tips regarding usage of this kind of WP Starter options are provided in the <em>&quot;About paths and urls sources&quot;</em> section below in this page.</p>
 <p>An example:</p>
 <pre><code class="language-json">{
   "extra": {
@@ -147,7 +144,7 @@ title: WP Starter Options
   }
 }</code></pre>
 <p>Using settings above the <code>db.php</code> dropin is copied to project content folder (whichever it is) from the folder <code>wp-content/plugins/wp-db-drivers/wp-content/db.php</code> that is the path of <a href="https://wordpress.org/plugins/wp-db-driver/">WP DB Driver plugin</a> available in WordPress official plugin repository.</p>
-<h2>"<code>unknown-dropins</code>"</h2>
+<h2 id="quot-1">&quot;<code>unknown-dropins</code>&quot;</h2>
 <p>When the option <code>"dropins"</code> explained right above is used, before copying the file to content folder WP Starter checks that the required file is a valid dropin recognized by WordPress.</p>
 <p>To check locales, WP Starter uses <code>wordpress.org</code> API to retrieve a list of locales supported by WordPress. Once this requires a connection to external server, there are tons of reasons why this operation may fail.</p>
 <p>This option controls what WP Starter has to do when a non-standard or a non-recognized dropin file is required. There are 3 possible values:</p>
@@ -157,27 +154,27 @@ title: WP Starter Options
 <li><code>"ask"</code> (string) when used WP Starter asks in console if copy the non recognized dropin file or not.</li>
 </ul>
 <p>Default behavior is <code>"ask"</code>.</p>
-<h2>"<code>env-example</code>"</h2>
+<h2 id="quot-2">&quot;<code>env-example</code>&quot;</h2>
 <p>A <code>.env</code> file is required to use WP Starter sites. By default, WP Starter puts in the project folder a <em>template</em> for this file named <code>.env.example</code>. Renaming this file to <code>.env</code> is a fast way to get site completely configured few seconds after installation.</p>
 <p>Using this option is possible to configure if and how WP Starter should create this file. Possible values are:</p>
 <ul>
 <li><code>true</code> (boolean), WP Starter creates the <code>.env.example</code> file using default template</li>
 <li><code>false</code> (boolean), WP Starter does not create any <code>.env.example</code></li>
 <li><code>"ask"</code> (string) WP Starter asks in console if the example file should be created or not</li>
-<li><code>$url_or_path</code> (string) it is possible to use a (relative) file path or an url that points to an existing file that will be copied to project folder as <code>.env.example</code> file. More info about the usage of this kind of WP Starter options are provided in the <em>"About paths and urls sources"</em> section below in this page.</li>
+<li><code>$url_or_path</code> (string) it is possible to use a (relative) file path or an url that points to an existing file that will be copied to project folder as <code>.env.example</code> file. More info about the usage of this kind of WP Starter options are provided in the <em>&quot;About paths and urls sources&quot;</em> section below in this page.</li>
 </ul>
 <p>Default value is <code>true</code>.</p>
 <p>It worth noting that if a <code>.env</code> file exists in project folder WP Starter just skip the creation of <code>.env.example</code>, no matter which value the option has.</p>
-<h2>"<code>env-file</code>"</h2>
+<h2 id="quot-3">&quot;<code>env-file</code>&quot;</h2>
 <p>The default environment file name is <code>.env</code>, using this option can be changed to something else. Note that you can specify here only the file name, and not the path.</p>
-<h2>"<code>gitignore</code>"</h2>
+<h2 id="quot-4">&quot;<code>gitignore</code>&quot;</h2>
 <p>This option controls if and how WP Starter has to create a <code>.gitignore</code> file for the project.</p>
 <p>Possible values are:</p>
 <ul>
 <li><code>true</code> (boolean), WP Starter creates the <code>.gitignore</code> file using default template that makes Git ignore files and folder installed via Composer, <code>.env</code> file and the generated <code>wp-config.php</code></li>
 <li><code>false</code> (boolean), WP Starter does not create any <code>.gitignore</code> file</li>
 <li><code>"ask"</code> (string) WP Starter asks in console if the <code>.gitignore</code> file should be created or not</li>
-<li><code>$url_or_path</code> (string) it is possible to use a (relative) file path or an url that point to an existing file that will be copied to project folder as <code>.gitignore</code> file. More info about the usage of this kind of WP Starter options are provided in the <em>"About paths and urls sources"</em> section below in this page.</li>
+<li><code>$url_or_path</code> (string) it is possible to use a (relative) file path or an url that point to an existing file that will be copied to project folder as <code>.gitignore</code> file. More info about the usage of this kind of WP Starter options are provided in the <em>&quot;About paths and urls sources&quot;</em> section below in this page.</li>
 <li>
 <p><code>$object</code> (object) it is possible to use an object to have a fine-grained control on the files that should be included in the <code>.gitignore</code> file.</p>
 <p>This object can contain following key/value pairs:</p>
@@ -191,7 +188,7 @@ Among them there are OS-specific files like <code>Thumbs.db</code> or <code>.DS_
 </ul>
 </li>
 </ul>
-<p>An example of "<code>gitignore</code>" option using object configuration:</p>
+<p>An example of &quot;<code>gitignore</code>&quot; option using object configuration:</p>
 <pre><code class="language-json">{
   "extra": {
       "wpstarter": {
@@ -212,14 +209,14 @@ Among them there are OS-specific files like <code>Thumbs.db</code> or <code>.DS_
 }</code></pre>
 <p>WordPress, content and vendor folders path are dynamically retrieved from settings in <code>composer.json</code>.</p>
 <p>Default value for this option is <code>true</code>.</p>
-<h1>About paths and urls sources</h1>
+<h1 id="about-paths-and-urls-sources">About paths and urls sources</h1>
 <p>Several WP Starter options accept urls or paths to be used as <em>source</em> for a file.</p>
 <p>Paths must always be <strong>relative to project root</strong> folder that is the folder which contains the <code>composer.json</code> file. Even if relative paths including dots are allowed
 e.g. <code>"../../a/file.php"</code> they are discouraged to maximize portability and minimize issues.</p>
 <p>Urls must return a response with <strong>HTTP status code equal to 200 and <code>"Content-Type"</code> header set to <code>"text/plain"</code></strong>. Any different kind of response will make download fail.</p>
 <p>Moreover, consider that to retrieve url content is used the curl library. Using HTTP connection for this sort of things is not very safe and HTTPS connection will fail if not properly configured.</p>
 <p>The suggested way to overcome all this issues and enforce the possibility of easily reuse files among different WP Starter installations, is to create dedicated Composer packages.</p>
-<h2>Packages for WP Starter files</h2>
+<h2 id="packages-for-wp-starter-files">Packages for WP Starter files</h2>
 <p>By creating a Composer package for the files to be used in WP Starter projects, is possible to add it to project dependencies and then using path option to move files in proper place. Composer fully support private repositories, so there is no need that a package like that have to be public to be used.</p>
 <p>A simple usage of this feature may be a Gist with the desired files, added to <code>"repositories"</code> setting in <code>composer.json</code> to make Composer recognize and use that files.</p>
 <p>For example, I'll use <a href="https://gist.github.com/Giuseppe-Mazzapica/e8c8e4dfc8e65f1903ac">this Gist</a> that contains some files and I'll show how to use them in WP Starter projects.</p>
@@ -253,7 +250,7 @@ e.g. <code>"../../a/file.php"</code> they are discouraged to maximize portabilit
         }
     }
 }</code></pre>
-<p><em>(note that example above is not complete, see "Complete Usage Example" doc section for a complete <code>composer.json</code> example)</em></p>
+<p><em>(note that example above is not complete, see &quot;Complete Usage Example&quot; doc section for a complete <code>composer.json</code> example)</em></p>
                                     </div>
             </div>
         </div>
@@ -276,21 +273,21 @@ e.g. <code>"../../a/file.php"</code> they are discouraged to maximize portabilit
     Made by hands by
     <a href="http://gm.zoomlab.it/" title="Giuseppe Mazzapica Home Page" target="_blank">Giuseppe Mazzapica</a>, with
     <a href="http://couscous.io/" title="Couscous" target="_blank">Couscous</a>,
-    <a href="http://getbootstrap.com/" title="Bootstrap" target="_blank">Bootstrap</a> &amp;
+    <a href="https://getbootstrap.com/" title="Bootstrap" target="_blank">Bootstrap</a> &amp;
     <a href="https://highlightjs.org/" title="highlight.js" target="_blank">highlight.js</a>
 
       <span class="socials">
         <a href="https://github.com/Giuseppe-Mazzapica" title="GitHub" target="_blank"><i class="fa fa-github-alt"></i></a>
         <a href="https://twitter.com/gmazzap" title="Twitter" target="_blank"><i class="fa fa-twitter"></i></a>
-        <a href="http://wordpress.stackexchange.com/users/35541/" title="Stack Exchange" target="_blank"><i
+        <a href="https://wordpress.stackexchange.com/users/35541/" title="Stack Exchange" target="_blank"><i
                     class="fa fa-stack-exchange"></i></a>
       </span>
 
 </footer>
 
 <a href="#wrapper" class="hidden-xs hidden-sm" id="back-top" title="Back to top"><i class="fa fa-long-arrow-up"></i></a>
-<script src="http://yandex.st/highlightjs/7.5/highlight.min.js"></script>
-<script src="http://wecodemore.github.io/wpstarter/js/theme.min.js"></script>
+<script src="https://yandex.st/highlightjs/7.5/highlight.min.js"></script>
+<script src="https://wecodemore.github.io/wpstarter/js/theme.min.js"></script>
 </body>
 
 </html>
