@@ -88,7 +88,7 @@
     "repositories": [
         {
             "type": "composer",
-            "url": "http://wpackagist.org"
+            "url": "https://wpackagist.org"
         }
     ],
     "require": {
@@ -99,7 +99,8 @@
         "vendor-dir": "wp-content/vendor"
     },
     "scripts": {
-        "post-install-cmd": "WCM\\WPStarter\\Setup::run"
+        "post-install-cmd": "WCM\\WPStarter\\Setup::run",
+        "post-update-cmd": "WCM\\WPStarter\\Setup::run"
     },
     "extra": {
         "wordpress-install-dir": "wp"
@@ -107,7 +108,7 @@
 }</code></pre>
 <p>This is a minimal example, but is possible to add any plugin or theme.</p>
 <p>For plugins and themes that support Composer natively, it is possible to just add their package name to the require object.</p>
-<p>For plugins and themes that do not support Composer natively, but are available in WordPress repository (like WP Super Cache in the example) is possible to use packages provided by <a href="http://wpackagist.org">wpackagist</a>. To do that, wpackagist has to be added to <code>"repositories"</code> setting as shown above.</p>
+<p>For plugins and themes that do not support Composer natively, but are available in WordPress repository (like WP Super Cache in the example) is possible to use packages provided by <a href="https://wpackagist.org">wpackagist</a>. To do that, wpackagist has to be added to <code>"repositories"</code> setting as shown above.</p>
 <p>The <code>config.vendor-dir</code> setting is optional. In the example above is used to have the vendor folder placed inside <code>wp-content</code> folder so that at the end of the installation the folder structure will be something like:</p>
 <ul>
 <li><code>wp/</code>
