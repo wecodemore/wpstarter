@@ -46,6 +46,7 @@
     },
     "scripts": {
         "post-install-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
+        "post-update-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
         "wpstarter": "WCM\\WPStarter\\Setup::runAsRoot"
     },
     "config": {
