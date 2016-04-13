@@ -41,7 +41,8 @@ That `composer.json` file should contain:
         "vendor-dir": "wp-content/vendor"
     },
     "scripts": {
-        "post-install-cmd": "WCM\\WPStarter\\Setup::run"
+        "post-install-cmd": "WCM\\WPStarter\\Setup::run",
+        "post-update-cmd": "WCM\\WPStarter\\Setup::run"
     },
     "extra": {
         "wordpress-install-dir": "wp"
