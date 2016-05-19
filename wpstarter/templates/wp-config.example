@@ -16,7 +16,7 @@
 require_once realpath({{{VENDOR_PATH}}}.'/autoload.php');
 
 /**
- * A reference to `.env` file path.
+ * A reference to `.env` folder path.
  */
 define('WPSTARTER_PATH', {{{ENV_REL_PATH}}});
 
