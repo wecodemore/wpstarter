@@ -17,7 +17,7 @@ namespace WCM\WPStarter\Setup;
  */
 class Salter
 {
-    private static $keys = array(
+    private static $keys = [
         'AUTH_KEY',
         'SECURE_AUTH_KEY',
         'LOGGED_IN_KEY',
@@ -26,7 +26,7 @@ class Salter
         'SECURE_AUTH_SALT',
         'LOGGED_IN_SALT',
         'NONCE_SALT',
-    );
+    ];
 
     private $result;
 
@@ -38,7 +38,7 @@ class Salter
     public function keys()
     {
         if (! is_array($this->result)) {
-            $this->result = array();
+            $this->result = [];
             foreach (self::$keys as $key) {
                 $this->result[$key] = $this->buildKey(64);
             }

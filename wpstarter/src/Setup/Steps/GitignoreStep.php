@@ -29,13 +29,13 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     /**
      * @var array
      */
-    private static $default = array(
+    private static $default = [
         'wp'         => true,
         'wp-content' => true,
         'vendor'     => true,
         'common'     => false,
-        'custom'     => array(),
-    );
+        'custom'     => [],
+    ];
 
     /**
      * @var mixed
@@ -94,7 +94,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
      */
     public function targetPath(ArrayAccess $paths)
     {
-        return $paths['root'].DIRECTORY_SEPARATOR.'.gitignore';
+        return $paths['root'].'/.gitignore';
     }
 
     /**
@@ -104,12 +104,12 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     {
         $this->found = false;
         if ($config['gitignore'] === "ask") {
-            $lines = array(
+            $lines = [
                 'Do you want to create a .gitignore file that makes Git ignore',
                 ' - files that contain sensible data (wp-config.php, .env)',
                 ' - WordPress package folder',
                 ' - WordPress content folder',
-            );
+            ];
 
             return $io->ask($lines, true);
         }
@@ -147,16 +147,16 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     {
         $lines = false;
         if ($this->found === true) {
-            $lines = array(
+            $lines = [
                 '.gitignore was found in your project folder.',
                 'Be sure to ignore .env and wp-config.php files.',
-            );
+            ];
         } elseif ($this->found === -1 && empty($this->error)) {
-            $lines = array(
+            $lines = [
                 '.gitignore was saved in your project folder,',
                 'feel free to edit it, but be sure to ignore',
                 '.env and wp-config.php files.',
-            );
+            ];
         }
         $lines and $io->block($lines, 'yellow', false);
     }
@@ -241,7 +241,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
         $filePaths = array_unique(
             array_filter(
                 array_merge(
-                    array($this->env, $paths['wp-parent'].'/wp-config.php'),
+                    [$this->env, $paths['wp-parent'].'/wp-config.php'],
                     $toDo['custom'],
                     $this->paths($toDo, $paths)
                 )
@@ -268,12 +268,12 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
      */
     private function paths(array $toDo, ArrayAccess $paths)
     {
-        $parsedPaths = array();
-        $toCheck = array(
+        $parsedPaths = [];
+        $toCheck = [
             'wp',
             'wp-content',
             'vendor',
-        );
+        ];
         foreach ($toCheck as $key) {
             if ($toDo[$key]) {
                 $parsedPaths = $this->maybeAdd($paths[$key], $parsedPaths);
@@ -292,7 +292,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
      */
     private function maybeAdd($path, array $parsedPaths)
     {
-        $rel = trim(str_replace(array('\\', '//'), '/', $path), '/').'/';
+        $rel = trim(str_replace(['\\', '//'], '/', $path), '/').'/';
         $targets = $parsedPaths;
         $add = null;
         foreach ($targets as $key => $target) {

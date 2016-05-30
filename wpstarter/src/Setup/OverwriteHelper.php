@@ -43,7 +43,7 @@ class OverwriteHelper
     {
         $this->config = $config['prevent-overwrite'];
         if (is_array($this->config)) {
-            $this->config = array_map(array($this, 'normalise'), $this->config);
+            $this->config = array_map([$this, 'normalise'], $this->config);
         }
         $this->io = $io;
         $this->root = $this->normalise($paths['root']);
@@ -63,7 +63,7 @@ class OverwriteHelper
         }
         if ($this->config === 'ask') {
             $name = basename($file);
-            $lines = array("{$name} found in target folder. Do you want to overwrite it?");
+            $lines = ["{$name} found in target folder. Do you want to overwrite it?"];
 
             return $this->io->ask($lines, true);
         }

@@ -28,13 +28,13 @@
     "repositories": [
         {
             "type": "composer",
-            "url": "http://wpackagist.org"
+            "url": "https://wpackagist.org"
         }
     ],
     "require": {
-        "php": ">=5.3.2",
+        "php": ">=5.4",
         "vlucas/phpdotenv": "~2.0",
-        "johnpbloch/wordpress": ">=4.2"
+        "johnpbloch/wordpress": ">=4.3"
     },
     "replace": {
         "wecodemore/wp-composer-config": "*"
@@ -46,6 +46,7 @@
     },
     "scripts": {
         "post-install-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
+        "post-update-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
         "wpstarter": "WCM\\WPStarter\\Setup::runAsRoot"
     },
     "config": {

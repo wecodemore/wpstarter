@@ -69,7 +69,7 @@ class IndexStep implements FileStepInterface, BlockingStepInterface
     {
         $n = count(explode('/', str_replace('\\', '/', $paths['wp']))) - 1;
         $rootPathRel = str_repeat('dirname(', $n).'__DIR__'.str_repeat(')', $n);
-        $this->vars = array('BOOTSTRAP_PATH' => $rootPathRel.".'/{$paths['wp']}/wp-blog-header.php'");
+        $this->vars = ['BOOTSTRAP_PATH' => $rootPathRel.".'/{$paths['wp']}/wp-blog-header.php'"];
         $build = $this->builder->build($paths, 'index.example', $this->vars);
         if (! $this->builder->save($build, dirname($this->targetPath($paths)), 'index.php')) {
             $this->error = 'Error on create index.php.';

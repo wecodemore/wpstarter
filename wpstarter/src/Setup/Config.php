@@ -20,17 +20,17 @@ use LogicException;
  */
 class Config implements ArrayAccess
 {
-    private static $defaults = array(
+    private static $defaults = [
         'gitignore'             => true,
         'env-example'           => true,
         'env-file'              => '.env',
         'move-content'          => false,
         'register-theme-folder' => true,
-        'prevent-overwrite'     => array('.gitignore'),
+        'prevent-overwrite'     => ['.gitignore'],
         'verbosity'             => 2,
-        'dropins'               => array(),
+        'dropins'               => [],
         'unknown-dropins'       => 'ask',
-    );
+    ];
 
     private $configs;
 
@@ -57,18 +57,18 @@ class Config implements ArrayAccess
      */
     private function validate($configs)
     {
-        $valid = array('is-root' => $configs['is-root'], 'wp-version' => $configs['wp-version']);
-        $map = array(
-            'gitignore'             => array($this, 'validateGitignore'),
-            'env-example'           => array($this, 'validateBoolOrAskOrUrl'),
-            'env-file'              => array($this, 'validateFilename'),
-            'register-theme-folder' => array($this, 'validateBoolOrAsk'),
-            'move-content'          => array($this, 'validateBoolOrAsk'),
-            'dropins'               => array($this, 'validatePathArray'),
-            'unknown-dropins'       => array($this, 'validateBoolOrAsk'),
-            'prevent-overwrite'     => array($this, 'validateOverwrite'),
-            'verbosity'             => array($this, 'validateVerbosity'),
-        );
+        $valid = ['is-root' => $configs['is-root'], 'wp-version' => $configs['wp-version']];
+        $map = [
+            'gitignore'             => [$this, 'validateGitignore'],
+            'env-example'           => [$this, 'validateBoolOrAskOrUrl'],
+            'env-file'              => [$this, 'validateFilename'],
+            'register-theme-folder' => [$this, 'validateBoolOrAsk'],
+            'move-content'          => [$this, 'validateBoolOrAsk'],
+            'dropins'               => [$this, 'validatePathArray'],
+            'unknown-dropins'       => [$this, 'validateBoolOrAsk'],
+            'prevent-overwrite'     => [$this, 'validateOverwrite'],
+            'verbosity'             => [$this, 'validateVerbosity'],
+        ];
         $defaults = self::$defaults;
         array_walk($configs, function ($value, $key) use ($map, &$defaults) {
             $result = array_key_exists($key, $defaults) ? call_user_func($map[$key], $value) : null;
@@ -92,20 +92,20 @@ class Config implements ArrayAccess
         if (is_array($value)) {
             $custom = isset($value['custom']) && is_array($value['custom'])
                 ? array_filter($value['custom'], 'is_string')
-                : array();
-            $default = array(
+                : [];
+            $default = [
                 'wp'         => true,
                 'wp-content' => true,
                 'vendor'     => true,
                 'common'     => true,
-            );
+            ];
             foreach ($value as $k => $v) {
                 if (array_key_exists($k, $default) && $this->validateBool($v) === false) {
                     $default[$k] = false;
                 }
             }
 
-            return array_merge(array('custom' => $custom), $default);
+            return array_merge(['custom' => $custom], $default);
         }
 
         return $this->validateBoolOrAskOrUrl($value);
@@ -152,7 +152,7 @@ class Config implements ArrayAccess
             return array_unique(array_filter($value));
         }
 
-        return array();
+        return [];
     }
 
     /**
@@ -177,7 +177,7 @@ class Config implements ArrayAccess
      */
     private function validateBoolOrAsk($value)
     {
-        $asks = array('ask', 'prompt', 'query', 'interrogate', 'demand');
+        $asks = ['ask', 'prompt', 'query', 'interrogate', 'demand'];
         if (in_array(trim(strtolower($value)), $asks, true)) {
             return 'ask';
         }
@@ -211,7 +211,7 @@ class Config implements ArrayAccess
      */
     private function validateBool($value)
     {
-        $booleans = array(true, false, 1, 0, "true", "false", "1", "0", "yes", "no", "on", "off");
+        $booleans = [true, false, 1, 0, "true", "false", "1", "0", "yes", "no", "on", "off"];
         if (in_array(is_string($value) ? strtolower($value) : $value, $booleans, true)) {
             return filter_var($value, FILTER_VALIDATE_BOOLEAN);
         }

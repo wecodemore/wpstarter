@@ -85,7 +85,7 @@ class Stepper implements StepperInterface, PostProcessStepInterface
     public function allowed(Config $config, ArrayAccess $paths)
     {
         $this->config = $config;
-        $wp_config = $paths['root'].DIRECTORY_SEPARATOR.'wp-config.php';
+        $wp_config = $paths['root'].'/wp-config.php';
 
         return $config['prevent-overwrite'] !== 'hard' || ! is_file($wp_config);
     }
@@ -124,14 +124,14 @@ class Stepper implements StepperInterface, PostProcessStepInterface
     public function error()
     {
         return $this->errors === 1
-            ? array(
+            ? [
                 'An error occurred during WP Starter install,',
                 'site might be not configured properly.',
-            )
-            : array(
+            ]
+            : [
                 'Some errors occurred during WP Starter install,',
                 'site is not configured properly.',
-            );
+            ];
     }
 
     /**
@@ -141,7 +141,7 @@ class Stepper implements StepperInterface, PostProcessStepInterface
      */
     public function success()
     {
-        return array('WP Starter finished successfully!');
+        return ['WP Starter finished successfully!'];
     }
 
     /**

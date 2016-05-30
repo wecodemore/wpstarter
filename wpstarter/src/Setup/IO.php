@@ -163,7 +163,7 @@ class IO
         array_unshift($lines, $open.$space);
         array_push($lines, $space.$close);
         $func = $is_error ? 'writeError' : 'write';
-        call_user_func(array($this->io, $func), PHP_EOL.implode($close.PHP_EOL.$open, $lines));
+        call_user_func([$this->io, $func], PHP_EOL.implode($close.PHP_EOL.$open, $lines));
 
         return ! $is_error;
     }
@@ -177,7 +177,7 @@ class IO
     private function ensureLength($text)
     {
         if (strlen($text) < 70) {
-            return array($text);
+            return [$text];
         }
         $words = explode(' ', $text);
         $line = '';

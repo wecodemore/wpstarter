@@ -47,7 +47,7 @@ class PluginAsMuLoader
     public function __construct(array $plugins)
     {
         if (! empty($plugins)) {
-            $installed = get_site_option(MuLoader::PREFIX.self::OPTION, array());
+            $installed = get_site_option(MuLoader::PREFIX.self::OPTION, []);
             $toInstall = array_diff($plugins, $installed);
             if ($toInstall !== $installed) {
                 update_site_option(MuLoader::PREFIX.self::OPTION, $toInstall);
@@ -62,8 +62,8 @@ class PluginAsMuLoader
     public function install()
     {
         if (! empty($this->plugins)) {
-            $this->uninstall = get_option('uninstall_plugins', array());
-            array_walk($this->plugins, array($this, 'installPlugin'));
+            $this->uninstall = get_option('uninstall_plugins', []);
+            array_walk($this->plugins, [$this, 'installPlugin']);
         }
     }
 

@@ -19,7 +19,7 @@ use Dotenv\Loader as DotenvLoader;
  */
 final class Loader extends DotenvLoader
 {
-    private $allVars = array();
+    private $allVars = [];
 
     /**
      * Set variable using Dotenv loader and store the name in class var

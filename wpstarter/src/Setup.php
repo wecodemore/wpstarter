@@ -54,11 +54,11 @@ class Setup
         $extra = $composer->getPackage()->getExtra();
         $wpStarterConfig = isset($extra['wpstarter']) && is_array($extra['wpstarter'])
             ? $extra['wpstarter']
-            : array();
+            : [];
         $config = new Config(
             array_merge(
                 $wpStarterConfig,
-                array('is-root' => self::$isRoot, 'wp-version' => $wpVersion)
+                ['is-root' => self::$isRoot, 'wp-version' => $wpVersion]
             )
         );
         $io = new IO($event->getIO(), $config['verbosity']);
@@ -120,11 +120,11 @@ class Setup
         IO $io
     ) {
         if (! $stepper->allowed($config, $paths)) {
-            $lines = array(
+            $lines = [
                 'WP Starter installation CANCELED.',
                 'wp-config.php was found in root folder and your overwrite settings',
                 'do not allow to proceed.',
-            );
+            ];
             $io->block($lines, 'yellow');
 
             return false;
@@ -151,20 +151,20 @@ class Setup
         $wpInstallDir = isset($extra['wordpress-install-dir'])
             ? $extra['wordpress-install-dir']
             : 'wordpress';
-        $wpFullDir = $cwd.DIRECTORY_SEPARATOR.$wpInstallDir;
+        $wpFullDir = "{$cwd}/{$wpInstallDir}";
         $wpSubdir = $this->subdir($cwd, $wpFullDir);
         $wpContent = isset($extra['wordpress-content-dir'])
-            ? $this->subdir($cwd, $cwd.DIRECTORY_SEPARATOR.$extra['wordpress-content-dir'])
+            ? $this->subdir($cwd, $cwd.'/'.$extra['wordpress-content-dir'])
             : 'wp-content';
 
-        return new ArrayObject($this->normalisePaths(array(
+        return new ArrayObject($this->normalisePaths([
             'root'       => $cwd,
             'vendor'     => $this->subdir($cwd, $composer->getConfig()->get('vendor-dir')),
             'wp'         => $wpSubdir,
             'wp-parent'  => $this->subdir($cwd, dirname($wpFullDir)),
             'wp-content' => $wpContent,
             'starter'    => $this->subdir($cwd, dirname(__DIR__)),
-        )), ArrayObject::STD_PROP_LIST);
+        ]), ArrayObject::STD_PROP_LIST);
     }
 
     /**
@@ -195,9 +195,7 @@ class Setup
     private function normalisePaths(array $paths)
     {
         array_walk($paths, function (&$path) {
-            $path = is_string($path)
-                ? str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $path)
-                : $path;
+            is_string($path) and $path = str_replace('\\', '/', $path);
         });
 
         return $paths;
@@ -212,7 +210,7 @@ class Setup
      */
     private function subdir($root, $path)
     {
-        $paths = $this->normalisePaths(array($root, $path));
+        $paths = $this->normalisePaths([$root, $path]);
 
         return trim(preg_replace('|^'.preg_quote($paths[0]).'|', '', $paths[1]), '\\/');
     }

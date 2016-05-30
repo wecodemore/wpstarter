@@ -1,0 +1,8 @@
+# VCS
+.gitattributes export-ignore
+.gitignore export-ignore
+# Docs
+docs/ export-ignore
+README.md export-ignore
+# License
+LICENSE export-ignore

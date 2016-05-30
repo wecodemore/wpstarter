@@ -16,6 +16,11 @@
 require_once realpath({{{VENDOR_PATH}}}.'/autoload.php');
 
 /**
+ * A reference to `.env` folder path.
+ */
+define('WPSTARTER_PATH', {{{ENV_REL_PATH}}});
+
+/**
  * Configuration constants.
  *
  * Use environment variables to set WordPress constants.
@@ -153,4 +158,4 @@ WCM\WPStarter\Helpers::addHook('plugins_loaded', function () {
 /**
  * Sets up WordPress vars and included files.
  */
-require_once ABSPATH.DIRECTORY_SEPARATOR.'wp-settings.php';
+require_once ABSPATH.'/wp-settings.php';

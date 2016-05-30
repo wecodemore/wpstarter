@@ -68,7 +68,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     {
         $this->config = $config;
         $this->paths = $paths;
-        $env = $paths['root'].DIRECTORY_SEPARATOR.'.env';
+        $env = $paths['root'].'/'.ltrim($config['env-file'], '\\/');
 
         return $config['env-example'] !== false && ! is_file($env);
     }
@@ -78,7 +78,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
      */
     public function targetPath(ArrayAccess $paths)
     {
-        return $paths['root'].DIRECTORY_SEPARATOR.'.env.example';
+        return $paths['root'].'/.env.example';
     }
 
     /**
@@ -87,10 +87,10 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     public function question(Config $config, IO $io)
     {
         if ($config['env-example'] === 'ask') {
-            $lines = array(
+            $lines = [
                 'Do you want to save .env.example file to',
                 'your project folder?',
-            );
+            ];
 
             return $io->ask($lines, true);
         }
@@ -125,11 +125,11 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
      */
     public function postProcess(IO $io)
     {
-        if (! is_file($this->paths['root'].DIRECTORY_SEPARATOR.'.env')) {
-            $lines = array(
+        if (! is_file($this->paths['root'].'/'.ltrim($this->config['env-file'], '/\\'))) {
+            $lines = [
                 'Remember you need a .env file with DB settings',
                 'to make your site fully functional.',
-            );
+            ];
 
             $io->block($lines, 'yellow', false);
         }
@@ -171,11 +171,11 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     private function copy(ArrayAccess $paths, $dest, $source = null)
     {
         if (is_null($source)) {
-            $pieces = array($paths['starter'], 'templates');
+            $pieces = [$paths['starter'], 'templates'];
             if (! $this->config['is-root']) {
                 array_unshift($pieces, $paths['root']);
             }
-            $source = implode(DIRECTORY_SEPARATOR, array_merge($pieces, array('.env.example')));
+            $source = implode('/', array_merge($pieces, ['.env.example']));
         }
         try {
             if (copy($source, $dest)) {

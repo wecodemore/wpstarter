@@ -67,11 +67,11 @@ class MoveContentStep implements OptionalStepInterface
         }
         $to = str_replace('\\', '/', $this->paths['wp-content']);
         $full = str_replace('\\', '/', $this->paths['root']).'/'.ltrim($to, '/');
-        $lines = array(
+        $lines = [
             'Do you want to move default plugins and themes from',
             'WordPress package wp-content dir to content folder:',
             '"'.$full.'"',
-        );
+        ];
 
         return $io->ask($lines, true);
     }

@@ -22,7 +22,7 @@ final class Env
     /**
      * @var array
      */
-    private static $set = array();
+    private static $set = [];
 
     /**
      * @var static
@@ -32,7 +32,7 @@ final class Env
     /**
      * @var array
      */
-    private static $isBool = array(
+    private static $isBool = [
         'ALLOW_UNFILTERED_UPLOADS',
         'ALTERNATE_WP_CRON',
         'AUTOMATIC_UPDATER_DISABLED',
@@ -68,12 +68,12 @@ final class Env
         'WP_DEBUG_LOG',
         'WPMU_ACCEL_REDIRECT',
         'WPMU_SENDFILE',
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $isInt = array(
+    private static $isInt = [
         'AUTOSAVE_INTERVAL',
         'EMPTY_TRASH_DAYS',
         'FS_TIMEOUT',
@@ -83,9 +83,9 @@ final class Env
         'SITE_ID_CURRENT_SITE',
         'BLOG_ID_CURRENT_SITE',
         'WP_PROXY_PORT',
-    );
+    ];
 
-    private static $isString = array(
+    private static $isString = [
         "ABSPATH",
         "ADMIN_COOKIE_PATH",
         "AUTH_COOKIE",
@@ -146,17 +146,17 @@ final class Env
         "WP_PROXY_USERNAME",
         "WP_SITEURL",
         "WP_TEMP_DIR",
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $isBoolOrInt = array('WP_POST_REVISIONS');
+    private static $isBoolOrInt = ['WP_POST_REVISIONS'];
 
     /**
      * @var array
      */
-    private static $isMod = array('FS_CHMOD_DIR', 'FS_CHMOD_FILE');
+    private static $isMod = ['FS_CHMOD_DIR', 'FS_CHMOD_FILE'];
 
     /**
      * @var array
@@ -182,7 +182,7 @@ final class Env
                 $file = '.env';
             }
 
-            $filePath = rtrim($path, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$file;
+            $filePath = rtrim(str_replace('\\', '/', $path), '/').'/'.$file;
             $loader = new Loader($filePath, true);
             $loader->load();
             self::$loaded = new static($loader->allVarNames());
@@ -233,7 +233,7 @@ final class Env
      */
     private function process(array $vars)
     {
-        $values = array();
+        $values = [];
         $constants = self::wpConstants();
         foreach ($vars as $var) {
             $value = getenv($var);

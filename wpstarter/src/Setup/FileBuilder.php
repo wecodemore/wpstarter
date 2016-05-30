@@ -43,13 +43,13 @@ class FileBuilder
      * @param  array        $vars
      * @return string|bool  file content on success, false on failure
      */
-    public function build(ArrayAccess $paths, $template, array $vars = array())
+    public function build(ArrayAccess $paths, $template, array $vars = [])
     {
-        $pieces = array($paths['starter'], 'templates', $template);
+        $pieces = [$paths['starter'], 'templates', $template];
         if (! $this->isRoot) {
             array_unshift($pieces, $paths['root']);
         }
-        $template = implode(DIRECTORY_SEPARATOR, $pieces);
+        $template = implode('/', $pieces);
         if (! is_readable($template)) {
             return false;
         }
@@ -75,9 +75,8 @@ class FileBuilder
         if (empty($content)) {
             return false;
         }
-        $dest = $targetPath.DIRECTORY_SEPARATOR.$fileName;
         try {
-            return file_put_contents($dest, $content) > 0;
+            return file_put_contents("{$targetPath}/{$fileName}", $content) > 0;
         } catch (Exception $e) {
             return false;
         }

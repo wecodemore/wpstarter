@@ -24,7 +24,7 @@ use Exception;
  */
 class DropinsStep implements StepInterface
 {
-    private static $dropins = array(
+    private static $dropins = [
         'advanced-cache.php',
         'db.php',
         'db-error.php',
@@ -35,7 +35,7 @@ class DropinsStep implements StepInterface
         'blog-deleted.php',
         'blog-inactive.php',
         'blog-suspended.php',
-    );
+    ];
 
     /**
      * @var \WCM\WPStarter\Setup\IO
@@ -183,7 +183,7 @@ class DropinsStep implements StepInterface
         }
         try {
             $all = (array) json_decode($result, true);
-            $languages = isset($all['translations']) ? array() : false;
+            $languages = isset($all['translations']) ? [] : false;
             if (is_array($languages)) {
                 foreach ($all['translations'] as $lang) {
                     $languages[] = $lang['language'];
@@ -211,24 +211,24 @@ class DropinsStep implements StepInterface
     {
         switch ($question) {
             case 2:
-                $lines = array(
+                $lines = [
                     "{$name} is not a core supported locale for WP ".$this->config['wp-version'],
                     "Do you want to proceed with {$name}.php anyway?",
-                );
+                ];
                 break;
             case 1:
-                $lines = array(
+                $lines = [
                     'WP Starter failed to get languages from wordpress.org API,',
                     "so it isn't possible to verify that {$name} is a supported locale.",
                     "Do you want to proceed with {$name}.php anyway?",
-                );
+                ];
                 break;
             case 0:
             default:
-                $lines = array(
+                $lines = [
                     "{$name} seems not a valid dropin file.",
                     "Do you want to proceed with it anyway?",
-                );
+                ];
                 break;
 
         }

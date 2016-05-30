@@ -26,27 +26,27 @@ class MuLoader
     /**
      * @var string[] Supported packages types
      */
-    private static $types = array('wordpress-plugin', 'wordpress-muplugin');
+    private static $types = ['wordpress-plugin', 'wordpress-muplugin'];
 
     /**
      * @var string[]
      */
-    private $plugins = array();
+    private $plugins = [];
 
     /**
      * @var string[]
      */
-    private $loaded = array();
+    private $loaded = [];
 
     /**
      * @var string[]
      */
-    private $regular = array();
+    private $regular = [];
 
     /**
      * @var string[]
      */
-    private $regularLoaded = array();
+    private $regularLoaded = [];
 
     /**
      * Runs on 'muplugins_loaded' hook, with very low priority, and checks for plugins files in
@@ -71,9 +71,9 @@ class MuLoader
         }
         $this->plugins = $refresh ? false : get_site_transient(self::PREFIX.$transient);
         if (empty($this->plugins)) {
-            $this->plugins = array();
+            $this->plugins = [];
             $refresh = true;
-            array_walk($jsonFiles, array($this, 'findFile'));
+            array_walk($jsonFiles, [$this, 'findFile']);
         }
         $this->loading($refresh, $transient);
     }
@@ -177,15 +177,15 @@ class MuLoader
         try {
             $json = json_decode(file_get_contents($jsonFile), true);
         } catch (Exception $e) { // a bad formed or unreadable composer.json file
-            $json = array();
+            $json = [];
         }
         // if the file for a WordPress (MU) Plugin?
         if (! isset($json['type']) || ! in_array($json['type'], self::$types, true)) {
             return;
         }
         $isRegular = $json['type'] === 'wordpress-plugin';
-        $basedir = dirname(str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $jsonFile));
-        $pluginFile = $basedir.DIRECTORY_SEPARATOR.basename($basedir).'.php';
+        $basedir = dirname(str_replace('\\', '/', $jsonFile));
+        $pluginFile = $basedir.'/'.basename($basedir).'.php';
         if (file_exists($pluginFile)) {
             $this->plugins[] = $pluginFile;
             $isRegular and $this->regular[] = $pluginFile;
@@ -207,10 +207,10 @@ class MuLoader
     {
         // check "extra.wordpress-plugin-main-file" in composer.json
         $main = isset($json['extra']) && isset($json['extra'][self::EXTRA_KEY]) ?
-            $json['extra'][self::EXTRA_KEY]
-            : str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $json['extra'][self::EXTRA_KEY]);
+            str_replace('\\', '/', $json['extra'][self::EXTRA_KEY])
+            : false;
         if ($main) {
-            $path = $basedir.DIRECTORY_SEPARATOR.$main;
+            $path = "{$basedir}/{$main}";
             $this->plugins[] = $path;
             $isRegular and $this->regular[] = $path;
         }
@@ -254,7 +254,7 @@ class MuLoader
      */
     private function getPluginsData($refresh)
     {
-        $data = $refresh ? array() : (get_site_transient(self::PREFIX.self::TRANSIENT) ?: array());
+        $data = $refresh ? [] : (get_site_transient(self::PREFIX.self::TRANSIENT) ?: []);
         foreach ($this->plugins as $file) {
             $key = basename($file);
             $data[$key] = $this->getPluginData($key, $file);

@@ -114,7 +114,7 @@ class UrlDownloader
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        $headers = $json ? array('Accept: application/json') : array('Accept: text/plain');
+        $headers = $json ? ['Accept: application/json'] : ['Accept: text/plain'];
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_HEADER, true);
         $response = curl_exec($ch);
@@ -149,7 +149,7 @@ class UrlDownloader
      */
     private function contentType($contentType)
     {
-        $types = is_string($contentType) ? explode(';', $contentType) : array('');
+        $types = is_string($contentType) ? explode(';', $contentType) : [''];
 
         return trim(strtolower($types[0]));
     }

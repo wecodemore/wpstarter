@@ -97,7 +97,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
                 : trim($path, '\\/');
         };
         $vars = array_merge(
-            array(
+            [
                 'VENDOR_PATH'        => $rootPathRel.".'/{$paths['vendor']}'",
                 'ENV_REL_PATH'       => $rootPathRel,
                 'WP_INSTALL_PATH'    => $rootPathRel.".'/{$paths['wp']}'",
@@ -106,7 +106,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
                 'WP_CONTENT_URL'     => $relUrl($paths['wp-content']),
                 'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
                 'ENV_FILE_NAME'      => $this->config['env-file'],
-            ),
+            ],
             $this->salter->keys()
         );
         $build = $this->builder->build($paths, 'wp-config.example', $vars);
@@ -140,10 +140,10 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
      */
     private function askForRegister()
     {
-        $lines = array(
+        $lines = [
             'Do you want to register WordPress package wp-content folder',
             'as additional theme folder for your project?',
-        );
+        ];
 
         return $this->io->ask($lines, true);
     }

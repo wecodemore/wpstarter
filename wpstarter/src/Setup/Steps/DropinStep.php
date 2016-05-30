@@ -176,11 +176,11 @@ class DropinStep implements FileStepInterface
     {
         $realpath = realpath($paths['root']."/{$url}");
         if ($realpath && is_file($realpath)) {
-            return array('copy', $realpath);
+            return ['copy', $realpath];
         } elseif (filter_var($url, FILTER_VALIDATE_URL)) {
-            return array('download', $url);
+            return ['download', $url];
         }
 
-        return array(false, false);
+        return [false, false];
     }
 }

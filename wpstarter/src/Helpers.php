@@ -32,11 +32,11 @@ class Helpers
 
         $settings = $env->allVars();
 
-        $required = array(
+        $required = [
             'DB_NAME',
             'DB_USER',
             'DB_PASSWORD',
-        );
+        ];
 
         foreach ($required as $key) {
             if (! isset($settings[$key]) || empty($settings[$key])) {
@@ -63,13 +63,13 @@ class Helpers
         }
         global $wp_filter;
         if (! is_array($wp_filter)) {
-            $wp_filter = array();
+            $wp_filter = [];
         }
         if (! isset($wp_filter[$hook])) {
-            $wp_filter[$hook] = array();
+            $wp_filter[$hook] = [];
         }
         if (! isset($wp_filter[$hook][$priority])) {
-            $wp_filter[$hook][$priority] = array();
+            $wp_filter[$hook][$priority] = [];
         }
         /** @var \Closure|object $function */
         $function = is_object($callable)
@@ -77,10 +77,10 @@ class Helpers
             : function () use ($callable) {
                 return call_user_func_array($callable, func_get_args());
             };
-        $wp_filter[$hook][$priority][spl_object_hash($function)] = array(
+        $wp_filter[$hook][$priority][spl_object_hash($function)] = [
             'function'      => $function,
             'accepted_args' => $argsNum,
-        );
+        ];
     }
 
     /**

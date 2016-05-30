@@ -60,11 +60,11 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     public function run(ArrayAccess $paths)
     {
         $this->paths = $paths;
-        $toCheck = array(
+        $toCheck = [
             realpath($paths['root'].'/'.$paths['starter']),
             realpath($paths['root'].'/'.$paths['vendor'].'/autoload.php'),
             realpath($paths['root'].'/'.$paths['wp'].'/wp-settings.php'),
-        );
+        ];
         if (array_filter($toCheck) !== $toCheck) {
             $this->error = 'WP Starter was not able to find valid folder settings.';
 
@@ -116,11 +116,11 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     public function postProcess(IO $io)
     {
         if (! $this->themeDir) {
-            $lines = array(
+            $lines = [
                 'Default theme folder:',
                 '"'.$this->paths['wp-content'].'/themes" does not exist.',
                 'The site may be unusable until you create it (even empty).',
-            );
+            ];
             $io->block($lines, 'red', true);
         }
     }
