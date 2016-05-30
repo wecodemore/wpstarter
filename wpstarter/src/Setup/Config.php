@@ -10,15 +10,12 @@
 
 namespace WCM\WPStarter\Setup;
 
-use ArrayAccess;
-use LogicException;
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class Config implements ArrayAccess
+final class Config implements \ArrayAccess
 {
     private static $defaults = [
         'gitignore'             => true,
@@ -29,6 +26,7 @@ class Config implements ArrayAccess
         'prevent-overwrite'     => ['.gitignore'],
         'verbosity'             => 2,
         'dropins'               => [],
+        'custom-steps'          => [],
         'unknown-dropins'       => 'ask',
     ];
 
@@ -54,6 +52,7 @@ class Config implements ArrayAccess
      * @see \WCM\WPStarter\Setup\Config::validateOverwrite()
      * @see \WCM\WPStarter\Setup\Config::validateVerbosity()
      * @see \WCM\WPStarter\Setup\Config::validateFilename()
+     * @see \WCM\WPStarter\Setup\Config::validateSteps()
      */
     private function validate($configs)
     {
@@ -68,6 +67,7 @@ class Config implements ArrayAccess
             'unknown-dropins'       => [$this, 'validateBoolOrAsk'],
             'prevent-overwrite'     => [$this, 'validateOverwrite'],
             'verbosity'             => [$this, 'validateVerbosity'],
+            'steps'                 => [$this, 'validateSteps'],
         ];
         $defaults = self::$defaults;
         array_walk($configs, function ($value, $key) use ($map, &$defaults) {
@@ -76,6 +76,7 @@ class Config implements ArrayAccess
                 $defaults[$key] = $result;
             }
         });
+
         if ($defaults['register-theme-folder']) {
             $defaults['move-content'] = false;
         }
@@ -207,6 +208,29 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     * @return array|null
+     */
+    private function validateSteps($value)
+    {
+        if (! is_array($value)) {
+            return null;
+        }
+
+        $interface = 'WCM\\WPStarter\\Setup\\Steps\\StepInterface';
+
+        $steps = [];
+        foreach ($value as $name => $step) {
+            if (is_string($step)) {
+                $step = trim($step);
+                is_subclass_of($step, $interface, true) and $steps[trim($name)] = $step;
+            }
+        }
+
+        return $steps ?: null;
+    }
+
+    /**
+     * @param $value
      * @return bool
      */
     private function validateBool($value)
@@ -249,7 +273,7 @@ class Config implements ArrayAccess
      */
     public function offsetSet($offset, $value)
     {
-        throw new LogicException("Configs can't be set on the fly.");
+        throw new \LogicException("Configs can't be set on the fly.");
     }
 
     /**
@@ -257,6 +281,6 @@ class Config implements ArrayAccess
      */
     public function offsetUnset($offset)
     {
-        throw new LogicException("Configs can't be unset on the fly.");
+        throw new \LogicException("Configs can't be unset on the fly.");
     }
 }
