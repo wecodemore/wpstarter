@@ -1,77 +1,81 @@
 {
-    "name": "wecodemore/wpstarter",
-    "description": "Easily bootstrap whole site Composer packages for WordPress.",
-    "type": "library",
-    "keywords": [
-        "composer",
-        "wordpress",
-        "wp",
-        "wp-config",
-        "config",
-        "env"
-    ],
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Giuseppe Mazzapica",
-            "email": "giuseppe.mazzapica@gmail.com",
-            "homepage": "http://gm.zoomlab.it",
-            "role": "Developer"
-        }
-    ],
-    "support": {
-        "issues": "https://github.com/wecodemore/wpstarter/issues",
-        "source": "https://github.com/wecodemore/wpstarter"
-    },
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https://wpackagist.org"
-        }
-    ],
-    "require": {
-        "php": ">=5.4",
-        "vlucas/phpdotenv": "~2.0",
-        "johnpbloch/wordpress": ">=4.3"
-    },
-    "replace": {
-        "wecodemore/wp-composer-config": "*"
-    },
-    "autoload": {
-        "psr-4": {
-            "WCM\\WPStarter\\": "wpstarter/src/"
-        }
-    },
-    "scripts": {
-        "post-install-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
-        "post-update-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
-        "wpstarter": "WCM\\WPStarter\\Setup::runAsRoot"
-    },
-    "config": {
-        "optimize-autoloader": true
-    },
-    "extra": {
-        "wordpress-install-dir": "public/wp",
-        "wordpress-content-dir": "public/content",
-        "wpstarter": {
-            "env-example": true,
-            "prevent-overwrite": false
-        },
-        "installer-paths": {
-            "public/content/plugins/{$name}": [
-                "type:wordpress-plugin"
-            ],
-            "public/content/mu-plugins/{$name}": [
-                "type:wordpress-muplugin"
-            ],
-            "public/content/themes/{$name}": [
-                "type:wordpress-theme"
-            ]
-        },
-        "branch-alias": {
-            "dev-master": "2.x-dev"
-        }
+  "name": "wecodemore/wpstarter",
+  "description": "Easily bootstrap whole site Composer packages for WordPress.",
+  "type": "library",
+  "keywords": [
+    "composer",
+    "wordpress",
+    "wp",
+    "wp-config",
+    "config",
+    "env"
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Giuseppe Mazzapica",
+      "email": "giuseppe.mazzapica@gmail.com",
+      "homepage": "http://gm.zoomlab.it",
+      "role": "Developer"
     }
+  ],
+  "support": {
+    "issues": "https://github.com/wecodemore/wpstarter/issues",
+    "source": "https://github.com/wecodemore/wpstarter"
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://wpackagist.org"
+    }
+  ],
+  "require": {
+    "php": ">=5.4",
+    "vlucas/phpdotenv": "~2.0",
+    "johnpbloch/wordpress": ">=4.3"
+  },
+  "require-dev": {
+    "composer/composer": "^1.0"
+  },
+  "replace": {
+    "wecodemore/wp-composer-config": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "WCM\\WPStarter\\": "wpstarter/src/"
+    }
+  },
+  "scripts": {
+    "post-install-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
+    "post-update-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
+    "wpstarter": "WCM\\WPStarter\\Setup::runAsRoot"
+  },
+  "config": {
+    "optimize-autoloader": true
+  },
+  "extra": {
+    "wordpress-install-dir": "public/wp",
+    "wordpress-content-dir": "public/content",
+    "wpstarter": {
+      "env-example": true,
+      "prevent-overwrite": false
+    },
+    "installer-paths": {
+      "public/content/plugins/{$name}": [
+        "type:wordpress-plugin"
+      ],
+      "public/content/mu-plugins/{$name}": [
+        "type:wordpress-muplugin"
+      ],
+      "public/content/themes/{$name}": [
+        "type:wordpress-theme"
+      ]
+    },
+    "branch-alias": {
+      "dev-master": "2.x-dev",
+      "dev-version-1": "3.x-dev"
+    }
+  }
 }
