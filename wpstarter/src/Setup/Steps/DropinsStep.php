@@ -10,6 +10,7 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
+use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\OverwriteHelper;
@@ -64,9 +65,10 @@ class DropinsStep implements StepInterface
 
     /**
      * @param \WCM\WPStarter\Setup\IO              $io
+     * @param \WCM\WPStarter\Setup\FileBuilder     $builder
      * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
      */
-    public function __construct(IO $io, OverwriteHelper $overwrite)
+    public function __construct(IO $io, FileBuilder $builder, OverwriteHelper $overwrite)
     {
         $this->io = $io;
         $this->overwrite = $overwrite;
