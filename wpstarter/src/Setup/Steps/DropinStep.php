@@ -14,8 +14,6 @@ use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\OverwriteHelper;
 use WCM\WPStarter\Setup\UrlDownloader;
-use ArrayAccess;
-use Exception;
 
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
@@ -76,7 +74,7 @@ class DropinStep implements FileCreationStepInterface
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, ArrayAccess $paths)
+    public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->actionSource = $this->action($this->url, $paths);
         if (empty($this->actionSource[0])) {
@@ -91,7 +89,7 @@ class DropinStep implements FileCreationStepInterface
     /**
      * @inheritdoc
      */
-    public function run(ArrayAccess $paths)
+    public function run(\ArrayAccess $paths)
     {
         $dest = $this->targetPath($paths);
         if (! $this->overwrite->should($dest)) {
@@ -123,7 +121,7 @@ class DropinStep implements FileCreationStepInterface
     /**
      * @inheritdoc
      */
-    public function targetPath(ArrayAccess $paths)
+    public function targetPath(\ArrayAccess $paths)
     {
         return $paths['root'].'/'.$paths['wp-content'].'/'.$this->name;
     }
@@ -159,7 +157,7 @@ class DropinStep implements FileCreationStepInterface
             copy($source, $dest)
                 ? $this->success .= "<comment>{$name}</comment> copied successfully."
                 : $this->error .= "Impossible to copy {$sourceBase} to {$name}.";
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->error .= "Impossible to copy {$sourceBase} to {$name}.";
         }
     }
@@ -172,7 +170,7 @@ class DropinStep implements FileCreationStepInterface
      * @param  \ArrayAccess $paths
      * @return array
      */
-    private function action($url, ArrayAccess $paths)
+    private function action($url, \ArrayAccess $paths)
     {
         $realpath = realpath($paths['root']."/{$url}");
         if ($realpath && is_file($realpath)) {

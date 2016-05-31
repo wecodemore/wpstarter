@@ -10,8 +10,6 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
-use ArrayAccess;
-
 /**
  * A step that saves a file.
  *

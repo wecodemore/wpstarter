@@ -10,12 +10,10 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
-use ArrayAccess;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
-use WCM\WPStarter\Setup\OverwriteHelper;
 
 /**
  * Steps that generates index.php in root folder.
@@ -73,7 +71,7 @@ class IndexStep implements FileCreationStepInterface, BlockingStepInterface
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, ArrayAccess $paths)
+    public function allowed(Config $config, \ArrayAccess $paths)
     {
         return true;
     }
@@ -81,7 +79,7 @@ class IndexStep implements FileCreationStepInterface, BlockingStepInterface
     /**
      * @inheritdoc
      */
-    public function targetPath(ArrayAccess $paths)
+    public function targetPath(\ArrayAccess $paths)
     {
         return rtrim($paths['root'].'/'.$paths['wp-parent'], '/').'/index.php';
     }
@@ -89,7 +87,7 @@ class IndexStep implements FileCreationStepInterface, BlockingStepInterface
     /**
      * @inheritdoc
      */
-    public function run(ArrayAccess $paths)
+    public function run(\ArrayAccess $paths)
     {
         $n = count(explode('/', str_replace('\\', '/', $paths['wp']))) - 1;
         $rootPathRel = str_repeat('dirname(', $n).'__DIR__'.str_repeat(')', $n);

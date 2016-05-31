@@ -10,8 +10,6 @@
 
 namespace WCM\WPStarter\Setup;
 
-use ArrayAccess;
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -39,7 +37,7 @@ class OverwriteHelper
      * @param \WCM\WPStarter\Setup\IO     $io
      * @param \ArrayAccess                $paths
      */
-    public function __construct(Config $config, IO $io, ArrayAccess $paths)
+    public function __construct(Config $config, IO $io, \ArrayAccess $paths)
     {
         $this->config = $config['prevent-overwrite'];
         if (is_array($this->config)) {

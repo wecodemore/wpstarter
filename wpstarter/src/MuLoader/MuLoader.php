@@ -10,8 +10,6 @@
 
 namespace WCM\WPStarter\MuLoader;
 
-use Exception;
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -176,7 +174,7 @@ class MuLoader
     {
         try {
             $json = json_decode(file_get_contents($jsonFile), true);
-        } catch (Exception $e) { // a bad formed or unreadable composer.json file
+        } catch (\Exception $e) { // a bad formed or unreadable composer.json file
             $json = [];
         }
         // if the file for a WordPress (MU) Plugin?

@@ -15,8 +15,6 @@ use WCM\WPStarter\Setup\Steps\FileCreationStepInterface;
 use WCM\WPStarter\Setup\Steps\OptionalStepInterface;
 use WCM\WPStarter\Setup\Steps\PostProcessStepInterface;
 use WCM\WPStarter\Setup\Steps\StepInterface;
-use ArrayAccess;
-use SplObjectStorage;
 
 /**
  * A step whose work routine consists in running other steps routines.
@@ -65,8 +63,8 @@ class Stepper implements StepperInterface, PostProcessStepInterface
     {
         $this->io = $io;
         $this->overwrite = $overwrite;
-        $this->steps = new SplObjectStorage();
-        $this->postProcessSteps = new SplObjectStorage();
+        $this->steps = new \SplObjectStorage();
+        $this->postProcessSteps = new \SplObjectStorage();
     }
 
     /**
@@ -82,7 +80,7 @@ class Stepper implements StepperInterface, PostProcessStepInterface
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, ArrayAccess $paths)
+    public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config;
         $wp_config = $paths['root'].'/wp-config.php';
@@ -96,7 +94,7 @@ class Stepper implements StepperInterface, PostProcessStepInterface
      * @param  \ArrayAccess $paths
      * @return int
      */
-    public function run(ArrayAccess $paths)
+    public function run(\ArrayAccess $paths)
     {
         $this->io->comment('WP Starter is going to start installation...');
         $this->steps->rewind();
@@ -165,7 +163,7 @@ class Stepper implements StepperInterface, PostProcessStepInterface
      * @param  \ArrayAccess                             $paths
      * @return bool
      */
-    private function shouldProcess(StepInterface $step, ArrayAccess $paths)
+    private function shouldProcess(StepInterface $step, \ArrayAccess $paths)
     {
         $comment = '';
         $process = $step->allowed($this->config, $paths);

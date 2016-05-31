@@ -10,8 +10,6 @@
 
 namespace WCM\WPStarter\Setup;
 
-use Exception;
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -77,7 +75,7 @@ class UrlDownloader
             $response = $this->fetch();
 
             return $response && file_put_contents($filename, $response) > 0;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->error = $e->getMessage();
         }
 
