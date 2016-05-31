@@ -23,7 +23,7 @@ use WCM\WPStarter\Setup\Steps\StepInterface;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class Stepper implements StepperInterface, PostProcessStepInterface
+final class Stepper implements StepperInterface, PostProcessStepInterface
 {
     /**
      * @var \WCM\WPStarter\Setup\IO
