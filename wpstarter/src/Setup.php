@@ -12,12 +12,14 @@ namespace WCM\WPStarter;
 
 use Composer\Script\Event;
 use Composer\Composer;
+use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\Stepper;
 use WCM\WPStarter\Setup\StepperInterface;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\OverwriteHelper;
 use WCM\WPStarter\Setup\IO;
+use WCM\WPStarter\Setup\Steps\StepInterface;
 
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
@@ -26,6 +28,7 @@ use WCM\WPStarter\Setup\IO;
  */
 class Setup
 {
+
     const WP_PACKAGE = 'johnpbloch/wordpress';
 
     /**
@@ -83,32 +86,65 @@ class Setup
         $overwrite = new OverwriteHelper($config, $io, $paths);
         $stepper = new Stepper($io, $overwrite);
         if ($this->stepperAllowed($stepper, $config, $paths, $io)) {
-            $builder = new FileBuilder(self::$isRoot);
+            $filesystem = new Filesystem();
+            $builder = new FileBuilder(self::$isRoot, $filesystem);
 
-            $ns = 'WCM\\WPStarter\\Setup\\Steps\\';
             $classes = array_merge([
-                'check-path'   => $ns.'CheckPathStep',
-                'wp-config'    => $ns.'WPConfigStep',
-                'inded'        => $ns.'IndexStep',
-                'env-example'  => $ns.'EnvExampleStep',
-                'dropins'      => $ns.'DropinsStep',
-                'gitignore'    => $ns.'GitignoreStep',
-                'move-content' => $ns.'MoveContentStep',
+                'check-path'   => '\\WCM\\WPStarter\\Setup\\Steps\\CheckPathStep',
+                'wp-config'    => '\\WCM\\WPStarter\\Setup\\Steps\\WPConfigStep',
+                'index'        => '\\WCM\\WPStarter\\Setup\\Steps\\IndexStep',
+                'env-example'  => '\\WCM\\WPStarter\\Setup\\Steps\\EnvExampleStep',
+                'dropins'      => '\\WCM\\WPStarter\\Setup\\Steps\\DropinsStep',
+                'gitignore'    => '\\WCM\\WPStarter\\Setup\\Steps\\GitignoreStep',
+                'move-content' => '\\WCM\\WPStarter\\Setup\\Steps\\MoveContentStep',
             ], $config['custom-steps']);
 
             array_walk(
                 $classes,
-                function ($stepClass) use ($stepper, $io, $builder, $overwrite, $ns) {
-                    $step = is_subclass_of($stepClass, $ns.'FileStepInterface', true)
-                        ? new $stepClass($io, $builder, $overwrite)
-                        : new $stepClass($io);
-
-                    $stepper->addStep($step);
+                function ($stepClass) use ($stepper, $io, $builder, $filesystem, $overwrite) {
+                    $step = $this->factoryStep($stepClass, $filesystem, $builder, $overwrite);
+                    $step and $stepper->addStep($step);
                 }
             );
 
             $stepper->run($paths);
         }
+    }
+
+    /**
+     * @param                                      $stepClass
+     * @param \WCM\WPStarter\Setup\IO              $io
+     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder     $builder
+     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
+     * @return \WCM\WPStarter\Setup\Steps\StepInterface|null
+     */
+    private function factoryStep(
+        $stepClass,
+        IO $io,
+        Filesystem $filesystem,
+        FileBuilder $builder,
+        OverwriteHelper $overwrite
+    ) {
+        $ns = 'WCM\\WPStarter\\Setup\\Steps\\';
+
+        if ( ! is_subclass_of($stepClass, $ns.'StepInterface', true)) {
+            return;
+        }
+
+        $step = null;
+
+        if (method_exists($stepClass, 'instance')) {
+            /** @var callable $factory */
+            $factory = [$stepClass, 'instance'];
+            $step = $factory($io, $filesystem, $builder, $overwrite);
+        }
+
+        $step or $step = is_subclass_of($stepClass, $ns.'FileStepInterface', true)
+            ? new $stepClass($io, $filesystem, $builder, $overwrite)
+            : new $stepClass($io);
+
+        return $step instanceof StepInterface ? $step : null;
     }
 
     /**
@@ -124,7 +160,7 @@ class Setup
         Paths $paths,
         IO $io
     ) {
-        if (! $stepper->allowed($config, $paths)) {
+        if ( ! $stepper->allowed($config, $paths)) {
             $lines = [
                 'WP Starter installation CANCELED.',
                 'wp-config.php was found in root folder and your overwrite settings',
