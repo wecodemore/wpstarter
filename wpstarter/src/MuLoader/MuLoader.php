@@ -17,38 +17,28 @@ namespace WCM\WPStarter\MuLoader;
  */
 class MuLoader
 {
-    const EXTRA_KEY = 'wordpress-plugin-main-file';
-    const PREFIX    = 'wcm_wps_';
-    const TRANSIENT = 'data_transient';
+    const PREFIX           = 'wcm_wps_';
+    const DATA_TRANSIENT   = 'plugins_data';
+    const INSTALLED_OPTION = 'plugins_installed';
 
     /**
-     * @var string[] Supported packages types
-     */
-    private static $types = ['wordpress-plugin', 'wordpress-muplugin'];
-
-    /**
-     * @var string[]
+     * @var array
      */
     private $plugins = [];
 
     /**
      * @var string[]
      */
-    private $loaded = [];
+    private $folders = [];
 
     /**
-     * @var string[]
+     * @var string
      */
-    private $regular = [];
-
-    /**
-     * @var string[]
-     */
-    private $regularLoaded = [];
+    private $lastParsedFolder = '';
 
     /**
      * Runs on 'muplugins_loaded' hook, with very low priority, and checks for plugins files in
-     * subfolder of MU plugin folder. Only plugins that support Composer are taken into account.
+     * subfolder of MU plugin folder.
      *
      * @param bool $refresh Force plugins data to be loaded from files instead of from transient
      */
@@ -57,23 +47,29 @@ class MuLoader
         if (! defined('WPMU_PLUGIN_DIR') || ! is_dir(WPMU_PLUGIN_DIR) || defined('WP_INSTALLING')) {
             return;
         }
-        static $jsonFiles;
+        static $phpFiles;
         static $transient;
-        if (is_null($jsonFiles)) {
-            $jsonFiles = glob(WPMU_PLUGIN_DIR."/*/composer.json", GLOB_NOSORT);
-
-            if (empty($jsonFiles)) {
+        if (is_null($phpFiles)) {
+            $phpFiles = glob(WPMU_PLUGIN_DIR."/*/*.php");
+            if (empty($phpFiles)) {
                 return;
             }
-            $transient = md5(serialize($jsonFiles));
         }
-        $this->plugins = $refresh ? false : get_site_transient(self::PREFIX.$transient);
+        if (is_null($transient)) {
+            $edited = @filemtime(WPMU_PLUGIN_DIR.'/.');
+            $edited or $edited = time();
+            $transient = md5(__CLASS__.$edited);
+        }
+
+        $refresh or $this->plugins = get_site_transient(self::PREFIX.$transient);
         if (empty($this->plugins)) {
             $this->plugins = [];
             $refresh = true;
-            array_walk($jsonFiles, [$this, 'findFile']);
+            array_walk($phpFiles, [$this, 'findPluginFile']);
         }
-        $this->loading($refresh, $transient);
+
+        $this->loadPlugins($refresh, $transient);
+        $this->afterLoading($refresh, $transient);
     }
 
     /**
@@ -82,17 +78,21 @@ class MuLoader
      * @param bool   $refresh
      * @param string $transient
      */
-    private function loading($refresh, $transient)
+    private function loadPlugins($refresh, $transient)
     {
-        $toLoad = array_diff($this->plugins, $this->loaded);
-        foreach ($toLoad as $key => $file) {
+        $toTrigger = [];
+        foreach ($this->plugins as $key => $plugin) {
+            list($file, $mu) = $plugin;
             $loaded = $this->loadPlugin($key, $file, $refresh, $transient);
             if (! $loaded) {
+                $this->__invoke(true);
                 break;
             }
+
+            $mu or $toTrigger[] = $file;
         }
-        empty($this->regularLoaded) or $this->regularAsMU($this->regularLoaded);
-        $this->afterLoading($refresh, $transient);
+
+        $toTrigger and $this->handleInstallHooks($toTrigger);
     }
 
     /**
@@ -106,111 +106,136 @@ class MuLoader
      */
     private function loadPlugin($key, $file, $refresh, $transient)
     {
-        if (is_readable($file) && strtolower(pathinfo($file, PATHINFO_EXTENSION)) === 'php') {
+        if (is_readable($file)) {
             wp_register_plugin_realpath($file);
-            if (in_array($file, $this->regular, true)) {
-                $this->regularLoaded[] = $file;
-            }
+            /** @noinspection PhpIncludeInspection */
             include_once $file;
-            $this->loaded[] = $file;
 
             return true;
         }
+
         if ($refresh) {
             // remove non-readable or non-php files from array of files to be saved
             unset($this->plugins[$key]);
 
             return true;
         }
+
         // If here, a non-readable or non-php file is cached: let's delete cache and restart
         delete_site_transient(self::PREFIX.$transient);
-        delete_site_transient(self::PREFIX.self::TRANSIENT);
-        $this->__invoke(true);
+        delete_site_transient(self::PREFIX.self::DATA_TRANSIENT);
 
         return false;
     }
 
     /**
-     * For regular plugins used as MU plugins fire activation hooks.
-     * Plugins that have deactivation hook CAN'T be used as MU plugins.
+     * Fire activation hooks for regular plugins used as MU plugins.
+     *
+     * However, regular plugins that have deactivation/activation routines should **NOT** be used a
+     * MU plugins, because deactivation routines will never happen (there's no way do deactivate a
+     * MU plugin) and activation routines will be triggered by this method first time a plugin file
+     * is loaded, which *should* work most of the times, but there's no warranty against
+     * explosions.
      *
      * @param array $plugins
      */
-    private function regularAsMU(array $plugins)
+    private function handleInstallHooks(array $plugins)
     {
-        $regular = new PluginAsMuLoader($plugins);
-        $regular->install();
+        $installed = get_site_option(MuLoader::PREFIX.self::INSTALLED_OPTION, []);
+        $toTrigger = array_diff($plugins, $installed);
+        array_walk($toTrigger, function ($plugin) {
+            $basename = plugin_basename($plugin);
+            do_action("activate_{$basename}");
+            is_multisite() and do_action('activated_plugin', $basename, true);
+        });
+
+        if ($toTrigger !== $installed) {
+            update_site_option(MuLoader::PREFIX.self::INSTALLED_OPTION, $toTrigger);
+        }
     }
 
     /**
-     * Performs operations after loading happened: cache loaded files if needed and add plugins
-     * data to mustuse plugin screen.
+     * Performs operations after loading happened.
+     *
+     * Cache loaded files if needed and add plugins data to MU plugin screen.
      *
      * @param bool   $refresh   Does data need to be cached?
      * @param string $transient Transient name
      */
     private function afterLoading($refresh, $transient)
     {
-        $refresh and set_site_transient(self::PREFIX.$transient, $this->plugins, WEEK_IN_SECONDS);
-        if (! is_admin()) {
-            return;
+        $refresh and set_site_transient(self::PREFIX.$transient, $this->plugins, DAY_IN_SECONDS);
+        if (is_admin()) {
+            $loader = $this;
+            add_filter('show_advanced_plugins', function ($bool, $type) use ($refresh, $loader) {
+                return $loader->showPluginsData($bool, $type, $refresh);
+            }, PHP_INT_MAX, 2);
         }
-        $loader = $this;
-        add_filter('show_advanced_plugins', function ($bool, $type) use ($refresh, $loader) {
-            return $loader->showPluginsData($bool, $type, $refresh);
-        }, PHP_INT_MAX, 2);
     }
 
     /**
-     * Reads the composer.json of a MU plugin package, and enqueue to be loaded the php file
-     * named in the same way of containing subfolder unless it does not exist, in which case
-     * findFileInJson() method is used to check for a different file set in
-     * "extra.wordpress-plugin-main-file" composer.json config.
+     * Looks for the plugin headers of a file, and enqueue it to be loaded headers are found.
      *
-     * @param  string $jsonFile Full path of composer.json of mu plugin file
+     * @param  string $phpFile Full path of candidate plugin file
      * @return void
      */
-    private function findFile($jsonFile)
+    private function findPluginFile($phpFile)
     {
-        try {
-            $json = json_decode(file_get_contents($jsonFile), true);
-        } catch (\Exception $e) { // a bad formed or unreadable composer.json file
-            $json = [];
-        }
-        // if the file for a WordPress (MU) Plugin?
-        if (! isset($json['type']) || ! in_array($json['type'], self::$types, true)) {
+        if (! is_file($phpFile) || ! is_readable($phpFile)) {
             return;
         }
-        $isRegular = $json['type'] === 'wordpress-plugin';
-        $basedir = dirname(str_replace('\\', '/', $jsonFile));
-        $pluginFile = $basedir.'/'.basename($basedir).'.php';
-        if (file_exists($pluginFile)) {
-            $this->plugins[] = $pluginFile;
-            $isRegular and $this->regular[] = $pluginFile;
 
+        $dirname = dirname($phpFile);
+        $this->guessMuPluginFile($dirname);
+
+        if (! array_key_exists($dirname, $this->folders)) {
+            $this->folders[$dirname] = ['done' => false, 'count' => 0];
+            $this->lastParsedFolder = $dirname;
+        }
+
+        $this->folders[$dirname]['count']++;
+        $this->folders[$dirname]['last'] = $phpFile;
+
+        // there might be just one plugin per folder
+        if ($this->folders[$dirname]['done']) {
             return;
         }
-        $this->findFileInJson($json, $basedir, $isRegular);
+
+        $data = @get_file_data($phpFile, ['Name' => 'Plugin Name']);
+        $data = is_array($data) ? array_change_key_case($data, CASE_LOWER) : [];
+        if (array_key_exists('name', $data) && trim($data['name'])) {
+            // seems we found the plugin file
+            $this->plugins[] = [$phpFile, false];
+            $this->folders[$dirname]['done'] = true;
+        }
     }
 
     /**
-     * Check for a plugin file set in "extra.wordpress-plugin-main-file" composer.json config when
-     * there's no file with same name of MU plugin subfolder.
+     * It is possible that a "real" MU plugin has no plugin headers.
+     * In that case, if its folder contains more than one file, we don't know what to laod and so
+     * we load nothing. In case the folder contains just one PHP file, we assume that's the file to
+     * load.
+     * No warranties against explosions.
      *
-     * @param array  $json
-     * @param string $basedir
-     * @param bool   $isRegular
+     * @param string $currentDir
      */
-    private function findFileInJson(array $json, $basedir, $isRegular)
+    private function guessMuPluginFile($currentDir)
     {
-        // check "extra.wordpress-plugin-main-file" in composer.json
-        $main = isset($json['extra']) && isset($json['extra'][self::EXTRA_KEY]) ?
-            str_replace('\\', '/', $json['extra'][self::EXTRA_KEY])
-            : false;
-        if ($main) {
-            $path = "{$basedir}/{$main}";
-            $this->plugins[] = $path;
-            $isRegular and $this->regular[] = $path;
+        if (
+            $this->lastParsedFolder
+            && $currentDir !== $this->lastParsedFolder
+            && array_key_exists($this->lastParsedFolder, $this->folders)
+        ) {
+            $lastData = $this->folders[$this->lastParsedFolder];
+            $pluginFile = null;
+            if (! $lastData['done'] && $lastData['count'] === 1) {
+                $pluginFile = isset($lastData['last']) ? $lastData['last'] : null;
+            }
+
+            if (is_file($pluginFile)) {
+                $this->folders[$this->lastParsedFolder]['done'] = true;
+                $this->plugins[] = [$pluginFile, true];
+            }
         }
     }
 
@@ -247,31 +272,39 @@ class MuLoader
     /**
      * Get plugins data from transient or from plugins headers (if available).
      *
-     * @param  bool  $refresh Should data should be cached in transient
+     * @param  bool $refresh Should data should be cached in transient
      * @return array
      */
     private function getPluginsData($refresh)
     {
-        $data = $refresh ? [] : (get_site_transient(self::PREFIX.self::TRANSIENT) ?: []);
-        foreach ($this->plugins as $file) {
+        $data = $refresh ? [] : get_site_transient(self::PREFIX.self::DATA_TRANSIENT);
+        is_array($data) or $data = [];
+        foreach ($this->plugins as $plugin) {
+            list($file, $mu) = $plugin;
             $key = basename($file);
-            $data[$key] = $this->getPluginData($key, $file);
+            $data[$key] = $this->getPluginData($key, $file, $mu);
         }
-        $refresh and set_site_transient(self::PREFIX.self::TRANSIENT, $data, WEEK_IN_SECONDS);
+        $refresh and set_site_transient(self::PREFIX.self::DATA_TRANSIENT, $data, WEEK_IN_SECONDS);
 
         return $data;
     }
 
     /**
+     * Get plugin headers to be shown on admin screen.
+     *
+     * Append `*` to names of those plugins we loaded automatically, so we can distinguish them.
+     * Append `**` to names of those plugins we loaded "guessing" the file (see `guessMuPlugin()`).
+     *
      * @param  string $key
      * @param  string $file
+     * @param  bool   $isMu
      * @return array
      */
-    private function getPluginData($key, $file)
+    private function getPluginData($key, $file, $isMu)
     {
         $plugin_data = get_plugin_data($file, false, false);
         empty($plugin_data['Name']) and $plugin_data['Name'] = $key;
-        in_array($file, $this->regularLoaded, true) and $plugin_data['Name'] .= '*';
+        $plugin_data['Name'] .= $isMu ? '**' : '*';
 
         return $plugin_data;
     }
