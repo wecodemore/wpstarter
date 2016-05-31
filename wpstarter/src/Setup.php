@@ -100,8 +100,8 @@ class Setup
 
             array_walk(
                 $classes,
-                function ($stepClass) use ($stepper, $io, $builder, $filesystem, $overwrite) {
-                    $step = $this->factoryStep($stepClass, $filesystem, $builder, $overwrite);
+                function ($stepClass) use ($stepper, $io, $builder, $filesystem) {
+                    $step = $this->factoryStep($stepClass, $filesystem, $builder);
                     $step and $stepper->addStep($step);
                 }
             );
@@ -117,15 +117,13 @@ class Setup
      * @param \WCM\WPStarter\Setup\IO              $io
      * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
      * @param \WCM\WPStarter\Setup\FileBuilder     $builder
-     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
      * @return \WCM\WPStarter\Setup\Steps\StepInterface|null
      */
     private function factoryStep(
         $stepClass,
         IO $io,
         Filesystem $filesystem,
-        FileBuilder $builder,
-        OverwriteHelper $overwrite
+        FileBuilder $builder
     ) {
         $ns = 'WCM\\WPStarter\\Setup\\Steps\\';
 
@@ -138,11 +136,11 @@ class Setup
         if (method_exists($stepClass, 'instance')) {
             /** @var callable $factory */
             $factory = [$stepClass, 'instance'];
-            $step = $factory($io, $filesystem, $builder, $overwrite);
+            $step = $factory($io, $filesystem, $builder);
         }
 
         $step or $step = is_subclass_of($stepClass, $ns.'FileStepInterface', true)
-            ? new $stepClass($io, $filesystem, $builder, $overwrite)
+            ? new $stepClass($io, $filesystem, $builder)
             : new $stepClass($io);
 
         return $step instanceof StepInterface ? $step : null;

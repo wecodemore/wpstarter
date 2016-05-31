@@ -16,8 +16,6 @@ use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\OverwriteHelper;
 use WCM\WPStarter\Setup\UrlDownloader;
-use ArrayAccess;
-use Exception;
 
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
@@ -45,11 +43,6 @@ class DropinsStep implements StepInterface
     private $io;
 
     /**
-     * @var \WCM\WPStarter\Setup\OverwriteHelper
-     */
-    private $overwrite;
-
-    /**
      * @var \WCM\WPStarter\Setup\Config
      */
     private $config;
@@ -65,35 +58,31 @@ class DropinsStep implements StepInterface
     private $success = '';
 
     /**
-     * @param \WCM\WPStarter\Setup\IO              $io
-     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
-     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
-     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @param \WCM\WPStarter\Setup\IO          $io
+     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
     public static function instance(
         IO $io,
         Filesystem $filesystem,
-        FileBuilder $filebuilder,
-        OverwriteHelper $overwriteHelper
+        FileBuilder $filebuilder
     ) {
-        return new static($io, $overwriteHelper);
+        return new static($io);
     }
 
     /**
-     * @param \WCM\WPStarter\Setup\IO              $io
-     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
+     * @param \WCM\WPStarter\Setup\IO $io
      */
-    public function __construct(IO $io, OverwriteHelper $overwrite)
+    public function __construct(IO $io)
     {
         $this->io = $io;
-        $this->overwrite = $overwrite;
     }
 
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, ArrayAccess $paths)
+    public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config;
 
@@ -103,11 +92,13 @@ class DropinsStep implements StepInterface
     /**
      * @inheritdoc
      */
-    public function run(ArrayAccess $paths)
+    public function run(\ArrayAccess $paths)
     {
+        $overwrite = new OverwriteHelper($this->config, $this->io, $paths);
+
         foreach ($this->config['dropins'] as $name => $url) {
             $this->validName(basename($name))
-                ? $this->runStep($name, $url, $paths)
+                ? $this->runStep($name, $url, $paths, $overwrite)
                 : $this->addMessage("{$name} is not a valid dropin name. Skipped.", 'error');
         }
         if (empty($this->error)) {
@@ -120,13 +111,14 @@ class DropinsStep implements StepInterface
     }
 
     /**
-     * @param string       $name
-     * @param string       $url
-     * @param \ArrayAccess $paths
+     * @param string                               $name
+     * @param string                               $url
+     * @param \ArrayAccess                         $paths
+     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
      */
-    private function runStep($name, $url, ArrayAccess $paths)
+    private function runStep($name, $url, \ArrayAccess $paths, OverwriteHelper $overwrite)
     {
-        $step = new DropinCreationStep($name, $url, $this->io, $this->overwrite);
+        $step = new DropinCreationStep($name, $url, $this->io, $overwrite);
         if ($step->allowed($this->config, $paths)) {
             $step->run($paths);
             $this->addMessage($step->error(), 'error');
@@ -207,7 +199,7 @@ class DropinsStep implements StepInterface
                     $languages[] = $lang['language'];
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $languages = false;
         }
         if ($languages === false) {

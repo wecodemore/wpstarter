@@ -37,6 +37,11 @@ class WPConfigStep implements FileCreationStepInterface, BlockingStepInterface
     private $builder;
 
     /**
+     * @var \WCM\WPStarter\Setup\Filesystem
+     */
+    private $filesystem;
+
+    /**
      * @var \WCM\WPStarter\Setup\Salter
      */
     private $salter;
@@ -52,30 +57,34 @@ class WPConfigStep implements FileCreationStepInterface, BlockingStepInterface
     private $error = '';
 
     /**
-     * @param \WCM\WPStarter\Setup\IO              $io
-     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
-     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
-     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @param \WCM\WPStarter\Setup\IO          $io
+     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
     public static function instance(
         IO $io,
         Filesystem $filesystem,
-        FileBuilder $filebuilder,
-        OverwriteHelper $overwriteHelper
+        FileBuilder $filebuilder
     ) {
-        return new static($io, $filebuilder, new Salter());
+        return new static($io, $filebuilder, $filesystem, new Salter());
     }
 
     /**
      * @param \WCM\WPStarter\Setup\IO          $io
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
+     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
      * @param \WCM\WPStarter\Setup\Salter|null $salter
      */
-    public function __construct(IO $io, FileBuilder $builder, Salter $salter)
-    {
+    public function __construct(
+        IO $io,
+        FileBuilder $builder,
+        Filesystem $filesystem,
+        Salter $salter
+    ) {
         $this->io = $io;
         $this->builder = $builder;
+        $this->filesystem = $filesystem;
         $this->salter = $salter;
     }
 
@@ -127,7 +136,9 @@ class WPConfigStep implements FileCreationStepInterface, BlockingStepInterface
             $this->salter->keys()
         );
         $build = $this->builder->build($paths, 'wp-config.example', $vars);
-        if (! $this->builder->save($build, dirname($this->targetPath($paths)), 'wp-config.php')) {
+        if (! $this->filesystem->save($build,
+            dirname($this->targetPath($paths)).'/wp-config.php')
+        ) {
             $this->error = 'Error on create wp-config.php.';
 
             return self::ERROR;

@@ -32,6 +32,11 @@ class IndexStep implements FileCreationStepInterface, BlockingStepInterface
     private $builder;
 
     /**
+     * @var \WCM\WPStarter\Setup\Filesystem
+     */
+    private $filesystem;
+
+    /**
      * @var array
      */
     private $vars;
@@ -42,27 +47,27 @@ class IndexStep implements FileCreationStepInterface, BlockingStepInterface
     private $error = '';
 
     /**
-     * @param \WCM\WPStarter\Setup\IO              $io
-     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
-     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
-     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @param \WCM\WPStarter\Setup\IO          $io
+     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
     public static function instance(
         IO $io,
         Filesystem $filesystem,
-        FileBuilder $filebuilder,
-        OverwriteHelper $overwriteHelper
+        FileBuilder $filebuilder
     ) {
-        return new static($filebuilder);
+        return new static($filebuilder, $filesystem);
     }
 
     /**
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
+     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
      */
-    public function __construct(FileBuilder $builder)
+    public function __construct(FileBuilder $builder, Filesystem $filesystem)
     {
         $this->builder = $builder;
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -90,7 +95,7 @@ class IndexStep implements FileCreationStepInterface, BlockingStepInterface
         $rootPathRel = str_repeat('dirname(', $n).'__DIR__'.str_repeat(')', $n);
         $this->vars = ['BOOTSTRAP_PATH' => $rootPathRel.".'/{$paths['wp']}/wp-blog-header.php'"];
         $build = $this->builder->build($paths, 'index.example', $this->vars);
-        if (! $this->builder->save($build, dirname($this->targetPath($paths)), 'index.php')) {
+        if (! $this->filesystem->save($build, dirname($this->targetPath($paths)).'/index.php')) {
             $this->error = 'Error on create index.php.';
 
             return self::ERROR;

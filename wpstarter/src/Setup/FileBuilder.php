@@ -34,7 +34,7 @@ class FileBuilder
     public function __construct($isRoot, Filesystem $filesystem = null)
     {
         $this->isRoot = $isRoot;
-        $this->filesystem = $filesystem ?: new Filesystem();
+        $this->filesystem = $filesystem ? : new Filesystem();
     }
 
     /**
@@ -60,22 +60,7 @@ class FileBuilder
         /** @var string $content */
         $content = $this->render(file_get_contents($template), $vars);
 
-        return $content ?: false;
-    }
-
-    /**
-     * Given a file content as string, dump it to a file in a given folder.
-     *
-     * @param  string $content    file content
-     * @param  string $targetPath target path
-     * @param  string $fileName   target file name
-     * @return bool   true on success, false on failure
-     */
-    public function save($content, $targetPath, $fileName)
-    {
-        $path = rtrim($targetPath, '/\\').'/'.ltrim($fileName, '/\\');
-
-        return $this->filesystem->save($content, $path);
+        return $content ? : false;
     }
 
     /**

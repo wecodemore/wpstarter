@@ -28,7 +28,7 @@ class Filesystem
     {
         $parent = dirname($targetPath);
 
-        if (!$this->createDir($parent)) {
+        if (! $this->createDir($parent)) {
             return false;
         }
 

@@ -14,10 +14,7 @@ use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\Config;
-use WCM\WPStarter\Setup\OverwriteHelper;
 use WCM\WPStarter\Setup\UrlDownloader;
-use ArrayAccess;
-use Exception;
 
 /**
  * Steps that stores .env.example in root folder. It is copied from a default file or downloaded.
@@ -49,40 +46,45 @@ class EnvExampleStep implements FileCreationStepInterface, OptionalStepInterface
     private $builder;
 
     /**
+     * @var \WCM\WPStarter\Setup\Filesystem
+     */
+    private $filesystem;
+
+    /**
      * @var string
      */
     private $error = '';
 
     /**
-     * @param \WCM\WPStarter\Setup\IO              $io
-     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
-     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
-     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @param \WCM\WPStarter\Setup\IO          $io
+     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
     public static function instance(
         IO $io,
         Filesystem $filesystem,
-        FileBuilder $filebuilder,
-        OverwriteHelper $overwriteHelper
+        FileBuilder $filebuilder
     ) {
-        return new static($io, $filebuilder);
+        return new static($io, $filebuilder, $filesystem);
     }
 
     /**
      * @param \WCM\WPStarter\Setup\IO          $io
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
+     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
      */
-    public function __construct(IO $io, FileBuilder $builder)
+    public function __construct(IO $io, FileBuilder $builder, Filesystem $filesystem)
     {
         $this->io = $io;
         $this->builder = $builder;
+        $this->filesystem = $filesystem;
     }
 
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, ArrayAccess $paths)
+    public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config;
         $this->paths = $paths;
@@ -94,7 +96,7 @@ class EnvExampleStep implements FileCreationStepInterface, OptionalStepInterface
     /**
      * @inheritdoc
      */
-    public function targetPath(ArrayAccess $paths)
+    public function targetPath(\ArrayAccess $paths)
     {
         return $paths['root'].'/.env.example';
     }
@@ -119,7 +121,7 @@ class EnvExampleStep implements FileCreationStepInterface, OptionalStepInterface
     /**
      * @inheritdoc
      */
-    public function run(ArrayAccess $paths)
+    public function run(\ArrayAccess $paths)
     {
         $dest = $this->targetPath($paths);
         $config = $this->config['env-example'];
@@ -161,7 +163,7 @@ class EnvExampleStep implements FileCreationStepInterface, OptionalStepInterface
      * @param  \ArrayAccess $paths
      * @return int
      */
-    private function download($url, $dest, ArrayAccess $paths)
+    private function download($url, $dest, \ArrayAccess $paths)
     {
         if (! UrlDownloader::checkSoftware()) {
             $this->io->comment('WP Starter needs cUrl installed to download files from url.');
@@ -186,7 +188,7 @@ class EnvExampleStep implements FileCreationStepInterface, OptionalStepInterface
      * @param  null         $source
      * @return int
      */
-    private function copy(ArrayAccess $paths, $dest, $source = null)
+    private function copy(\ArrayAccess $paths, $dest, $source = null)
     {
         if (is_null($source)) {
             $pieces = [$paths['starter'], 'templates'];
@@ -195,14 +197,12 @@ class EnvExampleStep implements FileCreationStepInterface, OptionalStepInterface
             }
             $source = implode('/', array_merge($pieces, ['.env.example']));
         }
-        try {
-            if (copy($source, $dest)) {
-                return self::SUCCESS;
-            }
-            $this->error = 'Error on copy default .env.example in root folder.';
-        } catch (Exception $e) {
-            $this->error = 'Error on copy default .env.example in root folder.';
+
+        if ($this->filesystem->copyFile($source, $dest)) {
+            return self::SUCCESS;
         }
+
+        $this->error = 'Error on copy default .env.example in root folder.';
 
         return self::ERROR;
     }

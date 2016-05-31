@@ -14,7 +14,6 @@ use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
-use WCM\WPStarter\Setup\OverwriteHelper;
 
 /**
  * Steps that check that all paths WP Starter needs have been recognized properly ad exist.
@@ -51,17 +50,15 @@ class CheckPathStep implements BlockingStepInterface, FileStepInterface, PostPro
     private $themeDir = true;
 
     /**
-     * @param \WCM\WPStarter\Setup\IO              $io
-     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
-     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
-     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @param \WCM\WPStarter\Setup\IO          $io
+     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
     public static function instance(
         IO $io,
         Filesystem $filesystem,
-        FileBuilder $filebuilder,
-        OverwriteHelper $overwriteHelper
+        FileBuilder $filebuilder
     ) {
         return new static($filesystem);
     }

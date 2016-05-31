@@ -14,10 +14,7 @@ use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
-use WCM\WPStarter\Setup\OverwriteHelper;
 use WCM\WPStarter\Setup\UrlDownloader;
-use ArrayAccess;
-use Exception;
 
 /**
  * Step that save .gitignore in root folder. It is generated based on settings or downloaded.
@@ -60,6 +57,11 @@ class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface,
     private $builder;
 
     /**
+     * @var \WCM\WPStarter\Setup\Filesystem
+     */
+    private $filesystem;
+
+    /**
      * @var string
      */
     private $error = '';
@@ -70,35 +72,35 @@ class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface,
     private $found = false;
 
     /**
-     * @param \WCM\WPStarter\Setup\IO              $io
-     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
-     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
-     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @param \WCM\WPStarter\Setup\IO          $io
+     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
     public static function instance(
         IO $io,
         Filesystem $filesystem,
-        FileBuilder $filebuilder,
-        OverwriteHelper $overwriteHelper
+        FileBuilder $filebuilder
     ) {
-        return new static($io, $filebuilder);
+        return new static($io, $filebuilder, $filesystem);
     }
 
     /**
      * @param \WCM\WPStarter\Setup\IO          $io
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
+     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
      */
-    public function __construct(IO $io, FileBuilder $builder)
+    public function __construct(IO $io, FileBuilder $builder, Filesystem $filesystem)
     {
         $this->io = $io;
         $this->builder = $builder;
+        $this->filesystem = $filesystem;
     }
 
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, ArrayAccess $paths)
+    public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config['gitignore'];
         $this->env = $config['env-file'];
@@ -110,7 +112,7 @@ class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface,
     /**
      * @inheritdoc
      */
-    public function targetPath(ArrayAccess $paths)
+    public function targetPath(\ArrayAccess $paths)
     {
         return $paths['root'].'/.gitignore';
     }
@@ -138,13 +140,16 @@ class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface,
     /**
      * @inheritdoc
      */
-    public function run(ArrayAccess $paths)
+    public function run(\ArrayAccess $paths)
     {
         $this->found = -1;
         if (is_string($this->config) && $this->config !== 'ask') {
             $realpath = realpath($paths['root'].'/'.$this->config);
             if ($realpath && is_file($realpath)) {
-                return $this->copy($paths, $realpath);
+                $done = $this->filesystem->copyDir($realpath, $this->targetPath($paths));
+                $done or $this->error = 'Error on saving .gitignore.';
+
+                return $done ? self::SUCCESS : self::ERROR;
             }
             if (! filter_var($this->config, FILTER_VALIDATE_URL)) {
                 $this->error = "{$this->config} is not a valid url not a valid relative path.";
@@ -209,7 +214,7 @@ class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface,
      * @param  \ArrayAccess $paths
      * @return int
      */
-    private function download(ArrayAccess $paths)
+    private function download(\ArrayAccess $paths)
     {
         if (! UrlDownloader::checkSoftware()) {
             $this->io->comment('WP Starter needs cUrl installed to download files from url.');
@@ -226,34 +231,12 @@ class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface,
     }
 
     /**
-     * Copy .gitignore from a source path to root folder.
-     *
-     * @param  \ArrayAccess $paths
-     * @param  string       $source
-     * @return int
-     */
-    private function copy(ArrayAccess $paths, $source)
-    {
-        $dest = $this->targetPath($paths);
-        try {
-            if (copy($source, $dest)) {
-                return self::SUCCESS;
-            }
-            $this->error = 'Error on saving .gitignore.';
-        } catch (Exception $e) {
-            $this->error = 'Error on saving .gitignore: '.rtrim($e->getMessage(), '.').'.';
-        }
-
-        return self::ERROR;
-    }
-
-    /**
      * Build .gitignore content based on settings.
      *
      * @param  \ArrayAccess $paths
      * @return int
      */
-    private function create(ArrayAccess $paths)
+    private function create(\ArrayAccess $paths)
     {
         $toDo = is_array($this->config) ? $this->config : self::$default;
         $filePaths = array_unique(
@@ -270,7 +253,7 @@ class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface,
             $common = trim($this->builder->build($paths, '.gitignore.example'));
             $content = $common ? $content.PHP_EOL.PHP_EOL.$common : $content;
         }
-        if (! $this->builder->save($content, $paths['root'], '.gitignore')) {
+        if (! $this->filesystem->save($content, $paths['root'].'/.gitignore')) {
             $this->error = 'WP Starter was not able to create .gitignore file.';
 
             return self::ERROR;
@@ -284,7 +267,7 @@ class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface,
      * @param  \ArrayAccess $paths
      * @return array
      */
-    private function paths(array $toDo, ArrayAccess $paths)
+    private function paths(array $toDo, \ArrayAccess $paths)
     {
         $parsedPaths = [];
         $toCheck = [
