@@ -10,9 +10,6 @@
 
 namespace WCM\WPStarter\Setup;
 
-use ArrayAccess;
-use Exception;
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -26,11 +23,18 @@ class FileBuilder
     private $isRoot;
 
     /**
-     * @param $isRoot
+     * @var \WCM\WPStarter\Setup\Filesystem
      */
-    public function __construct($isRoot)
+    private $filesystem;
+
+    /**
+     * @param                                 $isRoot
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
+     */
+    public function __construct($isRoot, Filesystem $filesystem = null)
     {
         $this->isRoot = $isRoot;
+        $this->filesystem = $filesystem ?: new Filesystem();
     }
 
     /**
@@ -43,7 +47,7 @@ class FileBuilder
      * @param  array        $vars
      * @return string|bool  file content on success, false on failure
      */
-    public function build(ArrayAccess $paths, $template, array $vars = [])
+    public function build(\ArrayAccess $paths, $template, array $vars = [])
     {
         $pieces = [$paths['starter'], 'templates', $template];
         if (! $this->isRoot) {
@@ -55,11 +59,8 @@ class FileBuilder
         }
         /** @var string $content */
         $content = $this->render(file_get_contents($template), $vars);
-        if (empty($content)) {
-            return false;
-        }
 
-        return $content;
+        return $content ?: false;
     }
 
     /**
@@ -72,14 +73,9 @@ class FileBuilder
      */
     public function save($content, $targetPath, $fileName)
     {
-        if (empty($content)) {
-            return false;
-        }
-        try {
-            return file_put_contents("{$targetPath}/{$fileName}", $content) > 0;
-        } catch (Exception $e) {
-            return false;
-        }
+        $path = rtrim($targetPath, '/\\').'/'.ltrim($fileName, '/\\');
+
+        return $this->filesystem->save($content, $path);
     }
 
     /**
