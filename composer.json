@@ -33,7 +33,7 @@
   ],
   "require": {
     "php": ">=5.4",
-    "gmazzap/gea" : "~0.1.0",
+    "gmazzap/gea": "~0.1.0",
     "johnpbloch/wordpress": ">=4.4"
   },
   "require-dev": {
@@ -48,8 +48,8 @@
     }
   },
   "scripts": {
-    "post-install-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
-    "post-update-cmd": "WCM\\WPStarter\\Setup::runAsRoot",
+    "post-install-cmd": "@wpstarter",
+    "post-update-cmd": "@wpstarter",
     "wpstarter": "WCM\\WPStarter\\Setup::runAsRoot"
   },
   "config": {
@@ -75,7 +75,7 @@
     },
     "branch-alias": {
       "dev-master": "2.x-dev",
-      "dev-version-1": "3.x-dev"
+      "dev-version-3": "3.x-dev"
     }
   }
 }
