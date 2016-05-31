@@ -34,7 +34,7 @@
   "require": {
     "php": ">=5.4",
     "gmazzap/gea" : "~0.1.0",
-    "johnpbloch/wordpress": ">=4.3"
+    "johnpbloch/wordpress": ">=4.4"
   },
   "require-dev": {
     "composer/composer": "^1.0"
