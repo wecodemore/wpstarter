@@ -86,7 +86,7 @@ class Setup
         $stepper = new Stepper($io, $overwrite);
         if ($this->stepperAllowed($stepper, $config, $paths, $io)) {
             $filesystem = new Filesystem();
-            $builder = new FileBuilder(self::$isRoot, $filesystem);
+            $fileBuilder = new FileBuilder(self::$isRoot, $filesystem);
 
             $classes = array_merge([
                 'check-path'   => '\\WCM\\WPStarter\\Setup\\Steps\\CheckPathStep',
@@ -100,8 +100,8 @@ class Setup
 
             array_walk(
                 $classes,
-                function ($stepClass) use ($stepper, $io, $builder, $filesystem) {
-                    $step = $this->factoryStep($stepClass, $filesystem, $builder);
+                function ($stepClass) use ($stepper, $io, $fileBuilder, $filesystem) {
+                    $step = $this->factoryStep($stepClass, $io, $filesystem, $fileBuilder);
                     $step and $stepper->addStep($step);
                 }
             );
