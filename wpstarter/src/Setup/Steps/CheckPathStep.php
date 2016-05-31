@@ -11,9 +11,10 @@
 namespace WCM\WPStarter\Setup\Steps;
 
 use WCM\WPStarter\Setup\Config;
+use WCM\WPStarter\Setup\FileBuilder;
+use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
-use ArrayAccess;
-use Exception;
+use WCM\WPStarter\Setup\OverwriteHelper;
 
 /**
  * Steps that check that all paths WP Starter needs have been recognized properly ad exist.
@@ -22,7 +23,7 @@ use Exception;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
+class CheckPathStep implements BlockingStepInterface, FileStepInterface, PostProcessStepInterface
 {
     /**
      * @var string
@@ -35,6 +36,11 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     private $config;
 
     /**
+     * @var \WCM\WPStarter\Setup\Filesystem
+     */
+    private $filesystem;
+
+    /**
      * @var \ArrayAccess
      */
     private $paths;
@@ -45,9 +51,33 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     private $themeDir = true;
 
     /**
+     * @param \WCM\WPStarter\Setup\IO              $io
+     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
+     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @return static
+     */
+    public static function instance(
+        IO $io,
+        Filesystem $filesystem,
+        FileBuilder $filebuilder,
+        OverwriteHelper $overwriteHelper
+    ) {
+        return new static($filesystem);
+    }
+
+    /**
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
+     */
+    public function __construct(Filesystem $filesystem)
+    {
+        $this->filesystem = $filesystem;
+    }
+
+    /**
      * @inheritdoc
      */
-    public function allowed(Config $config, ArrayAccess $paths)
+    public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config;
 
@@ -57,7 +87,7 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     /**
      * @inheritdoc
      */
-    public function run(ArrayAccess $paths)
+    public function run(\ArrayAccess $paths)
     {
         $this->paths = $paths;
         $toCheck = [
@@ -83,12 +113,8 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
         }
         // no love for this, but https://core.trac.wordpress.org/ticket/31620 makes it necessary
         if ($paths['wp-content'] && $this->config['move-content'] !== true) {
-            try {
-                $dir = $paths['root'].'/'.$paths['wp-content'].'/themes';
-                $this->themeDir = is_dir($dir) || mkdir($dir, 0755, true);
-            } catch (Exception $e) {
-                $this->themeDir = false;
-            }
+            $themeDir = $paths['root'].'/'.$paths['wp-content'].'/themes';
+            $this->themeDir = $this->filesystem->createDir($themeDir);
         }
 
         return self::SUCCESS;

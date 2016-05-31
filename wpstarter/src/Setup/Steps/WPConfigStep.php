@@ -10,10 +10,11 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
-use ArrayAccess;
 use WCM\WPStarter\Setup\Config;
+use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
+use WCM\WPStarter\Setup\OverwriteHelper;
 use WCM\WPStarter\Setup\Salter;
 
 /**
@@ -23,7 +24,7 @@ use WCM\WPStarter\Setup\Salter;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class WPConfigStep implements FileStepInterface, BlockingStepInterface
+class WPConfigStep implements FileCreationStepInterface, BlockingStepInterface
 {
     /**
      * @var \WCM\WPStarter\Setup\IO
@@ -51,21 +52,37 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
     private $error = '';
 
     /**
+     * @param \WCM\WPStarter\Setup\IO              $io
+     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
+     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @return static
+     */
+    public static function instance(
+        IO $io,
+        Filesystem $filesystem,
+        FileBuilder $filebuilder,
+        OverwriteHelper $overwriteHelper
+    ) {
+        return new static($io, $filebuilder, new Salter());
+    }
+
+    /**
      * @param \WCM\WPStarter\Setup\IO          $io
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
      * @param \WCM\WPStarter\Setup\Salter|null $salter
      */
-    public function __construct(IO $io, FileBuilder $builder, Salter $salter = null)
+    public function __construct(IO $io, FileBuilder $builder, Salter $salter)
     {
         $this->io = $io;
         $this->builder = $builder;
-        $this->salter = $salter ?: new Salter();
+        $this->salter = $salter;
     }
 
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, ArrayAccess $paths)
+    public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config;
 
@@ -75,7 +92,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
     /**
      * @inheritdoc
      */
-    public function targetPath(ArrayAccess $paths)
+    public function targetPath(\ArrayAccess $paths)
     {
         return rtrim($paths['root'].'/'.$paths['wp-parent'], '/').'/wp-config.php';
     }
@@ -83,7 +100,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
     /**
      * @inheritdoc
      */
-    public function run(ArrayAccess $paths)
+    public function run(\ArrayAccess $paths)
     {
         $register = $this->config['register-theme-folder'];
         if ($register === 'ask') {

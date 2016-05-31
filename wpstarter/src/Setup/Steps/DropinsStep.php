@@ -11,6 +11,7 @@
 namespace WCM\WPStarter\Setup\Steps;
 
 use WCM\WPStarter\Setup\FileBuilder;
+use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\OverwriteHelper;
@@ -25,6 +26,7 @@ use Exception;
  */
 class DropinsStep implements StepInterface
 {
+
     private static $dropins = [
         'advanced-cache.php',
         'db.php',
@@ -65,10 +67,25 @@ class DropinsStep implements StepInterface
 
     /**
      * @param \WCM\WPStarter\Setup\IO              $io
-     * @param \WCM\WPStarter\Setup\FileBuilder     $builder
+     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
+     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @return static
+     */
+    public static function instance(
+        IO $io,
+        Filesystem $filesystem,
+        FileBuilder $filebuilder,
+        OverwriteHelper $overwriteHelper
+    ) {
+        return new static($io, $overwriteHelper);
+    }
+
+    /**
+     * @param \WCM\WPStarter\Setup\IO              $io
      * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
      */
-    public function __construct(IO $io, FileBuilder $builder, OverwriteHelper $overwrite)
+    public function __construct(IO $io, OverwriteHelper $overwrite)
     {
         $this->io = $io;
         $this->overwrite = $overwrite;
@@ -110,7 +127,7 @@ class DropinsStep implements StepInterface
      */
     private function runStep($name, $url, ArrayAccess $paths)
     {
-        $step = new DropinStep($name, $url, $this->io, $this->overwrite);
+        $step = new DropinCreationStep($name, $url, $this->io, $this->overwrite);
         if ($step->allowed($this->config, $paths)) {
             $step->run($paths);
             $this->addMessage($step->error(), 'error');
@@ -167,24 +184,24 @@ class DropinsStep implements StepInterface
     /**
      * Fetch languages from wordpress.org API.
      *
-     * @param  bool       $ssl
+     * @param  bool $ssl
      * @return array|bool
      */
     private function fetchLanguages($ssl = true)
     {
         static $languages;
-        if (! is_null($languages)) {
+        if ( ! is_null($languages)) {
             return $languages;
         }
         $url = $ssl ? 'https' : 'http';
         $url .= '://api.wordpress.org/translations/core/1.0/?version=';
         $remote = new UrlDownloader($url.$this->config['wp-version']);
         $result = $remote->fetch(true);
-        if (! $result) {
+        if ( ! $result) {
             return $ssl ? $this->fetchLanguages(false) : false;
         }
         try {
-            $all = (array) json_decode($result, true);
+            $all = (array)json_decode($result, true);
             $languages = isset($all['translations']) ? [] : false;
             if (is_array($languages)) {
                 foreach ($all['translations'] as $lang) {

@@ -10,8 +10,6 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
-use ArrayAccess;
-
 /**
  * A step that saves a file.
  *
@@ -19,6 +17,13 @@ use ArrayAccess;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-interface FileStepInterface extends StepInterface
+interface FileCreationStepInterface extends FileStepInterface
 {
+    /**
+     * Returns the target path of the file the step will create.
+     *
+     * @param  \ArrayAccess $paths
+     * @return string
+     */
+    public function targetPath(\ArrayAccess $paths);
 }

@@ -10,9 +10,11 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
+use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\Config;
+use WCM\WPStarter\Setup\OverwriteHelper;
 use WCM\WPStarter\Setup\UrlDownloader;
 use ArrayAccess;
 use Exception;
@@ -24,7 +26,7 @@ use Exception;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostProcessStepInterface
+class EnvExampleCreationStep implements FileCreationStepInterface, OptionalStepInterface, PostProcessStepInterface
 {
     /**
      * @var \WCM\WPStarter\Setup\IO
@@ -50,6 +52,22 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
      * @var string
      */
     private $error = '';
+
+    /**
+     * @param \WCM\WPStarter\Setup\IO              $io
+     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
+     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @return static
+     */
+    public static function instance(
+        IO $io,
+        Filesystem $filesystem,
+        FileBuilder $filebuilder,
+        OverwriteHelper $overwriteHelper
+    ) {
+        return new static($io, $filebuilder);
+    }
 
     /**
      * @param \WCM\WPStarter\Setup\IO          $io

@@ -12,8 +12,10 @@ namespace WCM\WPStarter\Setup\Steps;
 
 use ArrayAccess;
 use WCM\WPStarter\Setup\Config;
+use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
+use WCM\WPStarter\Setup\OverwriteHelper;
 
 /**
  * Steps that generates index.php in root folder.
@@ -22,7 +24,7 @@ use WCM\WPStarter\Setup\FileBuilder;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class IndexStep implements FileStepInterface, BlockingStepInterface
+class IndexStep implements FileCreationStepInterface, BlockingStepInterface
 {
     /**
      * @var \WCM\WPStarter\Setup\FileBuilder
@@ -40,10 +42,25 @@ class IndexStep implements FileStepInterface, BlockingStepInterface
     private $error = '';
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
+     * @param \WCM\WPStarter\Setup\IO              $io
+     * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
+     * @param \WCM\WPStarter\Setup\FileBuilder     $filebuilder
+     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwriteHelper
+     * @return static
+     */
+    public static function instance(
+        IO $io,
+        Filesystem $filesystem,
+        FileBuilder $filebuilder,
+        OverwriteHelper $overwriteHelper
+    ) {
+        return new static($filebuilder);
+    }
+
+    /**
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
      */
-    public function __construct(IO $io, FileBuilder $builder)
+    public function __construct(FileBuilder $builder)
     {
         $this->builder = $builder;
     }

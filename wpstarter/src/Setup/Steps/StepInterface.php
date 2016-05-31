@@ -11,7 +11,6 @@
 namespace WCM\WPStarter\Setup\Steps;
 
 use WCM\WPStarter\Setup\Config;
-use ArrayAccess;
 
 /**
  * A "working unit" for WP Starter. Steps are processed one-by-one and any step performs a tasks.
@@ -33,7 +32,7 @@ interface StepInterface
      * @param  \ArrayAccess                $paths
      * @return bool
      */
-    public function allowed(Config $config, ArrayAccess $paths);
+    public function allowed(Config $config, \ArrayAccess $paths);
 
     /**
      * Process the step.
@@ -41,7 +40,7 @@ interface StepInterface
      * @param  \ArrayAccess $paths Have to return one of the step constants.
      * @return int
      */
-    public function run(ArrayAccess $paths);
+    public function run(\ArrayAccess $paths);
 
     /**
      * Return error message if any.

@@ -11,7 +11,7 @@
 namespace WCM\WPStarter\Setup;
 
 use WCM\WPStarter\Setup\Steps\BlockingStepInterface;
-use WCM\WPStarter\Setup\Steps\FileStepInterface;
+use WCM\WPStarter\Setup\Steps\FileCreationStepInterface;
 use WCM\WPStarter\Setup\Steps\OptionalStepInterface;
 use WCM\WPStarter\Setup\Steps\PostProcessStepInterface;
 use WCM\WPStarter\Setup\Steps\StepInterface;
@@ -169,8 +169,8 @@ class Stepper implements StepperInterface, PostProcessStepInterface
     {
         $comment = '';
         $process = $step->allowed($this->config, $paths);
-        if ($process && $step instanceof FileStepInterface) {
-            /** @var \WCM\WPStarter\Setup\Steps\FileStepInterface $step */
+        if ($process && $step instanceof FileCreationStepInterface) {
+            /** @var \WCM\WPStarter\Setup\Steps\FileCreationStepInterface $step */
             $path = $step->targetPath($paths);
             $process = $this->overwrite->should($path);
             $comment = $process ? '' : '- '.basename($path).' exists and will be preserved.';
