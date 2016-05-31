@@ -1,6 +1,6 @@
 <?php
 /*
- * This file is part of the wpstarter package.
+ * This file is part of the WP Starter package.
  *
  * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  *
@@ -17,7 +17,7 @@ use Gea\Exception\ReadOnlyWriteException;
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package wpstarter
+ * @package WPStarter
  */
 final class Accessor implements AccessorInterface
 {

@@ -1,6 +1,6 @@
 <?php
 /*
- * This file is part of the wpstarter package.
+ * This file is part of the WP Starter package.
  *
  * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  *
@@ -13,7 +13,7 @@ namespace WCM\WPStarter\Setup;
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package wpstarter
+ * @package WPStarter
  */
 class Filesystem
 {

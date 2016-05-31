@@ -17,7 +17,7 @@ use Gea\Gea;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WP Starter
+ * @package WPStarter
  */
 final class Env implements \ArrayAccess
 {
