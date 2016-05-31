@@ -54,7 +54,8 @@ final class Paths implements \ArrayAccess
     {
         $extra = $this->composer->getPackage()->getExtra();
 
-        $cwd = $this->normalise(getcwd());
+        $cwd = $this->normalise([getcwd()]);
+        $cwd = reset($cwd);
         $wpInstallDir = isset($extra['wordpress-install-dir'])
             ? $extra['wordpress-install-dir']
             : 'wordpress';
