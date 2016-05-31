@@ -23,7 +23,7 @@ use WCM\WPStarter\Setup\UrlDownloader;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface, PostProcessStepInterface
+final class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface, PostProcessStepInterface
 {
     /**
      * @var array

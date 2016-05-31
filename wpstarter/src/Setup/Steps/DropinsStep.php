@@ -22,7 +22,7 @@ use WCM\WPStarter\Setup\UrlDownloader;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class DropinsStep implements StepInterface
+final class DropinsStep implements StepInterface
 {
     private static $dropins = [
         'advanced-cache.php',

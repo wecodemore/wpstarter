@@ -24,7 +24,7 @@ use WCM\WPStarter\Setup\Salter;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class WPConfigStep implements FileCreationStepInterface, BlockingStepInterface
+final class WPConfigStep implements FileCreationStepInterface, BlockingStepInterface
 {
     /**
      * @var \WCM\WPStarter\Setup\IO

@@ -23,7 +23,7 @@ use WCM\WPStarter\Setup\OverwriteHelper;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class MoveContentStep implements OptionalStepInterface, FileStepInterface
+final class MoveContentStep implements OptionalStepInterface, FileStepInterface
 {
     /**
      * @var \WCM\WPStarter\Setup\IO

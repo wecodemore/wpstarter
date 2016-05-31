@@ -22,7 +22,7 @@ use WCM\WPStarter\Setup\FileBuilder;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class IndexStep implements FileCreationStepInterface, BlockingStepInterface
+final class IndexStep implements FileCreationStepInterface, BlockingStepInterface
 {
     /**
      * @var \WCM\WPStarter\Setup\FileBuilder

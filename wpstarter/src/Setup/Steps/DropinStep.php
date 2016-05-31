@@ -20,7 +20,7 @@ use WCM\WPStarter\Setup\UrlDownloader;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class DropinStep implements FileCreationStepInterface
+final class DropinStep implements FileCreationStepInterface
 {
     /**
      * @var string

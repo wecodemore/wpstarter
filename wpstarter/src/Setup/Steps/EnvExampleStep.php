@@ -23,7 +23,7 @@ use WCM\WPStarter\Setup\UrlDownloader;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class EnvExampleStep implements FileCreationStepInterface, OptionalStepInterface, PostProcessStepInterface
+final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInterface, PostProcessStepInterface
 {
     /**
      * @var \WCM\WPStarter\Setup\IO

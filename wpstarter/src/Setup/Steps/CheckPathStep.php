@@ -22,7 +22,7 @@ use WCM\WPStarter\Setup\IO;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class CheckPathStep implements BlockingStepInterface, FileStepInterface, PostProcessStepInterface
+final class CheckPathStep implements BlockingStepInterface, FileStepInterface, PostProcessStepInterface
 {
     /**
      * @var string
