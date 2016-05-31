@@ -33,7 +33,7 @@
   ],
   "require": {
     "php": ">=5.4",
-    "vlucas/phpdotenv": "~2.0",
+    "gmazzap/gea" : "~0.1.0",
     "johnpbloch/wordpress": ">=4.3"
   },
   "require-dev": {

@@ -10,6 +10,8 @@
 
 namespace WCM\WPStarter\Env;
 
+use Gea\Gea;
+
 /**
  * Extends Dotenv to load and store all environment variables.
  *
@@ -17,9 +19,8 @@ namespace WCM\WPStarter\Env;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WP Starter
  */
-class Env
+final class Env implements \ArrayAccess
 {
-
     /**
      * @var static
      */
@@ -160,29 +161,66 @@ class Env
     private static $all;
 
     /**
-     * @var array
+     * @var \Gea\Gea
      */
-    private $vars;
+    private $gea;
 
     /**
-     * @param  string                        $path
-     * @param  string                        $file
+     * @var array
+     */
+    private $names;
+
+    /**
+     * @param  string $path
+     * @param  string $file
      * @return \WCM\WPStarter\Env\Env|static
      */
     public static function load($path, $file = '.env')
     {
-        if (is_null(self::$loaded)) {
-            self::wpConstants();
-
-            if (! is_string($file)) {
-                $file = '.env';
-            }
-
-            $filePath = rtrim(str_replace('\\', '/', $path), '/').'/'.$file;
-            $loader = new Loader($filePath, true);
-            $loader->load();
-            self::$loaded = new static($loader->allVarNames());
+        if (!is_null(self::$loaded)) {
+            return self::$loaded;
         }
+
+        is_string($file) or $file = '.env';
+        $path = is_string($path) && is_string($file)
+            ? rtrim($path, '\\/').'/'.ltrim($file, '\\/')
+            : '';
+
+        $loadFile = is_file($path) && is_readable($path);
+        if (! $loadFile && getenv('WORDPRESS_ENV') === false) {
+            die('Please provide a .env file or ensure WORDPRESS_ENV variable is set.');
+        }
+
+        $gea = $loadFile
+            ? Gea::instance($path, $file, Gea::READ_ONLY | Gea::VAR_NAMES_HOLD, new Accessor())
+            : Gea::noLoaderInstance(Gea::READ_ONLY | Gea::VAR_NAMES_HOLD, new Accessor());
+
+        $gea->addFilter(['DB_NAME', 'DB_USER', 'DB_PASSWORD'], 'required');
+        $gea->addFilter(self::$isBool, 'bool');
+        $gea->addFilter(self::$isInt, 'int');
+        $gea->addFilter(self::$isBoolOrInt, [
+            'callback' => [
+                function ($value) {
+                    return is_numeric($value)
+                        ? (int)$value
+                        : filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                }
+            ]
+        ]);
+        $gea->addFilter(self::$isMod, [
+            'callback' => [
+                function ($value) {
+                    (is_string($value) && $value[0] === '0') and $value = substr($value, 1);
+
+                    return strlen($value) === 3 && str_replace(range(1, 7), '', $value) === ''
+                        ? octdec($value)
+                        : null;
+                }
+            ]
+        ]);
+
+        $gea->load();
+        self::$loaded = new static($gea);
 
         return self::$loaded;
     }
@@ -206,11 +244,11 @@ class Env
     }
 
     /**
-     * @param array $vars
+     * @param \Gea\Gea $gea
      */
-    public function __construct(array $vars)
+    public function __construct(Gea $gea)
     {
-        $this->vars = $this->process($vars);
+        $this->gea = $gea;
     }
 
     /**
@@ -220,61 +258,49 @@ class Env
      */
     public function allVars()
     {
-        return $this->vars;
+        if (is_array($this->names)) {
+            return $this->names;
+        }
+
+        self::wpConstants();
+
+        $loaded = $this->gea->varNames();
+        $this->names = $loaded
+            ? array_intersect($loaded, self::$all)
+            : array_filter(self::$all, [$this->gea, 'offsetExists']);
+
+        return $this->names;
     }
 
     /**
-     * @param  array array
-     * @return array
+     * @inheritdoc
      */
-    private function process(array $vars)
+    public function offsetExists($offset)
     {
-        $values = [];
-        $constants = self::wpConstants();
-        foreach ($vars as $var) {
-            $value = getenv($var);
-            $values[$var] = $value;
-
-            if (in_array($var, $constants, true)) {
-                switch (true) {
-                    case in_array($var, self::$isInt, true):
-                        $values[$var] = (int) $value;
-                        break;
-                    case in_array($var, self::$isBool, true):
-                        $values[$var] = (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
-                        break;
-                    case in_array($var, self::$isBoolOrInt, true) :
-                        if (is_numeric($value)) {
-                            $values[$var] = (int) $value;
-                            break;
-                        }
-                        $values[$var] = (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
-                        break;
-                    case in_array($var, self::$isMod, true) :
-                        $check = $this->checkMod($value);
-                        is_null($check) or $values[$var] = $check;
-                        break;
-                }
-            }
-        }
-
-        return $values;
+        return $this->gea->offsetExists($offset);
     }
 
     /**
-     * Checks that a value is a valid string representation of octal int file permission code.
-     *
-     * @param  string   $mod
-     * @return int|null
+     * @inheritdoc
      */
-    private function checkMod($mod)
+    public function offsetGet($offset)
     {
-        if ($mod[0] === '0') {
-            $mod = substr($mod, 1);
-        }
+        return $this->gea->offsetGet($offset);
+    }
 
-        return strlen($mod) === 3 && str_replace(range(1, 7), '', $mod) === ''
-            ? octdec($mod)
-            : null;
+    /**
+     * @inheritdoc
+     */
+    public function offsetSet($offset, $value)
+    {
+        $this->gea->offsetSet($offset, $value);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function offsetUnset($offset)
+    {
+        $this->gea->offsetUnset($offset);
     }
 }

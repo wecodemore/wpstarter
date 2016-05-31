@@ -31,14 +31,14 @@ define('WPSTARTER_PATH', {{{ENV_REL_PATH}}});
  *
  * @var array $env All the variables stored in environment variables
  */
-$env = WCM\WPStarter\Helpers::settings({{{ENV_REL_PATH}}}, '{{{ENV_FILE_NAME}}}');
-array_walk($env, function ($value, $name) {
+$env = WCM\WPStarter\Env\Env::load({{{ENV_REL_PATH}}}, '{{{ENV_FILE_NAME}}}');
+array_walk($env->allVars(), function ($name) {
     switch ($name) {
         case 'DB_TABLE_PREFIX':
-            $GLOBALS['table_prefix'] = preg_replace('#[^\w]#', '', $value);
+            $GLOBALS['table_prefix'] = preg_replace('#[^\w]#', '', $env[$name]);
             break;
         default:
-            defined($name) or define($name, $value);
+            defined($name) or define($name, $env[$name]);
             break;
     }
 });

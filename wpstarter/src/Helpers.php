@@ -20,35 +20,6 @@ namespace WCM\WPStarter;
 class Helpers
 {
     /**
-     * Load all the environment variables using Dotenv class and return them.
-     *
-     * @param  string $dir
-     * @param  string $file
-     * @return array
-     */
-    public static function settings($dir, $file = '.env')
-    {
-        $env = Env\Env::load($dir, $file);
-
-        $settings = $env->allVars();
-
-        $required = [
-            'DB_NAME',
-            'DB_USER',
-            'DB_PASSWORD',
-        ];
-
-        foreach ($required as $key) {
-            if (! isset($settings[$key]) || empty($settings[$key])) {
-                $names = implode(', ', $required);
-                throw new \RuntimeException($names.' environment variables are required.');
-            }
-        }
-
-        return $settings;
-    }
-
-    /**
      * Add an action/filter before WordPress environment is loaded.
      *
      * @param string   $hook

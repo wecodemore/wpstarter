@@ -22,6 +22,8 @@ final class Config implements \ArrayAccess
         'env-example'           => true,
         'env-file'              => '.env',
         'move-content'          => false,
+        'content-dev'           => 'symlink',
+        'content-dev-dir'       => 'content-dev',
         'register-theme-folder' => true,
         'prevent-overwrite'     => ['.gitignore'],
         'verbosity'             => 2,
@@ -43,12 +45,35 @@ final class Config implements \ArrayAccess
     }
 
     /**
+     * Append-only setter.
+     *
+     * Allows to use config class as a DTO among steps.
+     *
+     * @param string $name
+     * @param mixed  $value
+     */
+    public function appendConfig($name, $value)
+    {
+        if ($this->offsetExists($name)) {
+            throw new \BadMethodCallException(
+                "%s is append-ony: %s config is already set",
+                __CLASS__,
+                $name
+            );
+        }
+
+        $this->configs[$name] = $value;
+    }
+
+    /**
      * @param  array $configs
      * @return array
      * @see \WCM\WPStarter\Setup\Config::validateGitignore()
      * @see \WCM\WPStarter\Setup\Config::validateBoolOrAskOrUrl()
      * @see \WCM\WPStarter\Setup\Config::validateBoolOrAsk()
+     * @see \WCM\WPStarter\Setup\Config::validatePath()
      * @see \WCM\WPStarter\Setup\Config::validatePathArray()
+     * @see \WCM\WPStarter\Setup\Config::validateContentDevOperation()
      * @see \WCM\WPStarter\Setup\Config::validateOverwrite()
      * @see \WCM\WPStarter\Setup\Config::validateVerbosity()
      * @see \WCM\WPStarter\Setup\Config::validateFilename()
@@ -63,23 +88,25 @@ final class Config implements \ArrayAccess
             'env-file'              => [$this, 'validateFilename'],
             'register-theme-folder' => [$this, 'validateBoolOrAsk'],
             'move-content'          => [$this, 'validateBoolOrAsk'],
+            'content-dev-dir'       => [$this, 'validatePath'],
+            'content-dev-op'        => [$this, 'validateContentDevOperation'],
             'dropins'               => [$this, 'validatePathArray'],
             'unknown-dropins'       => [$this, 'validateBoolOrAsk'],
             'prevent-overwrite'     => [$this, 'validateOverwrite'],
             'verbosity'             => [$this, 'validateVerbosity'],
             'steps'                 => [$this, 'validateSteps'],
         ];
-        $defaults = self::$defaults;
-        array_walk($configs, function ($value, $key) use ($map, &$defaults) {
-            $result = array_key_exists($key, $defaults) ? call_user_func($map[$key], $value) : null;
-            if (! is_null($result)) {
-                $defaults[$key] = $result;
-            }
-        });
 
-        if ($defaults['register-theme-folder']) {
-            $defaults['move-content'] = false;
-        }
+        $defaults = self::$defaults;
+
+        array_walk($defaults, function (&$value, $key, array $map) use ($configs) {
+            if (isset($configs[$key])) {
+                $validated = call_user_func($map[$key], $configs[$key]);
+                is_null($validated) or $value = $validated;
+            }
+        }, $map);
+
+        $defaults['register-theme-folder'] and $defaults['move-content'] = false;
 
         return array_merge($defaults, $valid);
     }
@@ -121,7 +148,7 @@ final class Config implements \ArrayAccess
         if (is_array($value)) {
             return $this->validatePathArray($value);
         }
-        if (trim(strtolower((string) $value)) === 'hard') {
+        if (trim(strtolower((string)$value)) === 'hard') {
             return 'hard';
         }
 
@@ -134,9 +161,20 @@ final class Config implements \ArrayAccess
      */
     private function validateVerbosity($value)
     {
-        $int = (int) $this->validateInt($value);
+        $int = (int)$this->validateInt($value);
 
         return $int >= 0 && $int < 3 ? $int : null;
+    }
+
+    /**
+     * @param $value
+     * @return string|null
+     */
+    private function validatePath($value)
+    {
+        $path = filter_var(str_replace('\\', '/', $value), FILTER_SANITIZE_URL);
+
+        return $path ? : null;
     }
 
     /**
@@ -147,7 +185,7 @@ final class Config implements \ArrayAccess
     {
         if (is_array($value)) {
             array_walk($value, function (&$path) {
-                $path = filter_var(str_replace('\\', '/', $path), FILTER_SANITIZE_URL);
+                $path = $this->validatePath($path);
             });
 
             return array_unique(array_filter($value));
@@ -192,7 +230,7 @@ final class Config implements \ArrayAccess
      */
     private function validateUrl($value)
     {
-        return filter_var($value, FILTER_SANITIZE_URL) ?: null;
+        return filter_var($value, FILTER_SANITIZE_URL) ? : null;
     }
 
     /**
@@ -201,7 +239,7 @@ final class Config implements \ArrayAccess
      */
     private function validateFilename($value)
     {
-        $filtered = filter_var($value, FILTER_SANITIZE_URL) ?: null;
+        $filtered = filter_var($value, FILTER_SANITIZE_URL) ? : null;
 
         return $filtered ? basename($filtered) : null;
     }
@@ -226,7 +264,25 @@ final class Config implements \ArrayAccess
             }
         }
 
-        return $steps ?: null;
+        return $steps ? : null;
+    }
+
+    /**
+     * @param $value
+     * @return bool|null|string
+     */
+    private function validateContentDevOperation($value)
+    {
+        is_string($value) and $value = strtolower($value);
+
+        if (in_array($value, ['symlink', 'copy'], true)) {
+            return $value;
+        }
+
+        $bool = $this->validateBool($value);
+        $bool === true and $bool = null; // when true we return null to force default
+
+        return $bool;
     }
 
     /**
