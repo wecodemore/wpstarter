@@ -97,7 +97,7 @@ class UrlDownloader
     /**
      * Perform a cUrl request and return the response.
      *
-     * @param  bool        $json
+     * @param  bool $json
      * @return bool|string
      */
     public function fetch($json = false)
@@ -120,7 +120,7 @@ class UrlDownloader
         $response = curl_exec($ch);
         $error = curl_error($ch);
         $info = curl_getinfo($ch);
-        $code = (int) $info['http_code'];
+        $code = (int)$info['http_code'];
         $wanted = $json ? 'application/json' : 'text/plain';
         if (
             ! empty($response)

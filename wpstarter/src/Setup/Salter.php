@@ -50,7 +50,7 @@ class Salter
     /**
      * Build random key.
      *
-     * @param  int    $length
+     * @param  int $length
      * @return string
      */
     private function buildKey($length)
