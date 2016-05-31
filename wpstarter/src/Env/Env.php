@@ -17,12 +17,8 @@ namespace WCM\WPStarter\Env;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WP Starter
  */
-final class Env
+class Env
 {
-    /**
-     * @var array
-     */
-    private static $set = [];
 
     /**
      * @var static
