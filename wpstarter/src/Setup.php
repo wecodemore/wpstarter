@@ -111,7 +111,9 @@ class Setup
     }
 
     /**
-     * @param                                      $stepClass
+     * Instantiate a step instance using the best method available.
+     *
+     * @param string                               $stepClass
      * @param \WCM\WPStarter\Setup\IO              $io
      * @param \WCM\WPStarter\Setup\Filesystem      $filesystem
      * @param \WCM\WPStarter\Setup\FileBuilder     $builder
