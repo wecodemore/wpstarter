@@ -28,7 +28,6 @@ use WCM\WPStarter\Setup\Steps\StepInterface;
  */
 class Setup
 {
-
     const WP_PACKAGE = 'johnpbloch/wordpress';
 
     /**
@@ -128,7 +127,7 @@ class Setup
     ) {
         $ns = 'WCM\\WPStarter\\Setup\\Steps\\';
 
-        if ( ! is_subclass_of($stepClass, $ns.'StepInterface', true)) {
+        if (! is_subclass_of($stepClass, $ns.'StepInterface', true)) {
             return;
         }
 
@@ -160,7 +159,7 @@ class Setup
         Paths $paths,
         IO $io
     ) {
-        if ( ! $stepper->allowed($config, $paths)) {
+        if (! $stepper->allowed($config, $paths)) {
             $lines = [
                 'WP Starter installation CANCELED.',
                 'wp-config.php was found in root folder and your overwrite settings',

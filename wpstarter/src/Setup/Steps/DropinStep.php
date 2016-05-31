@@ -22,7 +22,7 @@ use Exception;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class DropinCreationStep implements FileCreationStepInterface
+class DropinStep implements FileCreationStepInterface
 {
     /**
      * @var string

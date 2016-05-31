@@ -10,7 +10,6 @@
 
 namespace WCM\WPStarter\Setup;
 
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -18,7 +17,6 @@ namespace WCM\WPStarter\Setup;
  */
 class Filesystem
 {
-
     /**
      * Save some textual content ro a file in given path.
      *
@@ -52,7 +50,7 @@ class Filesystem
     {
         $targetParent = dirname($targetPath);
 
-        if ( ! is_file($sourcePath) || ! $this->createDir($targetParent)) {
+        if (! is_file($sourcePath) || ! $this->createDir($targetParent)) {
             return false;
         }
 
@@ -61,7 +59,6 @@ class Filesystem
         } catch (\Exception $e) {
             return false;
         }
-
     }
 
     /**
@@ -75,7 +72,7 @@ class Filesystem
     {
         $targetParent = dirname($targetPath);
 
-        if ( ! is_file($sourcePath) || ! $this->createDir($targetParent)) {
+        if (! is_file($sourcePath) || ! $this->createDir($targetParent)) {
             return false;
         }
 

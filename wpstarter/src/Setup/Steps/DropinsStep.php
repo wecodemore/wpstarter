@@ -26,7 +26,6 @@ use Exception;
  */
 class DropinsStep implements StepInterface
 {
-
     private static $dropins = [
         'advanced-cache.php',
         'db.php',
@@ -190,14 +189,14 @@ class DropinsStep implements StepInterface
     private function fetchLanguages($ssl = true)
     {
         static $languages;
-        if ( ! is_null($languages)) {
+        if (! is_null($languages)) {
             return $languages;
         }
         $url = $ssl ? 'https' : 'http';
         $url .= '://api.wordpress.org/translations/core/1.0/?version=';
         $remote = new UrlDownloader($url.$this->config['wp-version']);
         $result = $remote->fetch(true);
-        if ( ! $result) {
+        if (! $result) {
             return $ssl ? $this->fetchLanguages(false) : false;
         }
         try {

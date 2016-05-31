@@ -26,7 +26,7 @@ use Exception;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class EnvExampleCreationStep implements FileCreationStepInterface, OptionalStepInterface, PostProcessStepInterface
+class EnvExampleStep implements FileCreationStepInterface, OptionalStepInterface, PostProcessStepInterface
 {
     /**
      * @var \WCM\WPStarter\Setup\IO
