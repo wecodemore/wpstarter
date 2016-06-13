@@ -14,7 +14,6 @@ use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
-use WCM\WPStarter\Setup\OverwriteHelper;
 use WCM\WPStarter\Setup\Salter;
 
 /**

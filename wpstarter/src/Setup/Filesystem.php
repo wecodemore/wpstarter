@@ -18,7 +18,7 @@ namespace WCM\WPStarter\Setup;
 class Filesystem
 {
     /**
-     * Save some textual content ro a file in given path.
+     * Save some textual content to a file in given path.
      *
      * @param string $content
      * @param string $targetPath
@@ -84,7 +84,7 @@ class Filesystem
     }
 
     /**
-     * Just a wrapper arouns symlink().
+     * Just a wrapper around symlink().
      *
      * @param string $sourcePath
      * @param string $targetPath
@@ -116,8 +116,8 @@ class Filesystem
             $total++;
             $fullpathTarget = $targetPath.'/'.$item->getBasename();
             $done += $item->isDir()
-                ? $this->createDir($fullpathTarget)
-                : $this->moveFile($item->getPathname(), $fullpathTarget);
+                ? (int) $this->createDir($fullpathTarget)
+                : (int) $this->moveFile($item->getPathname(), $fullpathTarget);
         }
 
         return $done === $total;
@@ -139,8 +139,8 @@ class Filesystem
             $total++;
             $fullpathTarget = $targetPath.'/'.$item->getBasename();
             $done += $item->isDir()
-                ? $this->createDir($fullpathTarget)
-                : $this->copyFile($item->getPathname(), $fullpathTarget);
+                ? (int) $this->createDir($fullpathTarget)
+                : (int) $this->copyFile($item->getPathname(), $fullpathTarget);
         }
 
         return $done === $total;

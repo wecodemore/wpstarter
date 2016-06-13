@@ -13,7 +13,7 @@ namespace WCM\WPStarter\Env;
 use Gea\Gea;
 
 /**
- * Extends Dotenv to load and store all environment variables.
+ * Handle WordPress related environment variables using Gea library.
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
