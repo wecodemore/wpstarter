@@ -26,14 +26,12 @@ final class Accessor implements AccessorInterface
      */
     public function read($name)
     {
-        switch (true) {
-            case array_key_exists($name, $_ENV):
-                return $_ENV[$name];
-            default:
-                $value = getenv($name);
-                // switch getenv default to null
-                $value === false and $value = null;
+        if (array_key_exists($name, $_ENV)) {
+            return $_ENV[$name];
         }
+
+        $value = getenv($name);
+        $value === false and $value = null;
 
         return $value;
     }
