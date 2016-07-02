@@ -4,11 +4,11 @@ title: Quick Start
 -->
 # Quick Start
 
-After a system has WP Starter requirements (PHP 5.3.2+, Composer) to install a fully working, Composer-managed WordPress site involves just 3 steps:
+Once a system meets WP Starter requirements (PHP 5.3.2+, Composer), installing a fully working, Composer-managed WordPress site involves just 3 steps:
 
  1. create a `composer.json` file in an empty folder
  2. open a console and type: `composer install`
- 3. rename the `.env.example` file created by WP Starter to `.env`, open it with a text editor and set, at least, database settings.
+ 3. rename the `.env.example` file created by WP Starter to `.env`, open it with a text editor and set, at the very least, the database settings.
 
 Done :-)
 
@@ -16,8 +16,8 @@ That `composer.json` file should contain:
 
  - WP Starter
  - `WCM\WPStarter\Setup::run()` set as `"post-install-cmd"` script
- - WordPress package (optional) By explicitly requiring WordPress package is possible to choose WP version to install (min version is WP 3.9+)
- - Any desired theme and plugin (optional)
+ - WordPress package (optional). By explicitly requiring a WordPress package it is possible to choose the WP version to install (min version is WP 3.9+)
+ - Any desired theme(s) and plugin(s) (optional)
  - WP Starter configuration in `"extra"` setting (optional)
 
 # A simple `composer.json`
@@ -50,13 +50,13 @@ That `composer.json` file should contain:
 }
 ```
 
-This is a minimal example, but is possible to add any plugin or theme.
+This is a minimal example, but it is possible to add any plugin or theme.
 
 For plugins and themes that support Composer natively, it is possible to just add their package name to the require object.
 
-For plugins and themes that do not support Composer natively, but are available in WordPress repository (like WP Super Cache in the example) is possible to use packages provided by [wpackagist](https://wpackagist.org). To do that, wpackagist has to be added to `"repositories"` setting as shown above.
+For plugins and themes that do not support Composer natively, but are available in official wordpress.org repository (like WP Super Cache in the example) it is possible to use the packages provided by [wpackagist](https://wpackagist.org). To do that, wpackagist has to be added to `"repositories"` setting as shown above.
 
-The `config.vendor-dir` setting is optional. In the example above is used to have the vendor folder placed inside `wp-content` folder so that at the end of the installation the folder structure will be something like:
+The `config.vendor-dir` setting is optional. In the example above it is used to have the vendor folder be placed within the `wp-content` folder, so that at the end of the installation the folder structure will be something like:
 
 
   - `wp/`
@@ -75,17 +75,17 @@ The `config.vendor-dir` setting is optional. In the example above is used to hav
   - `.env.example`
   - `.gitignore`
 
-*(some files in wp folder have been omitted for sake of readability)*
+*(some files in wp folder have been omitted for the sake of readability)*
 
 
 ## There's More
 
-The example in this page shows how simple is to get started with WP Starter. However, by using both general Composer settings and WP Starter specific settings is possible to do more with WP Starter and also to control and customize any aspect of WP Starter flow.
+The example in this page shows how simple it is to get started with WP Starter. However, by using both general Composer settings and WP Starter specific settings it is possible to do more with WP Starter and also to control and customize any aspect of the WP Starter flow.
 
-The ***"Complete Usage Example"*** doc page contains a `composer.json` example code that uses all WP Starter power by making use of all the configurations available.
+The ***"Complete Usage Example"*** doc page contains a `composer.json` example code that uses all of the WP Starter power by making use of all of the configurations available.
 
-WP Starter flow is what goes from a `composer.json` to a fully functional WordPress site. What happen in between is that Composer install all packages and, after that, WP Starter performs different operations to configure the WordPress site.
+The WP Starter flow is what happens when you go from a `composer.json` to a fully functional WordPress site. What happens in-between is that Composer installs all packages and, after that, WP Starter performs different operations to configure the WordPress site.
 
-All these operations are called *steps* and are described one by one in the ***"How It Works"*** doc page.
+All these operations are called *steps* and are individually described on the ***"How It Works"*** doc page.
 
-Moreover, the way every WP Starter step works can be configured with settings in the `composer.json` file. The ***"WP Starter Options"*** doc page describes all the available configuration.
+Moreover, the way every WP Starter step works can be configured with settings in the `composer.json` file. The ***"WP Starter Options"*** doc page describes all the available configurations.
