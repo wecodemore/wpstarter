@@ -1,7 +1,7 @@
 WP Starter
 ==========
 
-> WordPress whole-site Composer packages has never been so easy.
+> WordPress whole-site Composer packages have never been so easy.
 
 WP Starter is the easiest and fastest way to bootstrap WordPress sites entirely based on
 [Composer](https://getcomposer.org/).
@@ -15,7 +15,7 @@ WP Starter is the easiest and fastest way to bootstrap WordPress sites entirely 
 
 # License
 
-MIT. See LICENSE file.
+MIT. See [LICENSE](LICENSE) file.
 
 # Dependencies
 
@@ -41,6 +41,6 @@ file an issue as they are public.
 
 WP Starter is hosted on GitHub. Feel free to open issues there for suggestions, questions and real issues.
 
-# Who's Behind
+# Who's Behind This?
 
 I'm Giuseppe, I deal with PHP since 2005. For questions, rants or chat ping me on Twitter ([@gmazzap](https://twitter.com/gmazzap)) or on ["The Loop"](http://chat.stackexchange.com/rooms/6/the-loop) (Stack Exchange) chat. Well, it's possible I'll ignore rants.
