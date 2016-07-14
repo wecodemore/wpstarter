@@ -129,9 +129,15 @@ if (! defined('WP_HOME')) {
     define('WP_HOME', $scheme.$name);
 }
 defined('ABSPATH')        or define('ABSPATH',        realpath({{{WP_INSTALL_PATH}}}));
-defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath({{{WP_CONTENT_PATH}}}));
 defined('WP_SITEURL')     or define('WP_SITEURL',     rtrim(WP_HOME, '/').'/{{{WP_SITEURL}}}');
-defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_URL}}}');
+
+/**
+ * Define content constants only if needed, or network install screen will complain for no reason
+ */
+if (realpath({{{WP_CONTENT_PATH}}}) !== realpath(ABSPATH.'/wp-content')) {
+    defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath({{{WP_CONTENT_PATH}}}));
+    defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_URL}}}');
+}
 
 /**
  * Clean up.
