@@ -141,16 +141,19 @@ class MuLoader
      */
     private function handleInstallHooks(array $plugins)
     {
-        $installed = get_site_option(MuLoader::PREFIX.self::INSTALLED_OPTION, []);
-        $toTrigger = array_diff($plugins, $installed);
-        array_walk($toTrigger, function ($plugin) {
+        $triggered = get_site_option(MuLoader::PREFIX.self::INSTALLED_OPTION, []);
+        $valid = array_intersect($triggered, $plugins);
+        $toTrigger = array_diff($plugins, $triggered);
+
+        array_walk($toTrigger, function ($plugin) use (&$valid) {
             $basename = plugin_basename($plugin);
             do_action("activate_{$basename}");
             is_multisite() and do_action('activated_plugin', $basename, true);
+            $valid[] = $plugin;
         });
 
-        if ($toTrigger !== $installed) {
-            update_site_option(MuLoader::PREFIX.self::INSTALLED_OPTION, $toTrigger);
+        if ($valid !== $triggered) {
+            update_site_option(MuLoader::PREFIX.self::INSTALLED_OPTION, $valid);
         }
     }
 
@@ -166,9 +169,8 @@ class MuLoader
     {
         $refresh and set_site_transient(self::PREFIX.$transient, $this->plugins, DAY_IN_SECONDS);
         if (is_admin()) {
-            $loader = $this;
-            add_filter('show_advanced_plugins', function ($bool, $type) use ($refresh, $loader) {
-                return $loader->showPluginsData($bool, $type, $refresh);
+            add_filter('show_advanced_plugins', function ($bool, $type) use ($refresh) {
+                return $this->showPluginsData($bool, $type, $refresh);
             }, PHP_INT_MAX, 2);
         }
     }
@@ -185,6 +187,7 @@ class MuLoader
             return;
         }
 
+        $phpFile = wp_normalize_path($phpFile);
         $dirname = dirname($phpFile);
         $this->guessMuPluginFile($dirname);
 
@@ -205,16 +208,18 @@ class MuLoader
         $data = is_array($data) ? array_change_key_case($data, CASE_LOWER) : [];
         if (array_key_exists('name', $data) && trim($data['name'])) {
             // seems we found the plugin file
-            $this->plugins[] = [$phpFile, false];
+            $this->plugins[] = [$phpFile, $this->maybeIsMu($dirname)];
             $this->folders[$dirname]['done'] = true;
         }
     }
 
     /**
+     * Sets the unique PHP file in a folder as the plugin file to load, if not already set.
+     *
      * It is possible that a "real" MU plugin has no plugin headers.
-     * In that case, if its folder contains more than one file, we don't know what to laod and so
-     * we load nothing. In case the folder contains just one PHP file, we assume that's the file to
-     * load.
+     * In that case, if its folder contains more than one file, we don't know what to load and so
+     * we load nothing.
+     * In case the folder contains just one PHP file, we assume that's the file to load.
      * No warranties against explosions.
      *
      * @param string $currentDir
@@ -227,15 +232,59 @@ class MuLoader
             && array_key_exists($this->lastParsedFolder, $this->folders)
         ) {
             $lastData = $this->folders[$this->lastParsedFolder];
-            $pluginFile = null;
-            if (! $lastData['done'] && $lastData['count'] === 1) {
-                $pluginFile = isset($lastData['last']) ? $lastData['last'] : null;
-            }
+            $pluginFile = $lastData['done'] || lastData['count'] !== 1 ? null : $lastData['last'];
 
             if (is_file($pluginFile)) {
                 $this->folders[$this->lastParsedFolder]['done'] = true;
                 $this->plugins[] = [$pluginFile, true];
             }
+        }
+    }
+
+    /**
+     * Try to discover if a plugin file is a MU plugin.
+     *
+     * When a file with plugins headers is found, we try to understand if it's a MU plugin,
+     * because if not we will trigger installation hooks @see handleInstallHooks().
+     * A MU plugin with no `composer.json` and proper `"type"` setting will be considered a
+     * regular plugin, so installation hooks will be triggered.
+     * Should not explode, but no warranties.
+     *
+     * @param string $path
+     * @return bool
+     */
+    private function maybeIsMu($path)
+    {
+        // If the folder contains more than one PHP file, it can't be a MU plugin, it must be
+        // a regular plugin used as MU plugin.
+
+        if (isset($this->folders[$path]['count']) && $this->folders[$path]['count'] > 1) {
+            return false;
+        }
+
+        $glob = glob($path.'/*.php');
+        if (count($glob) > 1) {
+            return false;
+        }
+
+        // If the plugin path contains just one file, at this point we can't say it is a MU plugin
+        // or not, because WordPress has no plugin header to specify it's a MU plugin, so now we try
+        // to look at `composer.json` `"type"` setting, if any `composer.json` is there.
+
+        $composer = $path.'/composer.json';
+        if (! is_file($composer) || ! is_readable($composer)) {
+            return false;
+        }
+
+        try {
+            $decoded = @json_decode(@file_get_contents($composer), true);
+
+            return
+                is_array($decoded)
+                && isset($decoded['type'])
+                && $decoded['type'] === 'wordpress-muplugin';
+        } catch (\Exception $e) {
+            return false;
         }
     }
 
@@ -253,12 +302,12 @@ class MuLoader
         $check = is_multisite() ? 'plugins-network' : 'plugins';
         static $show;
         if ($type === 'mustuse') {
-            $show = $bool;                          // does user want to show mustuse plugins?
+            $show = $bool;
         } elseif (
-            $type === 'dropins'                     // dropins are checked after mustuse
-            && $show                                // if user want show mustuse plugins
-            && $screen->base === $check             // we are in right screen
-            && current_user_can('activate_plugins') // and user has right capabilities
+            $type === 'dropins'                     // dropins are checked just after mustuse
+            && $show
+            && $screen->base === $check
+            && current_user_can('activate_plugins')
         ) {
             global $plugins;
             // let's merge plugins data discovered by WordPress with plugins data discovered by us
@@ -278,12 +327,27 @@ class MuLoader
     private function getPluginsData($refresh)
     {
         $data = $refresh ? [] : get_site_transient(self::PREFIX.self::DATA_TRANSIENT);
+
         is_array($data) or $data = [];
+        $oldKeys = $data ? array_keys($data) : [];
         foreach ($this->plugins as $plugin) {
             list($file, $mu) = $plugin;
             $key = basename($file);
-            $data[$key] = $this->getPluginData($key, $file, $mu);
+            // remove current  key from old keys, if there
+            $oldKeys and $oldKeys = array_diff($oldKeys, [$key]);
+            // get fresh plugin data if not in transient
+            if (empty($data[$key]) || ! is_array($data[$key]) || ! isset($data[$key]['Name'])) {
+                $data[$key] = $this->getPluginData($key, $file, $mu);
+            }
         }
+
+        // `$oldKeys` is not empty when `$refresh` is false, but transient has data for plugins
+        // that are not loaded anymore
+        $oldKeys and $refresh = true;
+        foreach ($oldKeys as $key) {
+            unset($data[$key]);
+        }
+
         $refresh and set_site_transient(self::PREFIX.self::DATA_TRANSIENT, $data, WEEK_IN_SECONDS);
 
         return $data;
@@ -292,8 +356,10 @@ class MuLoader
     /**
      * Get plugin headers to be shown on admin screen.
      *
-     * Append `*` to names of those plugins we loaded automatically, so we can distinguish them.
-     * Append `**` to names of those plugins we loaded "guessing" the file (see `guessMuPlugin()`).
+     * Append `*` to names of those regular plugins we loaded as MU plugin.
+     * Don't append anything to plugins we loaded uisng this class but were recognized as MU plugin.
+     * @see guessMuPluginFile()
+     * @see maybeIsMu()
      *
      * @param  string $key
      * @param  string $file
@@ -303,8 +369,11 @@ class MuLoader
     private function getPluginData($key, $file, $isMu)
     {
         $plugin_data = get_plugin_data($file, false, false);
-        empty($plugin_data['Name']) and $plugin_data['Name'] = $key;
-        $plugin_data['Name'] .= $isMu ? '**' : '*';
+        if (empty($plugin_data['Name'])) {
+            $plugin_data['Name'] = $key;
+            $isMu = true; // if we're loading a file with no plugins headers, it must be a MU plugin
+        }
+        $plugin_data['Name'] .= $isMu ? '' : '*';
 
         return $plugin_data;
     }

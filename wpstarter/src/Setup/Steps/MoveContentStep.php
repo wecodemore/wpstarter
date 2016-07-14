@@ -72,6 +72,14 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
     /**
      * @inheritdoc
      */
+    public function name()
+    {
+        return 'move-content';
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->paths = $paths;
@@ -82,7 +90,7 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
     /**
      * @inheritdoc
      */
-    public function question(Config $config, IO $io)
+    public function askConfirm(Config $config, IO $io)
     {
         if ($config['move-content'] !== 'ask') {
             return true;
@@ -95,7 +103,7 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
             '"'.$full.'"',
         ];
 
-        return $io->ask($lines, true);
+        return $io->confirm($lines, true);
     }
 
     /**

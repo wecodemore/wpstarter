@@ -17,21 +17,44 @@ namespace WCM\WPStarter\Setup;
  */
 final class Config implements \ArrayAccess
 {
+    /**
+     * @var array
+     */
     private static $defaults = [
         'gitignore'             => true,
         'env-example'           => true,
         'env-file'              => '.env',
         'move-content'          => false,
-        'content-dev'           => 'symlink',
+        'content-dev-op'        => 'symlink',
         'content-dev-dir'       => 'content-dev',
         'register-theme-folder' => true,
         'prevent-overwrite'     => ['.gitignore'],
-        'verbosity'             => 2,
         'dropins'               => [],
-        'custom-steps'          => [],
         'unknown-dropins'       => 'ask',
     ];
 
+    /**
+     * @var array
+     */
+    private static $validationMap = [
+        'gitignore'             => 'validateGitignore',
+        'env-example'           => 'validateBoolOrAskOrUrl',
+        'env-file'              => 'validatePath',
+        'register-theme-folder' => 'validateBoolOrAsk',
+        'move-content'          => 'validateBoolOrAsk',
+        'content-dev-dir'       => 'validatePath',
+        'content-dev-op'        => 'validateContentDevOperation',
+        'dropins'               => 'validatePathArray',
+        'unknown-dropins'       => 'validateBoolOrAsk',
+        'prevent-overwrite'     => 'validateOverwrite',
+        'verbosity'             => 'validateVerbosity',
+        'custom-steps'          => 'validateSteps',
+        'scripts'               => 'validateScripts'
+    ];
+
+    /**
+     * @var array
+     */
     private $configs;
 
     /**
@@ -39,7 +62,7 @@ final class Config implements \ArrayAccess
      *
      * @param array $configs
      */
-    public function __construct($configs)
+    public function __construct(array $configs)
     {
         $this->configs = $this->validate($configs);
     }
@@ -51,6 +74,7 @@ final class Config implements \ArrayAccess
      *
      * @param string $name
      * @param mixed  $value
+     * @return static
      */
     public function appendConfig($name, $value)
     {
@@ -62,7 +86,15 @@ final class Config implements \ArrayAccess
             );
         }
 
-        $this->configs[$name] = $value;
+        if (array_key_exists($name, self::$validationMap)) {
+            /** @var callable $validate */
+            $validate = [$this, self::$validationMap[$name]];
+            $value = $validate($validate);
+        }
+
+        is_null($value) or $this->configs[$name] = $value;
+
+        return $this;
     }
 
     /**
@@ -76,39 +108,28 @@ final class Config implements \ArrayAccess
      * @see \WCM\WPStarter\Setup\Config::validateContentDevOperation()
      * @see \WCM\WPStarter\Setup\Config::validateOverwrite()
      * @see \WCM\WPStarter\Setup\Config::validateVerbosity()
-     * @see \WCM\WPStarter\Setup\Config::validateFilename()
      * @see \WCM\WPStarter\Setup\Config::validateSteps()
+     * @see \WCM\WPStarter\Setup\Config::validateScripts()
      */
-    private function validate($configs)
+    private function validate(array $configs)
     {
-        $valid = ['is-root' => $configs['is-root'], 'wp-version' => $configs['wp-version']];
-        $map = [
-            'gitignore'             => [$this, 'validateGitignore'],
-            'env-example'           => [$this, 'validateBoolOrAskOrUrl'],
-            'env-file'              => [$this, 'validateFilename'],
-            'register-theme-folder' => [$this, 'validateBoolOrAsk'],
-            'move-content'          => [$this, 'validateBoolOrAsk'],
-            'content-dev-dir'       => [$this, 'validatePath'],
-            'content-dev-op'        => [$this, 'validateContentDevOperation'],
-            'dropins'               => [$this, 'validatePathArray'],
-            'unknown-dropins'       => [$this, 'validateBoolOrAsk'],
-            'prevent-overwrite'     => [$this, 'validateOverwrite'],
-            'verbosity'             => [$this, 'validateVerbosity'],
-            'steps'                 => [$this, 'validateSteps'],
-        ];
+        $valid = ['wp-version' => $configs['wp-version']];
+        $parsed = self::$defaults;
 
-        $defaults = self::$defaults;
-
-        array_walk($defaults, function (&$value, $key, array $map) use ($configs) {
-            if (isset($configs[$key])) {
-                $validated = call_user_func($map[$key], $configs[$key]);
-                is_null($validated) or $value = $validated;
+        array_walk($configs, function ($value, $key) use (&$parsed) {
+            $validated = $value;
+            if (array_key_exists($key, self::$validationMap)) {
+                /** @var callable $validate */
+                $validate = [$this, self::$validationMap[$key]];
+                $validated = $validate($value);
             }
-        }, $map);
 
-        $defaults['register-theme-folder'] and $defaults['move-content'] = false;
+            is_null($validated) or $parsed[$key] = $validated;
+        });
 
-        return array_merge($defaults, $valid);
+        $parsed['register-theme-folder'] and $parsed['move-content'] = false;
+
+        return array_merge($parsed, $valid);
     }
 
     /**
@@ -235,17 +256,6 @@ final class Config implements \ArrayAccess
 
     /**
      * @param $value
-     * @return string|null
-     */
-    private function validateFilename($value)
-    {
-        $filtered = filter_var($value, FILTER_SANITIZE_URL) ? : null;
-
-        return $filtered ? basename($filtered) : null;
-    }
-
-    /**
-     * @param $value
      * @return array|null
      */
     private function validateSteps($value)
@@ -264,7 +274,36 @@ final class Config implements \ArrayAccess
             }
         }
 
-        return $steps ? : null;
+        return $steps ?: null;
+    }
+
+    /**
+     * @param $value
+     * @return array
+     */
+    private function validateScripts($value)
+    {
+        if (! is_array($value)) {
+            return null;
+        }
+
+        $allScripts = [];
+        foreach ($value as $name => $scripts) {
+            is_string($name) or $name = '';
+            if (strpos($name, 'pre-') !== 0 && strpos($name, 'post-') !== 0) {
+                continue;
+            }
+            if (is_callable($scripts)) {
+                $allScripts[$name] = [$scripts];
+                continue;
+            }
+            if (is_array($scripts)) {
+                $scripts = array_filter($scripts, 'is_callable');
+                $scripts and $allScripts[$name] = $scripts;
+            }
+        }
+
+        return $allScripts ?: null;
     }
 
     /**
@@ -273,9 +312,9 @@ final class Config implements \ArrayAccess
      */
     private function validateContentDevOperation($value)
     {
-        is_string($value) and $value = strtolower($value);
+        is_string($value) and $value = trim(strtolower($value));
 
-        if (in_array($value, ['symlink', 'copy'], true)) {
+        if (in_array($value, ['symlink', 'copy', 'ask'], true)) {
             return $value;
         }
 

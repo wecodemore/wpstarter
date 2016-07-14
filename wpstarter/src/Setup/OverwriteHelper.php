@@ -63,7 +63,7 @@ class OverwriteHelper
             $name = basename($file);
             $lines = ["{$name} found in target folder. Do you want to overwrite it?"];
 
-            return $this->io->ask($lines, true);
+            return $this->io->confirm($lines, true);
         }
         if (is_array($this->config)) {
             $relative = trim(str_replace($this->root, '', $this->normalise($file)), '/');

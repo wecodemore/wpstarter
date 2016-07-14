@@ -19,6 +19,7 @@ use Composer\IO\IOInterface;
  */
 class IO
 {
+
     /**
      * @var \Composer\IO\IOInterface
      */
@@ -104,13 +105,13 @@ class IO
 
     /**
      * Get an array of question lines and a default response and use them to format and ask a
-     * question to console.
+     * confirmation to console.
      *
      * @param  array $lines
      * @param  bool  $default
      * @return bool
      */
-    public function ask(array $lines, $default = true)
+    public function confirm(array $lines, $default = true)
     {
         if ($this->verbosity < 1) {
             return $default;
@@ -132,6 +133,67 @@ class IO
         $prompt .= $default ? '[Y]' : '[N]';
 
         return $this->io->askConfirmation($question.PHP_EOL.$prompt, $default);
+    }
+
+    /**
+     * Get an array of question lines and a default response and use them to format and ask a
+     * question to console.
+     *
+     * @param  array $lines
+     * @param array  $answers
+     * @param  bool  $default
+     * @return bool
+     */
+    public function ask(array $lines, array $answers = [], $default = null)
+    {
+        $answers = array_change_key_case($answers, CASE_LOWER);
+        $answers = array_map('trim', array_filter($answers, 'is_string'));
+        is_string($default) && array_key_exists($default, $answers) or $default = null;
+
+        if ($this->verbosity < 1) {
+            return $default ?: key($answers);
+        }
+
+        array_unshift($lines, 'QUESTION');
+        $length = max(array_map('strlen', $lines));
+        array_walk($lines, function (&$line) use ($length) {
+            $len = strlen($line);
+            if ($len < $length) {
+                $line = $line.str_repeat(' ', $length - $len);
+            }
+            $line = "  {$line}  ";
+        });
+        $space = str_repeat(' ', $length + 4);
+        array_unshift($lines, '  <question>'.$space);
+        array_push($lines, $space.'</question>');
+        $question = PHP_EOL.implode('</question>'.PHP_EOL.'  <question>', $lines);
+        $prompt = '';
+        foreach ($answers as $expected => $label) {
+            $prompt and $prompt .= '|';
+            $prompt .= '<option=bold>'.$label.'</option=bold>';
+        }
+
+        $default and $prompt .= "[{$answers[$default]}]";
+        $question .= PHP_EOL.PHP_EOL.'    '.$prompt;
+
+        try {
+            $answer = $this->io->ask($question, $default);
+            while (! array_key_exists(strtolower(trim($answer)), $answers, true)) {
+                $this->io->write('<comment>Invalid answer.</comment>');
+                $answer = $this->io->ask($question, $default);
+            }
+
+            return $answer;
+        } catch (\RuntimeException $exception) {
+            if (is_null($default)) {
+                reset($answers);
+
+                return key($answers);
+            }
+
+            return $default;
+        }
+
     }
 
     /**
@@ -166,6 +228,14 @@ class IO
         call_user_func([$this->io, $func], PHP_EOL.implode($close.PHP_EOL.$open, $lines));
 
         return ! $is_error;
+    }
+
+    /**
+     * @return \Composer\IO\IOInterface
+     */
+    public function composerIo()
+    {
+        return clone $this->io;
     }
 
     /**

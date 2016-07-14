@@ -100,6 +100,14 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     /**
      * @inheritdoc
      */
+    public function name()
+    {
+        return 'build-gitignore';
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config['gitignore'];
@@ -120,10 +128,10 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     /**
      * @inheritdoc
      */
-    public function question(Config $config, IO $io)
+    public function askConfirm(Config $config, IO $io)
     {
         $this->found = false;
-        if ($config['gitignore'] === "ask") {
+        if ($config['gitignore'] === 'ask') {
             $lines = [
                 'Do you want to create a .gitignore file that makes Git ignore',
                 ' - files that contain sensible data (wp-config.php, .env)',
@@ -131,7 +139,7 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
                 ' - WordPress content folder',
             ];
 
-            return $io->ask($lines, true);
+            return $io->confirm($lines, true);
         }
 
         return true;
@@ -216,12 +224,7 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
      */
     private function download(\ArrayAccess $paths)
     {
-        if (! UrlDownloader::checkSoftware()) {
-            $this->io->comment('WP Starter needs cUrl installed to download files from url.');
-
-            return $this->create($paths);
-        }
-        $remote = new UrlDownloader($this->config);
+        $remote = new UrlDownloader($this->config, $this->io);
         if ($remote->save($this->targetPath($paths))) {
             return self::SUCCESS;
         }

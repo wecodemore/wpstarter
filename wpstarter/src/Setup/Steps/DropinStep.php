@@ -74,6 +74,14 @@ final class DropinStep implements FileCreationStepInterface
     /**
      * @inheritdoc
      */
+    public function name()
+    {
+        return '__dropin';
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->actionSource = $this->action($this->url, $paths);
@@ -134,7 +142,7 @@ final class DropinStep implements FileCreationStepInterface
      */
     private function download($url, $dest)
     {
-        $remote = new UrlDownloader($url);
+        $remote = new UrlDownloader($url, $this->io);
         $name = basename($dest);
         if (! $remote->save($dest)) {
             $this->error .= "Impossible to download and save {$name}: ".$remote->error();

@@ -8,9 +8,9 @@
  * file that was distributed with this source code.
  */
 
-namespace WCM\WPStarter;
+namespace WCM\WPStarter\Setup;
 
-use Composer\Script\Event;
+use Composer\Composer;
 
 
 /**
@@ -36,12 +36,12 @@ final class Paths implements \ArrayAccess
     private $composer;
 
     /**
-     * @param \Composer\Script\Event $event
+     * @param \Composer\Composer $composer
      */
-    public function __construct(Event $event)
+    public function __construct(Composer $composer)
     {
         is_null(self::$parsed) and self::$parsed = new \SplObjectStorage();
-        $this->composer = $event->getComposer();
+        $this->composer = $composer;
         $this->paths = self::$parsed->contains($this->composer)
             ? self::$parsed->offsetGet($this->composer)
             : $this->parse();

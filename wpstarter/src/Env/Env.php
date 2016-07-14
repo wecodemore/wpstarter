@@ -148,12 +148,17 @@ final class Env implements \ArrayAccess
     /**
      * @var array
      */
-    private static $isBoolOrInt = ['WP_POST_REVISIONS'];
+    private static $isBoolOrInt = [
+        'WP_POST_REVISIONS',
+    ];
 
     /**
      * @var array
      */
-    private static $isMod = ['FS_CHMOD_DIR', 'FS_CHMOD_FILE'];
+    private static $isMod = [
+        'FS_CHMOD_DIR',
+        'FS_CHMOD_FILE',
+    ];
 
     /**
      * @var array
@@ -171,22 +176,22 @@ final class Env implements \ArrayAccess
     private $names;
 
     /**
-     * @param  string $path
-     * @param  string $file
-     * @return \WCM\WPStarter\Env\Env|static
+     * @param  string $path Environment file path
+     * @param  string $file Environment file path relative to `$path`
+     * @return \WCM\WPStarter\Env\Env
      */
     public static function load($path, $file = '.env')
     {
-        if (!is_null(self::$loaded)) {
+        if (! is_null(self::$loaded)) {
             return self::$loaded;
         }
 
         is_string($file) or $file = '.env';
         $path = is_string($path) && is_string($file)
-            ? rtrim($path, '\\/').'/'.ltrim($file, '\\/')
+            ? realpath(rtrim($path, '\\/').'/'.ltrim($file, '\\/'))
             : '';
 
-        $loadFile = is_file($path) && is_readable($path);
+        $loadFile = $path && is_file($path) && is_readable($path);
         if (! $loadFile && getenv('WORDPRESS_ENV') === false) {
             die('Please provide a .env file or ensure WORDPRESS_ENV variable is set.');
         }
@@ -198,27 +203,8 @@ final class Env implements \ArrayAccess
         $gea->addFilter(['DB_NAME', 'DB_USER', 'DB_PASSWORD'], 'required');
         $gea->addFilter(self::$isBool, 'bool');
         $gea->addFilter(self::$isInt, 'int');
-        $gea->addFilter(self::$isBoolOrInt, [
-            'callback' => [
-                function ($value) {
-                    return is_numeric($value)
-                        ? (int)$value
-                        : filter_var($value, FILTER_VALIDATE_BOOLEAN);
-                }
-            ]
-        ]);
-        $gea->addFilter(self::$isMod, [
-            'callback' => [
-                function ($value) {
-                    (is_string($value) && $value[0] === '0') and $value = substr($value, 1);
-
-                    return strlen($value) === 3 && str_replace(range(1, 7), '', $value) === ''
-                        ? octdec($value)
-                        : null;
-                }
-            ]
-        ]);
-
+        $gea->addFilter(self::$isBoolOrInt, ['callback' => [self::boolOrIntFilter()]]);
+        $gea->addFilter(self::$isMod, ['callback' => [self::modFilter()]]);
         $gea->load();
         self::$loaded = new static($gea);
 
@@ -244,6 +230,34 @@ final class Env implements \ArrayAccess
     }
 
     /**
+     * @return \Closure
+     */
+    private static function boolOrIntFilter()
+    {
+        return function ($value) {
+            (is_string($value) && $value[0] === '0') and $value = substr($value, 1);
+
+            return strlen($value) === 3 && str_replace(range(1, 7), '', $value) === ''
+                ? octdec($value)
+                : null;
+        };
+    }
+
+    /**
+     * @return \Closure
+     */
+    private static function modFilter()
+    {
+        return function ($value) {
+            (is_string($value) && $value[0] === '0') and $value = substr($value, 1);
+
+            return strlen($value) === 3 && str_replace(range(1, 7), '', $value) === ''
+                ? octdec($value)
+                : null;
+        };
+    }
+
+    /**
      * @param \Gea\Gea $gea
      */
     public function __construct(Gea $gea)
@@ -256,7 +270,7 @@ final class Env implements \ArrayAccess
      *
      * @return array
      */
-    public function allVars()
+    public function allWpVars()
     {
         if (is_array($this->names)) {
             return $this->names;

@@ -71,6 +71,14 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
     /**
      * @inheritdoc
      */
+    public function name()
+    {
+        return 'build-index';
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function allowed(Config $config, \ArrayAccess $paths)
     {
         return true;

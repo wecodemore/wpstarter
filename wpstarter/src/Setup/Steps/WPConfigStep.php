@@ -90,6 +90,14 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
     /**
      * @inheritdoc
      */
+    public function name()
+    {
+        return 'build-wpconfig';
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config;
@@ -135,9 +143,7 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
             $this->salter->keys()
         );
         $build = $this->builder->build($paths, 'wp-config.example', $vars);
-        if (! $this->filesystem->save($build,
-            dirname($this->targetPath($paths)).'/wp-config.php')
-        ) {
+        if (! $this->filesystem->save($build, $this->targetPath($paths))) {
             $this->error = 'Error on create wp-config.php.';
 
             return self::ERROR;
@@ -172,6 +178,6 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
             'as additional theme folder for your project?',
         ];
 
-        return $this->io->ask($lines, true);
+        return $this->io->confirm($lines, true);
     }
 }

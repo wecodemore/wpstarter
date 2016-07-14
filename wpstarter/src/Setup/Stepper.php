@@ -10,12 +10,6 @@
 
 namespace WCM\WPStarter\Setup;
 
-use WCM\WPStarter\Setup\Steps\BlockingStepInterface;
-use WCM\WPStarter\Setup\Steps\FileCreationStepInterface;
-use WCM\WPStarter\Setup\Steps\OptionalStepInterface;
-use WCM\WPStarter\Setup\Steps\PostProcessStepInterface;
-use WCM\WPStarter\Setup\Steps\StepInterface;
-
 /**
  * A step whose work routine consists in running other steps routines.
  *
@@ -23,7 +17,7 @@ use WCM\WPStarter\Setup\Steps\StepInterface;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-final class Stepper implements StepperInterface, PostProcessStepInterface
+final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
 {
     /**
      * @var \WCM\WPStarter\Setup\IO
@@ -67,10 +61,15 @@ final class Stepper implements StepperInterface, PostProcessStepInterface
         $this->postProcessSteps = new \SplObjectStorage();
     }
 
+    public function name()
+    {
+        return '__stepper';
+    }
+
     /**
      * @inheritdoc
      */
-    public function addStep(StepInterface $step)
+    public function addStep(Steps\StepInterface $step)
     {
         $this->steps->attach($step);
 
@@ -83,7 +82,7 @@ final class Stepper implements StepperInterface, PostProcessStepInterface
     public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config;
-        $wp_config = $paths['root'].'/wp-config.php';
+        $wp_config = $paths['wp-parent'].'/wp-config.php';
 
         return $config['prevent-overwrite'] !== 'hard' || ! is_file($wp_config);
     }
@@ -96,19 +95,32 @@ final class Stepper implements StepperInterface, PostProcessStepInterface
      */
     public function run(\ArrayAccess $paths)
     {
-        $this->io->comment('WP Starter is going to start installation...');
+        $this->io->comment('WP Starter is going to start...');
         $this->steps->rewind();
+
+        $scripts = $this->config['scripts'] ? : [];
+
         while ($this->steps->valid()) {
             /** @var \WCM\WPStarter\Setup\Steps\StepInterface $step */
             $step = $this->steps->current();
-            /** @var int $result */
-            $result = $this->shouldProcess($step, $paths) ? $step->run($paths) : 0;
+            $result = 0;
+            $shouldProcess = $this->shouldProcess($step, $paths);
+
+            if ($shouldProcess) {
+                $this->runStepsScripts($step, $scripts, 'pre', $paths, Steps\StepInterface::NONE);
+                $result = $step->run($paths);
+            }
+
             if (! $this->handleResult($step, $result)) {
                 return $this->finalMessage();
             }
-            $step instanceof PostProcessStepInterface and $this->postProcessSteps->attach($step);
+
+            $step instanceof Steps\PostProcessStepInterface and $this->postProcessSteps->attach($step);
+            $shouldProcess and $this->runStepsScripts($step, $scripts, 'post', $paths, $result);
+
             $this->steps->next();
         }
+
         $this->postProcess($this->io);
 
         return $this->finalMessage();
@@ -163,19 +175,19 @@ final class Stepper implements StepperInterface, PostProcessStepInterface
      * @param  \ArrayAccess                             $paths
      * @return bool
      */
-    private function shouldProcess(StepInterface $step, \ArrayAccess $paths)
+    private function shouldProcess(Steps\StepInterface $step, \ArrayAccess $paths)
     {
         $comment = '';
         $process = $step->allowed($this->config, $paths);
-        if ($process && $step instanceof FileCreationStepInterface) {
+        if ($process && $step instanceof Steps\FileCreationStepInterface) {
             /** @var \WCM\WPStarter\Setup\Steps\FileCreationStepInterface $step */
             $path = $step->targetPath($paths);
             $process = $this->overwrite->should($path);
             $comment = $process ? '' : '- '.basename($path).' exists and will be preserved.';
         }
-        if ($process && $step instanceof OptionalStepInterface) {
+        if ($process && $step instanceof Steps\OptionalStepInterface) {
             /** @var \WCM\WPStarter\Setup\Steps\OptionalStepInterface $step */
-            $process = $step->question($this->config, $this->io);
+            $process = $step->askConfirm($this->config, $this->io);
             $comment = $process ? '' : $step->skipped();
         }
         $process or $this->io->comment($comment);
@@ -192,20 +204,45 @@ final class Stepper implements StepperInterface, PostProcessStepInterface
      * @param  int                                      $result
      * @return bool
      */
-    private function handleResult(StepInterface $step, $result)
+    private function handleResult(Steps\StepInterface $step, $result)
     {
-        if ($result & StepInterface::SUCCESS) {
+        if ($result & Steps\StepInterface::SUCCESS) {
             $this->printMessages($step->success(), false);
         }
-        if ($result & StepInterface::ERROR) {
+
+        if ($result & Steps\StepInterface::ERROR) {
             $this->printMessages($step->error(), true);
             $this->errors++;
-            if ($step instanceof BlockingStepInterface) {
+            if ($step instanceof Steps\BlockingStepInterface) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * @param \WCM\WPStarter\Setup\Steps\StepInterface $step
+     * @param array                                    $scripts
+     * @param string                                   $type
+     * @param \WCM\WPStarter\Setup\Paths               $paths
+     * @param int                                      $result
+     */
+    private function runStepsScripts(
+        Steps\StepInterface $step,
+        array $scripts,
+        $type = 'pre',
+        Paths $paths,
+        $result
+    ) {
+        $name = $step->name();
+        $toRun = array_key_exists("{$type}-$name", $scripts)
+            ? (array)$scripts["{$type}-$name"]
+            : [];
+
+        array_walk($toRun, function (callable $script) use ($paths, $result) {
+            $script($this->config, $paths, $this->io, $result);
+        });
     }
 
     /**

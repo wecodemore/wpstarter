@@ -26,6 +26,13 @@ interface StepInterface
     const NONE    = 4;
 
     /**
+     * Return an unique name for the step.
+     *
+     * @return string
+     */
+    public function name();
+
+    /**
      * Return true if the step is allowed, i.e. the run method have to be called or not
      *
      * @param  \WCM\WPStarter\Setup\Config $config

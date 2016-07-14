@@ -17,6 +17,11 @@ namespace WCM\WPStarter\Setup;
  */
 class Salter
 {
+    const CHARS = ' =,.;:/?!|@#$%^&*()-_[]{}<>~`+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    /**
+     * @var array
+     */
     private static $keys = [
         'AUTH_KEY',
         'SECURE_AUTH_KEY',
@@ -28,7 +33,15 @@ class Salter
         'NONCE_SALT',
     ];
 
+    /**
+     * @var array
+     */
     private $result;
+
+    /**
+     * @var callable
+     */
+    private $randCb;
 
     /**
      * Build random keys.
@@ -39,6 +52,7 @@ class Salter
     {
         if (! is_array($this->result)) {
             $this->result = [];
+            $this->randCb = function_exists('mt_rand') ? 'mt_rand' : 'rand';
             foreach (self::$keys as $key) {
                 $this->result[$key] = $this->buildKey(64);
             }
@@ -55,11 +69,10 @@ class Salter
      */
     private function buildKey($length)
     {
-        $chars = ' =,.;:/?!|@#$%^&*()-_[]{}<>~`+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $key = '';
+        $cb = $this->randCb;
         for ($i = 0; $i < $length; $i++) {
-            $rand = mt_rand(0, 91);
-            $key .= $chars[$rand];
+            $key .= self::CHARS[$cb(0, 91)];
         }
 
         return $key;

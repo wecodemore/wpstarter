@@ -1,9 +1,10 @@
 {
   "name": "wecodemore/wpstarter",
   "description": "Easily bootstrap whole site Composer packages for WordPress.",
-  "type": "library",
+  "type": "composer-plugin",
   "keywords": [
     "composer",
+    "composer plugin",
     "wordpress",
     "wp",
     "wp-config",
@@ -25,54 +26,25 @@
     "issues": "https://github.com/wecodemore/wpstarter/issues",
     "source": "https://github.com/wecodemore/wpstarter"
   },
-  "repositories": [
-    {
-      "type": "composer",
-      "url": "https://wpackagist.org"
-    }
-  ],
   "require": {
     "php": ">=5.4",
-    "gmazzap/gea": "~0.1.0",
-    "johnpbloch/wordpress": ">=4.4"
+    "composer-plugin-api": "^1.0",
+    "johnpbloch/wordpress-core-installer": "~0.2",
+    "gmazzap/gea": "~0.1.0"
   },
   "require-dev": {
     "composer/composer": "^1.0"
-  },
-  "replace": {
-    "wecodemore/wp-composer-config": "*"
   },
   "autoload": {
     "psr-4": {
       "WCM\\WPStarter\\": "wpstarter/src/"
     }
   },
-  "scripts": {
-    "post-install-cmd": "@wpstarter",
-    "post-update-cmd": "@wpstarter",
-    "wpstarter": "WCM\\WPStarter\\Setup::runAsRoot"
-  },
   "config": {
     "optimize-autoloader": true
   },
   "extra": {
-    "wordpress-install-dir": "public/wp",
-    "wordpress-content-dir": "public/content",
-    "wpstarter": {
-      "env-example": true,
-      "prevent-overwrite": false
-    },
-    "installer-paths": {
-      "public/content/plugins/{$name}": [
-        "type:wordpress-plugin"
-      ],
-      "public/content/mu-plugins/{$name}": [
-        "type:wordpress-muplugin"
-      ],
-      "public/content/themes/{$name}": [
-        "type:wordpress-theme"
-      ]
-    },
+    "class": "WCM\\WPStarter\\ComposerPlugin",
     "branch-alias": {
       "dev-master": "2.x-dev",
       "dev-version-3": "3.x-dev"

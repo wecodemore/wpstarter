@@ -74,6 +74,14 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
     /**
      * @inheritdoc
      */
+    public function name()
+    {
+        return 'check-paths';
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config;

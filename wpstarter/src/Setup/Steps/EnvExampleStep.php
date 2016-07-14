@@ -84,6 +84,14 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
     /**
      * @inheritdoc
      */
+    public function name()
+    {
+        return 'build-env-example';
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config;
@@ -104,7 +112,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
     /**
      * @inheritdoc
      */
-    public function question(Config $config, IO $io)
+    public function askConfirm(Config $config, IO $io)
     {
         if ($config['env-example'] === 'ask') {
             $lines = [
@@ -112,7 +120,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
                 'your project folder?',
             ];
 
-            return $io->ask($lines, true);
+            return $io->confirm($lines, true);
         }
 
         return true;
@@ -165,12 +173,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
      */
     private function download($url, $dest, \ArrayAccess $paths)
     {
-        if (! UrlDownloader::checkSoftware()) {
-            $this->io->comment('WP Starter needs cUrl installed to download files from url.');
-
-            return $this->copy($paths, $dest);
-        }
-        $remote = new UrlDownloader($url);
+        $remote = new UrlDownloader($url, $this->io);
         if (! $remote->save($dest)) {
             $this->error = 'Error on downloading and save .env.example: '.$remote->error().'.';
 

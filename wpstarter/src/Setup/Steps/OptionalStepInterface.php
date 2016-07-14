@@ -23,13 +23,16 @@ use WCM\WPStarter\Setup\IO;
 interface OptionalStepInterface extends StepInterface
 {
     /**
-     * Ask a question if necessary and return result;
+     * Ask a corfirmation  and return result.
+     *
+     * To actually display the question on screen, use `$io->confirm()`.
+     * @see \WCM\WPStarter\Setup\IO::confirm()
      *
      * @param  \WCM\WPStarter\Setup\Config $config
      * @param  \WCM\WPStarter\Setup\IO     $io
-     * @return mixed
+     * @return bool
      */
-    public function question(Config $config, IO $io);
+    public function askConfirm(Config $config, IO $io);
 
     /**
      * The message that should be printed when users says don't want to process this step.

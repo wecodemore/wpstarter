@@ -21,6 +21,15 @@ require_once realpath({{{VENDOR_PATH}}}.'/autoload.php');
 define('WPSTARTER_PATH', {{{ENV_REL_PATH}}});
 
 /**
+ * @return \WCM\WPStarter\Env\Env
+ */
+function wpstarter_env() {
+    return WCM\WPStarter\Env\Env::load({{{ENV_REL_PATH}}}, '{{{ENV_FILE_NAME}}}');
+}
+
+$env = wpstarter_env();
+
+/**
  * Configuration constants.
  *
  * Use environment variables to set WordPress constants.
@@ -29,19 +38,16 @@ define('WPSTARTER_PATH', {{{ENV_REL_PATH}}});
  * - DB_USER
  * - DB_PASSWORD
  *
- * @var array $env All the variables stored in environment variables
+ * @var array $allWpVars
  */
-$env = WCM\WPStarter\Env\Env::load({{{ENV_REL_PATH}}}, '{{{ENV_FILE_NAME}}}');
-array_walk($env->allVars(), function ($name) {
-    switch ($name) {
-        case 'DB_TABLE_PREFIX':
-            $GLOBALS['table_prefix'] = preg_replace('#[^\w]#', '', $env[$name]);
-            break;
-        default:
-            defined($name) or define($name, $env[$name]);
-            break;
+$allWpVars = $env->allWpVars();
+array_walk($allConfVars, function ($name, $i, ArrayAccess $env) {
+    if ($name === 'DB_TABLE_PREFIX') {
+        $GLOBALS['table_prefix'] = preg_replace('#[^\w]#', '', $env[$name]);
+    } elseif(! defined($name) && $env->offsetExists($name)) {
+        define($name, $env[$name]);
     }
-});
+}, $env);
 
 /**
  * Set optional database settings if not already set
@@ -89,6 +95,7 @@ switch ($environment) {
         defined('WP_DEBUG')         or define('WP_DEBUG',         true);
         defined('WP_DEBUG_DISPLAY') or define('WP_DEBUG_DISPLAY', false);
         defined('WP_DEBUG_LOG')     or define('WP_DEBUG_LOG',     true);
+        defined('SAVEQUERIES')      or define('SAVEQUERIES',      false);
         defined('SCRIPT_DEBUG')     or define('SCRIPT_DEBUG',     true);
         break;
 
@@ -97,6 +104,7 @@ switch ($environment) {
         defined('WP_DEBUG')         or define('WP_DEBUG',         false);
         defined('WP_DEBUG_DISPLAY') or define('WP_DEBUG_DISPLAY', false);
         defined('WP_DEBUG_LOG')     or define('WP_DEBUG_LOG',     false);
+        defined('SAVEQUERIES')      or define('SAVEQUERIES',      false);
         defined('SCRIPT_DEBUG')     or define('SCRIPT_DEBUG',     false);
         break;
 }
@@ -115,7 +123,7 @@ if (
 }
 
 /**
- * Set WordPress paths and urls if not set via environment variables.
+ * Set WordPress paths and URLs if not set via environment variables.
  */
 if (! defined('WP_HOME')) {
     $server = filter_input_array(INPUT_SERVER, array(
@@ -136,7 +144,7 @@ defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{W
 /**
  * Clean up.
  */
-unset($env, $environment, $server, $secure, $scheme, $name);
+unset($env, $allWpVars, $environment, $server, $secure, $scheme, $name);
 
 /**
  * Allows to load MU plugins in subfolders.

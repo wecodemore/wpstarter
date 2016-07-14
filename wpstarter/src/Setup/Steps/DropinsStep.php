@@ -14,8 +14,8 @@ use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\Config;
+use WCM\WPStarter\Setup\LanguagesFetcher;
 use WCM\WPStarter\Setup\OverwriteHelper;
-use WCM\WPStarter\Setup\UrlDownloader;
 
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
@@ -24,7 +24,7 @@ use WCM\WPStarter\Setup\UrlDownloader;
  */
 final class DropinsStep implements StepInterface
 {
-    private static $dropins = [
+    private static $validDropins = [
         'advanced-cache.php',
         'db.php',
         'db-error.php',
@@ -41,6 +41,11 @@ final class DropinsStep implements StepInterface
      * @var \WCM\WPStarter\Setup\IO
      */
     private $io;
+
+    /**
+     * @var array
+     */
+    private $dropins;
 
     /**
      * @var \WCM\WPStarter\Setup\Config
@@ -80,6 +85,26 @@ final class DropinsStep implements StepInterface
     }
 
     /**
+     * @param array $dropins
+     * @return \WCM\WPStarter\Setup\Steps\DropinsStep
+     */
+    public function forDropins(array $dropins)
+    {
+        $clone = clone $this;
+        $clone->dropins = $dropins;
+
+        return $clone;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function name()
+    {
+        return 'dropins';
+    }
+
+    /**
      * @inheritdoc
      */
     public function allowed(Config $config, \ArrayAccess $paths)
@@ -95,8 +120,13 @@ final class DropinsStep implements StepInterface
     public function run(\ArrayAccess $paths)
     {
         $overwrite = new OverwriteHelper($this->config, $this->io, $paths);
+        is_array($this->dropins) or $this->dropins = $this->config['dropins'];
 
-        foreach ($this->config['dropins'] as $name => $url) {
+        if (empty($this->dropins)) {
+            return self::NONE;
+        }
+
+        foreach ($this->dropins as $name => $url) {
             $this->validName(basename($name))
                 ? $this->runStep($name, $url, $paths, $overwrite)
                 : $this->addMessage("{$name} is not a valid dropin name. Skipped.", 'error');
@@ -152,61 +182,24 @@ final class DropinsStep implements StepInterface
      * @param  string $name
      * @return bool
      */
-    private function validName($name)
+    public function validName($name)
     {
-        if ($this->config['unknown-dropins'] === true || in_array($name, self::$dropins, true)) {
+        if ($this->config['unknown-dropins'] === true || in_array($name, self::$validDropins, true)) {
             return true;
         }
         $ext = pathinfo($name, PATHINFO_EXTENSION);
+        $ask = $this->config['unknown-dropins'] === 'ask';
         if (strtolower($ext) !== 'php') {
-            return $this->config['unknown-dropins'] === "ask" && $this->ask($name, 0);
+            return $ask && $this->ask($name, 0);
         }
+
         $name = substr($name, 0, -4);
-        $languages = $this->fetchLanguages();
+        $fetcher = new LanguagesFetcher($this->io);
+        $languages = $fetcher->fetch($this->config['wp-version']);
 
-        return $languages === false
-            ? $this->config['unknown-dropins'] === "ask" && $this->ask($name, 1)
-            : (
-                in_array($name, $languages, true)
-                || ($this->config['unknown-dropins'] === "ask" && $this->ask($name, 2))
-            );
-    }
-
-    /**
-     * Fetch languages from wordpress.org API.
-     *
-     * @param  bool $ssl
-     * @return array|bool
-     */
-    private function fetchLanguages($ssl = true)
-    {
-        static $languages;
-        if (! is_null($languages)) {
-            return $languages;
-        }
-        $url = $ssl ? 'https' : 'http';
-        $url .= '://api.wordpress.org/translations/core/1.0/?version=';
-        $remote = new UrlDownloader($url.$this->config['wp-version']);
-        $result = $remote->fetch(true);
-        if (! $result) {
-            return $ssl ? $this->fetchLanguages(false) : false;
-        }
-        try {
-            $all = (array)json_decode($result, true);
-            $languages = isset($all['translations']) ? [] : false;
-            if (is_array($languages)) {
-                foreach ($all['translations'] as $lang) {
-                    $languages[] = $lang['language'];
-                }
-            }
-        } catch (\Exception $e) {
-            $languages = false;
-        }
-        if ($languages === false) {
-            $this->io->comment('Error on loading languages from wordpress.org');
-        }
-
-        return $languages;
+        return $languages
+            ? in_array($name, $languages, true) || ($ask && $this->ask($name, 2))
+            : $ask && $this->ask($name, 1);
     }
 
     /**
@@ -243,7 +236,7 @@ final class DropinsStep implements StepInterface
 
         }
 
-        return $this->io->ask($lines, false);
+        return $this->io->confirm($lines, false);
     }
 
     /**
