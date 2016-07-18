@@ -19,7 +19,6 @@ use Composer\IO\IOInterface;
  */
 class IO
 {
-
     /**
      * @var \Composer\IO\IOInterface
      */
@@ -151,7 +150,7 @@ class IO
         is_string($default) && array_key_exists($default, $answers) or $default = null;
 
         if ($this->verbosity < 1) {
-            return $default ?: key($answers);
+            return $default ? : key($answers);
         }
 
         array_unshift($lines, 'QUESTION');
@@ -193,7 +192,6 @@ class IO
 
             return $default;
         }
-
     }
 
     /**

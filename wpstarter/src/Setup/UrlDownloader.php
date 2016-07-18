@@ -11,6 +11,7 @@
 namespace WCM\WPStarter\Setup;
 
 use Composer\Factory;
+use Composer\Util\Filesystem;
 use Composer\Util\RemoteFilesystem;
 
 /**
@@ -28,6 +29,11 @@ class UrlDownloader
     /**
      * @var \Composer\Util\RemoteFilesystem|null
      */
+    private $remoteFilesystem;
+
+    /**
+     * @var \Composer\Util\Filesystem|null
+     */
     private $filesystem;
 
     /**
@@ -38,7 +44,7 @@ class UrlDownloader
     /**
      * Constructor. Validate and store the given url or an error if url is not valid.
      *
-     * @param string $url
+     * @param string                  $url
      * @param \WCM\WPStarter\Setup\IO $io
      */
     public function __construct($url, IO $io)
@@ -59,7 +65,10 @@ class UrlDownloader
             $this->error = is_string($url) ? "{$url} is an invalid url." : "Invalid url.";
         }
 
-        $this->url and $this->filesystem = Factory::createRemoteFilesystem($composerIo, $config);
+        if ($this->url) {
+            $this->remoteFilesystem = Factory::createRemoteFilesystem($composerIo, $config);
+            $this->filesystem = new Filesystem();
+        }
     }
 
     /**
@@ -74,14 +83,16 @@ class UrlDownloader
             return false;
         }
 
-        if (! is_string($filename) || ! is_dir(dirname($filename))) {
+        if (! is_string($filename) || ! dirname($filename)) {
             $this->error = "Invalid target path to download {$this->url}.";
 
             return false;
         }
 
         try {
-            return $this->filesystem->copy(
+            $this->filesystem->ensureDirectoryExists(dirname($filename));
+
+            return $this->remoteFilesystem->copy(
                 parse_url($this->url, PHP_URL_HOST),
                 $this->url,
                 $filename
@@ -106,20 +117,23 @@ class UrlDownloader
     /**
      * Perform a remote request and return the response as string.
      *
-     * @return bool|string
+     * @return string
      */
     public function fetch()
     {
         if (! $this->check()) {
-            return false;
+            return '';
         }
 
         try {
-            return $this->filesystem->getContents(parse_url($this->url, PHP_URL_HOST), $this->url);
+            return $this->remoteFilesystem->getContents(
+                parse_url($this->url, PHP_URL_HOST),
+                $this->url
+            );
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
 
-            return false;
+            return '';
         }
     }
 
@@ -131,6 +145,6 @@ class UrlDownloader
         return
             ! empty($this->url)
             && empty($this->error)
-            && $this->filesystem instanceof RemoteFilesystem;
+            && $this->remoteFilesystem instanceof RemoteFilesystem;
     }
 }

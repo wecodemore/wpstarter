@@ -26,6 +26,7 @@ interface OptionalStepInterface extends StepInterface
      * Ask a corfirmation  and return result.
      *
      * To actually display the question on screen, use `$io->confirm()`.
+     *
      * @see \WCM\WPStarter\Setup\IO::confirm()
      *
      * @param  \WCM\WPStarter\Setup\Config $config

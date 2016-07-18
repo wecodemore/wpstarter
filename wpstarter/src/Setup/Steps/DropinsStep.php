@@ -184,7 +184,10 @@ final class DropinsStep implements StepInterface
      */
     public function validName($name)
     {
-        if ($this->config['unknown-dropins'] === true || in_array($name, self::$validDropins, true)) {
+        if (
+            $this->config['unknown-dropins'] === true
+            || in_array($name, self::$validDropins, true)
+        ) {
             return true;
         }
         $ext = pathinfo($name, PATHINFO_EXTENSION);

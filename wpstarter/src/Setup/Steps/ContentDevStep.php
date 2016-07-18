@@ -22,7 +22,6 @@ use WCM\WPStarter\Setup\IO;
  */
 final class ContentDevStep implements OptionalStepInterface
 {
-
     /**
      * @var \WCM\WPStarter\Setup\IO
      */
@@ -43,7 +42,7 @@ final class ContentDevStep implements OptionalStepInterface
      */
     public function __construct(IO $io)
     {
-        $this->io  = $io;
+        $this->io = $io;
     }
 
     /**
@@ -53,8 +52,6 @@ final class ContentDevStep implements OptionalStepInterface
     {
         return 'publish-content-dev';
     }
-
-
 
     /**
      * Return true if the step is allowed, i.e. the run method have to be called or not
@@ -87,6 +84,8 @@ final class ContentDevStep implements OptionalStepInterface
             'to make them available in WP content dir?'
         ], $answers, 's');
 
+        is_string($operation) and $operation = strtolower($operation);
+
         if ($operation === 'n') {
             return false;
         }
@@ -103,7 +102,7 @@ final class ContentDevStep implements OptionalStepInterface
     public function run(\ArrayAccess $paths)
     {
         $dir = $this->config['content-dev-dir'];
-        if (!$dir) {
+        if (! $dir) {
             return self::NONE;
         }
 
@@ -114,15 +113,15 @@ final class ContentDevStep implements OptionalStepInterface
             return self::ERROR;
         }
 
-        if (!in_array($this->operation, ['copy', 'symlink'])) {
+        if (! in_array($this->operation, ['copy', 'symlink'])) {
             return self::ERROR;
         }
 
         $target = $paths['root'].'/'.$paths['wp-content'];
         $filesystem = new Filesystem();
 
-        $sourceDirs = glob($source.'/*', GLOB_NOSORT|GLOB_ONLYDIR);
-        if (!$sourceDirs) {
+        $sourceDirs = glob($source.'/*', GLOB_NOSORT | GLOB_ONLYDIR);
+        if (! $sourceDirs) {
             return self::NONE;
         }
 
@@ -151,7 +150,6 @@ final class ContentDevStep implements OptionalStepInterface
         }
 
         return "Some errors occurred while publishing content-dev dirs from /{$dir}.";
-
     }
 
     /**

@@ -1,53 +1,53 @@
 {
-  "name": "wecodemore/wpstarter",
-  "description": "Easily bootstrap whole site Composer packages for WordPress.",
-  "type": "composer-plugin",
-  "keywords": [
-    "composer",
-    "composer plugin",
-    "wordpress",
-    "wp",
-    "wp-config",
-    "config",
-    "env"
-  ],
-  "minimum-stability": "dev",
-  "prefer-stable": true,
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "Giuseppe Mazzapica",
-      "email": "giuseppe.mazzapica@gmail.com",
-      "homepage": "http://gm.zoomlab.it",
-      "role": "Developer"
+    "name":              "wecodemore/wpstarter",
+    "description":       "Easily bootstrap whole site Composer packages for WordPress.",
+    "type":              "composer-plugin",
+    "keywords":          [
+        "composer",
+        "composer plugin",
+        "wordpress",
+        "wp",
+        "wp-config",
+        "config",
+        "env"
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable":     true,
+    "license":           "MIT",
+    "authors":           [
+        {
+            "name":     "Giuseppe Mazzapica",
+            "email":    "giuseppe.mazzapica@gmail.com",
+            "homepage": "http://gm.zoomlab.it",
+            "role":     "Developer"
+        }
+    ],
+    "support":           {
+        "issues": "https://github.com/wecodemore/wpstarter/issues",
+        "source": "https://github.com/wecodemore/wpstarter"
+    },
+    "require":           {
+        "php":                  ">=5.5",
+        "composer-plugin-api":  "^1.0",
+        "johnpbloch/wordpress": ">=4.4.3",
+        "gmazzap/gea":          "~0.1.0"
+    },
+    "require-dev":       {
+        "composer/composer": "^1.0"
+    },
+    "autoload":          {
+        "psr-4": {
+            "WCM\\WPStarter\\": "wpstarter/src/"
+        }
+    },
+    "config":            {
+        "optimize-autoloader": true
+    },
+    "extra":             {
+        "class":        "WCM\\WPStarter\\ComposerPlugin",
+        "branch-alias": {
+            "dev-master":    "2.x-dev",
+            "dev-version-3": "3.x-dev"
+        }
     }
-  ],
-  "support": {
-    "issues": "https://github.com/wecodemore/wpstarter/issues",
-    "source": "https://github.com/wecodemore/wpstarter"
-  },
-  "require": {
-    "php": ">=5.4",
-    "composer-plugin-api": "^1.0",
-    "johnpbloch/wordpress-core-installer": "~0.2",
-    "gmazzap/gea": "~0.1.0"
-  },
-  "require-dev": {
-    "composer/composer": "^1.0"
-  },
-  "autoload": {
-    "psr-4": {
-      "WCM\\WPStarter\\": "wpstarter/src/"
-    }
-  },
-  "config": {
-    "optimize-autoloader": true
-  },
-  "extra": {
-    "class": "WCM\\WPStarter\\ComposerPlugin",
-    "branch-alias": {
-      "dev-master": "2.x-dev",
-      "dev-version-3": "3.x-dev"
-    }
-  }
 }

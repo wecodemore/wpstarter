@@ -26,32 +26,41 @@ class Helpers
      * @param callable $callable
      * @param int      $priority
      * @param int      $argsNum
+     * @return bool
      */
     public static function addHook($hook, $callable, $priority = 10, $argsNum = 1)
     {
-        if (! is_callable($callable) || function_exists('add_action')) {
+        if (! is_callable($callable)) {
             return;
         }
+
+        if (function_exists('add_filter')) {
+            return add_filter($hook, function () use ($callable) {
+                $return = call_user_func_array($callable, func_get_args());
+                if (! is_null($return)) {
+                    return $return;
+                }
+            }, $priority, $argsNum);
+        }
+
         global $wp_filter;
-        if (! is_array($wp_filter)) {
-            $wp_filter = [];
-        }
-        if (! isset($wp_filter[$hook])) {
-            $wp_filter[$hook] = [];
-        }
-        if (! isset($wp_filter[$hook][$priority])) {
-            $wp_filter[$hook][$priority] = [];
-        }
+        is_array($wp_filter) or $wp_filter = [];
+        array_key_exists($hook, $wp_filter) or $wp_filter[$hook] = [];
+        array_key_exists($priority, $wp_filter[$hook]) or $wp_filter[$hook][$priority] = [];
+
         /** @var \Closure|object $function */
         $function = is_object($callable)
             ? $callable
             : function () use ($callable) {
                 return call_user_func_array($callable, func_get_args());
             };
+
         $wp_filter[$hook][$priority][spl_object_hash($function)] = [
             'function'      => $function,
             'accepted_args' => $argsNum,
         ];
+
+        return true;
     }
 
     /**

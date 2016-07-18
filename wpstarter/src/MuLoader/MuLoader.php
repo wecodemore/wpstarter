@@ -281,7 +281,7 @@ class MuLoader
 
             return
                 is_array($decoded)
-                && isset($decoded['type'])
+                && array_key_exists('key', $decoded)
                 && $decoded['type'] === 'wordpress-muplugin';
         } catch (\Exception $e) {
             return false;
@@ -358,6 +358,7 @@ class MuLoader
      *
      * Append `*` to names of those regular plugins we loaded as MU plugin.
      * Don't append anything to plugins we loaded uisng this class but were recognized as MU plugin.
+     *
      * @see guessMuPluginFile()
      * @see maybeIsMu()
      *

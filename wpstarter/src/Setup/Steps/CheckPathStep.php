@@ -100,11 +100,13 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
             realpath($paths['root'].'/'.$paths['vendor'].'/autoload.php'),
             realpath($paths['root'].'/'.$paths['wp'].'/wp-settings.php'),
         ];
+
         if (array_filter($toCheck) !== $toCheck) {
             $this->error = 'WP Starter was not able to find valid folder settings.';
 
             return self::ERROR;
         }
+
         if (
             $paths['wp-content']
             && $paths['wp-parent']

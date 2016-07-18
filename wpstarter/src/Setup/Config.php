@@ -10,6 +10,8 @@
 
 namespace WCM\WPStarter\Setup;
 
+use WCM\WPStarter\Setup\Steps\StepInterface;
+
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -113,7 +115,8 @@ final class Config implements \ArrayAccess
      */
     private function validate(array $configs)
     {
-        $valid = ['wp-version' => $configs['wp-version']];
+        $wpVersion = empty($configs['wp-version']) ? '0.0.0' : $configs['wp-version'];
+        $valid = ['wp-version' => $wpVersion];
         $parsed = self::$defaults;
 
         array_walk($configs, function ($value, $key) use (&$parsed) {
@@ -264,7 +267,7 @@ final class Config implements \ArrayAccess
             return null;
         }
 
-        $interface = 'WCM\\WPStarter\\Setup\\Steps\\StepInterface';
+        $interface = StepInterface::class;
 
         $steps = [];
         foreach ($value as $name => $step) {
@@ -274,7 +277,7 @@ final class Config implements \ArrayAccess
             }
         }
 
-        return $steps ?: null;
+        return $steps ? : null;
     }
 
     /**
@@ -303,7 +306,7 @@ final class Config implements \ArrayAccess
             }
         }
 
-        return $allScripts ?: null;
+        return $allScripts ? : null;
     }
 
     /**
@@ -319,7 +322,7 @@ final class Config implements \ArrayAccess
         }
 
         $bool = $this->validateBool($value);
-        $bool === true and $bool = null; // when true we return null to force default
+        ($bool === true) and $bool = null; // when true we return null to force default
 
         return $bool;
     }

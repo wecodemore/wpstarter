@@ -10,6 +10,7 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
+use Composer\Util\Filesystem as FilesystemUtil;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
@@ -25,6 +26,11 @@ use WCM\WPStarter\Setup\Salter;
  */
 final class WPConfigStep implements FileCreationStepInterface, BlockingStepInterface
 {
+    /**
+     * @var \Composer\Util\Filesystem
+     */
+    private $filesystemUtil;
+
     /**
      * @var \WCM\WPStarter\Setup\IO
      */
@@ -85,6 +91,7 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
         $this->builder = $builder;
         $this->filesystem = $filesystem;
         $this->salter = $salter;
+        $this->filesystemUtil = new FilesystemUtil();
     }
 
     /**
@@ -110,7 +117,9 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
      */
     public function targetPath(\ArrayAccess $paths)
     {
-        return rtrim($paths['root'].'/'.$paths['wp-parent'], '/').'/wp-config.php';
+        return $this->filesystemUtil->normalizePath(
+            "{$paths['root']}/{$paths['wp-parent']}/wp-config.php"
+        );
     }
 
     /**
@@ -119,30 +128,44 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
     public function run(\ArrayAccess $paths)
     {
         $register = $this->config['register-theme-folder'];
-        if ($register === 'ask') {
-            $register = $this->askForRegister();
-        }
-        $n = count(explode('/', str_replace('\\', '/', $paths['wp']))) - 1;
-        $rootPathRel = str_repeat('dirname(', $n).'__DIR__'.str_repeat(')', $n);
-        $relUrl = function ($path) use ($paths) {
-            return $paths['wp-parent']
-                ? trim(substr($path, strlen($paths['wp-parent'])), '\\/')
-                : trim($path, '\\/');
+        $register === 'ask' and $this->askForRegister();
+
+        $from = $this->filesystemUtil->normalizePath("{$paths['root']}/{$paths['wp-parent']}");
+
+        $relPath = function ($to, $addRoot = true) use ($from, $paths) {
+            $addRoot and $to = "{$paths['root']}/$to";
+
+            return $this->filesystemUtil->findShortestPathCode($from, $to, true);
         };
-        $vars = array_merge(
-            [
-                'VENDOR_PATH'        => $rootPathRel.".'/{$paths['vendor']}'",
-                'ENV_REL_PATH'       => $rootPathRel,
-                'WP_INSTALL_PATH'    => $rootPathRel.".'/{$paths['wp']}'",
-                'WP_CONTENT_PATH'    => $rootPathRel.".'/{$paths['wp-content']}'",
-                'WP_SITEURL'         => $relUrl($paths['wp']),
-                'WP_CONTENT_URL'     => $relUrl($paths['wp-content']),
-                'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
-                'ENV_FILE_NAME'      => $this->config['env-file'],
-            ],
-            $this->salter->keys()
+
+        $relUrl = function ($path) use ($from, $paths) {
+            if (! $paths['wp-parent']) {
+                return $this->filesystemUtil->normalizePath($path);
+            }
+
+            $shortest = $this->filesystemUtil->findShortestPath($from, "{$paths['root']}/{$path}");
+            strpos($shortest, './') === 0 and $subdir = substr($shortest, 2);
+
+            return $shortest;
+        };
+
+        $vars = [
+            'VENDOR_PATH'        => $relPath($paths['vendor']),
+            'ENV_REL_PATH'       => $relPath($paths['root'], false),
+            'WP_INSTALL_PATH'    => $relPath($paths['wp']),
+            'WP_CONTENT_PATH'    => $relPath($paths['wp-content']),
+            'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
+            'ENV_FILE_NAME'      => $this->config['env-file'],
+            'WP_SITEURL'         => $relUrl($paths['wp']),
+            'WP_CONTENT_URL'     => $relUrl($paths['wp-content']),
+        ];
+
+        $build = $this->builder->build(
+            $paths,
+            'wp-config.example',
+            array_merge($vars, $this->salter->keys())
         );
-        $build = $this->builder->build($paths, 'wp-config.example', $vars);
+
         if (! $this->filesystem->save($build, $this->targetPath($paths))) {
             $this->error = 'Error on create wp-config.php.';
 

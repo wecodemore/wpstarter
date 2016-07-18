@@ -13,7 +13,7 @@
 /**
  * Composer autoload.
  */
-require_once realpath({{{VENDOR_PATH}}}.'/autoload.php');
+require_once {{{VENDOR_PATH}}}/autoload.php;
 
 /**
  * A reference to `.env` folder path.
@@ -61,9 +61,7 @@ defined('DB_COLLATE') or define('DB_COLLATE', '');
  *
  * @global string $table_prefix
  */
-if (! isset($table_prefix) || empty($table_prefix)) {
-    $table_prefix = 'wp_';
-}
+empty($table_prefix) or $table_prefix = 'wp_';
 
 /**
  * Set unique authentication keys if not already set via environment variables.
@@ -110,14 +108,14 @@ switch ($environment) {
 }
 
 /**
- * Fix HTTPS behind load balancers.
+ * Fix `is_ssl()` behind load balancers.
  *
  * @link https://core.trac.wordpress.org/ticket/31288
  * @link https://github.com/wecodemore/wpstarter/issues/7
  */
 if (
-    isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
-	&& 'https' === strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'])
+    array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER)
+	&& strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
 ) {
 	$_SERVER[ 'HTTPS' ] = 'on';
 }
@@ -126,16 +124,17 @@ if (
  * Set WordPress paths and URLs if not set via environment variables.
  */
 if (! defined('WP_HOME')) {
-    $server = filter_input_array(INPUT_SERVER, array(
+    $server = filter_input_array(INPUT_SERVER, [
         'HTTPS'       => FILTER_SANITIZE_STRING,
         'SERVER_PORT' => FILTER_SANITIZE_NUMBER_INT,
         'SERVER_NAME' => FILTER_SANITIZE_URL,
-    ));
+    ]);
     $secure = in_array((string) $server['HTTPS'], array('on', '1'), true);
     $scheme = $secure ? 'https://' : 'http://';
     $name   = $server['SERVER_NAME'] ? : 'localhost';
     define('WP_HOME', $scheme.$name);
 }
+
 defined('ABSPATH')        or define('ABSPATH',        realpath({{{WP_INSTALL_PATH}}}));
 defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath({{{WP_CONTENT_PATH}}}));
 defined('WP_SITEURL')     or define('WP_SITEURL',     rtrim(WP_HOME, '/').'/{{{WP_SITEURL}}}');

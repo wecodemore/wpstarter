@@ -48,7 +48,7 @@ final class WpStarterCommand extends BaseCommand
         try {
             $plugin = new ComposerPlugin();
             $plugin->activate($this->getComposer(false, false), $this->getIO());
-            $plugin->run($input->getArgument('steps') ?: []);
+            $plugin->run($input->getArgument('steps') ? : []);
 
             return 0;
         } catch (\Exception $e) {
