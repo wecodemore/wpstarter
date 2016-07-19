@@ -10,6 +10,8 @@
 
 namespace WCM\WPStarter\Setup;
 
+use Composer\Util\Filesystem as FilesystemUtil;
+
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -17,6 +19,16 @@ namespace WCM\WPStarter\Setup;
  */
 class Filesystem
 {
+    /**
+     * @var \Composer\Util\Filesystem
+     */
+    private $filesystem;
+
+    public function __construct()
+    {
+        $this->filesystem = new FilesystemUtil();
+    }
+
     /**
      * Save some textual content to a file in given path.
      *
@@ -26,7 +38,7 @@ class Filesystem
      */
     public function save($content, $targetPath)
     {
-        $parent = dirname($targetPath);
+        $parent = dirname($this->filesystem->normalizePath($targetPath));
 
         if (! $this->createDir($parent)) {
             return false;
@@ -48,17 +60,14 @@ class Filesystem
      */
     public function moveFile($sourcePath, $targetPath)
     {
-        $targetParent = dirname($targetPath);
+        file_exists($targetPath) and $this->filesystem->unlink($targetPath);
 
-        if (! is_file($sourcePath) || ! $this->createDir($targetParent)) {
-            return false;
-        }
+        $this->filesystem->rename(
+            $this->filesystem->normalizePath($sourcePath),
+            $this->filesystem->normalizePath($targetPath)
+        );
 
-        try {
-            return rename($sourcePath, $targetPath);
-        } catch (\Exception $e) {
-            return false;
-        }
+        return file_exists($targetPath);
     }
 
     /**
@@ -70,9 +79,9 @@ class Filesystem
      */
     public function copyFile($sourcePath, $targetPath)
     {
-        $targetParent = dirname($targetPath);
+        $sourcePath = realpath($sourcePath);
 
-        if (! is_file($sourcePath) || ! $this->createDir($targetParent)) {
+        if (! is_file($sourcePath) || ! $this->createDir(dirname($targetPath))) {
             return false;
         }
 
@@ -93,7 +102,7 @@ class Filesystem
     public function symlink($sourcePath, $targetPath)
     {
         try {
-            return symlink($sourcePath, $targetPath);
+            return @symlink($sourcePath, $targetPath);
         } catch (\Exception $e) {
             return false;
         }
@@ -108,19 +117,21 @@ class Filesystem
      */
     public function moveDir($sourcePath, $targetPath)
     {
-        $dir = new \RecursiveDirectoryIterator($sourcePath, \RecursiveDirectoryIterator::SKIP_DOTS);
-        $iterator = new \RecursiveIteratorIterator($dir, \RecursiveIteratorIterator::SELF_FIRST);
-        $done = $total = 0;
-        /** @var \SplFileInfo $item */
-        foreach ($iterator as $item) {
-            $total++;
-            $fullpathTarget = $targetPath.'/'.$item->getBasename();
-            $done += $item->isDir()
-                ? (int) $this->createDir($fullpathTarget)
-                : (int) $this->moveFile($item->getPathname(), $fullpathTarget);
+        try {
+            $sourcePath = $this->filesystem->normalizePath($sourcePath);
+            if (! realpath($sourcePath)) {
+                return false;
+            }
+
+            $this->filesystem->copyThenRemove(
+                $sourcePath,
+                $this->filesystem->normalizePath($targetPath)
+            );
+        } catch (\Exception $e) {
+            return false;
         }
 
-        return $done === $total;
+        return is_dir($targetPath) && ! is_dir($targetPath);
     }
 
     /**
@@ -132,6 +143,12 @@ class Filesystem
      */
     public function copyDir($sourcePath, $targetPath)
     {
+        $sourcePath = $this->filesystem->normalizePath($sourcePath);
+        if (! realpath($sourcePath)) {
+            return false;
+        }
+
+        $targetPath = $this->filesystem->normalizePath($targetPath);
         $dir = new \RecursiveDirectoryIterator($sourcePath, \RecursiveDirectoryIterator::SKIP_DOTS);
         $iterator = new \RecursiveIteratorIterator($dir, \RecursiveIteratorIterator::SELF_FIRST);
         $done = $total = 0;
@@ -139,8 +156,8 @@ class Filesystem
             $total++;
             $fullpathTarget = $targetPath.'/'.$item->getBasename();
             $done += $item->isDir()
-                ? (int) $this->createDir($fullpathTarget)
-                : (int) $this->copyFile($item->getPathname(), $fullpathTarget);
+                ? (int)$this->createDir($fullpathTarget)
+                : (int)$this->copyFile($item->getPathname(), $fullpathTarget);
         }
 
         return $done === $total;
@@ -154,8 +171,7 @@ class Filesystem
      */
     public function createDir($targetPath)
     {
-        $targetPath = rtrim(str_replace('\\', '/', $targetPath), '/');
-        $targetPath or $targetPath = '/';
+        $targetPath = $this->filesystem->normalizePath($targetPath) ? : '/';
 
         if (file_exists($targetPath)) {
             return @is_dir($targetPath);

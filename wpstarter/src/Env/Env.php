@@ -10,6 +10,7 @@
 
 namespace WCM\WPStarter\Env;
 
+use Composer\Util\Filesystem;
 use Gea\Gea;
 
 /**
@@ -187,13 +188,18 @@ final class Env implements \ArrayAccess
         }
 
         is_string($file) or $file = '.env';
+
+        $filesystem = new Filesystem();
+
         $path = is_string($path) && is_string($file)
-            ? realpath(rtrim($path, '\\/').'/'.ltrim($file, '\\/'))
+            ? $filesystem->normalizePath("{$path}/{$file}")
             : '';
 
         $loadFile = $path && is_file($path) && is_readable($path);
         if (! $loadFile && getenv('WORDPRESS_ENV') === false) {
-            die('Please provide a .env file or ensure WORDPRESS_ENV variable is set.');
+            throw new \RuntimeException(
+                'Please provide a .env file or ensure WORDPRESS_ENV variable is set.'
+            );
         }
 
         $gea = $loadFile

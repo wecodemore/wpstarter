@@ -10,6 +10,7 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
+use Composer\Util\Filesystem as FilesystemUtil;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
@@ -35,9 +36,9 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
     private $filesystem;
 
     /**
-     * @var array
+     * @var \Composer\Util\Filesystem
      */
-    private $vars;
+    private $filesystemUtil;
 
     /**
      * @var string
@@ -66,6 +67,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
     {
         $this->builder = $builder;
         $this->filesystem = $filesystem;
+        $this->filesystemUtil = new FilesystemUtil();
     }
 
     /**
@@ -89,7 +91,9 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
      */
     public function targetPath(\ArrayAccess $paths)
     {
-        return rtrim($paths['root'].'/'.$paths['wp-parent'], '/').'/index.php';
+        return $this->filesystemUtil->normalizePath(
+            "{$paths['root']}/{$paths['wp-parent']}/index.php"
+        );
     }
 
     /**
@@ -97,12 +101,12 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
      */
     public function run(\ArrayAccess $paths)
     {
-        $n = count(explode('/', str_replace('\\', '/', $paths['wp']))) - 1;
-        $rootPathRel = str_repeat('dirname(', $n).'__DIR__'.str_repeat(')', $n);
-        $this->vars = ['BOOTSTRAP_PATH' => $rootPathRel.".'/{$paths['wp']}/wp-blog-header.php'"];
-        $build = $this->builder->build($paths, 'index.example', $this->vars);
-        if (! $this->filesystem->save($build, dirname($this->targetPath($paths)).'/index.php')) {
-            $this->error = 'Error on create index.php.';
+        $from = "{$paths['root']}/{$paths['wp-parent']}";
+        $to = "{$paths['root']}/{$paths['wp']}";
+        $rootPathRel = $this->filesystemUtil->findShortestPathCode($from, $to, true);
+        $build = $this->builder->build($paths, 'index.example', ['BOOTSTRAP_PATH' => $rootPathRel]);
+        if (! $this->filesystem->save($build, $this->targetPath($paths))) {
+            $this->error = 'Error creating index.php.';
 
             return self::ERROR;
         }

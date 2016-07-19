@@ -23,7 +23,7 @@ use WCM\WPStarter\Setup\OverwriteHelper;
 use WCM\WPStarter\Setup\Paths;
 use WCM\WPStarter\Setup\Stepper;
 use WCM\WPStarter\Setup\StepperInterface;
-use WCM\WPStarter\Setup\Steps\StepInterface;
+use WCM\WPStarter\Setup\Steps;
 
 
 /**
@@ -102,7 +102,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     {
         if ($this->config instanceof Config) {
             return $this->io->writeError([
-                'Error rinning WP Starter command.',
+                'Error running WP Starter command.',
                 'WordPress not found or found in a too old version.',
                 'Minimum required WordPress version is '.self::WP_MIN_VER.'.',
             ]);
@@ -122,19 +122,19 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
 
         $steps = array_filter($steps, 'is_string');
 
-        if ($this->stepperAllowed($stepper, $this->config, $paths, $io, $steps)) {
+        if ($this->stepperAllowed($stepper, $this->config, $paths, $io)) {
             $filesystem = new Filesystem();
-            $fileBuilder = new FileBuilder(self::$isRoot, $filesystem);
+            $fileBuilder = new FileBuilder();
 
             $classes = array_merge([
-                'check-paths'         => '\\WCM\\WPStarter\\Setup\\Steps\\CheckPathStep',
-                'build-wpconfig'      => '\\WCM\\WPStarter\\Setup\\Steps\\WPConfigStep',
-                'build-index'         => '\\WCM\\WPStarter\\Setup\\Steps\\IndexStep',
-                'build-env-example'   => '\\WCM\\WPStarter\\Setup\\Steps\\EnvExampleStep',
-                'dropins'             => '\\WCM\\WPStarter\\Setup\\Steps\\DropinsStep',
-                'build-gitignore'     => '\\WCM\\WPStarter\\Setup\\Steps\\GitignoreStep',
-                'move-content'        => '\\WCM\\WPStarter\\Setup\\Steps\\MoveContentStep',
-                'publish-content-dev' => '\\WCM\\WPStarter\\Setup\\Steps\\ContentDevStep'
+                'check-paths'         => Steps\CheckPathStep::class,
+                'build-wpconfig'      => Steps\WPConfigStep::class,
+                'build-index'         => Steps\IndexStep::class,
+                'build-env-example'   => Steps\EnvExampleStep::class,
+                'dropins'             => Steps\DropinsStep::class,
+                'build-gitignore'     => Steps\GitignoreStep::class,
+                'move-content'        => Steps\MoveContentStep::class,
+                'publish-content-dev' => Steps\ContentDevStep::class,
             ], $this->config['custom-steps']);
 
             array_walk(
@@ -220,9 +220,10 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
         Filesystem $filesystem,
         FileBuilder $builder
     ) {
-        $ns = 'WCM\\WPStarter\\Setup\\Steps\\';
-
-        if (! is_string($stepClass) || ! is_subclass_of($stepClass, $ns.'StepInterface', true)) {
+        if (
+            ! is_string($stepClass)
+            || ! is_subclass_of($stepClass, Steps\StepInterface::class, true)
+        ) {
             return;
         }
 
@@ -234,7 +235,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
             $step = $factory($io, $filesystem, $builder);
         }
 
-        $step or $step = is_subclass_of($stepClass, $ns.'FileStepInterface', true)
+        $step or $step = is_subclass_of($stepClass, Steps\FileCreationStepInterface::class, true)
             ? new $stepClass($io, $filesystem, $builder)
             : new $stepClass($io);
 
@@ -246,22 +247,14 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      * @param \WCM\WPStarter\Setup\Config           $config
      * @param \WCM\WPStarter\Setup\Paths            $paths
      * @param \WCM\WPStarter\Setup\IO               $io
-     * @param array                                 $steps
      * @return bool
      */
     private function stepperAllowed(
         StepperInterface $stepper,
         Config $config,
         Paths $paths,
-        IO $io,
-        array $steps
+        IO $io
     ) {
-        $blocking = ['build-wpconfig', 'build-index'];
-
-        if (! empty($steps) && ! array_intersect($blocking, $steps, true)) {
-            return true;
-        }
-
         if (! $stepper->allowed($config, $paths)) {
             $io->block([
                 'WP Starter installation CANCELED.',

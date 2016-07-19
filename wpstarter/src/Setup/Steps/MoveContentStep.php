@@ -10,11 +10,11 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
+use Composer\Util\Filesystem as FilesystemUtil;
 use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\Config;
-use WCM\WPStarter\Setup\OverwriteHelper;
 
 /**
  * Step that moves wp-content contents from WP package folder to project wp-content folder.
@@ -25,6 +25,11 @@ use WCM\WPStarter\Setup\OverwriteHelper;
  */
 final class MoveContentStep implements OptionalStepInterface, FileStepInterface
 {
+    /**
+     * @var \Composer\Util\Filesystem
+     */
+    private $filesystemUtil;
+
     /**
      * @var \WCM\WPStarter\Setup\IO
      */
@@ -67,6 +72,7 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
     {
         $this->io = $io;
         $this->filesystem = $filesystem;
+        $this->filesystemUtil = new FilesystemUtil();
     }
 
     /**
@@ -95,8 +101,9 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
         if ($config['move-content'] !== 'ask') {
             return true;
         }
-        $to = str_replace('\\', '/', $this->paths['wp-content']);
-        $full = str_replace('\\', '/', $this->paths['root']).'/'.ltrim($to, '/');
+
+        $to = $this->filesystemUtil->normalizePath($this->paths['wp-content']);
+        $full = $this->filesystemUtil->normalizePath("{$this->paths['root']}/{$to}");
         $lines = [
             'Do you want to move default plugins and themes from',
             'WordPress package wp-content dir to content folder:',
@@ -111,13 +118,13 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
      */
     public function run(\ArrayAccess $paths)
     {
-        $from = str_replace('\\', '/', $paths['root'].'/'.$paths['wp'].'/wp-content');
-        $to = str_replace('\\', '/', $paths['root'].'/'.$paths['wp-content']);
+        $from = $this->filesystemUtil->normalizePath("{$paths['root']}/{$paths['wp']}/wp-content");
+        $to = $this->filesystemUtil->normalizePath("{$paths['root']}/wp-content");
         if ($from === $to) {
             return self::NONE;
         }
 
-        if ($this->filesystem->createDir($to)) {
+        if (! $this->filesystem->createDir($to)) {
             $this->error = "The folder {$to} does not exists and was not possible to create it.";
         }
 

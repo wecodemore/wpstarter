@@ -11,6 +11,7 @@
 namespace WCM\WPStarter\Setup;
 
 use Composer\Composer;
+use Composer\Util\Filesystem;
 
 
 /**
@@ -24,6 +25,11 @@ final class Paths implements \ArrayAccess
      * @var \SplObjectStorage
      */
     private static $parsed;
+
+    /**
+     * @var Filesystem
+     */
+    private $filesystem;
 
     /**
      * @var array
@@ -42,6 +48,7 @@ final class Paths implements \ArrayAccess
     {
         is_null(self::$parsed) and self::$parsed = new \SplObjectStorage();
         $this->composer = $composer;
+        $this->filesystem = new Filesystem();
         $this->paths = self::$parsed->contains($this->composer)
             ? self::$parsed->offsetGet($this->composer)
             : $this->parse();
@@ -54,21 +61,21 @@ final class Paths implements \ArrayAccess
     {
         $extra = $this->composer->getPackage()->getExtra();
 
-        $cwd = $this->normalise([getcwd()]);
-        $cwd = reset($cwd);
-        $wpInstallDir = isset($extra['wordpress-install-dir'])
-            ? $extra['wordpress-install-dir']
-            : 'wordpress';
-        $wpFullDir = "{$cwd}/{$wpInstallDir}";
-        $wpSubdir = $this->subdir($cwd, $wpFullDir);
-        $wpContent = isset($extra['wordpress-content-dir'])
-            ? $this->subdir($cwd, $cwd.'/'.$extra['wordpress-content-dir'])
-            : 'wp-content';
+        $cwd = getcwd();
+
+        $wpInstallDir = empty($extra['wordpress-install-dir'])
+            ? 'wordpress'
+            : $extra['wordpress-install-dir'];
+
+        $wpFullDir = $this->filesystem->normalizePath("{$cwd}/{$wpInstallDir}");
+        $wpContent = empty($extra['wordpress-content-dir'])
+            ? 'wp-content'
+            : $this->subdir($cwd, "{$cwd}/{$extra['wordpress-content-dir']}");
 
         $paths = [
-            'root'       => $cwd,
+            'root'       => $this->filesystem->normalizePath($cwd),
             'vendor'     => $this->subdir($cwd, $this->composer->getConfig()->get('vendor-dir')),
-            'wp'         => $wpSubdir,
+            'wp'         => $wpInstallDir,
             'wp-parent'  => $this->subdir($cwd, dirname($wpFullDir)),
             'wp-content' => $wpContent,
             'starter'    => $this->subdir($cwd, dirname(__DIR__)),
@@ -127,21 +134,6 @@ final class Paths implements \ArrayAccess
     }
 
     /**
-     * Just ensures paths use same separator, to allow search/replace.
-     *
-     * @param  array $paths
-     * @return array
-     */
-    private function normalise(array $paths)
-    {
-        array_walk($paths, function (&$path) {
-            is_string($path) and $path = str_replace('\\', '/', $path);
-        });
-
-        return $paths;
-    }
-
-    /**
      * Strips a parent folder from child.
      *
      * @param  string $root
@@ -150,8 +142,9 @@ final class Paths implements \ArrayAccess
      */
     private function subdir($root, $path)
     {
-        $paths = $this->normalise([$root, $path]);
+        $subdir = $this->filesystem->findShortestPath($root, $path, true);
+        strpos($subdir, './') === 0 and $subdir = substr($subdir, 2);
 
-        return trim(preg_replace('|^'.preg_quote($paths[0]).'|', '', $paths[1]), '\\/');
+        return $subdir;
     }
 }

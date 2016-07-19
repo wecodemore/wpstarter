@@ -10,6 +10,7 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
+use Composer\Util\Filesystem as FilesystemUtil;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
@@ -278,10 +279,11 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
             'wp-content',
             'vendor',
         ];
+
+        $filesystem = new FilesystemUtil();
+
         foreach ($toCheck as $key) {
-            if ($toDo[$key]) {
-                $parsedPaths = $this->maybeAdd($paths[$key], $parsedPaths);
-            }
+            $toDo[$key] and $parsedPaths = $this->maybeAdd($paths[$key], $parsedPaths, $filesystem);
         }
 
         return $parsedPaths;
@@ -290,22 +292,24 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     /**
      * Takes a path and compare it to already added path to discover if it should be added or not.
      *
-     * @param  string $path
-     * @param  array  $parsedPaths
+     * @param  string                   $path
+     * @param  array                    $parsedPaths
+     * @param \Composer\Util\Filesystem $filesystem
      * @return array
      */
-    private function maybeAdd($path, array $parsedPaths)
+    private function maybeAdd($path, array $parsedPaths, FilesystemUtil $filesystem)
     {
-        $rel = trim(str_replace(['\\', '//'], '/', $path), '/').'/';
+        $rel = $filesystem->normalizePath("{$path}/");
         $targets = $parsedPaths;
         $add = null;
+
         foreach ($targets as $key => $target) {
-            if ($target === $rel || strpos($rel, $target) === 0) {
+            if ($target === $rel || strpos($rel, $target) !== false) {
                 $add = false;
                 // given path is equal or contained in one of the already added paths
                 continue;
             }
-            if (strpos($target, $rel) === 0) {
+            if (strpos($target, $rel) !== false) {
                 is_null($add) and $add = true;
                 // given path contains one of the already added paths
                 unset($parsedPaths[$key]);

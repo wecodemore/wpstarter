@@ -10,6 +10,8 @@
 
 namespace WCM\WPStarter\Setup;
 
+use Composer\Util\Filesystem;
+
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -17,24 +19,17 @@ namespace WCM\WPStarter\Setup;
  */
 class FileBuilder
 {
-    /**
-     * @var bool
-     */
-    private $isRoot;
 
     /**
-     * @var \WCM\WPStarter\Setup\Filesystem
+     * @var \Composer\Util\Filesystem
      */
     private $filesystem;
 
     /**
-     * @param                                 $isRoot
-     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      */
-    public function __construct($isRoot, Filesystem $filesystem = null)
+    public function __construct()
     {
-        $this->isRoot = $isRoot;
-        $this->filesystem = $filesystem ? : new Filesystem();
+        $this->filesystem = new Filesystem();
     }
 
     /**
@@ -49,12 +44,11 @@ class FileBuilder
      */
     public function build(\ArrayAccess $paths, $template, array $vars = [])
     {
-        $pieces = [$paths['starter'], 'templates', $template];
-        if (! $this->isRoot) {
-            array_unshift($pieces, $paths['root']);
-        }
-        $template = implode('/', $pieces);
-        if (! is_readable($template)) {
+        $template = realpath($this->filesystem->normalizePath(
+            "{$paths['root']}/{$paths['starter']}/templates/{$template}"
+        ));
+
+        if (! $template || ! is_file($template) || ! is_readable($template)) {
             return false;
         }
         /** @var string $content */
