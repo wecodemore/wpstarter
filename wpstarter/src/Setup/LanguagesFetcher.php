@@ -20,7 +20,7 @@ class LanguagesFetcher
     /**
      * @var array
      */
-    private static $languages = [];
+    private $languages = [];
 
     /**
      * @var \WCM\WPStarter\Setup\IO
@@ -42,8 +42,8 @@ class LanguagesFetcher
      */
     public function fetch($version = '0.0.0', $useSsl = true)
     {
-        if (self::$languages) {
-            return self::$languages;
+        if ($this->languages) {
+            return $this->languages;
         }
 
         $url = $useSsl ? 'https' : 'http';
@@ -79,7 +79,7 @@ class LanguagesFetcher
         }
 
         $languages
-            ? self::$languages = $languages
+            ? $this->languages = $languages
             : $this->io->comment('Error on loading languages from wordpress.org');
 
         return $languages;

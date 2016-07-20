@@ -11,7 +11,6 @@
 namespace WCM\WPStarter\Command;
 
 use Composer\Command\BaseCommand;
-use Symfony\Component\Console\Helper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;

@@ -24,6 +24,7 @@ use WCM\WPStarter\Setup\OverwriteHelper;
  */
 final class DropinsStep implements StepInterface
 {
+
     private static $validDropins = [
         'advanced-cache.php',
         'db.php',
@@ -85,18 +86,6 @@ final class DropinsStep implements StepInterface
     }
 
     /**
-     * @param array $dropins
-     * @return \WCM\WPStarter\Setup\Steps\DropinsStep
-     */
-    public function forDropins(array $dropins)
-    {
-        $clone = clone $this;
-        $clone->dropins = $dropins;
-
-        return $clone;
-    }
-
-    /**
      * @inheritdoc
      */
     public function name()
@@ -141,22 +130,6 @@ final class DropinsStep implements StepInterface
     }
 
     /**
-     * @param string                               $name
-     * @param string                               $url
-     * @param \ArrayAccess                         $paths
-     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
-     */
-    private function runStep($name, $url, \ArrayAccess $paths, OverwriteHelper $overwrite)
-    {
-        $step = new DropinCreationStep($name, $url, $this->io, $overwrite);
-        if ($step->allowed($this->config, $paths)) {
-            $step->run($paths);
-            $this->addMessage($step->error(), 'error');
-            $this->addMessage($step->success(), 'success');
-        }
-    }
-
-    /**
      * @inheritdoc
      */
     public function error()
@@ -173,6 +146,22 @@ final class DropinsStep implements StepInterface
     }
 
     /**
+     * @param string                               $name
+     * @param string                               $url
+     * @param \ArrayAccess                         $paths
+     * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
+     */
+    private function runStep($name, $url, \ArrayAccess $paths, OverwriteHelper $overwrite)
+    {
+        $step = new DropinCreationStep($name, $url, $this->io, $overwrite);
+        if ($step->allowed($this->config, $paths)) {
+            $step->run($paths);
+            $this->addMessage($step->error(), 'error');
+            $this->addMessage($step->success(), 'success');
+        }
+    }
+
+    /**
      * Besides dropins stored in class $dropins variable, locale files are valid dropins as well.
      * This method checks that required dropin is one of the default or one of supported locales,
      * retrieved from wordpress.org API.
@@ -182,7 +171,7 @@ final class DropinsStep implements StepInterface
      * @param  string $name
      * @return bool
      */
-    public function validName($name)
+    private function validName($name)
     {
         if (
             $this->config['unknown-dropins'] === true
@@ -199,6 +188,9 @@ final class DropinsStep implements StepInterface
         $name = substr($name, 0, -4);
         $fetcher = new LanguagesFetcher($this->io);
         $languages = $fetcher->fetch($this->config['wp-version']);
+        if (is_array($languages) && $languages) {
+            self::$validDropins = array_merge(self::$validDropins, $languages);
+        }
 
         return $languages
             ? in_array($name, $languages, true) || ($ask && $this->ask($name, 2))

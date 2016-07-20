@@ -33,6 +33,7 @@ use WCM\WPStarter\Setup\Steps;
  */
 final class ComposerPlugin implements PluginInterface, EventSubscriberInterface, CommandProvider
 {
+
     const WP_PACKAGE_TYPE = 'wordpress-core';
     const WP_MIN_VER      = '4.4.3';
 
@@ -70,7 +71,6 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
         $this->composer = $composer;
         $this->io = $io;
         $wpVersion = $this->discoverWpVersion($composer, $io);
-
         // if no or wrong WP found we do nothing, so install() will show an error not findind config
         if ($this->checkWpVersion($wpVersion)) {
             $extra = (array)$composer->getPackage()->getExtra();
@@ -100,7 +100,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      */
     public function run(array $steps = [])
     {
-        if ($this->config instanceof Config) {
+        if ( ! $this->config instanceof Config) {
             return $this->io->writeError([
                 'Error running WP Starter command.',
                 'WordPress not found or found in a too old version.',
@@ -110,7 +110,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
 
         $this->config->offsetExists('custom-steps') or $this->config['custom-steps'] = [];
         $this->config->offsetExists('scripts') or $this->config['scripts'] = [];
-        if (! $this->config->offsetExists('verbosity')) {
+        if ( ! $this->config->offsetExists('verbosity')) {
             $verbosity = ($this->io->isDebug() || $this->io->isVeryVerbose()) ? 2 : 1;
             $this->config->appendConfig('verbosity', $verbosity);
         }
@@ -141,7 +141,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
                 $classes,
                 function ($stepClass) use ($stepper, $fileBuilder, $filesystem, $io, $steps) {
                     $stepObj = $this->factoryStep($stepClass, $io, $filesystem, $fileBuilder);
-                    if ($stepObj && (! $steps || in_array($stepObj->name(), $steps, true))) {
+                    if ($stepObj && ( ! $steps || in_array($stepObj->name(), $steps, true))) {
                         $stepper->addStep($stepObj);
                     }
                 }
@@ -164,13 +164,13 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
         /** @var array $packages */
         $packages = $composer->getRepositoryManager()->getLocalRepository()->getPackages();
         $vers = [];
-        while (! empty($packages) && count($vers) < 2) {
+        while ( ! empty($packages) && count($vers) < 2) {
             /** @var \Composer\Package\PackageInterface $package */
             $package = array_pop($packages);
             $package->getType() === self::WP_PACKAGE_TYPE and $vers[] = $package->getVersion();
         }
 
-        if (! $vers) {
+        if ( ! $vers) {
             return '0.0.0';
         }
 
@@ -198,7 +198,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      */
     private function checkWpVersion($version)
     {
-        if (! $version || $version === '0.0.0') {
+        if ( ! $version || $version === '0.0.0') {
             return false;
         }
 
@@ -255,7 +255,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
         Paths $paths,
         IO $io
     ) {
-        if (! $stepper->allowed($config, $paths)) {
+        if ( ! $stepper->allowed($config, $paths)) {
             $io->block([
                 'WP Starter installation CANCELED.',
                 'wp-config.php was found in root folder and your overwrite settings',
