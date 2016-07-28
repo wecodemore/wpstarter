@@ -62,7 +62,7 @@ class PluginAsMuLoader
     public function install()
     {
         if (! empty($this->plugins)) {
-            $this->uninstall = get_option('uninstall_plugins', array());
+            $this->uninstall = (array) get_option('uninstall_plugins', array());
             array_walk($this->plugins, array($this, 'installPlugin'));
         }
     }
