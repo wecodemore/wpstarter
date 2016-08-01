@@ -25,6 +25,7 @@ use WCM\WPStarter\Setup\Steps\EnvExampleStep;
 use WCM\WPStarter\Setup\Steps\GitignoreStep;
 use WCM\WPStarter\Setup\Steps\IndexStep;
 use WCM\WPStarter\Setup\Steps\MoveContentStep;
+use WCM\WPStarter\Setup\Steps\WPCliStep;
 use WCM\WPStarter\Setup\Steps\WPConfigStep;
 
 /**
@@ -102,6 +103,7 @@ class Setup
                 ->addStep(new EnvExampleStep($io, $builder))
                 ->addStep(new DropinsStep($io, $overwrite))
                 ->addStep(new GitignoreStep($io, $builder))
+                ->addStep(new WPCliStep($builder))
                 ->addStep(new MoveContentStep($io))
                 ->run($paths);
         }
