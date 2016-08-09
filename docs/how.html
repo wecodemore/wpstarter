@@ -94,8 +94,8 @@
 <p>The well known <a href="https://github.com/vlucas/phpdotenv">Dotenv package</a> is then used to load all configurations from the <code>.env</code> file and register them as WordPress configuration constants. In this way is possible to easily setup multiple WordPress environments with easy.</p>
 <p>This step puts in project folder a file named <code>.env.example</code> that contains a template to be used as base for <code>.env</code> file. This step can be disabled and customized using <code>composer.json</code> settings.</p>
 <h3 id="6">6. <code>.gitignore</code> step</h3>
-<p>When using a version control system (VCS) it is important to keep out from it files that contains critical information. For WP Starter installations it mostly means the <code>.env</code> file. Moreover, files that are managed via Composer should be keep out of version control as well.</p>
-<p>This step creates in project folder a <code>.gitignore</code> file that makes the popular Git VCS ignore <code>.env</code> file and all the Composer dependencies (including WordPress package). This step can be disabled and customized using <code>composer.json</code> settings.</p>
+<p>When using a version control system (VCS) it is important to keep files that contain critical information out of it. For WP Starter installations it mostly means the <code>.env</code> file. Moreover, files that are managed via Composer should be kept out of version control as well.</p>
+<p>This step creates a <code>.gitignore</code> file in the project folder that makes the popular Git VCS ignore <code>.env</code> files and all the Composer dependencies (including WordPress package). This step can be disabled and customized using <code>composer.json</code> settings.</p>
                                     </div>
             </div>
         </div>
