@@ -32,6 +32,10 @@ Suggested flow:
  - Fork the repo and create a feature/bug-fix branch from `dev` branch. For trivial changes you might want to work directly on forked `dev` branch.
  - Send a PR to `dev` branch
 
+You will find the full description on top of the [issues](issues). There are 
+also existing templates that will be used automatically when opening a new 
+issue or pull request.
+
 # Security Issues
 
 If you have identified a security issue, please email **giuseppe.mazzapica [at] gmail.com** and do not
