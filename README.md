@@ -21,6 +21,9 @@ MIT. See [LICENSE](LICENSE) file.
  - John P. Bloch [WordPress package](https://github.com/johnpbloch/wordpress)
  - [Dotenv](https://github.com/vlucas/phpdotenv) by Vance Lucas
 
+## Change Log
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 
