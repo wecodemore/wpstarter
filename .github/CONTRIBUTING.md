@@ -14,21 +14,20 @@ In general, it's the following rule:
 ### Submitting changes
 1. Please open [an issue][github-issues-link] 
    to discuss your changes before filing a pull request.
-2. When you send a pull request, we will love you forever.
-3. Always add changes to **a new branch** named 
+1. Always add changes to **a new branch** named 
 
         git checkout -b issue-<issue number>-<topic>
         # Example
         # issue-54-feature-title
 
-    An exception are extremely minor changes. Those can go directly to `dev`  
+    An exception are extremely minor changes. Those can go directly to `dev`.  
 
-4. Always **file PRs against the `dev` branch**. Nothing goes to `master` without 
+1. Always **file PRs against the `dev` branch**. Nothing goes to `master` without 
    going to `dev` first. In case you did not do that, please just update/rebase 
    your pull request.
-5. If you include tests, we will love you in all eternity. 
+1. If you include tests, we will love you in all eternity. 
    **Hint:** We can always use more test coverage.
-6. When you send a pull request, please try to explain your changes. A list of 
+1. When you send a pull request, please try to explain your changes. A list of 
    keywords is enough.
 
 We will label your issue or PR accordingly so that you can filter the list of 
