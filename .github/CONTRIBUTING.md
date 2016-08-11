@@ -34,7 +34,7 @@ File one commit _per change_. If you are afraid that you might end up with too
 many commits, you can [squash commits][so-git-squash].
 
 Please, always write a clear log message for your commits. It's always hard 
-to find changes that introduced bugs. Good messages makes it easier to trace 
+to find changes that introduced bugs. Good messages make it easier to trace 
 things back to their origin.
 
 We really like the 
@@ -54,8 +54,9 @@ Else GitHub issues do not add the commits to the issues. Example: `see #23`
  * Use the imperative, present tense "change", not "changed" nor "changes"
  * Limit the subject line to 50 characters
  * Use the body to explain what and why vs. how
- * Use `see #123` to _reference_ an issue. Avoid `fixes` or `closes` to not 
- trigger automatic closing of GitHub issues.
+ * Use `see #{number}` to _reference_ an issue. Without it, GitHub will not be 
+ able to link the commit to the issue. Example: `see #23`. Avoid `fixes` or 
+ `closes` to not trigger automatic closing of GitHub issues.
 
 Specific example:
 
