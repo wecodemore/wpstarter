@@ -49,16 +49,15 @@ a lot. Here's an example:
 <type>(<scope>) <subject>, see #<issue number>
     <BLANK LINE>
 <body>
-    <BLANK LINE>
-<footer (optional)>
 ```
 
 Please make sure that you **always include the issue number** in a commit message. 
 Else GitHub issues do not add the commits to the issues. Example: `see #23`
 
- * Avoid a dot/`.` at the end of the commit message
+ * Avoid a period/dot/`.` at the end of the commit message
  * Use the imperative, present tense "change", not "changed" nor "changes"
- * One change per `<body>` line
+ * One change per `<body>` line - think of it as a "list of changes", things
+  that end up in a changelog
 
 Specific example:
 
@@ -70,6 +69,18 @@ Explain general tools to use
 Explain local setup
 Explain CI setup
 ```
+
+In most cases the `<type>` should be one of the following:
+
+ * `feat` (new feature)
+ * `fix` (bug fix)
+ * `docs` (changes to documentation, README, …)
+ * `style` (css, missing semi colons, etc; no code change)
+ * `refactor` (restructuring docs, refactoring production code)
+ * `test` (adding missing tests, refactoring tests; no production code change)
+
+The `<scope>` will be the _class or component_ your changes are for. 
+You can think of it as _topic_ as well.
 
 [github-pr-link]: https://github.com/wecodemore/wpstarter/compare
 [github-issues-link]: https://github.com/wecodemore/wpstarter/issues/new
