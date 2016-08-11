@@ -34,9 +34,11 @@ Suggested flow:
  For trivial changes you might want to work directly on forked `dev` branch.
  - Send a PR to `dev` branch
 
-You will find the full description on top of the [issues](issues). There are 
-also existing templates that will be used automatically when opening a new 
-issue or pull request.
+You will find the full description on top of the [GitHub issues](issues). 
+If you are reading this file locally, you can find the contributing 
+guidelines inside [`CONTRIBUTING.md`](.github/CONTRIBUTING.md).
+There are also existing templates that will be used automatically when opening 
+a new issue or pull request on GitHub.
 
 # Security Issues
 
