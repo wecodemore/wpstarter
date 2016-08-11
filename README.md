@@ -28,8 +28,10 @@ Contributions are very welcome.
 
 Suggested flow:
 
- - Open an issue to discuss the fix / improvement. Might not be needed for trivial things.
- - Fork the repo and create a feature/bug-fix branch from `dev` branch. For trivial changes you might want to work directly on forked `dev` branch.
+ - Open an issue to discuss the fix / improvement. Might not be needed for 
+ trivial things.
+ - Fork the repo and create a feature/bug-fix branch from `dev` branch. 
+ For trivial changes you might want to work directly on forked `dev` branch.
  - Send a PR to `dev` branch
 
 You will find the full description on top of the [issues](issues). There are 
@@ -38,13 +40,18 @@ issue or pull request.
 
 # Security Issues
 
-If you have identified a security issue, please email **giuseppe.mazzapica [at] gmail.com** and do not
+If you have identified a security issue, please email 
+`**giuseppe.mazzapica [at] gmail.com**` and do not
 file an issue as they are public.
 
 # Question? Issues?
 
-WP Starter is hosted on GitHub. Feel free to open issues there for suggestions, questions and real issues.
+WP Starter is hosted on GitHub. Feel free to open issues there for suggestions, 
+questions and real issues.
 
 # Who's Behind
 
-I'm Giuseppe, I deal with PHP since 2005. For questions, rants or chat ping me on Twitter ([@gmazzap](https://twitter.com/gmazzap)) or on ["The Loop"](http://chat.stackexchange.com/rooms/6/the-loop) (Stack Exchange) chat. Well, it's possible I'll ignore rants.
+I'm Giuseppe, I deal with PHP since 2005. For questions, rants or chat ping me 
+on Twitter ([@gmazzap](https://twitter.com/gmazzap)) or on 
+["The Loop"](http://chat.stackexchange.com/rooms/6/the-loop) (Stack Exchange) chat. 
+Well, it's possible I'll ignore rants.
