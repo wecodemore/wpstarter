@@ -79,7 +79,7 @@
 * Massive refactoring: code is now more modular and the entire workflow is organized into "steps".
 * Content folder is not moved anymore, but an additional theme folder is registered. As per discussion in [#2]
 * Configurations discussed in [#3] is now available.
-* Documenation added in gh-pages branch, see [http://wecodemore.github.io/wpstarter/]
+* Documenation added in gh-pages branch, see [https://wecodemore.github.io/wpstarter/]
 
 ## [1.3.4] - 2015-03-18
 
@@ -126,7 +126,7 @@
 
 * Initial release.
 
-[http://wecodemore.github.io/wpstarter/]: http://wecodemore.github.io/wpstarter/
+[https://wecodemore.github.io/wpstarter/]: https://wecodemore.github.io/wpstarter/
 
 [Alain Schlesser]: https://github.com/schlessera
 [Gary Jones]: https://github.com/GaryJones
