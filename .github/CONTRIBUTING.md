@@ -59,7 +59,6 @@ Else GitHub issues do not add the commits to the issues. Example: `see #23`
  * Avoid a period/dot/`.` at the end of the commit message
  * Use the imperative, present tense "change", not "changed" nor "changes"
  * Limit the subject line to 50 characters
- * Use the body to explain what and why vs. how
  * One change per `<body>` line - think of it as a "list of changes", things
   that end up in a changelog
  
