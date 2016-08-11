@@ -54,6 +54,8 @@ Else GitHub issues do not add the commits to the issues. Example: `see #23`
  * Use the imperative, present tense "change", not "changed" nor "changes"
  * Limit the subject line to 50 characters
  * Use the body to explain what and why vs. how
+ * Use `see #123` to _reference_ to an issue. Avoid `fixes` or `closes` to not 
+ trigger automatic closing of GitHub issues.
 
 Specific example:
 
