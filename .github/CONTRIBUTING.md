@@ -29,11 +29,6 @@ In general, it's the following rule:
 1. When you send a pull request, please try to explain your changes. A list of 
    keywords is enough.
 
-We will label your issue or PR accordingly so that you can filter the list of 
-issues with the least effort possible. We also assign issues to milestones and 
-release minor or major versions when the list of issues exceeds a certain 
-threshold.
-
 ### Commit changes
 File one commit _per change_. If you are afraid that you might end up with too 
 many commits, you can [squash commits][so-git-squash].
