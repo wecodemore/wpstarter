@@ -14,15 +14,6 @@ In general, it's the following rule:
 
 > Try to play nice with later developers or people using this package.
 
-### Code of Conduct
-
-This project adheres to the Contributor Covenant 
-[code of conduct](http://contributor-covenant.org/version/1/4/) v1.4.
-By participating, you are expected to uphold this code.
-Please report unacceptable behavior to [giuseppe.mazzapica@gmail.com](mailto:giuseppe.mazzapica@gmail.com).
-In case you would like to propose a better or more throughout COC, please file 
-[a new pull request](https://github.com/wecodemore/wpstarter/compare).
-
 ### Submitting changes
 
 1. Please open [an issue](https://github.com/wecodemore/wpstarter/issues/new) 
