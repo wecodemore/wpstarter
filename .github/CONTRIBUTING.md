@@ -37,6 +37,9 @@ release minor or major versions when the list of issues exceeds a certain
 threshold.
 
 ### Commit changes
+File one commit _per change_. If you are afraid that you might end up with too 
+many commits, you can [squash commits][so-git-squash].
+
 Please, always write a clear log message for your commits. It's always hard 
 to find changes that introduced bugs. Good messages makes it easier to trace 
 things back to their origin.
@@ -58,6 +61,7 @@ Else GitHub issues do not add the commits to the issues. Example: `see #23`
  * Use the imperative, present tense "change", not "changed" nor "changes"
  * One change per `<body>` line - think of it as a "list of changes", things
   that end up in a changelog
+ 
 
 Specific example:
 
@@ -84,4 +88,5 @@ You can think of it as _topic_ as well.
 
 [github-pr-link]: https://github.com/wecodemore/wpstarter/compare
 [github-issues-link]: https://github.com/wecodemore/wpstarter/issues/new
+[so-git-squash]: http://stackoverflow.com/a/5201642/376483
 [angular-contrib-docs-link]: https://github.com/angular/angular.js/blob/5d695e5566212d93da0fc1281d5d39ffee0039a3/CONTRIBUTING.md#commit-message-format
