@@ -25,8 +25,7 @@ In general, it's the following rule:
 1. Always **file PRs against the `dev` branch**. Nothing goes to `master` without 
    going to `dev` first. In case you did not do that, please just update/rebase 
    your pull request.
-1. If you include tests, we will love you in all eternity. 
-   **Hint:** We can always use more test coverage.
+1. If possible, include tests. We can always use more test coverage.
 1. When you send a pull request, please try to explain your changes. A list of 
    keywords is enough.
 
