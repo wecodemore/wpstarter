@@ -1,22 +1,18 @@
 # Contributing to _WPStarter_
-
 **First**, let us say: Thank you for contributing! :+1:
-
 The outlined steps in this document are just guidelines, not rules, 
 use your best judgment and feel free to propose changes to this document 
-in [a new pull request](https://github.com/wecodemore/wpstarter/compare).
+in [a new pull request][github-pr-link].
 
 ---
 
 ## What should I know before getting started?
-
 In general, it's the following rule:
 
 > Try to play nice with later developers or people using this package.
 
 ### Submitting changes
-
-1. Please open [an issue](https://github.com/wecodemore/wpstarter/issues/new) 
+1. Please open [an issue][github-issues-link] 
    to discuss your changes before filing a pull request.
 2. When you send a pull request, we will love you forever.
 3. Always add changes to **a new branch** named 
@@ -41,13 +37,12 @@ release minor or major versions when the list of issues exceeds a certain
 threshold.
 
 ### Commit changes
-
 Please, always write a clear log message for your commits. It's always hard 
 to find changes that introduced bugs. Good messages makes it easier to trace 
 things back to their origin.
 
 We really like the 
-[Angular commit message format](https://github.com/angular/angular.js/blob/5d695e5566212d93da0fc1281d5d39ffee0039a3/CONTRIBUTING.md#commit-message-format) 
+[Angular commit message format][angular-contrib-docs-link] 
 a lot. Here's an example:
 
 ```
@@ -75,3 +70,7 @@ Explain general tools to use
 Explain local setup
 Explain CI setup
 ```
+
+[github-pr-link]: https://github.com/wecodemore/wpstarter/compare
+[github-issues-link]: https://github.com/wecodemore/wpstarter/issues/new
+[angular-contrib-docs-link]: https://github.com/angular/angular.js/blob/5d695e5566212d93da0fc1281d5d39ffee0039a3/CONTRIBUTING.md#commit-message-format
