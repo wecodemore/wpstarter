@@ -183,7 +183,7 @@ final class Env implements \ArrayAccess
      */
     public static function load($path, $file = '.env')
     {
-        if (! is_null(self::$loaded)) {
+        if (!is_null(self::$loaded)) {
             return self::$loaded;
         }
 
@@ -196,7 +196,7 @@ final class Env implements \ArrayAccess
             : '';
 
         $loadFile = $path && is_file($path) && is_readable($path);
-        if (! $loadFile && getenv('WORDPRESS_ENV') === false) {
+        if (!$loadFile && getenv('WORDPRESS_ENV') === false) {
             throw new \RuntimeException(
                 'Please provide a .env file or ensure WORDPRESS_ENV variable is set.'
             );

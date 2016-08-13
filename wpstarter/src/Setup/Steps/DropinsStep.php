@@ -64,8 +64,8 @@ final class DropinsStep implements StepInterface
     private $success = '';
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\IO $io
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
@@ -100,7 +100,7 @@ final class DropinsStep implements StepInterface
     {
         $this->config = $config;
 
-        return ! empty($config['dropins']) && ! empty($paths['wp-content']);
+        return !empty($config['dropins']) && !empty($paths['wp-content']);
     }
 
     /**
@@ -146,14 +146,14 @@ final class DropinsStep implements StepInterface
     }
 
     /**
-     * @param string                               $name
-     * @param string                               $url
-     * @param \ArrayAccess                         $paths
+     * @param string $name
+     * @param string $url
+     * @param \ArrayAccess $paths
      * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
      */
     private function runStep($name, $url, \ArrayAccess $paths, OverwriteHelper $overwrite)
     {
-        $step = new DropinCreationStep($name, $url, $this->io, $overwrite);
+        $step = new DropinStep($name, $url, $this->io, $overwrite);
         if ($step->allowed($this->config, $paths)) {
             $step->run($paths);
             $this->addMessage($step->error(), 'error');
@@ -202,7 +202,7 @@ final class DropinsStep implements StepInterface
      * Question is different based on situations.
      *
      * @param  string $name
-     * @param  int    $question
+     * @param  int $question
      * @return bool
      */
     private function ask($name, $question = 0)
@@ -210,7 +210,7 @@ final class DropinsStep implements StepInterface
         switch ($question) {
             case 2:
                 $lines = [
-                    "{$name} is not a core supported locale for WP ".$this->config['wp-version'],
+                    "{$name} is not a core supported locale for WP " . $this->config['wp-version'],
                     "Do you want to proceed with {$name}.php anyway?",
                 ];
                 break;
@@ -240,6 +240,6 @@ final class DropinsStep implements StepInterface
      */
     private function addMessage($message, $type)
     {
-        $this->$type .= $message ? $message.PHP_EOL : '';
+        $this->$type .= $message ? $message . PHP_EOL : '';
     }
 }

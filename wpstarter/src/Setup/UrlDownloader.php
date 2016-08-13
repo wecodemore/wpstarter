@@ -44,7 +44,7 @@ class UrlDownloader
     /**
      * Constructor. Validate and store the given url or an error if url is not valid.
      *
-     * @param string                  $url
+     * @param string $url
      * @param \WCM\WPStarter\Setup\IO $io
      */
     public function __construct($url, IO $io)
@@ -55,8 +55,8 @@ class UrlDownloader
         $scheme = parse_url($url, PHP_URL_SCHEME);
         if (empty($scheme)) {
             $url = $config->get('disable-tls')
-                ? 'http://'.ltrim($url, '/')
-                : 'https://'.ltrim($url, '/');
+                ? 'http://' . ltrim($url, '/')
+                : 'https://' . ltrim($url, '/');
         }
 
         if (filter_var($url, FILTER_VALIDATE_URL)) {
@@ -79,11 +79,11 @@ class UrlDownloader
      */
     public function save($filename)
     {
-        if (! $this->check()) {
+        if (!$this->check()) {
             return false;
         }
 
-        if (! is_string($filename) || ! dirname($filename)) {
+        if (!is_string($filename) || !dirname($filename)) {
             $this->error = "Invalid target path to download {$this->url}.";
 
             return false;
@@ -121,7 +121,7 @@ class UrlDownloader
      */
     public function fetch()
     {
-        if (! $this->check()) {
+        if (!$this->check()) {
             return '';
         }
 
@@ -143,7 +143,7 @@ class UrlDownloader
     private function check()
     {
         return
-            ! empty($this->url)
+            !empty($this->url)
             && empty($this->error)
             && $this->remoteFilesystem instanceof RemoteFilesystem;
     }

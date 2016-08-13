@@ -14,7 +14,6 @@ use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -57,7 +56,7 @@ final class ContentDevStep implements OptionalStepInterface
      * Return true if the step is allowed, i.e. the run method have to be called or not
      *
      * @param  \WCM\WPStarter\Setup\Config $config
-     * @param  \ArrayAccess                $paths
+     * @param  \ArrayAccess $paths
      * @return bool
      */
     public function allowed(Config $config, \ArrayAccess $paths)
@@ -73,7 +72,7 @@ final class ContentDevStep implements OptionalStepInterface
     public function askConfirm(Config $config, IO $io)
     {
         $dir = $this->config['content-dev-dir'];
-        if ($this->config['content-dev-op'] !== 'ask' || ! $dir) {
+        if ($this->config['content-dev-op'] !== 'ask' || !$dir) {
             return true;
         }
 
@@ -102,26 +101,26 @@ final class ContentDevStep implements OptionalStepInterface
     public function run(\ArrayAccess $paths)
     {
         $dir = $this->config['content-dev-dir'];
-        if (! $dir) {
+        if (!$dir) {
             return self::NONE;
         }
 
-        $source = $paths['root'].'/'.$dir;
-        if (! is_dir($source)) {
+        $source = $paths['root'] . '/' . $dir;
+        if (!is_dir($source)) {
             $this->operation = '';
 
             return self::ERROR;
         }
 
-        if (! in_array($this->operation, ['copy', 'symlink'])) {
+        if (!in_array($this->operation, ['copy', 'symlink'])) {
             return self::ERROR;
         }
 
-        $target = $paths['root'].'/'.$paths['wp-content'];
+        $target = $paths['root'] . '/' . $paths['wp-content'];
         $filesystem = new Filesystem();
 
-        $sourceDirs = glob($source.'/*', GLOB_NOSORT | GLOB_ONLYDIR);
-        if (! $sourceDirs) {
+        $sourceDirs = glob($source . '/*', GLOB_NOSORT | GLOB_ONLYDIR);
+        if (!$sourceDirs) {
             return self::NONE;
         }
 
@@ -133,7 +132,7 @@ final class ContentDevStep implements OptionalStepInterface
         $all = count($sourceDirs);
 
         foreach ($sourceDirs as $sourceDir) {
-            $filesystem->symlink($sourceDir, $target.'/'.basename($sourceDir)) and $done++;
+            $filesystem->symlink($sourceDir, $target . '/' . basename($sourceDir)) and $done++;
         }
 
         return $done === $all ? self::SUCCESS : self::ERROR;

@@ -30,7 +30,7 @@ interface OptionalStepInterface extends StepInterface
      * @see \WCM\WPStarter\Setup\IO::confirm()
      *
      * @param  \WCM\WPStarter\Setup\Config $config
-     * @param  \WCM\WPStarter\Setup\IO     $io
+     * @param  \WCM\WPStarter\Setup\IO $io
      * @return bool
      */
     public function askConfirm(Config $config, IO $io);

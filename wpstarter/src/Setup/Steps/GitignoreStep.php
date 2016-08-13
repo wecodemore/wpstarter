@@ -30,11 +30,11 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
      * @var array
      */
     private static $default = [
-        'wp'         => true,
+        'wp' => true,
         'wp-content' => true,
-        'vendor'     => true,
-        'common'     => false,
-        'custom'     => [],
+        'vendor' => true,
+        'common' => false,
+        'custom' => [],
     ];
 
     /**
@@ -73,8 +73,8 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     private $found = false;
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\IO $io
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
@@ -87,9 +87,9 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     }
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
+     * @param \WCM\WPStarter\Setup\IO $io
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      */
     public function __construct(IO $io, FileBuilder $builder, Filesystem $filesystem)
     {
@@ -123,7 +123,7 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
      */
     public function targetPath(\ArrayAccess $paths)
     {
-        return $paths['root'].'/.gitignore';
+        return $paths['root'] . '/.gitignore';
     }
 
     /**
@@ -153,14 +153,14 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     {
         $this->found = -1;
         if (is_string($this->config) && $this->config !== 'ask') {
-            $realpath = realpath($paths['root'].'/'.$this->config);
+            $realpath = realpath($paths['root'] . '/' . $this->config);
             if ($realpath && is_file($realpath)) {
                 $done = $this->filesystem->copyDir($realpath, $this->targetPath($paths));
                 $done or $this->error = 'Error on saving .gitignore.';
 
                 return $done ? self::SUCCESS : self::ERROR;
             }
-            if (! filter_var($this->config, FILTER_VALIDATE_URL)) {
+            if (!filter_var($this->config, FILTER_VALIDATE_URL)) {
                 $this->error = "{$this->config} is not a valid url not a valid relative path.";
 
                 return self::ERROR;
@@ -229,7 +229,7 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
         if ($remote->save($this->targetPath($paths))) {
             return self::SUCCESS;
         }
-        $this->error = 'Error on downloading and saving .gitignore. '.$remote->error();
+        $this->error = 'Error on downloading and saving .gitignore. ' . $remote->error();
 
         return self::ERROR;
     }
@@ -246,18 +246,18 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
         $filePaths = array_unique(
             array_filter(
                 array_merge(
-                    [$this->env, $paths['wp-parent'].'/wp-config.php'],
+                    [$this->env, $paths['wp-parent'] . '/wp-config.php'],
                     $toDo['custom'],
                     $this->paths($toDo, $paths)
                 )
             )
         );
-        $content = '### WP Starter'.PHP_EOL.implode(PHP_EOL, $filePaths).PHP_EOL;
+        $content = '### WP Starter' . PHP_EOL . implode(PHP_EOL, $filePaths) . PHP_EOL;
         if ($toDo['common']) {
             $common = trim($this->builder->build($paths, '.gitignore.example'));
-            $content = $common ? $content.PHP_EOL.PHP_EOL.$common : $content;
+            $content = $common ? $content . PHP_EOL . PHP_EOL . $common : $content;
         }
-        if (! $this->filesystem->save($content, $paths['root'].'/.gitignore')) {
+        if (!$this->filesystem->save($content, $paths['root'] . '/.gitignore')) {
             $this->error = 'WP Starter was not able to create .gitignore file.';
 
             return self::ERROR;
@@ -267,7 +267,7 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     }
 
     /**
-     * @param  array        $toDo
+     * @param  array $toDo
      * @param  \ArrayAccess $paths
      * @return array
      */
@@ -292,8 +292,8 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     /**
      * Takes a path and compare it to already added path to discover if it should be added or not.
      *
-     * @param  string                   $path
-     * @param  array                    $parsedPaths
+     * @param  string $path
+     * @param  array $parsedPaths
      * @param \Composer\Util\Filesystem $filesystem
      * @return array
      */

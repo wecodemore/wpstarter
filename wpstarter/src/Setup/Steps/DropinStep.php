@@ -58,9 +58,9 @@ final class DropinStep implements FileCreationStepInterface
     private $success = '';
 
     /**
-     * @param string                               $name
-     * @param string                               $url
-     * @param \WCM\WPStarter\Setup\IO              $io
+     * @param string $name
+     * @param string $url
+     * @param \WCM\WPStarter\Setup\IO $io
      * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
      */
     public function __construct($name, $url, IO $io, OverwriteHelper $overwrite)
@@ -100,14 +100,14 @@ final class DropinStep implements FileCreationStepInterface
     public function run(\ArrayAccess $paths)
     {
         $dest = $this->targetPath($paths);
-        if (! $this->overwrite->should($dest)) {
+        if (!$this->overwrite->should($dest)) {
             $this->io->comment("  - {$this->name} skipped.");
 
             return;
         }
         $this->actionSource[0] === 'download'
             ? $this->download($this->actionSource[1], $dest)
-            : $this->copy($this->actionSource[1], $dest, $paths);
+            : $this->copy($this->actionSource[1], $dest);
     }
 
     /**
@@ -131,7 +131,7 @@ final class DropinStep implements FileCreationStepInterface
      */
     public function targetPath(\ArrayAccess $paths)
     {
-        return $paths['root'].'/'.$paths['wp-content'].'/'.$this->name;
+        return $paths['root'] . '/' . $paths['wp-content'] . '/' . $this->name;
     }
 
     /**
@@ -144,8 +144,8 @@ final class DropinStep implements FileCreationStepInterface
     {
         $remote = new UrlDownloader($url, $this->io);
         $name = basename($dest);
-        if (! $remote->save($dest)) {
-            $this->error .= "Impossible to download and save {$name}: ".$remote->error();
+        if (!$remote->save($dest)) {
+            $this->error .= "Impossible to download and save {$name}: " . $remote->error();
         } else {
             $this->success .= "<comment>{$name}</comment> downloaded and saved successfully.";
         }
@@ -174,13 +174,13 @@ final class DropinStep implements FileCreationStepInterface
      * Check if a string is a valid relative path or an url.
      * Return false if none of them.
      *
-     * @param  string       $url
+     * @param  string $url
      * @param  \ArrayAccess $paths
      * @return array
      */
     private function action($url, \ArrayAccess $paths)
     {
-        $realpath = realpath($paths['root']."/{$url}");
+        $realpath = realpath($paths['root'] . "/{$url}");
         if ($realpath && is_file($realpath)) {
             return ['copy', $realpath];
         } elseif (filter_var($url, FILTER_VALIDATE_URL)) {

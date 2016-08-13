@@ -23,7 +23,7 @@ class OverwriteHelper
     private $config;
 
     /**
-     * @var \WCM\WPStarter\IO
+     * @var \WCM\WPStarter\Setup\IO
      */
     private $io;
 
@@ -34,8 +34,8 @@ class OverwriteHelper
 
     /**
      * @param \WCM\WPStarter\Setup\Config $config
-     * @param \WCM\WPStarter\Setup\IO     $io
-     * @param \ArrayAccess                $paths
+     * @param \WCM\WPStarter\Setup\IO $io
+     * @param \ArrayAccess $paths
      */
     public function __construct(Config $config, IO $io, \ArrayAccess $paths)
     {
@@ -56,7 +56,7 @@ class OverwriteHelper
      */
     public function should($file)
     {
-        if (! is_file($file)) {
+        if (!is_file($file)) {
             return true;
         }
         if ($this->config === 'ask') {
@@ -86,7 +86,7 @@ class OverwriteHelper
     {
         $overwrite = true;
         $config = $this->config;
-        while ($overwrite === true && ! empty($config)) {
+        while ($overwrite === true && !empty($config)) {
             $overwrite = fnmatch(array_shift($config), $file, FNM_NOESCAPE) ? false : true;
         }
 

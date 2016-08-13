@@ -13,7 +13,6 @@ namespace WCM\WPStarter\Setup;
 use Composer\Composer;
 use Composer\Util\Filesystem;
 
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -73,12 +72,12 @@ final class Paths implements \ArrayAccess
             : $this->subdir($cwd, "{$cwd}/{$extra['wordpress-content-dir']}");
 
         $paths = [
-            'root'       => $this->filesystem->normalizePath($cwd),
-            'vendor'     => $this->subdir($cwd, $this->composer->getConfig()->get('vendor-dir')),
-            'wp'         => $wpInstallDir,
-            'wp-parent'  => $this->subdir($cwd, dirname($wpFullDir)),
+            'root' => $this->filesystem->normalizePath($cwd),
+            'vendor' => $this->subdir($cwd, $this->composer->getConfig()->get('vendor-dir')),
+            'wp' => $wpInstallDir,
+            'wp-parent' => $this->subdir($cwd, dirname($wpFullDir)),
             'wp-content' => $wpContent,
-            'starter'    => $this->subdir($cwd, dirname(__DIR__)),
+            'starter' => $this->subdir($cwd, dirname(__DIR__)),
         ];
 
         self::$parsed->attach($this->composer, $paths);
@@ -99,7 +98,7 @@ final class Paths implements \ArrayAccess
      */
     public function offsetGet($offset)
     {
-        if (! $this->offsetExists($offset)) {
+        if (!$this->offsetExists($offset)) {
             throw new \InvalidArgumentException(sprintf("%s is not a valid WP Starter path index."));
         }
 

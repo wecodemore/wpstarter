@@ -56,8 +56,8 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
     private $error = '';
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\IO $io
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
@@ -70,9 +70,9 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
     }
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
+     * @param \WCM\WPStarter\Setup\IO $io
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      */
     public function __construct(IO $io, FileBuilder $builder, Filesystem $filesystem)
     {
@@ -96,9 +96,9 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
     {
         $this->config = $config;
         $this->paths = $paths;
-        $env = $paths['root'].'/'.ltrim($config['env-file'], '\\/');
+        $env = $paths['root'] . '/' . ltrim($config['env-file'], '\\/');
 
-        return $config['env-example'] !== false && ! is_file($env);
+        return $config['env-example'] !== false && !is_file($env);
     }
 
     /**
@@ -106,7 +106,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
      */
     public function targetPath(\ArrayAccess $paths)
     {
-        return $paths['root'].'/.env.example';
+        return $paths['root'] . '/.env.example';
     }
 
     /**
@@ -134,7 +134,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
         $dest = $this->targetPath($paths);
         $config = $this->config['env-example'];
         if (is_string($config) && $config !== 'ask') {
-            $realpath = realpath($paths['root'].'/'.$config);
+            $realpath = realpath($paths['root'] . '/' . $config);
             if ($realpath && is_file($realpath)) {
                 return $this->copy($paths, $dest, $realpath);
             } elseif (filter_var($config, FILTER_VALIDATE_URL)) {
@@ -153,7 +153,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
      */
     public function postProcess(IO $io)
     {
-        if (! is_file($this->paths['root'].'/'.ltrim($this->config['env-file'], '/\\'))) {
+        if (!is_file($this->paths['root'] . '/' . ltrim($this->config['env-file'], '/\\'))) {
             $lines = [
                 'Remember you need a .env file with DB settings',
                 'to make your site fully functional.',
@@ -166,16 +166,16 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
     /**
      * Download a remote .env.example in root folder.
      *
-     * @param  string       $url
-     * @param  string       $dest
+     * @param  string $url
+     * @param  string $dest
      * @param  \ArrayAccess $paths
      * @return int
      */
     private function download($url, $dest, \ArrayAccess $paths)
     {
         $remote = new UrlDownloader($url, $this->io);
-        if (! $remote->save($dest)) {
-            $this->error = 'Error on downloading and save .env.example: '.$remote->error().'.';
+        if (!$remote->save($dest)) {
+            $this->error = 'Error on downloading and save .env.example: ' . $remote->error() . '.';
 
             return self::ERROR;
         }
@@ -188,14 +188,14 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
      *
      * @param  \ArrayAccess $paths
      * @param               $dest
-     * @param  null         $source
+     * @param  null $source
      * @return int
      */
     private function copy(\ArrayAccess $paths, $dest, $source = null)
     {
         if (is_null($source)) {
             $pieces = [$paths['starter'], 'templates'];
-            if (! $this->config['is-root']) {
+            if (!$this->config['is-root']) {
                 array_unshift($pieces, $paths['root']);
             }
             $source = implode('/', array_merge($pieces, ['.env.example']));

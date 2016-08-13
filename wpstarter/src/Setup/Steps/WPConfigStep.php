@@ -62,8 +62,8 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
     private $error = '';
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\IO $io
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
@@ -76,9 +76,9 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
     }
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
+     * @param \WCM\WPStarter\Setup\IO $io
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      * @param \WCM\WPStarter\Setup\Salter|null $salter
      */
     public function __construct(
@@ -139,7 +139,7 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
         };
 
         $relUrl = function ($path) use ($from, $paths) {
-            if (! $paths['wp-parent']) {
+            if (!$paths['wp-parent']) {
                 return $this->filesystemUtil->normalizePath($path);
             }
 
@@ -150,14 +150,14 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
         };
 
         $vars = [
-            'VENDOR_PATH'        => $relPath($paths['vendor']),
-            'ENV_REL_PATH'       => $relPath($paths['root'], false),
-            'WP_INSTALL_PATH'    => $relPath($paths['wp']),
-            'WP_CONTENT_PATH'    => $relPath($paths['wp-content']),
+            'VENDOR_PATH' => $relPath($paths['vendor']),
+            'ENV_REL_PATH' => $relPath($paths['root'], false),
+            'WP_INSTALL_PATH' => $relPath($paths['wp']),
+            'WP_CONTENT_PATH' => $relPath($paths['wp-content']),
             'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
-            'ENV_FILE_NAME'      => $this->config['env-file'],
-            'WP_SITEURL'         => $relUrl($paths['wp']),
-            'WP_CONTENT_URL'     => $relUrl($paths['wp-content']),
+            'ENV_FILE_NAME' => $this->config['env-file'],
+            'WP_SITEURL' => $relUrl($paths['wp']),
+            'WP_CONTENT_URL' => $relUrl($paths['wp-content']),
         ];
 
         $build = $this->builder->build(
@@ -166,7 +166,7 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
             array_merge($vars, $this->salter->keys())
         );
 
-        if (! $this->filesystem->save($build, $this->targetPath($paths))) {
+        if (!$this->filesystem->save($build, $this->targetPath($paths))) {
             $this->error = 'Error on create wp-config.php.';
 
             return self::ERROR;

@@ -13,7 +13,6 @@ namespace WCM\WPStarter\Env;
 use Gea\Accessor\AccessorInterface;
 use Gea\Exception\ReadOnlyWriteException;
 
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -39,7 +38,7 @@ final class Accessor implements AccessorInterface
     /**
      * Disabled because read-only
      *
-     * @param  string      $name
+     * @param  string $name
      * @param  string|null $value
      * @return void
      */

@@ -25,7 +25,6 @@ use WCM\WPStarter\Setup\Stepper;
 use WCM\WPStarter\Setup\StepperInterface;
 use WCM\WPStarter\Setup\Steps;
 
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
@@ -35,7 +34,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
 {
 
     const WP_PACKAGE_TYPE = 'wordpress-core';
-    const WP_MIN_VER      = '4.4.3';
+    const WP_MIN_VER = '4.4.3';
 
     /**
      * @var \Composer\Composer
@@ -59,7 +58,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     {
         return [
             'post-install-cmd' => 'run',
-            'post-update-cmd'  => 'run',
+            'post-update-cmd' => 'run',
         ];
     }
 
@@ -96,21 +95,23 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      * It is possible to provide the names of steps to run
      *
      * @param array $steps
-     * @return
+     * @return void
      */
     public function run(array $steps = [])
     {
-        if ( ! $this->config instanceof Config) {
-            return $this->io->writeError([
+        if (!$this->config instanceof Config) {
+            $this->io->writeError([
                 'Error running WP Starter command.',
                 'WordPress not found or found in a too old version.',
-                'Minimum required WordPress version is '.self::WP_MIN_VER.'.',
+                'Minimum required WordPress version is ' . self::WP_MIN_VER . '.',
             ]);
+
+            return;
         }
 
         $this->config->offsetExists('custom-steps') or $this->config['custom-steps'] = [];
         $this->config->offsetExists('scripts') or $this->config['scripts'] = [];
-        if ( ! $this->config->offsetExists('verbosity')) {
+        if (!$this->config->offsetExists('verbosity')) {
             $verbosity = ($this->io->isDebug() || $this->io->isVeryVerbose()) ? 2 : 1;
             $this->config->appendConfig('verbosity', $verbosity);
         }
@@ -127,13 +128,13 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
             $fileBuilder = new FileBuilder();
 
             $classes = array_merge([
-                'check-paths'         => Steps\CheckPathStep::class,
-                'build-wpconfig'      => Steps\WPConfigStep::class,
-                'build-index'         => Steps\IndexStep::class,
-                'build-env-example'   => Steps\EnvExampleStep::class,
-                'dropins'             => Steps\DropinsStep::class,
-                'build-gitignore'     => Steps\GitignoreStep::class,
-                'move-content'        => Steps\MoveContentStep::class,
+                'check-paths' => Steps\CheckPathStep::class,
+                'build-wpconfig' => Steps\WPConfigStep::class,
+                'build-index' => Steps\IndexStep::class,
+                'build-env-example' => Steps\EnvExampleStep::class,
+                'dropins' => Steps\DropinsStep::class,
+                'build-gitignore' => Steps\GitignoreStep::class,
+                'move-content' => Steps\MoveContentStep::class,
                 'publish-content-dev' => Steps\ContentDevStep::class,
             ], $this->config['custom-steps']);
 
@@ -141,7 +142,8 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
                 $classes,
                 function ($stepClass) use ($stepper, $fileBuilder, $filesystem, $io, $steps) {
                     $stepObj = $this->factoryStep($stepClass, $io, $filesystem, $fileBuilder);
-                    if ($stepObj && ( ! $steps || in_array($stepObj->name(), $steps, true))) {
+                    $name = $stepObj->name();
+                    if ($name && (!$steps || in_array($name, $steps, true))) {
                         $stepper->addStep($stepObj);
                     }
                 }
@@ -155,7 +157,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      * Go through installed packages to find WordPress version.
      * Normalize to always be in the form x.x.x
      *
-     * @param  \Composer\Composer      $composer
+     * @param  \Composer\Composer $composer
      * @param \Composer\IO\IOInterface $io
      * @return string
      */
@@ -164,13 +166,13 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
         /** @var array $packages */
         $packages = $composer->getRepositoryManager()->getLocalRepository()->getPackages();
         $vers = [];
-        while ( ! empty($packages) && count($vers) < 2) {
+        while (!empty($packages) && count($vers) < 2) {
             /** @var \Composer\Package\PackageInterface $package */
             $package = array_pop($packages);
             $package->getType() === self::WP_PACKAGE_TYPE and $vers[] = $package->getVersion();
         }
 
-        if ( ! $vers) {
+        if (!$vers) {
             return '0.0.0';
         }
 
@@ -198,7 +200,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      */
     private function checkWpVersion($version)
     {
-        if ( ! $version || $version === '0.0.0') {
+        if (!$version || $version === '0.0.0') {
             return false;
         }
 
@@ -208,11 +210,11 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     /**
      * Instantiate a step instance using the best method available.
      *
-     * @param string                           $stepClass
-     * @param \WCM\WPStarter\Setup\IO          $io
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param string $stepClass
+     * @param \WCM\WPStarter\Setup\IO $io
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
-     * @return \WCM\WPStarter\Setup\Steps\StepInterface|null
+     * @return \WCM\WPStarter\Setup\Steps\StepInterface
      */
     private function factoryStep(
         $stepClass,
@@ -221,10 +223,10 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
         FileBuilder $builder
     ) {
         if (
-            ! is_string($stepClass)
-            || ! is_subclass_of($stepClass, Steps\StepInterface::class, true)
+            !is_string($stepClass)
+            || !is_subclass_of($stepClass, Steps\StepInterface::class, true)
         ) {
-            return;
+            return new Steps\NullStep();
         }
 
         $step = null;
@@ -239,14 +241,14 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
             ? new $stepClass($io, $filesystem, $builder)
             : new $stepClass($io);
 
-        return $step instanceof StepInterface ? $step : null;
+        return $step instanceof Steps\StepInterface ? $step : null;
     }
 
     /**
      * @param \WCM\WPStarter\Setup\StepperInterface $stepper
-     * @param \WCM\WPStarter\Setup\Config           $config
-     * @param \WCM\WPStarter\Setup\Paths            $paths
-     * @param \WCM\WPStarter\Setup\IO               $io
+     * @param \WCM\WPStarter\Setup\Config $config
+     * @param \WCM\WPStarter\Setup\Paths $paths
+     * @param \WCM\WPStarter\Setup\IO $io
      * @return bool
      */
     private function stepperAllowed(
@@ -255,7 +257,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
         Paths $paths,
         IO $io
     ) {
-        if ( ! $stepper->allowed($config, $paths)) {
+        if (!$stepper->allowed($config, $paths)) {
             $io->block([
                 'WP Starter installation CANCELED.',
                 'wp-config.php was found in root folder and your overwrite settings',

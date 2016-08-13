@@ -19,6 +19,7 @@ namespace WCM\WPStarter\Setup;
  */
 final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
 {
+
     /**
      * @var \WCM\WPStarter\Setup\IO
      */
@@ -50,7 +51,7 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
     private $errors = 0;
 
     /**
-     * @param \WCM\WPStarter\Setup\IO              $io
+     * @param \WCM\WPStarter\Setup\IO $io
      * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
      */
     public function __construct(IO $io, OverwriteHelper $overwrite)
@@ -82,9 +83,9 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
     public function allowed(Config $config, \ArrayAccess $paths)
     {
         $this->config = $config;
-        $wp_config = $paths['wp-parent'].'/wp-config.php';
+        $wp_config = $paths['wp-parent'] . '/wp-config.php';
 
-        return $config['prevent-overwrite'] !== 'hard' || ! is_file($wp_config);
+        return $config['prevent-overwrite'] !== 'hard' || !is_file($wp_config);
     }
 
     /**
@@ -98,7 +99,7 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
         $this->io->comment('WP Starter is going to start...');
         $this->steps->rewind();
 
-        $scripts = $this->config['scripts'] ? : [];
+        $scripts = $this->config['scripts'] ?: [];
 
         while ($this->steps->valid()) {
             /** @var \WCM\WPStarter\Setup\Steps\StepInterface $step */
@@ -111,7 +112,7 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
                 $result = $step->run($paths);
             }
 
-            if (! $this->handleResult($step, $result)) {
+            if (!$this->handleResult($step, $result)) {
                 return $this->finalMessage();
             }
 
@@ -172,7 +173,7 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
 
     /**
      * @param  \WCM\WPStarter\Setup\Steps\StepInterface $step
-     * @param  \ArrayAccess                             $paths
+     * @param  \ArrayAccess $paths
      * @return bool
      */
     private function shouldProcess(Steps\StepInterface $step, \ArrayAccess $paths)
@@ -183,7 +184,7 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
             /** @var \WCM\WPStarter\Setup\Steps\FileCreationStepInterface $step */
             $path = $step->targetPath($paths);
             $process = $this->overwrite->should($path);
-            $comment = $process ? '' : '- '.basename($path).' exists and will be preserved.';
+            $comment = $process ? '' : '- ' . basename($path) . ' exists and will be preserved.';
         }
         if ($process && $step instanceof Steps\OptionalStepInterface) {
             /** @var \WCM\WPStarter\Setup\Steps\OptionalStepInterface $step */
@@ -201,7 +202,7 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
      * Return false in case of error for blocking steps.
      *
      * @param  \WCM\WPStarter\Setup\Steps\StepInterface $step
-     * @param  int                                      $result
+     * @param  int $result
      * @return bool
      */
     private function handleResult(Steps\StepInterface $step, $result)
@@ -223,16 +224,16 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
 
     /**
      * @param \WCM\WPStarter\Setup\Steps\StepInterface $step
-     * @param array                                    $scripts
-     * @param string                                   $type
-     * @param \WCM\WPStarter\Setup\Paths               $paths
-     * @param int                                      $result
+     * @param array $scripts
+     * @param string $type
+     * @param \ArrayAccess $paths
+     * @param int $result
      */
     private function runStepsScripts(
         Steps\StepInterface $step,
         array $scripts,
         $type = 'pre',
-        Paths $paths,
+        \ArrayAccess $paths,
         $result
     ) {
         $name = $step->name();
@@ -249,7 +250,7 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
      * Print messages to console line by line.
      *
      * @param string $message
-     * @param bool   $error
+     * @param bool $error
      */
     private function printMessages($message, $error = false)
     {

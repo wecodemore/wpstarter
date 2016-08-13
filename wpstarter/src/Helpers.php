@@ -22,24 +22,21 @@ class Helpers
     /**
      * Add an action/filter before WordPress environment is loaded.
      *
-     * @param string   $hook
+     * @param string $hook
      * @param callable $callable
-     * @param int      $priority
-     * @param int      $argsNum
+     * @param int $priority
+     * @param int $argsNum
      * @return bool
      */
     public static function addHook($hook, $callable, $priority = 10, $argsNum = 1)
     {
-        if (! is_callable($callable)) {
-            return;
+        if (!is_callable($callable)) {
+            return false;
         }
 
         if (function_exists('add_filter')) {
             return add_filter($hook, function () use ($callable) {
-                $return = call_user_func_array($callable, func_get_args());
-                if (! is_null($return)) {
-                    return $return;
-                }
+                return call_user_func_array($callable, func_get_args());
             }, $priority, $argsNum);
         }
 
@@ -56,7 +53,7 @@ class Helpers
             };
 
         $wp_filter[$hook][$priority][spl_object_hash($function)] = [
-            'function'      => $function,
+            'function' => $function,
             'accepted_args' => $argsNum,
         ];
 
@@ -71,7 +68,7 @@ class Helpers
     public static function loadThemeFolder($register = true)
     {
         if (defined('ABSPATH') && $register) {
-            register_theme_directory(ABSPATH.'wp-content/themes');
+            register_theme_directory(ABSPATH . 'wp-content/themes');
         }
     }
 }

@@ -37,7 +37,7 @@ class LanguagesFetcher
 
     /**
      * @param string $version
-     * @param bool   $useSsl
+     * @param bool $useSsl
      * @return array|bool
      */
     public function fetch($version = '0.0.0', $useSsl = true)
@@ -48,28 +48,28 @@ class LanguagesFetcher
 
         $url = $useSsl ? 'https' : 'http';
         $url .= '://api.wordpress.org/translations/core/1.0/?version=';
-        $remote = new UrlDownloader($url.$version, $this->io);
+        $remote = new UrlDownloader($url . $version, $this->io);
         $result = $remote->fetch();
 
-        if (! $result && $useSsl) {
+        if (!$result && $useSsl) {
             $this->io->comment('Languages download failed, trying with disabled SSL...');
 
             return $this->fetch($version, false);
-        } elseif (! $result && substr_count($version, '.') === 2) {
+        } elseif (!$result && substr_count($version, '.') === 2) {
             $verArray = explode('.', $version);
             array_pop($verArray);
             $version = implode('.', $verArray);
             $this->io->comment("Languages download failed, trying with version {$version}...");
 
             return $this->fetch($version, true);
-        } elseif (! $result) {
+        } elseif (!$result) {
             return [];
         }
 
         try {
             $all = (array)@json_decode($result, true);
             $languages = [];
-            if (! empty($all['translations'])) {
+            if (!empty($all['translations'])) {
                 foreach ((array)$all['translations'] as $lang) {
                     empty($lang['language']) or $languages[] = $lang['language'];
                 }

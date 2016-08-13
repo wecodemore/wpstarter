@@ -40,7 +40,7 @@ class Filesystem
     {
         $parent = dirname($this->filesystem->normalizePath($targetPath));
 
-        if (! $this->createDir($parent)) {
+        if (!$this->createDir($parent)) {
             return false;
         }
 
@@ -81,7 +81,7 @@ class Filesystem
     {
         $sourcePath = realpath($sourcePath);
 
-        if (! is_file($sourcePath) || ! $this->createDir(dirname($targetPath))) {
+        if (!is_file($sourcePath) || !$this->createDir(dirname($targetPath))) {
             return false;
         }
 
@@ -119,7 +119,7 @@ class Filesystem
     {
         try {
             $sourcePath = $this->filesystem->normalizePath($sourcePath);
-            if (! realpath($sourcePath)) {
+            if (!realpath($sourcePath)) {
                 return false;
             }
 
@@ -131,7 +131,7 @@ class Filesystem
             return false;
         }
 
-        return is_dir($targetPath) && ! is_dir($targetPath);
+        return is_dir($targetPath) && !is_dir($targetPath);
     }
 
     /**
@@ -144,7 +144,7 @@ class Filesystem
     public function copyDir($sourcePath, $targetPath)
     {
         $sourcePath = $this->filesystem->normalizePath($sourcePath);
-        if (! realpath($sourcePath)) {
+        if (!realpath($sourcePath)) {
             return false;
         }
 
@@ -154,7 +154,7 @@ class Filesystem
         $done = $total = 0;
         foreach ($iterator as $item) {
             $total++;
-            $fullpathTarget = $targetPath.'/'.$item->getBasename();
+            $fullpathTarget = $targetPath . '/' . $item->getBasename();
             $done += $item->isDir()
                 ? (int)$this->createDir($fullpathTarget)
                 : (int)$this->copyFile($item->getPathname(), $fullpathTarget);
@@ -171,14 +171,14 @@ class Filesystem
      */
     public function createDir($targetPath)
     {
-        $targetPath = $this->filesystem->normalizePath($targetPath) ? : '/';
+        $targetPath = $this->filesystem->normalizePath($targetPath) ?: '/';
 
         if (file_exists($targetPath)) {
             return @is_dir($targetPath);
         }
 
         $parentDir = dirname($targetPath);
-        while ('.' != $parentDir && ! is_dir($parentDir)) {
+        while ('.' != $parentDir && !is_dir($parentDir)) {
             $parentDir = dirname($parentDir);
         }
 
@@ -192,7 +192,7 @@ class Filesystem
             if ($permissions != ($permissions & ~umask())) {
                 $nameParts = explode('/', substr($targetPath, strlen($parentDir) + 1));
                 for ($i = 1, $count = count($nameParts); $i <= $count; $i++) {
-                    $dirname = $parentDir.'/'.implode('/', array_slice($nameParts, 0, $i));
+                    $dirname = $parentDir . '/' . implode('/', array_slice($nameParts, 0, $i));
                     @chmod($dirname, $permissions);
                 }
             }

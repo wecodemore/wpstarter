@@ -46,8 +46,8 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
     private $error = '';
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\IO $io
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
@@ -61,7 +61,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
 
     /**
      * @param \WCM\WPStarter\Setup\FileBuilder $builder
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      */
     public function __construct(FileBuilder $builder, Filesystem $filesystem)
     {
@@ -105,7 +105,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
         $to = "{$paths['root']}/{$paths['wp']}";
         $rootPathRel = $this->filesystemUtil->findShortestPathCode($from, $to, true);
         $build = $this->builder->build($paths, 'index.example', ['BOOTSTRAP_PATH' => $rootPathRel]);
-        if (! $this->filesystem->save($build, $this->targetPath($paths))) {
+        if (!$this->filesystem->save($build, $this->targetPath($paths))) {
             $this->error = 'Error creating index.php.';
 
             return self::ERROR;

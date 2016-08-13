@@ -23,35 +23,35 @@ final class Config implements \ArrayAccess
      * @var array
      */
     private static $defaults = [
-        'gitignore'             => true,
-        'env-example'           => true,
-        'env-file'              => '.env',
-        'move-content'          => false,
-        'content-dev-op'        => 'symlink',
-        'content-dev-dir'       => 'content-dev',
+        'gitignore' => true,
+        'env-example' => true,
+        'env-file' => '.env',
+        'move-content' => false,
+        'content-dev-op' => 'symlink',
+        'content-dev-dir' => 'content-dev',
         'register-theme-folder' => true,
-        'prevent-overwrite'     => ['.gitignore'],
-        'dropins'               => [],
-        'unknown-dropins'       => 'ask',
+        'prevent-overwrite' => ['.gitignore'],
+        'dropins' => [],
+        'unknown-dropins' => 'ask',
     ];
 
     /**
      * @var array
      */
     private static $validationMap = [
-        'gitignore'             => 'validateGitignore',
-        'env-example'           => 'validateBoolOrAskOrUrl',
-        'env-file'              => 'validatePath',
+        'gitignore' => 'validateGitignore',
+        'env-example' => 'validateBoolOrAskOrUrl',
+        'env-file' => 'validatePath',
         'register-theme-folder' => 'validateBoolOrAsk',
-        'move-content'          => 'validateBoolOrAsk',
-        'content-dev-dir'       => 'validatePath',
-        'content-dev-op'        => 'validateContentDevOperation',
-        'dropins'               => 'validatePathArray',
-        'unknown-dropins'       => 'validateBoolOrAsk',
-        'prevent-overwrite'     => 'validateOverwrite',
-        'verbosity'             => 'validateVerbosity',
-        'custom-steps'          => 'validateSteps',
-        'scripts'               => 'validateScripts'
+        'move-content' => 'validateBoolOrAsk',
+        'content-dev-dir' => 'validatePath',
+        'content-dev-op' => 'validateContentDevOperation',
+        'dropins' => 'validatePathArray',
+        'unknown-dropins' => 'validateBoolOrAsk',
+        'prevent-overwrite' => 'validateOverwrite',
+        'verbosity' => 'validateVerbosity',
+        'custom-steps' => 'validateSteps',
+        'scripts' => 'validateScripts'
     ];
 
     /**
@@ -75,7 +75,7 @@ final class Config implements \ArrayAccess
      * Allows to use config class as a DTO among steps.
      *
      * @param string $name
-     * @param mixed  $value
+     * @param mixed $value
      * @return static
      */
     public function appendConfig($name, $value)
@@ -146,10 +146,10 @@ final class Config implements \ArrayAccess
                 ? array_filter($value['custom'], 'is_string')
                 : [];
             $default = [
-                'wp'         => true,
+                'wp' => true,
                 'wp-content' => true,
-                'vendor'     => true,
-                'common'     => true,
+                'vendor' => true,
+                'common' => true,
             ];
             foreach ($value as $k => $v) {
                 if (array_key_exists($k, $default) && $this->validateBool($v) === false) {
@@ -198,7 +198,7 @@ final class Config implements \ArrayAccess
     {
         $path = filter_var(str_replace('\\', '/', $value), FILTER_SANITIZE_URL);
 
-        return $path ? : null;
+        return $path ?: null;
     }
 
     /**
@@ -254,7 +254,7 @@ final class Config implements \ArrayAccess
      */
     private function validateUrl($value)
     {
-        return filter_var($value, FILTER_SANITIZE_URL) ? : null;
+        return filter_var($value, FILTER_SANITIZE_URL) ?: null;
     }
 
     /**
@@ -263,7 +263,7 @@ final class Config implements \ArrayAccess
      */
     private function validateSteps($value)
     {
-        if (! is_array($value)) {
+        if (!is_array($value)) {
             return null;
         }
 
@@ -277,7 +277,7 @@ final class Config implements \ArrayAccess
             }
         }
 
-        return $steps ? : null;
+        return $steps ?: null;
     }
 
     /**
@@ -286,7 +286,7 @@ final class Config implements \ArrayAccess
      */
     private function validateScripts($value)
     {
-        if (! is_array($value)) {
+        if (!is_array($value)) {
             return null;
         }
 
@@ -306,7 +306,7 @@ final class Config implements \ArrayAccess
             }
         }
 
-        return $allScripts ? : null;
+        return $allScripts ?: null;
     }
 
     /**

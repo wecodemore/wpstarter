@@ -38,8 +38,8 @@ class FileBuilder
      * Templater class is used to apply the replacements.
      *
      * @param  \ArrayAccess $paths
-     * @param  string       $template
-     * @param  array        $vars
+     * @param  string $template
+     * @param  array $vars
      * @return string|bool  file content on success, false on failure
      */
     public function build(\ArrayAccess $paths, $template, array $vars = [])
@@ -48,24 +48,24 @@ class FileBuilder
             "{$paths['root']}/{$paths['starter']}/templates/{$template}"
         ));
 
-        if (! $template || ! is_file($template) || ! is_readable($template)) {
+        if (!$template || !is_file($template) || !is_readable($template)) {
             return false;
         }
         /** @var string $content */
         $content = $this->render(file_get_contents($template), $vars);
 
-        return $content ? : false;
+        return $content ?: false;
     }
 
     /**
      * @param  string $content
-     * @param  array  $vars
+     * @param  array $vars
      * @return string
      */
     public function render($content, array $vars)
     {
         foreach ($vars as $key => $value) {
-            $content = str_replace('{{{'.$key.'}}}', $value, $content);
+            $content = str_replace('{{{' . $key . '}}}', $value, $content);
         }
 
         return $content;

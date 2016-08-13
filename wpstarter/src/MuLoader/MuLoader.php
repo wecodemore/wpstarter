@@ -17,8 +17,8 @@ namespace WCM\WPStarter\MuLoader;
  */
 class MuLoader
 {
-    const PREFIX           = 'wcm_wps_';
-    const DATA_TRANSIENT   = 'plugins_data';
+    const PREFIX = 'wcm_wps_';
+    const DATA_TRANSIENT = 'plugins_data';
     const INSTALLED_OPTION = 'plugins_installed';
 
     /**
@@ -44,24 +44,24 @@ class MuLoader
      */
     public function __invoke($refresh = false)
     {
-        if (! defined('WPMU_PLUGIN_DIR') || ! is_dir(WPMU_PLUGIN_DIR) || defined('WP_INSTALLING')) {
+        if (!defined('WPMU_PLUGIN_DIR') || !is_dir(WPMU_PLUGIN_DIR) || defined('WP_INSTALLING')) {
             return;
         }
         static $phpFiles;
         static $transient;
         if (is_null($phpFiles)) {
-            $phpFiles = glob(WPMU_PLUGIN_DIR."/*/*.php");
+            $phpFiles = glob(WPMU_PLUGIN_DIR . "/*/*.php");
             if (empty($phpFiles)) {
                 return;
             }
         }
         if (is_null($transient)) {
-            $edited = @filemtime(WPMU_PLUGIN_DIR.'/.');
+            $edited = @filemtime(WPMU_PLUGIN_DIR . '/.');
             $edited or $edited = time();
-            $transient = md5(__CLASS__.$edited);
+            $transient = md5(__CLASS__ . $edited);
         }
 
-        $refresh or $this->plugins = get_site_transient(self::PREFIX.$transient);
+        $refresh or $this->plugins = get_site_transient(self::PREFIX . $transient);
         if (empty($this->plugins)) {
             $this->plugins = [];
             $refresh = true;
@@ -75,7 +75,7 @@ class MuLoader
     /**
      * Check and load each discovered files.
      *
-     * @param bool   $refresh
+     * @param bool $refresh
      * @param string $transient
      */
     private function loadPlugins($refresh, $transient)
@@ -84,7 +84,7 @@ class MuLoader
         foreach ($this->plugins as $key => $plugin) {
             list($file, $mu) = $plugin;
             $loaded = $this->loadPlugin($key, $file, $refresh, $transient);
-            if (! $loaded) {
+            if (!$loaded) {
                 $this->__invoke(true);
                 break;
             }
@@ -100,7 +100,7 @@ class MuLoader
      *
      * @param  string $key
      * @param  string $file
-     * @param  bool   $refresh
+     * @param  bool $refresh
      * @param  string $transient
      * @return bool
      */
@@ -122,8 +122,8 @@ class MuLoader
         }
 
         // If here, a non-readable or non-php file is cached: let's delete cache and restart
-        delete_site_transient(self::PREFIX.$transient);
-        delete_site_transient(self::PREFIX.self::DATA_TRANSIENT);
+        delete_site_transient(self::PREFIX . $transient);
+        delete_site_transient(self::PREFIX . self::DATA_TRANSIENT);
 
         return false;
     }
@@ -141,7 +141,7 @@ class MuLoader
      */
     private function handleInstallHooks(array $plugins)
     {
-        $triggered = get_site_option(MuLoader::PREFIX.self::INSTALLED_OPTION, []);
+        $triggered = get_site_option(MuLoader::PREFIX . self::INSTALLED_OPTION, []);
         $valid = array_intersect($triggered, $plugins);
         $toTrigger = array_diff($plugins, $triggered);
 
@@ -153,7 +153,7 @@ class MuLoader
         });
 
         if ($valid !== $triggered) {
-            update_site_option(MuLoader::PREFIX.self::INSTALLED_OPTION, $valid);
+            update_site_option(MuLoader::PREFIX . self::INSTALLED_OPTION, $valid);
         }
     }
 
@@ -162,12 +162,12 @@ class MuLoader
      *
      * Cache loaded files if needed and add plugins data to MU plugin screen.
      *
-     * @param bool   $refresh   Does data need to be cached?
+     * @param bool $refresh Does data need to be cached?
      * @param string $transient Transient name
      */
     private function afterLoading($refresh, $transient)
     {
-        $refresh and set_site_transient(self::PREFIX.$transient, $this->plugins, DAY_IN_SECONDS);
+        $refresh and set_site_transient(self::PREFIX . $transient, $this->plugins, DAY_IN_SECONDS);
         if (is_admin()) {
             add_filter('show_advanced_plugins', function ($bool, $type) use ($refresh) {
                 return $this->showPluginsData($bool, $type, $refresh);
@@ -183,7 +183,7 @@ class MuLoader
      */
     private function findPluginFile($phpFile)
     {
-        if (! is_file($phpFile) || ! is_readable($phpFile)) {
+        if (!is_file($phpFile) || !is_readable($phpFile)) {
             return;
         }
 
@@ -191,7 +191,7 @@ class MuLoader
         $dirname = dirname($phpFile);
         $this->guessMuPluginFile($dirname);
 
-        if (! array_key_exists($dirname, $this->folders)) {
+        if (!array_key_exists($dirname, $this->folders)) {
             $this->folders[$dirname] = ['done' => false, 'count' => 0];
             $this->lastParsedFolder = $dirname;
         }
@@ -232,7 +232,7 @@ class MuLoader
             && array_key_exists($this->lastParsedFolder, $this->folders)
         ) {
             $lastData = $this->folders[$this->lastParsedFolder];
-            $pluginFile = $lastData['done'] || lastData['count'] !== 1 ? null : $lastData['last'];
+            $pluginFile = $lastData['done'] || $lastData['count'] !== 1 ? null : $lastData['last'];
 
             if (is_file($pluginFile)) {
                 $this->folders[$this->lastParsedFolder]['done'] = true;
@@ -262,7 +262,7 @@ class MuLoader
             return false;
         }
 
-        $glob = glob($path.'/*.php');
+        $glob = glob($path . '/*.php');
         if (count($glob) > 1) {
             return false;
         }
@@ -271,8 +271,8 @@ class MuLoader
         // or not, because WordPress has no plugin header to specify it's a MU plugin, so now we try
         // to look at `composer.json` `"type"` setting, if any `composer.json` is there.
 
-        $composer = $path.'/composer.json';
-        if (! is_file($composer) || ! is_readable($composer)) {
+        $composer = $path . '/composer.json';
+        if (!is_file($composer) || !is_readable($composer)) {
             return false;
         }
 
@@ -291,9 +291,9 @@ class MuLoader
     /**
      * Runs on 'show_advanced_plugins' hook to show data of MU plugins loaded by this class.
      *
-     * @param  bool   $bool
+     * @param  bool $bool
      * @param  string $type
-     * @param  bool   $refresh
+     * @param  bool $refresh
      * @return bool
      */
     private function showPluginsData($bool, $type, $refresh)
@@ -326,7 +326,7 @@ class MuLoader
      */
     private function getPluginsData($refresh)
     {
-        $data = $refresh ? [] : get_site_transient(self::PREFIX.self::DATA_TRANSIENT);
+        $data = $refresh ? [] : get_site_transient(self::PREFIX . self::DATA_TRANSIENT);
 
         is_array($data) or $data = [];
         $oldKeys = $data ? array_keys($data) : [];
@@ -336,7 +336,7 @@ class MuLoader
             // remove current  key from old keys, if there
             $oldKeys and $oldKeys = array_diff($oldKeys, [$key]);
             // get fresh plugin data if not in transient
-            if (empty($data[$key]) || ! is_array($data[$key]) || ! isset($data[$key]['Name'])) {
+            if (empty($data[$key]) || !is_array($data[$key]) || !isset($data[$key]['Name'])) {
                 $data[$key] = $this->getPluginData($key, $file, $mu);
             }
         }
@@ -348,7 +348,8 @@ class MuLoader
             unset($data[$key]);
         }
 
-        $refresh and set_site_transient(self::PREFIX.self::DATA_TRANSIENT, $data, WEEK_IN_SECONDS);
+        $refresh and set_site_transient(self::PREFIX . self::DATA_TRANSIENT, $data,
+            WEEK_IN_SECONDS);
 
         return $data;
     }
@@ -364,7 +365,7 @@ class MuLoader
      *
      * @param  string $key
      * @param  string $file
-     * @param  bool   $isMu
+     * @param  bool $isMu
      * @return array
      */
     private function getPluginData($key, $file, $isMu)

@@ -50,8 +50,8 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
     private $themeDir = true;
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\IO $io
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
@@ -96,9 +96,9 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
     {
         $this->paths = $paths;
         $toCheck = [
-            realpath($paths['root'].'/'.$paths['starter']),
-            realpath($paths['root'].'/'.$paths['vendor'].'/autoload.php'),
-            realpath($paths['root'].'/'.$paths['wp'].'/wp-settings.php'),
+            realpath($paths['root'] . '/' . $paths['starter']),
+            realpath($paths['root'] . '/' . $paths['vendor'] . '/autoload.php'),
+            realpath($paths['root'] . '/' . $paths['wp'] . '/wp-settings.php'),
         ];
 
         if (array_filter($toCheck) !== $toCheck) {
@@ -114,13 +114,13 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
         ) {
             $this->error =
                 'Content folder must share parent folder with WP folder, or be contained in it.'
-                .' Use the "wordpress-content-dir" setting to properly set it';
+                . ' Use the "wordpress-content-dir" setting to properly set it';
 
             return self::ERROR;
         }
         // no love for this, but https://core.trac.wordpress.org/ticket/31620 makes it necessary
         if ($paths['wp-content'] && $this->config['move-content'] !== true) {
-            $themeDir = $paths['root'].'/'.$paths['wp-content'].'/themes';
+            $themeDir = $paths['root'] . '/' . $paths['wp-content'] . '/themes';
             $this->themeDir = $this->filesystem->createDir($themeDir);
         }
 
@@ -148,10 +148,10 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
      */
     public function postProcess(IO $io)
     {
-        if (! $this->themeDir) {
+        if (!$this->themeDir) {
             $lines = [
                 'Default theme folder:',
-                '"'.$this->paths['wp-content'].'/themes" does not exist.',
+                '"' . $this->paths['wp-content'] . '/themes" does not exist.',
                 'The site may be unusable until you create it (even empty).',
             ];
             $io->block($lines, 'red', true);

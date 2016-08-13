@@ -13,53 +13,63 @@ namespace WCM\WPStarter\Setup\Steps;
 use WCM\WPStarter\Setup\Config;
 
 /**
- * A "working unit" for WP Starter. Steps are processed one-by-one and any step performs a tasks.
- *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
- * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
+ * @license http://opensource.org/licenses/MIT MIT
  */
-interface StepInterface
+final class NullStep implements StepInterface
 {
-    const ERROR = 1;
-    const SUCCESS = 2;
-    const NONE = 4;
 
     /**
-     * Return an unique name for the step.
+     * Implements the interface doing nothing.
      *
      * @return string
      */
-    public function name();
+    public function name()
+    {
+        return '';
+    }
 
     /**
-     * Return true if the step is allowed, i.e. the run method have to be called or not
+     * Implements the interface doing nothing.
      *
      * @param  \WCM\WPStarter\Setup\Config $config
      * @param  \ArrayAccess $paths
      * @return bool
      */
-    public function allowed(Config $config, \ArrayAccess $paths);
+    public function allowed(Config $config, \ArrayAccess $paths)
+    {
+        return false;
+    }
 
     /**
-     * Process the step.
+     * Implements the interface doing nothing.
      *
      * @param  \ArrayAccess $paths Have to return one of the step constants.
      * @return int
      */
-    public function run(\ArrayAccess $paths);
+    public function run(\ArrayAccess $paths)
+    {
+        return self::NONE;
+    }
 
     /**
-     * Return error message if any.
+     * Implements the interface doing nothing.
      *
      * @return string
      */
-    public function error();
+    public function error()
+    {
+        return '';
+    }
 
     /**
-     * Return success message if any.
+     * Implements the interface doing nothing.
      *
      * @return string
      */
-    public function success();
+    public function success()
+    {
+        return '';
+    }
 }

@@ -51,8 +51,8 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
     private $paths;
 
     /**
-     * @param \WCM\WPStarter\Setup\IO          $io
-     * @param \WCM\WPStarter\Setup\Filesystem  $filesystem
+     * @param \WCM\WPStarter\Setup\IO $io
+     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      * @param \WCM\WPStarter\Setup\FileBuilder $filebuilder
      * @return static
      */
@@ -65,7 +65,7 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
     }
 
     /**
-     * @param \WCM\WPStarter\Setup\IO         $io
+     * @param \WCM\WPStarter\Setup\IO $io
      * @param \WCM\WPStarter\Setup\Filesystem $filesystem
      */
     public function __construct(IO $io, Filesystem $filesystem)
@@ -90,7 +90,7 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
     {
         $this->paths = $paths;
 
-        return $config['move-content'] !== false && ! empty($paths['wp-content']);
+        return $config['move-content'] !== false && !empty($paths['wp-content']);
     }
 
     /**
@@ -107,7 +107,7 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
         $lines = [
             'Do you want to move default plugins and themes from',
             'WordPress package wp-content dir to content folder:',
-            '"'.$full.'"',
+            '"' . $full . '"',
         ];
 
         return $io->confirm($lines, true);
@@ -124,7 +124,7 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
             return self::NONE;
         }
 
-        if (! $this->filesystem->createDir($to)) {
+        if (!$this->filesystem->createDir($to)) {
             $this->error = "The folder {$to} does not exists and was not possible to create it.";
         }
 

@@ -50,7 +50,7 @@ class Salter
      */
     public function keys()
     {
-        if (! is_array($this->result)) {
+        if (!is_array($this->result)) {
             $this->result = [];
             $this->randCb = function_exists('mt_rand') ? 'mt_rand' : 'rand';
             foreach (self::$keys as $key) {
