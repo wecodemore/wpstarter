@@ -54,7 +54,7 @@ class WPCliStep implements FileStepInterface, BlockingStepInterface
 	 */
 	public function targetPath( ArrayAccess $paths )
 	{
-		return rtrim( "{$paths['root']}/{$paths['wp-parent']}", "/" )."/wp-cli.yml";
+		return rtrim( "{$paths['root']}/{$paths['wp']}", "/" )."/wp-cli.yml";
 	}
 
 	/**
