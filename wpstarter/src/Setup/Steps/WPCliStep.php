@@ -78,11 +78,8 @@ class WPCliStep implements FileStepInterface, BlockingStepInterface
 	public function run( ArrayAccess $paths )
 	{
 		$root        = rtrim( $paths['root'], '/' );
-		$parent      = rtrim( ltrim( $paths['wp'], '/' ), '/' );
 
-		$this->vars  = array(
-			'WP_INSTALL_PATH' => "{$root}/{$parent}",
-		);
+		$this->vars  = array( 'WP_INSTALL_PATH' => $root, );
 		$build       = $this->builder->build(
 			$paths,
 			'wp-cli.yml.example',
