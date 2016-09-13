@@ -25,20 +25,17 @@ final class Loader extends DotenvLoader
      * Set variable using Dotenv loader and store the name in class var
      *
      * @param string $name
-     * @param mixed  $value
+     * @param mixed $value
      */
     public function setEnvironmentVariable($name, $value = null)
     {
         list($name, $value) = $this->normaliseEnvironmentVariable($name, $value);
 
-        if ($this->immutable === true && ! is_null($this->getEnvironmentVariable($name))) {
-            return;
-        }
+        in_array($name, $this->allVars, true) or $this->allVars[] = $name;
 
-        putenv("$name=$value");
-        $_ENV[$name] = $value;
-        $_SERVER[$name] = $value;
-        $this->allVars[] = $name;
+        if (!$this->immutable || is_null($this->getEnvironmentVariable($name))) {
+            parent::setEnvironmentVariable($name, $value);
+        }
     }
 
     /**

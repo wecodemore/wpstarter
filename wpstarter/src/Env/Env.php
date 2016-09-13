@@ -185,7 +185,7 @@ final class Env
             $filePath = rtrim(str_replace('\\', '/', $path), '/').'/'.$file;
             $loader = new Loader($filePath, true);
             $loader->load();
-            self::$loaded = new static($loader->allVarNames());
+            self::$loaded = new static($loader->allVarNames(), $loader);
         }
 
         return self::$loaded;
@@ -211,10 +211,11 @@ final class Env
 
     /**
      * @param array $vars
+     * @param Loader|\WCM\WPStarter\Env\Loader $loader
      */
-    public function __construct(array $vars)
+    public function __construct(array $vars, Loader $loader)
     {
-        $this->vars = $this->process($vars);
+        $this->vars = $this->process($vars, $loader);
     }
 
     /**
@@ -229,14 +230,19 @@ final class Env
 
     /**
      * @param  array array
+     * @param Loader $loader
      * @return array
      */
-    private function process(array $vars)
+    private function process(array $vars, Loader $loader)
     {
         $values = array();
         $constants = self::wpConstants();
         foreach ($vars as $var) {
-            $value = getenv($var);
+            $value =  $loader->getEnvironmentVariable($var);
+            if (is_null($value)) {
+                continue;
+            }
+
             $values[$var] = $value;
 
             if (in_array($var, $constants, true)) {
