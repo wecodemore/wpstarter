@@ -15,7 +15,6 @@ use ArrayAccess;
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class OverwriteHelper
 {
@@ -53,12 +52,13 @@ class OverwriteHelper
      * Return true if a file does not exist or exists but should be overwritten according to config.
      * Ask user if necessary.
      *
-     * @param  string $file
+     * @param string $file
+     *
      * @return bool
      */
     public function should($file)
     {
-        if (! is_file($file)) {
+        if (!is_file($file)) {
             return true;
         }
         if ($this->config === 'ask') {
@@ -81,14 +81,15 @@ class OverwriteHelper
     /**
      * Check if a file is set to not be overwritten using shell patterns.
      *
-     * @param  string $file
+     * @param string $file
+     *
      * @return bool
      */
     private function patternCheck($file)
     {
         $overwrite = true;
         $config = $this->config;
-        while ($overwrite === true && ! empty($config)) {
+        while ($overwrite === true && !empty($config)) {
             $overwrite = fnmatch(array_shift($config), $file, FNM_NOESCAPE) ? false : true;
         }
 
@@ -98,7 +99,8 @@ class OverwriteHelper
     /**
      * Normalize path for no issue on str_replace.
      *
-     * @param  string $path
+     * @param string $path
+     *
      * @return string
      */
     private function normalise($path)

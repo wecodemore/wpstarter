@@ -20,7 +20,6 @@ use Exception;
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class DropinStep implements FileStepInterface
 {
@@ -74,7 +73,7 @@ class DropinStep implements FileStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function allowed(Config $config, ArrayAccess $paths)
     {
@@ -89,12 +88,12 @@ class DropinStep implements FileStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function run(ArrayAccess $paths)
     {
         $dest = $this->targetPath($paths);
-        if (! $this->overwrite->should($dest)) {
+        if (!$this->overwrite->should($dest)) {
             $this->io->comment("  - {$this->name} skipped.");
 
             return;
@@ -105,7 +104,7 @@ class DropinStep implements FileStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function error()
     {
@@ -113,7 +112,7 @@ class DropinStep implements FileStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function success()
     {
@@ -121,7 +120,7 @@ class DropinStep implements FileStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function targetPath(ArrayAccess $paths)
     {
@@ -138,7 +137,7 @@ class DropinStep implements FileStepInterface
     {
         $remote = new UrlDownloader($url);
         $name = basename($dest);
-        if (! $remote->save($dest)) {
+        if (!$remote->save($dest)) {
             $this->error .= "Impossible to download and save {$name}: ".$remote->error();
         } else {
             $this->success .= "<comment>{$name}</comment> downloaded and saved successfully.";
@@ -168,8 +167,9 @@ class DropinStep implements FileStepInterface
      * Check if a string is a valid relative path or an url.
      * Return false if none of them.
      *
-     * @param  string       $url
-     * @param  \ArrayAccess $paths
+     * @param string       $url
+     * @param \ArrayAccess $paths
+     *
      * @return array
      */
     private function action($url, ArrayAccess $paths)

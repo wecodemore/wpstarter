@@ -22,7 +22,6 @@ use Exception;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostProcessStepInterface
 {
@@ -62,7 +61,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function allowed(Config $config, ArrayAccess $paths)
     {
@@ -70,11 +69,11 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
         $this->paths = $paths;
         $env = $paths['root'].'/.env';
 
-        return $config['env-example'] !== false && ! is_file($env);
+        return $config['env-example'] !== false && !is_file($env);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function targetPath(ArrayAccess $paths)
     {
@@ -82,7 +81,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function question(Config $config, IO $io)
     {
@@ -99,7 +98,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function run(ArrayAccess $paths)
     {
@@ -121,11 +120,11 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function postProcess(IO $io)
     {
-        if (! is_file($this->paths['root'].'/.env')) {
+        if (!is_file($this->paths['root'].'/.env')) {
             $lines = array(
                 'Remember you need a .env file with DB settings',
                 'to make your site fully functional.',
@@ -138,20 +137,21 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     /**
      * Download a remote .env.example in root folder.
      *
-     * @param  string       $url
-     * @param  string       $dest
-     * @param  \ArrayAccess $paths
+     * @param string       $url
+     * @param string       $dest
+     * @param \ArrayAccess $paths
+     *
      * @return int
      */
     private function download($url, $dest, ArrayAccess $paths)
     {
-        if (! UrlDownloader::checkSoftware()) {
+        if (!UrlDownloader::checkSoftware()) {
             $this->io->comment('WP Starter needs cUrl installed to download files from url.');
 
             return $this->copy($paths, $dest);
         }
         $remote = new UrlDownloader($url);
-        if (! $remote->save($dest)) {
+        if (!$remote->save($dest)) {
             $this->error = 'Error on downloading and save .env.example: '.$remote->error().'.';
 
             return self::ERROR;
@@ -163,16 +163,17 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     /**
      * Copy a .env.example in root folder.
      *
-     * @param  \ArrayAccess $paths
-     * @param               $dest
-     * @param  null         $source
+     * @param \ArrayAccess $paths
+     * @param              $dest
+     * @param null         $source
+     *
      * @return int
      */
     private function copy(ArrayAccess $paths, $dest, $source = null)
     {
         if (is_null($source)) {
             $pieces = array($paths['starter'], 'templates');
-            if (! $this->config['is-root']) {
+            if (!$this->config['is-root']) {
                 array_unshift($pieces, $paths['root']);
             }
             $source = implode('/', array_merge($pieces, array('.env.example')));
@@ -190,7 +191,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function error()
     {
@@ -198,7 +199,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function skipped()
     {
@@ -206,7 +207,7 @@ class EnvExampleStep implements FileStepInterface, OptionalStepInterface, PostPr
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function success()
     {

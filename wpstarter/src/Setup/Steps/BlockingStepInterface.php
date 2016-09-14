@@ -15,7 +15,6 @@ namespace WCM\WPStarter\Setup\Steps;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 interface BlockingStepInterface extends StepInterface
 {

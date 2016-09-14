@@ -18,15 +18,15 @@ use WCM\WPStarter\Setup\IO;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 interface OptionalStepInterface extends StepInterface
 {
     /**
-     * Ask a question if necessary and return result;
+     * Ask a question if necessary and return result;.
      *
-     * @param  \WCM\WPStarter\Setup\Config $config
-     * @param  \WCM\WPStarter\Setup\IO     $io
+     * @param \WCM\WPStarter\Setup\Config $config
+     * @param \WCM\WPStarter\Setup\IO     $io
+     *
      * @return mixed
      */
     public function question(Config $config, IO $io);

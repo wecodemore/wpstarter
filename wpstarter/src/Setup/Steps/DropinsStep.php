@@ -20,7 +20,6 @@ use Exception;
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class DropinsStep implements StepInterface
 {
@@ -73,17 +72,17 @@ class DropinsStep implements StepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function allowed(Config $config, ArrayAccess $paths)
     {
         $this->config = $config;
 
-        return ! empty($config['dropins']) && ! empty($paths['wp-content']);
+        return !empty($config['dropins']) && !empty($paths['wp-content']);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function run(ArrayAccess $paths)
     {
@@ -117,7 +116,7 @@ class DropinsStep implements StepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function error()
     {
@@ -125,7 +124,7 @@ class DropinsStep implements StepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function success()
     {
@@ -139,7 +138,8 @@ class DropinsStep implements StepInterface
      * Via "unknown-dropins" config is possible to change how this method acts in case of unknown
      * dropins.
      *
-     * @param  string $name
+     * @param string $name
+     *
      * @return bool
      */
     private function validName($name)
@@ -149,36 +149,37 @@ class DropinsStep implements StepInterface
         }
         $ext = pathinfo($name, PATHINFO_EXTENSION);
         if (strtolower($ext) !== 'php') {
-            return $this->config['unknown-dropins'] === "ask" && $this->ask($name, 0);
+            return $this->config['unknown-dropins'] === 'ask' && $this->ask($name, 0);
         }
         $name = substr($name, 0, -4);
         $languages = $this->fetchLanguages();
 
         return $languages === false
-            ? $this->config['unknown-dropins'] === "ask" && $this->ask($name, 1)
+            ? $this->config['unknown-dropins'] === 'ask' && $this->ask($name, 1)
             : (
                 in_array($name, $languages, true)
-                || ($this->config['unknown-dropins'] === "ask" && $this->ask($name, 2))
+                || ($this->config['unknown-dropins'] === 'ask' && $this->ask($name, 2))
             );
     }
 
     /**
      * Fetch languages from wordpress.org API.
      *
-     * @param  bool       $ssl
+     * @param bool $ssl
+     *
      * @return array|bool
      */
     private function fetchLanguages($ssl = true)
     {
         static $languages;
-        if (! is_null($languages)) {
+        if (!is_null($languages)) {
             return $languages;
         }
         $url = $ssl ? 'https' : 'http';
         $url .= '://api.wordpress.org/translations/core/1.0/?version=';
         $remote = new UrlDownloader($url.$this->config['wp-version']);
         $result = $remote->fetch(true);
-        if (! $result) {
+        if (!$result) {
             return $ssl ? $this->fetchLanguages(false) : false;
         }
         try {
@@ -203,8 +204,9 @@ class DropinsStep implements StepInterface
      * Asks to user what to do in case of unknown dropins.
      * Question is different based on situations.
      *
-     * @param  string $name
-     * @param  int    $question
+     * @param string $name
+     * @param int    $question
+     *
      * @return bool
      */
     private function ask($name, $question = 0)
@@ -227,7 +229,7 @@ class DropinsStep implements StepInterface
             default:
                 $lines = array(
                     "{$name} seems not a valid dropin file.",
-                    "Do you want to proceed with it anyway?",
+                    'Do you want to proceed with it anyway?',
                 );
                 break;
 

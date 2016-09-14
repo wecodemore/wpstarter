@@ -21,8 +21,9 @@ interface StepperInterface extends StepInterface
     /**
      * Add a step to be processed.
      *
-     * @param  \WCM\WPStarter\Setup\Steps\StepInterface $step
-     * @return \WCM\WPStarter\Setup\StepperInterface    Itself for fluent interface
+     * @param \WCM\WPStarter\Setup\Steps\StepInterface $step
+     *
+     * @return \WCM\WPStarter\Setup\StepperInterface Itself for fluent interface
      */
     public function addStep(StepInterface $step);
 }

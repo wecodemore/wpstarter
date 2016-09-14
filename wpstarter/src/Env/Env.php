@@ -15,7 +15,6 @@ namespace WCM\WPStarter\Env;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WP Starter
  */
 final class Env
 {
@@ -86,66 +85,66 @@ final class Env
     );
 
     private static $isString = array(
-        "ABSPATH",
-        "ADMIN_COOKIE_PATH",
-        "AUTH_COOKIE",
-        "BLOGUPLOADDIR",
-        "COOKIEHASH",
-        "COOKIEPATH",
-        "COOKIE_DOMAIN",
-        "CUSTOM_USER_META_TABLE",
-        "CUSTOM_USER_TABLE",
-        "DB_CHARSET",
-        "DB_COLLATE",
-        "DB_HOST",
-        "DB_NAME",
-        "DB_PASSWORD",
-        "DB_TABLE_PREFIX",
-        "DB_USER",
-        "DOMAIN_CURRENT_SITE",
-        "ERRORLOGFILE",
-        "FS_METHOD",
-        "FTP_BASE",
-        "FTP_CONTENT_DIR",
-        "FTP_HOST",
-        "FTP_PASS",
-        "FTP_PLUGIN_DIR",
-        "FTP_PRIKEY",
-        "FTP_PUBKEY",
-        "FTP_SSH",
-        "FTP_SSL",
-        "FTP_USER",
-        "LOGGED_IN_COOKIE",
-        "MU_BASE",
-        "NOBLOGREDIRECT",
-        "PASS_COOKIE",
-        "PATH_CURRENT_SITE",
-        "PLUGINS_COOKIE_PATH",
-        "SECURE_AUTH_COOKIE",
-        "SITECOOKIEPATH",
-        "TEST_COOKIE",
-        "UPLOADBLOGSDIR",
-        "UPLOADS",
-        "USER_COOKIE",
-        "WPLANG",
-        "WPMU_PLUGIN_DIR",
-        "WPMU_PLUGIN_URL",
-        "WP_ACCESSIBLE_HOSTS",
-        "WP_CONTENT_DIR",
-        "WP_CONTENT_URL",
-        "WP_DEFAULT_THEME",
-        "WP_HOME",
-        "WP_LANG_DIR",
-        "WP_MAX_MEMORY_LIMIT",
-        "WP_MEMORY_LIMIT",
-        "WP_PLUGIN_DIR",
-        "WP_PLUGIN_URL",
-        "WP_PROXY_BYPASS_HOSTS",
-        "WP_PROXY_HOST",
-        "WP_PROXY_PASSWORD",
-        "WP_PROXY_USERNAME",
-        "WP_SITEURL",
-        "WP_TEMP_DIR",
+        'ABSPATH',
+        'ADMIN_COOKIE_PATH',
+        'AUTH_COOKIE',
+        'BLOGUPLOADDIR',
+        'COOKIEHASH',
+        'COOKIEPATH',
+        'COOKIE_DOMAIN',
+        'CUSTOM_USER_META_TABLE',
+        'CUSTOM_USER_TABLE',
+        'DB_CHARSET',
+        'DB_COLLATE',
+        'DB_HOST',
+        'DB_NAME',
+        'DB_PASSWORD',
+        'DB_TABLE_PREFIX',
+        'DB_USER',
+        'DOMAIN_CURRENT_SITE',
+        'ERRORLOGFILE',
+        'FS_METHOD',
+        'FTP_BASE',
+        'FTP_CONTENT_DIR',
+        'FTP_HOST',
+        'FTP_PASS',
+        'FTP_PLUGIN_DIR',
+        'FTP_PRIKEY',
+        'FTP_PUBKEY',
+        'FTP_SSH',
+        'FTP_SSL',
+        'FTP_USER',
+        'LOGGED_IN_COOKIE',
+        'MU_BASE',
+        'NOBLOGREDIRECT',
+        'PASS_COOKIE',
+        'PATH_CURRENT_SITE',
+        'PLUGINS_COOKIE_PATH',
+        'SECURE_AUTH_COOKIE',
+        'SITECOOKIEPATH',
+        'TEST_COOKIE',
+        'UPLOADBLOGSDIR',
+        'UPLOADS',
+        'USER_COOKIE',
+        'WPLANG',
+        'WPMU_PLUGIN_DIR',
+        'WPMU_PLUGIN_URL',
+        'WP_ACCESSIBLE_HOSTS',
+        'WP_CONTENT_DIR',
+        'WP_CONTENT_URL',
+        'WP_DEFAULT_THEME',
+        'WP_HOME',
+        'WP_LANG_DIR',
+        'WP_MAX_MEMORY_LIMIT',
+        'WP_MEMORY_LIMIT',
+        'WP_PLUGIN_DIR',
+        'WP_PLUGIN_URL',
+        'WP_PROXY_BYPASS_HOSTS',
+        'WP_PROXY_HOST',
+        'WP_PROXY_PASSWORD',
+        'WP_PROXY_USERNAME',
+        'WP_SITEURL',
+        'WP_TEMP_DIR',
     );
 
     /**
@@ -169,8 +168,9 @@ final class Env
     private $vars;
 
     /**
-     * @param  string                        $path
-     * @param  string                        $file
+     * @param string $path
+     * @param string $file
+     *
      * @return \WCM\WPStarter\Env\Env|static
      */
     public static function load($path, $file = '.env')
@@ -178,7 +178,7 @@ final class Env
         if (is_null(self::$loaded)) {
             self::wpConstants();
 
-            if (! is_string($file)) {
+            if (!is_string($file)) {
                 $file = '.env';
             }
 
@@ -210,7 +210,7 @@ final class Env
     }
 
     /**
-     * @param array $vars
+     * @param array                            $vars
      * @param Loader|\WCM\WPStarter\Env\Loader $loader
      */
     public function __construct(array $vars, Loader $loader)
@@ -219,7 +219,7 @@ final class Env
     }
 
     /**
-     * Return all vars have been set
+     * Return all vars have been set.
      *
      * @return array
      */
@@ -231,6 +231,7 @@ final class Env
     /**
      * @param  array array
      * @param Loader $loader
+     *
      * @return array
      */
     private function process(array $vars, Loader $loader)
@@ -238,7 +239,7 @@ final class Env
         $values = array();
         $constants = self::wpConstants();
         foreach ($vars as $var) {
-            $value =  $loader->getEnvironmentVariable($var);
+            $value = $loader->getEnvironmentVariable($var);
             if (is_null($value)) {
                 continue;
             }
@@ -274,7 +275,8 @@ final class Env
     /**
      * Checks that a value is a valid string representation of octal int file permission code.
      *
-     * @param  string   $mod
+     * @param string $mod
+     *
      * @return int|null
      */
     private function checkMod($mod)

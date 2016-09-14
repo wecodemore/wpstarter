@@ -23,7 +23,6 @@ use SplObjectStorage;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class Stepper implements StepperInterface, PostProcessStepInterface
 {
@@ -70,7 +69,7 @@ class Stepper implements StepperInterface, PostProcessStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function addStep(StepInterface $step)
     {
@@ -80,20 +79,21 @@ class Stepper implements StepperInterface, PostProcessStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function allowed(Config $config, ArrayAccess $paths)
     {
         $this->config = $config;
         $wp_config = $paths['root'].'/wp-config.php';
 
-        return $config['prevent-overwrite'] !== 'hard' || ! is_file($wp_config);
+        return $config['prevent-overwrite'] !== 'hard' || !is_file($wp_config);
     }
 
     /**
      * Process all added steps.
      *
-     * @param  \ArrayAccess $paths
+     * @param \ArrayAccess $paths
+     *
      * @return int
      */
     public function run(ArrayAccess $paths)
@@ -105,7 +105,7 @@ class Stepper implements StepperInterface, PostProcessStepInterface
             $step = $this->steps->current();
             /** @var int $result */
             $result = $this->shouldProcess($step, $paths) ? $step->run($paths) : 0;
-            if (! $this->handleResult($step, $result)) {
+            if (!$this->handleResult($step, $result)) {
                 return $this->finalMessage();
             }
             $step instanceof PostProcessStepInterface and $this->postProcessSteps->attach($step);
@@ -161,8 +161,9 @@ class Stepper implements StepperInterface, PostProcessStepInterface
     }
 
     /**
-     * @param  \WCM\WPStarter\Setup\Steps\StepInterface $step
-     * @param  \ArrayAccess                             $paths
+     * @param \WCM\WPStarter\Setup\Steps\StepInterface $step
+     * @param \ArrayAccess                             $paths
+     *
      * @return bool
      */
     private function shouldProcess(StepInterface $step, ArrayAccess $paths)
@@ -170,13 +171,13 @@ class Stepper implements StepperInterface, PostProcessStepInterface
         $comment = '';
         $process = $step->allowed($this->config, $paths);
         if ($process && $step instanceof FileStepInterface) {
-            /** @var \WCM\WPStarter\Setup\Steps\FileStepInterface $step */
+            /* @var \WCM\WPStarter\Setup\Steps\FileStepInterface $step */
             $path = $step->targetPath($paths);
             $process = $this->overwrite->should($path);
             $comment = $process ? '' : '- '.basename($path).' exists and will be preserved.';
         }
         if ($process && $step instanceof OptionalStepInterface) {
-            /** @var \WCM\WPStarter\Setup\Steps\OptionalStepInterface $step */
+            /* @var \WCM\WPStarter\Setup\Steps\OptionalStepInterface $step */
             $process = $step->question($this->config, $this->io);
             $comment = $process ? '' : $step->skipped();
         }
@@ -190,8 +191,9 @@ class Stepper implements StepperInterface, PostProcessStepInterface
      * Increment error count in case of error.
      * Return false in case of error for blocking steps.
      *
-     * @param  \WCM\WPStarter\Setup\Steps\StepInterface $step
-     * @param  int                                      $result
+     * @param \WCM\WPStarter\Setup\Steps\StepInterface $step
+     * @param int                                      $result
+     *
      * @return bool
      */
     private function handleResult(StepInterface $step, $result)
@@ -201,7 +203,7 @@ class Stepper implements StepperInterface, PostProcessStepInterface
         }
         if ($result & StepInterface::ERROR) {
             $this->printMessages($step->error(), true);
-            $this->errors++;
+            ++$this->errors;
             if ($step instanceof BlockingStepInterface) {
                 return false;
             }
