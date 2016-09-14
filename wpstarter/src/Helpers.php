@@ -15,15 +15,15 @@ namespace WCM\WPStarter;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class Helpers
 {
     /**
      * Load all the environment variables using Dotenv class and return them.
      *
-     * @param  string $dir
-     * @param  string $file
+     * @param string $dir
+     * @param string $file
+     *
      * @return array
      */
     public static function settings($dir, $file = '.env')
@@ -39,7 +39,7 @@ class Helpers
         );
 
         foreach ($required as $key) {
-            if (! isset($settings[$key]) || empty($settings[$key])) {
+            if (!isset($settings[$key]) || empty($settings[$key])) {
                 $names = implode(', ', $required);
                 throw new \RuntimeException($names.' environment variables are required.');
             }
@@ -58,17 +58,42 @@ class Helpers
      */
     public static function addHook($hook, $callable, $priority = 10, $argsNum = 1)
     {
-        if (! is_callable($callable) || function_exists('add_action')) {
+        // sanity check
+        if (
+            !is_callable($callable)
+            || !is_scalar($hook)
+            || !$hook
+            || !is_numeric($priority)
+            || !is_int($argsNum)) {
+
             return;
         }
+
+        $hook = (string)$hook;
+
+        if (function_exists('add_filter')) {
+            add_action($hook, $callable, $priority, $argsNum);
+
+            return;
+        }
+
+        if (defined(ABSPATH) && is_file(ABSPATH.'wp-includes/plugin.php')) {
+            require_once ABSPATH.'wp-includes/plugin.php';
+            if (class_exists('WP_Hook')) {
+                add_filter($hook, $callable, $priority, $argsNum);
+
+                return;
+            }
+        }
+
         global $wp_filter;
-        if (! is_array($wp_filter)) {
+        if (!is_array($wp_filter)) {
             $wp_filter = array();
         }
-        if (! isset($wp_filter[$hook])) {
+        if (!isset($wp_filter[$hook])) {
             $wp_filter[$hook] = array();
         }
-        if (! isset($wp_filter[$hook][$priority])) {
+        if (!isset($wp_filter[$hook][$priority])) {
             $wp_filter[$hook][$priority] = array();
         }
         /** @var \Closure|object $function */
@@ -78,7 +103,7 @@ class Helpers
                 return call_user_func_array($callable, func_get_args());
             };
         $wp_filter[$hook][$priority][spl_object_hash($function)] = array(
-            'function'      => $function,
+            'function' => $function,
             'accepted_args' => $argsNum,
         );
     }
