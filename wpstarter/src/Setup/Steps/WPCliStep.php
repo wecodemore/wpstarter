@@ -54,7 +54,7 @@ class WPCliStep implements FileStepInterface, BlockingStepInterface
 	 */
 	public function targetPath( ArrayAccess $paths )
 	{
-		return rtrim( "{$paths['root']}/{$paths['wp']}", "/" )."/wp-cli.yml";
+		return rtrim( $paths['root'], "/" )."/wp-cli.yml";
 	}
 
 	/**
@@ -77,9 +77,9 @@ class WPCliStep implements FileStepInterface, BlockingStepInterface
 	 */
 	public function run( ArrayAccess $paths )
 	{
-		$root        = rtrim( $paths['root'], '/' );
+		$wp_install_path = rtrim( "{$paths['root']}/{$paths['wp']}", '/' );
 
-		$this->vars  = array( 'WP_INSTALL_PATH' => $root, );
+		$this->vars  = array( 'WP_INSTALL_PATH' => $wp_install_path, );
 		$build       = $this->builder->build(
 			$paths,
 			'wp-cli.yml.example',
