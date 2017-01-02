@@ -1,13 +1,10 @@
-<?php
-/**
- * This file is part of the "" package.
- *
- * © 2016 Franz Josef Kaiser
+<?php declare( strict_types = 1 ); # -*- coding: utf-8 -*-
+/*
+ * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
 namespace WCM\WPStarter\Setup\Steps;
 
 use ArrayAccess;
