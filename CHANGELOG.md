@@ -5,6 +5,8 @@
 * Case whatever we get from `get_option(uninstall_plugins)` to an array, to avoid throwing a warning. See [#36].
 * Fix variable syntax for `.env` file template. See [#38].
 * Fix RuntimeException because of `DB_NAME`, `DB_USER`, `DB_PASSWORD` not set. See [#48].
+* Code styles fixes.
+* Improve `Helpers::addHook()` by using WordPress function when available and loading `plugin.php` earlier on WP 4.7+. See [#50].
 
 ## [2.3.2] - 2016-07-28
 
