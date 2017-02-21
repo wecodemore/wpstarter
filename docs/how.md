@@ -8,6 +8,8 @@ The WP Starter flow starts with a `composer.json` file and ends with a fully wor
 
 Only two words sit in-between these two states: `composer install` typed into a console.
 
+If you're installing locally, and want to try and pull the Git history down where possible, so you can make improvements, use `composer install --prefer-source` instead.
+
 WP Starter uses a [Composer `post-install-cmd` script](https://getcomposer.org/doc/articles/scripts.md). This script is run by Composer after all packages have been installed and performs some operations that configure the WordPress site that has just been installed.
 
 ## The "Steps"
