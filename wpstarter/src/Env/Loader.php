@@ -26,9 +26,9 @@ final class Loader extends DotenvLoader
      */
     public function setEnvironmentVariable($name, $value = null)
     {
-        list($name, $value) = $this->normaliseEnvironmentVariable($name, $value);
+        list($normalised_name, $value) = $this->normaliseEnvironmentVariable($name, $value);
 
-        in_array($name, $this->allVars, true) or $this->allVars[] = $name;
+        in_array($normalised_name, $this->allVars, true) or $this->allVars[] = $normalised_name;
 
         if (!$this->immutable || is_null($this->getEnvironmentVariable($name))) {
             parent::setEnvironmentVariable($name, $value);
