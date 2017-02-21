@@ -22,7 +22,6 @@ use Exception;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostProcessStepInterface
 {
@@ -30,11 +29,11 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
      * @var array
      */
     private static $default = array(
-        'wp'         => true,
+        'wp' => true,
         'wp-content' => true,
-        'vendor'     => true,
-        'common'     => false,
-        'custom'     => array(),
+        'vendor' => true,
+        'common' => false,
+        'custom' => array(),
     );
 
     /**
@@ -78,7 +77,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function allowed(Config $config, ArrayAccess $paths)
     {
@@ -90,7 +89,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function targetPath(ArrayAccess $paths)
     {
@@ -98,12 +97,12 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function question(Config $config, IO $io)
     {
         $this->found = false;
-        if ($config['gitignore'] === "ask") {
+        if ($config['gitignore'] === 'ask') {
             $lines = array(
                 'Do you want to create a .gitignore file that makes Git ignore',
                 ' - files that contain sensible data (wp-config.php, .env)',
@@ -118,7 +117,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function run(ArrayAccess $paths)
     {
@@ -128,7 +127,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
             if ($realpath && is_file($realpath)) {
                 return $this->copy($paths, $realpath);
             }
-            if (! filter_var($this->config, FILTER_VALIDATE_URL)) {
+            if (!filter_var($this->config, FILTER_VALIDATE_URL)) {
                 $this->error = "{$this->config} is not a valid url not a valid relative path.";
 
                 return self::ERROR;
@@ -141,7 +140,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function postProcess(IO $io)
     {
@@ -162,7 +161,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function error()
     {
@@ -170,7 +169,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function skipped()
     {
@@ -178,7 +177,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function success()
     {
@@ -188,12 +187,13 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     /**
      * Download .gitignore from a given url.
      *
-     * @param  \ArrayAccess $paths
+     * @param \ArrayAccess $paths
+     *
      * @return int
      */
     private function download(ArrayAccess $paths)
     {
-        if (! UrlDownloader::checkSoftware()) {
+        if (!UrlDownloader::checkSoftware()) {
             $this->io->comment('WP Starter needs cUrl installed to download files from url.');
 
             return $this->create($paths);
@@ -210,8 +210,9 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     /**
      * Copy .gitignore from a source path to root folder.
      *
-     * @param  \ArrayAccess $paths
-     * @param  string       $source
+     * @param \ArrayAccess $paths
+     * @param string       $source
+     *
      * @return int
      */
     private function copy(ArrayAccess $paths, $source)
@@ -232,7 +233,8 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     /**
      * Build .gitignore content based on settings.
      *
-     * @param  \ArrayAccess $paths
+     * @param \ArrayAccess $paths
+     *
      * @return int
      */
     private function create(ArrayAccess $paths)
@@ -252,7 +254,7 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
             $common = trim($this->builder->build($paths, '.gitignore.example'));
             $content = $common ? $content.PHP_EOL.PHP_EOL.$common : $content;
         }
-        if (! $this->builder->save($content, $paths['root'], '.gitignore')) {
+        if (!$this->builder->save($content, $paths['root'], '.gitignore')) {
             $this->error = 'WP Starter was not able to create .gitignore file.';
 
             return self::ERROR;
@@ -262,8 +264,9 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     }
 
     /**
-     * @param  array        $toDo
-     * @param  \ArrayAccess $paths
+     * @param array        $toDo
+     * @param \ArrayAccess $paths
+     *
      * @return array
      */
     private function paths(array $toDo, ArrayAccess $paths)
@@ -286,8 +289,9 @@ class GitignoreStep implements FileStepInterface, OptionalStepInterface, PostPro
     /**
      * Takes a path and compare it to already added path to discover if it should be added or not.
      *
-     * @param  string $path
-     * @param  array  $parsedPaths
+     * @param string $path
+     * @param array  $parsedPaths
+     *
      * @return array
      */
     private function maybeAdd($path, array $parsedPaths)

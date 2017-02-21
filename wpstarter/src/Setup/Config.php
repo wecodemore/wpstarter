@@ -16,20 +16,19 @@ use LogicException;
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class Config implements ArrayAccess
 {
     private static $defaults = array(
-        'gitignore'             => true,
-        'env-example'           => true,
-        'env-file'              => '.env',
-        'move-content'          => false,
+        'gitignore' => true,
+        'env-example' => true,
+        'env-file' => '.env',
+        'move-content' => false,
         'register-theme-folder' => true,
-        'prevent-overwrite'     => array('.gitignore'),
-        'verbosity'             => 2,
-        'dropins'               => array(),
-        'unknown-dropins'       => 'ask',
+        'prevent-overwrite' => array('.gitignore'),
+        'verbosity' => 2,
+        'dropins' => array(),
+        'unknown-dropins' => 'ask',
     );
 
     private $configs;
@@ -45,8 +44,10 @@ class Config implements ArrayAccess
     }
 
     /**
-     * @param  array $configs
+     * @param array $configs
+     *
      * @return array
+     *
      * @see \WCM\WPStarter\Setup\Config::validateGitignore()
      * @see \WCM\WPStarter\Setup\Config::validateBoolOrAskOrUrl()
      * @see \WCM\WPStarter\Setup\Config::validateBoolOrAsk()
@@ -59,20 +60,20 @@ class Config implements ArrayAccess
     {
         $valid = array('is-root' => $configs['is-root'], 'wp-version' => $configs['wp-version']);
         $map = array(
-            'gitignore'             => array($this, 'validateGitignore'),
-            'env-example'           => array($this, 'validateBoolOrAskOrUrl'),
-            'env-file'              => array($this, 'validateFilename'),
+            'gitignore' => array($this, 'validateGitignore'),
+            'env-example' => array($this, 'validateBoolOrAskOrUrl'),
+            'env-file' => array($this, 'validateFilename'),
             'register-theme-folder' => array($this, 'validateBoolOrAsk'),
-            'move-content'          => array($this, 'validateBoolOrAsk'),
-            'dropins'               => array($this, 'validatePathArray'),
-            'unknown-dropins'       => array($this, 'validateBoolOrAsk'),
-            'prevent-overwrite'     => array($this, 'validateOverwrite'),
-            'verbosity'             => array($this, 'validateVerbosity'),
+            'move-content' => array($this, 'validateBoolOrAsk'),
+            'dropins' => array($this, 'validatePathArray'),
+            'unknown-dropins' => array($this, 'validateBoolOrAsk'),
+            'prevent-overwrite' => array($this, 'validateOverwrite'),
+            'verbosity' => array($this, 'validateVerbosity'),
         );
         $defaults = self::$defaults;
         array_walk($configs, function ($value, $key) use ($map, &$defaults) {
             $result = array_key_exists($key, $defaults) ? call_user_func($map[$key], $value) : null;
-            if (! is_null($result)) {
+            if (!is_null($result)) {
                 $defaults[$key] = $result;
             }
         });
@@ -85,6 +86,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     *
      * @return string|bool|array|null
      */
     private function validateGitignore($value)
@@ -94,10 +96,10 @@ class Config implements ArrayAccess
                 ? array_filter($value['custom'], 'is_string')
                 : array();
             $default = array(
-                'wp'         => true,
+                'wp' => true,
                 'wp-content' => true,
-                'vendor'     => true,
-                'common'     => true,
+                'vendor' => true,
+                'common' => true,
             );
             foreach ($value as $k => $v) {
                 if (array_key_exists($k, $default) && $this->validateBool($v) === false) {
@@ -113,6 +115,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     *
      * @return bool|string
      */
     private function validateOverwrite($value)
@@ -129,6 +132,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     *
      * @return int|null
      */
     private function validateVerbosity($value)
@@ -140,6 +144,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     *
      * @return array
      */
     private function validatePathArray($value)
@@ -157,6 +162,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     *
      * @return string|bool|null
      */
     private function validateBoolOrAskOrUrl($value)
@@ -173,6 +179,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     *
      * @return bool|string
      */
     private function validateBoolOrAsk($value)
@@ -187,6 +194,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     *
      * @return string|null
      */
     private function validateUrl($value)
@@ -196,6 +204,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     *
      * @return string|null
      */
     private function validateFilename($value)
@@ -207,11 +216,12 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     *
      * @return bool
      */
     private function validateBool($value)
     {
-        $booleans = array(true, false, 1, 0, "true", "false", "1", "0", "yes", "no", "on", "off");
+        $booleans = array(true, false, 1, 0, 'true', 'false', '1', '0', 'yes', 'no', 'on', 'off');
         if (in_array(is_string($value) ? strtolower($value) : $value, $booleans, true)) {
             return filter_var($value, FILTER_VALIDATE_BOOLEAN);
         }
@@ -221,6 +231,7 @@ class Config implements ArrayAccess
 
     /**
      * @param $value
+     *
      * @return int|null
      */
     private function validateInt($value)
@@ -229,7 +240,7 @@ class Config implements ArrayAccess
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function offsetExists($offset)
     {
@@ -237,7 +248,7 @@ class Config implements ArrayAccess
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function offsetGet($offset)
     {
@@ -245,7 +256,7 @@ class Config implements ArrayAccess
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function offsetSet($offset, $value)
     {
@@ -253,7 +264,7 @@ class Config implements ArrayAccess
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function offsetUnset($offset)
     {

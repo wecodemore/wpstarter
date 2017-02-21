@@ -15,7 +15,6 @@ use Exception;
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class UrlDownloader
 {
@@ -53,14 +52,15 @@ class UrlDownloader
         if (filter_var($url, FILTER_VALIDATE_URL)) {
             $this->url = $url;
         } else {
-            $this->error = is_string($url) ? "{$url} is an invalid url." : "Invalid url.";
+            $this->error = is_string($url) ? "{$url} is an invalid url." : 'Invalid url.';
         }
     }
 
     /**
      * Download an url and save content to a file.
      *
-     * @param  string $filename
+     * @param string $filename
+     *
      * @return bool
      */
     public function save($filename)
@@ -68,7 +68,7 @@ class UrlDownloader
         if (empty($this->url)) {
             return false;
         }
-        if (! is_string($filename) || ! is_dir(dirname($filename))) {
+        if (!is_string($filename) || !is_dir(dirname($filename))) {
             $this->error = "Invalid target path for {$this->url}.";
 
             return false;
@@ -97,15 +97,16 @@ class UrlDownloader
     /**
      * Perform a cUrl request and return the response.
      *
-     * @param  bool        $json
+     * @param bool $json
+     *
      * @return bool|string
      */
     public function fetch($json = false)
     {
-        if (empty($this->url) || ! self::checkSoftware()) {
+        if (empty($this->url) || !self::checkSoftware()) {
             $this->error .= empty($this->url)
                 ? ''
-                : "WP Starter needs cUrl installed to download files from url.";
+                : 'WP Starter needs cUrl installed to download files from url.';
 
             return false;
         }
@@ -123,14 +124,14 @@ class UrlDownloader
         $code = (int) $info['http_code'];
         $wanted = $json ? 'application/json' : 'text/plain';
         if (
-            ! empty($response)
+            !empty($response)
             && empty($error)
             && $code === 200
             && $this->contentType($info['content_type']) === $wanted
         ) {
             return trim(substr($response, $info['header_size']));
         }
-        if (! empty($error)) {
+        if (!empty($error)) {
             $this->error = $error;
         } else {
             $this->error = $code !== 200 || empty($response)
@@ -144,7 +145,8 @@ class UrlDownloader
     /**
      * Get the mime type from a content type string.
      *
-     * @param  string $contentType
+     * @param string $contentType
+     *
      * @return string
      */
     private function contentType($contentType)

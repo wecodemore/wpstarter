@@ -20,7 +20,6 @@ use Exception;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
 {
@@ -45,7 +44,7 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     private $themeDir = true;
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function allowed(Config $config, ArrayAccess $paths)
     {
@@ -55,7 +54,7 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function run(ArrayAccess $paths)
     {
@@ -95,7 +94,7 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function error()
     {
@@ -103,7 +102,7 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function success()
     {
@@ -111,11 +110,11 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function postProcess(IO $io)
     {
-        if (! $this->themeDir) {
+        if (!$this->themeDir) {
             $lines = array(
                 'Default theme folder:',
                 '"'.$this->paths['wp-content'].'/themes" does not exist.',

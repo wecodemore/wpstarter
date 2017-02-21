@@ -15,12 +15,11 @@ use Exception;
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WP Starter
  */
 class MuLoader
 {
     const EXTRA_KEY = 'wordpress-plugin-main-file';
-    const PREFIX    = 'wcm_wps_';
+    const PREFIX = 'wcm_wps_';
     const TRANSIENT = 'data_transient';
 
     /**
@@ -56,13 +55,13 @@ class MuLoader
      */
     public function __invoke($refresh = false)
     {
-        if (! defined('WPMU_PLUGIN_DIR') || ! is_dir(WPMU_PLUGIN_DIR) || defined('WP_INSTALLING')) {
+        if (!defined('WPMU_PLUGIN_DIR') || !is_dir(WPMU_PLUGIN_DIR) || defined('WP_INSTALLING')) {
             return;
         }
         static $jsonFiles;
         static $transient;
         if (is_null($jsonFiles)) {
-            $jsonFiles = glob(WPMU_PLUGIN_DIR."/*/composer.json", GLOB_NOSORT);
+            $jsonFiles = glob(WPMU_PLUGIN_DIR.'/*/composer.json', GLOB_NOSORT);
 
             if (empty($jsonFiles)) {
                 return;
@@ -89,7 +88,7 @@ class MuLoader
         $toLoad = array_diff($this->plugins, $this->loaded);
         foreach ($toLoad as $key => $file) {
             $loaded = $this->loadPlugin($key, $file, $refresh, $transient);
-            if (! $loaded) {
+            if (!$loaded) {
                 break;
             }
         }
@@ -100,10 +99,11 @@ class MuLoader
     /**
      * Check and load a discovered file. Handle problems if file is invalid or unreadable.
      *
-     * @param  string $key
-     * @param  string $file
-     * @param  bool   $refresh
-     * @param  string $transient
+     * @param string $key
+     * @param string $file
+     * @param bool   $refresh
+     * @param string $transient
+     *
      * @return bool
      */
     private function loadPlugin($key, $file, $refresh, $transient)
@@ -154,7 +154,7 @@ class MuLoader
     private function afterLoading($refresh, $transient)
     {
         $refresh and set_site_transient(self::PREFIX.$transient, $this->plugins, WEEK_IN_SECONDS);
-        if (! is_admin()) {
+        if (!is_admin()) {
             return;
         }
         $loader = $this;
@@ -169,8 +169,7 @@ class MuLoader
      * findFileInJson() method is used to check for a different file set in
      * "extra.wordpress-plugin-main-file" composer.json config.
      *
-     * @param  string $jsonFile Full path of composer.json of mu plugin file
-     * @return void
+     * @param string $jsonFile Full path of composer.json of mu plugin file
      */
     private function findFile($jsonFile)
     {
@@ -180,7 +179,7 @@ class MuLoader
             $json = array();
         }
         // if the file for a WordPress (MU) Plugin?
-        if (! isset($json['type']) || ! in_array($json['type'], self::$types, true)) {
+        if (!isset($json['type']) || !in_array($json['type'], self::$types, true)) {
             return;
         }
         $isRegular = $json['type'] === 'wordpress-plugin';
@@ -219,9 +218,10 @@ class MuLoader
     /**
      * Runs on 'show_advanced_plugins' hook to show data of MU plugins loaded by this class.
      *
-     * @param  bool   $bool
-     * @param  string $type
-     * @param  bool   $refresh
+     * @param bool   $bool
+     * @param string $type
+     * @param bool   $refresh
+     *
      * @return bool
      */
     private function showPluginsData($bool, $type, $refresh)
@@ -249,7 +249,8 @@ class MuLoader
     /**
      * Get plugins data from transient or from plugins headers (if available).
      *
-     * @param  bool  $refresh Should data should be cached in transient
+     * @param bool $refresh Should data should be cached in transient
+     *
      * @return array
      */
     private function getPluginsData($refresh)
@@ -265,8 +266,9 @@ class MuLoader
     }
 
     /**
-     * @param  string $key
-     * @param  string $file
+     * @param string $key
+     * @param string $file
+     *
      * @return array
      */
     private function getPluginData($key, $file)

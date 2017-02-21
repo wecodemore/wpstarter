@@ -19,7 +19,6 @@ use WCM\WPStarter\Setup\FileBuilder;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class IndexStep implements FileStepInterface, BlockingStepInterface
 {
@@ -47,7 +46,7 @@ class IndexStep implements FileStepInterface, BlockingStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function allowed(Config $config, ArrayAccess $paths)
     {
@@ -55,7 +54,7 @@ class IndexStep implements FileStepInterface, BlockingStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function targetPath(ArrayAccess $paths)
     {
@@ -63,7 +62,7 @@ class IndexStep implements FileStepInterface, BlockingStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function run(ArrayAccess $paths)
     {
@@ -71,7 +70,7 @@ class IndexStep implements FileStepInterface, BlockingStepInterface
         $rootPathRel = str_repeat('dirname(', $n).'__DIR__'.str_repeat(')', $n);
         $this->vars = array('BOOTSTRAP_PATH' => $rootPathRel.".'/{$paths['wp']}/wp-blog-header.php'");
         $build = $this->builder->build($paths, 'index.example', $this->vars);
-        if (! $this->builder->save($build, dirname($this->targetPath($paths)), 'index.php')) {
+        if (!$this->builder->save($build, dirname($this->targetPath($paths)), 'index.php')) {
             $this->error = 'Error on create index.php.';
 
             return self::ERROR;
@@ -81,7 +80,7 @@ class IndexStep implements FileStepInterface, BlockingStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function error()
     {
@@ -89,7 +88,7 @@ class IndexStep implements FileStepInterface, BlockingStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function success()
     {

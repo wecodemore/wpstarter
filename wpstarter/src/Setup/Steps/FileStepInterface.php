@@ -17,14 +17,14 @@ use ArrayAccess;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 interface FileStepInterface extends StepInterface
 {
     /**
      * Returns the target path of the file the step will create.
      *
-     * @param  \ArrayAccess $paths
+     * @param \ArrayAccess $paths
+     *
      * @return string
      */
     public function targetPath(ArrayAccess $paths);

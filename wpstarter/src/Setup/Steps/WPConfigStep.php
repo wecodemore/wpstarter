@@ -21,7 +21,6 @@ use WCM\WPStarter\Setup\Salter;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class WPConfigStep implements FileStepInterface, BlockingStepInterface
 {
@@ -63,7 +62,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function allowed(Config $config, ArrayAccess $paths)
     {
@@ -73,7 +72,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function targetPath(ArrayAccess $paths)
     {
@@ -81,7 +80,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function run(ArrayAccess $paths)
     {
@@ -98,19 +97,19 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
         };
         $vars = array_merge(
             array(
-                'VENDOR_PATH'        => $rootPathRel.".'/{$paths['vendor']}'",
-                'ENV_REL_PATH'       => $rootPathRel,
-                'WP_INSTALL_PATH'    => $rootPathRel.".'/{$paths['wp']}'",
-                'WP_CONTENT_PATH'    => $rootPathRel.".'/{$paths['wp-content']}'",
-                'WP_SITEURL'         => $relUrl($paths['wp']),
-                'WP_CONTENT_URL'     => $relUrl($paths['wp-content']),
+                'VENDOR_PATH' => $rootPathRel.".'/{$paths['vendor']}'",
+                'ENV_REL_PATH' => $rootPathRel,
+                'WP_INSTALL_PATH' => $rootPathRel.".'/{$paths['wp']}'",
+                'WP_CONTENT_PATH' => $rootPathRel.".'/{$paths['wp-content']}'",
+                'WP_SITEURL' => $relUrl($paths['wp']),
+                'WP_CONTENT_URL' => $relUrl($paths['wp-content']),
                 'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
-                'ENV_FILE_NAME'      => $this->config['env-file'],
+                'ENV_FILE_NAME' => $this->config['env-file'],
             ),
             $this->salter->keys()
         );
         $build = $this->builder->build($paths, 'wp-config.example', $vars);
-        if (! $this->builder->save($build, dirname($this->targetPath($paths)), 'wp-config.php')) {
+        if (!$this->builder->save($build, dirname($this->targetPath($paths)), 'wp-config.php')) {
             $this->error = 'Error on create wp-config.php.';
 
             return self::ERROR;
@@ -120,7 +119,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function error()
     {
@@ -128,7 +127,7 @@ class WPConfigStep implements FileStepInterface, BlockingStepInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function success()
     {

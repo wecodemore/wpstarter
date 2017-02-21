@@ -30,7 +30,6 @@ use WCM\WPStarter\Setup\Steps\WPConfigStep;
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class Setup
 {
@@ -42,6 +41,7 @@ class Setup
      * Method that should be used as "post-install-cmd" Composer script.
      *
      * @param \Composer\Script\Event $event
+     *
      * @see https://getcomposer.org/doc/articles/scripts.md
      */
     public static function run(Event $event)
@@ -71,6 +71,7 @@ class Setup
      * when WP Starter is used as root package.
      *
      * @param \Composer\Script\Event $event
+     *
      * @see https://getcomposer.org/doc/articles/scripts.md
      */
     public static function runAsRoot(Event $event)
@@ -107,10 +108,11 @@ class Setup
     }
 
     /**
-     * @param  \WCM\WPStarter\Setup\StepperInterface $stepper
-     * @param  \WCM\WPStarter\Setup\Config           $config
-     * @param  \ArrayObject                          $paths
-     * @param  \WCM\WPStarter\Setup\IO               $io
+     * @param \WCM\WPStarter\Setup\StepperInterface $stepper
+     * @param \WCM\WPStarter\Setup\Config           $config
+     * @param \ArrayObject                          $paths
+     * @param \WCM\WPStarter\Setup\IO               $io
+     *
      * @return bool
      */
     private function stepperAllowed(
@@ -119,7 +121,7 @@ class Setup
         ArrayObject $paths,
         IO $io
     ) {
-        if (! $stepper->allowed($config, $paths)) {
+        if (!$stepper->allowed($config, $paths)) {
             $lines = array(
                 'WP Starter installation CANCELED.',
                 'wp-config.php was found in root folder and your overwrite settings',
@@ -141,8 +143,9 @@ class Setup
      * 'extra.wordpress-content-dir', instead, can be used to customized wp-content folder, with
      * proper automatic url generation for content.
      *
-     * @param  \Composer\Composer $composer
-     * @param  array              $extra
+     * @param \Composer\Composer $composer
+     * @param array              $extra
+     *
      * @return \ArrayObject
      */
     private function paths(Composer $composer, array $extra)
@@ -158,19 +161,20 @@ class Setup
             : 'wp-content';
 
         return new ArrayObject($this->normalisePaths(array(
-            'root'       => $cwd,
-            'vendor'     => $this->subdir($cwd, $composer->getConfig()->get('vendor-dir')),
-            'wp'         => $wpSubdir,
-            'wp-parent'  => $this->subdir($cwd, dirname($wpFullDir)),
+            'root' => $cwd,
+            'vendor' => $this->subdir($cwd, $composer->getConfig()->get('vendor-dir')),
+            'wp' => $wpSubdir,
+            'wp-parent' => $this->subdir($cwd, dirname($wpFullDir)),
             'wp-content' => $wpContent,
-            'starter'    => $this->subdir($cwd, dirname(__DIR__)),
+            'starter' => $this->subdir($cwd, dirname(__DIR__)),
         )), ArrayObject::STD_PROP_LIST);
     }
 
     /**
      * Go through installed packages to find WordPress version.
      *
-     * @param  \Composer\Composer $composer
+     * @param \Composer\Composer $composer
+     *
      * @return string|bool
      */
     private function discoverWpVersion(Composer $composer)
@@ -178,7 +182,7 @@ class Setup
         /** @var array $packages */
         $packages = $composer->getRepositoryManager()->getLocalRepository()->getPackages();
         $version = false;
-        while ($version === false && ! empty($packages)) {
+        while ($version === false && !empty($packages)) {
             $package = array_pop($packages);
             $version = $package->getName() === self::WP_PACKAGE ? $package->getVersion() : false;
         }
@@ -189,7 +193,8 @@ class Setup
     /**
      * Just ensures paths use same separator, to allow search/replace.
      *
-     * @param  array $paths
+     * @param array $paths
+     *
      * @return array
      */
     private function normalisePaths(array $paths)
@@ -204,8 +209,9 @@ class Setup
     /**
      * Strips a parent folder from child.
      *
-     * @param  string $root
-     * @param  string $path
+     * @param string $root
+     * @param string $path
+     *
      * @return string string
      */
     private function subdir($root, $path)

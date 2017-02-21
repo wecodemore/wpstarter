@@ -18,19 +18,19 @@ use ArrayAccess;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 interface StepInterface
 {
-    const ERROR   = 1;
+    const ERROR = 1;
     const SUCCESS = 2;
-    const NONE    = 4;
+    const NONE = 4;
 
     /**
-     * Return true if the step is allowed, i.e. the run method have to be called or not
+     * Return true if the step is allowed, i.e. the run method have to be called or not.
      *
-     * @param  \WCM\WPStarter\Setup\Config $config
-     * @param  \ArrayAccess                $paths
+     * @param \WCM\WPStarter\Setup\Config $config
+     * @param \ArrayAccess                $paths
+     *
      * @return bool
      */
     public function allowed(Config $config, ArrayAccess $paths);
@@ -38,7 +38,8 @@ interface StepInterface
     /**
      * Process the step.
      *
-     * @param  \ArrayAccess $paths Have to return one of the step constants.
+     * @param \ArrayAccess $paths Have to return one of the step constants.
+     *
      * @return int
      */
     public function run(ArrayAccess $paths);

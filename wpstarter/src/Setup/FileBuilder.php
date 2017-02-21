@@ -16,7 +16,6 @@ use Exception;
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class FileBuilder
 {
@@ -38,19 +37,20 @@ class FileBuilder
      * Part of those variables (salt keys) are generated using Salter class.
      * Templater class is used to apply the replacements.
      *
-     * @param  \ArrayAccess $paths
-     * @param  string       $template
-     * @param  array        $vars
-     * @return string|bool  file content on success, false on failure
+     * @param \ArrayAccess $paths
+     * @param string       $template
+     * @param array        $vars
+     *
+     * @return string|bool file content on success, false on failure
      */
     public function build(ArrayAccess $paths, $template, array $vars = array())
     {
         $pieces = array($paths['starter'], 'templates', $template);
-        if (! $this->isRoot) {
+        if (!$this->isRoot) {
             array_unshift($pieces, $paths['root']);
         }
         $template = implode('/', $pieces);
-        if (! is_readable($template)) {
+        if (!is_readable($template)) {
             return false;
         }
         /** @var string $content */
@@ -65,10 +65,11 @@ class FileBuilder
     /**
      * Given a file content as string, dump it to a file in a given folder.
      *
-     * @param  string $content    file content
-     * @param  string $targetPath target path
-     * @param  string $fileName   target file name
-     * @return bool   true on success, false on failure
+     * @param string $content    file content
+     * @param string $targetPath target path
+     * @param string $fileName   target file name
+     *
+     * @return bool true on success, false on failure
      */
     public function save($content, $targetPath, $fileName)
     {
@@ -83,8 +84,9 @@ class FileBuilder
     }
 
     /**
-     * @param  string $content
-     * @param  array  $vars
+     * @param string $content
+     * @param array  $vars
+     *
      * @return string
      */
     public function render($content, array $vars)

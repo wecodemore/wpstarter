@@ -20,7 +20,6 @@ use RuntimeException;
  *
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @license http://opensource.org/licenses/MIT MIT
- * @package WPStarter
  */
 class PluginAsMuLoader
 {
@@ -46,7 +45,7 @@ class PluginAsMuLoader
      */
     public function __construct(array $plugins)
     {
-        if (! empty($plugins)) {
+        if (!empty($plugins)) {
             $installed = get_site_option(MuLoader::PREFIX.self::OPTION, array());
             $toInstall = array_diff($plugins, $installed);
             if ($toInstall !== $installed) {
@@ -61,7 +60,7 @@ class PluginAsMuLoader
      */
     public function install()
     {
-        if (! empty($this->plugins)) {
+        if (!empty($this->plugins)) {
             $this->uninstall = (array) get_option('uninstall_plugins', array());
             array_walk($this->plugins, array($this, 'installPlugin'));
         }
