@@ -1,5 +1,8 @@
 # Change Log for WPStarter
 
+## [2.4.1] - 2017-02-21
+* Removed strict types declaration for PHP 5 compat.
+
 ## [2.4.0] - 2017-02-21
 
 * Case whatever we get from `get_option(uninstall_plugins)` to an array, to avoid throwing a warning. See [#36].
