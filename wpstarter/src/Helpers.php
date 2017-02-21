@@ -1,8 +1,6 @@
-<?php
+<?php declare( strict_types = 1 ); # -*- coding: utf-8 -*-
 /*
  * This file is part of the WP Starter package.
- *
- * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -77,7 +75,11 @@ class Helpers
             return;
         }
 
-        if (defined(ABSPATH) && is_file(ABSPATH.'wp-includes/plugin.php')) {
+        if (
+            defined(ABSPATH)
+            && is_file(ABSPATH.'wp-includes/class-wp-hook.php')
+            && is_file(ABSPATH.'wp-includes/plugin.php')
+        ) {
             require_once ABSPATH.'wp-includes/plugin.php';
             if (class_exists('WP_Hook')) {
                 add_filter($hook, $callable, $priority, $argsNum);

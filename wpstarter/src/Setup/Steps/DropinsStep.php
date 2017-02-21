@@ -1,8 +1,6 @@
-<?php
+<?php declare( strict_types = 1 ); # -*- coding: utf-8 -*-
 /*
- * This file is part of the WPStarter package.
- *
- * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
+ * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -147,7 +145,7 @@ class DropinsStep implements StepInterface
         if ($this->config['unknown-dropins'] === true || in_array($name, self::$dropins, true)) {
             return true;
         }
-        $ext = pathinfo($name, PATHINFO_EXTENSION);
+        $ext = (string) pathinfo($name, PATHINFO_EXTENSION);
         if (strtolower($ext) !== 'php') {
             return $this->config['unknown-dropins'] === 'ask' && $this->ask($name, 0);
         }

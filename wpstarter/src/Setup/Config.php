@@ -1,8 +1,6 @@
-<?php
+<?php declare( strict_types = 1 ); # -*- coding: utf-8 -*-
 /*
- * This file is part of the WPStarter package.
- *
- * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
+ * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -185,7 +183,7 @@ class Config implements ArrayAccess
     private function validateBoolOrAsk($value)
     {
         $asks = array('ask', 'prompt', 'query', 'interrogate', 'demand');
-        if (in_array(trim(strtolower($value)), $asks, true)) {
+        if (is_string($value) && in_array(trim(strtolower($value)), $asks, true)) {
             return 'ask';
         }
 

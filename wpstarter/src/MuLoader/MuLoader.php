@@ -1,8 +1,6 @@
-<?php
+<?php declare( strict_types = 1 ); # -*- coding: utf-8 -*-
 /*
  * This file is part of the WP Starter package.
- *
- * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -108,7 +106,10 @@ class MuLoader
      */
     private function loadPlugin($key, $file, $refresh, $transient)
     {
-        if (is_readable($file) && strtolower(pathinfo($file, PATHINFO_EXTENSION)) === 'php') {
+        if (
+            is_readable($file)
+            && strtolower( (string) pathinfo($file, PATHINFO_EXTENSION)) === 'php'
+        ) {
             wp_register_plugin_realpath($file);
             if (in_array($file, $this->regular, true)) {
                 $this->regularLoaded[] = $file;

@@ -1,8 +1,6 @@
-<?php
+<?php declare( strict_types = 1 ); # -*- coding: utf-8 -*-
 /*
- * This file is part of the WPStarter package.
- *
- * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
+ * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,6 +23,7 @@ use WCM\WPStarter\Setup\Steps\EnvExampleStep;
 use WCM\WPStarter\Setup\Steps\GitignoreStep;
 use WCM\WPStarter\Setup\Steps\IndexStep;
 use WCM\WPStarter\Setup\Steps\MoveContentStep;
+use WCM\WPStarter\Setup\Steps\WPCliStep;
 use WCM\WPStarter\Setup\Steps\WPConfigStep;
 
 /**
@@ -102,6 +101,7 @@ class Setup
                 ->addStep(new EnvExampleStep($io, $builder))
                 ->addStep(new DropinsStep($io, $overwrite))
                 ->addStep(new GitignoreStep($io, $builder))
+                ->addStep(new WPCliStep($builder))
                 ->addStep(new MoveContentStep($io))
                 ->run($paths);
         }
