@@ -1,9 +1,10 @@
 # Change Log for WPStarter
 
-## [Unreleased]
+## [2.3.3] - 2017-02-21
 
 * Case whatever we get from `get_option(uninstall_plugins)` to an array, to avoid throwing a warning. See [#36].
 * Fix variable syntax for `.env` file template. See [#38].
+* Fix RuntimeException because of `DB_NAME`, `DB_USER`, `DB_PASSWORD` not set. See [#48].
 
 ## [2.3.2] - 2016-07-28
 
