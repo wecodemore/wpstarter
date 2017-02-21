@@ -75,7 +75,11 @@ class Helpers
             return;
         }
 
-        if (defined(ABSPATH) && is_file(ABSPATH.'wp-includes/plugin.php')) {
+        if (
+            defined(ABSPATH)
+            && is_file(ABSPATH.'wp-includes/class-wp-hook.php')
+            && is_file(ABSPATH.'wp-includes/plugin.php')
+        ) {
             require_once ABSPATH.'wp-includes/plugin.php';
             if (class_exists('WP_Hook')) {
                 add_filter($hook, $callable, $priority, $argsNum);
