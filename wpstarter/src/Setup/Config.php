@@ -183,7 +183,7 @@ class Config implements ArrayAccess
     private function validateBoolOrAsk($value)
     {
         $asks = array('ask', 'prompt', 'query', 'interrogate', 'demand');
-        if (in_array(trim(strtolower($value)), $asks, true)) {
+        if (is_string($value) && in_array(trim(strtolower($value)), $asks, true)) {
             return 'ask';
         }
 

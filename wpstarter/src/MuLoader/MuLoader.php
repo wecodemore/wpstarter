@@ -106,7 +106,10 @@ class MuLoader
      */
     private function loadPlugin($key, $file, $refresh, $transient)
     {
-        if (is_readable($file) && strtolower(pathinfo($file, PATHINFO_EXTENSION)) === 'php') {
+        if (
+            is_readable($file)
+            && strtolower( (string) pathinfo($file, PATHINFO_EXTENSION)) === 'php'
+        ) {
             wp_register_plugin_realpath($file);
             if (in_array($file, $this->regular, true)) {
                 $this->regularLoaded[] = $file;
