@@ -136,7 +136,9 @@ defined('WP_SITEURL')     or define('WP_SITEURL',     rtrim(WP_HOME, '/').'/{{{W
  */
 if (realpath({{{WP_CONTENT_PATH}}}) !== realpath(ABSPATH.'/wp-content')) {
     defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath({{{WP_CONTENT_PATH}}}));
-    defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_URL}}}');
+    if ( ! defined('MULTISITE' ) || ! MULTISITE ) {
+        defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_URL}}}');
+    }
 }
 
 /**
