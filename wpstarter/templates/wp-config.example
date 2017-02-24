@@ -105,7 +105,6 @@ switch ($environment) {
  * Fix HTTPS behind load balancers.
  *
  * @link https://core.trac.wordpress.org/ticket/31288
- * @link https://github.com/wecodemore/wpstarter/issues/7
  */
 if (
     isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
@@ -115,7 +114,7 @@ if (
 }
 
 /**
- * Set WordPress paths and urls if not set via environment variables.
+ * Set WordPress paths and URLs if not set via environment variables.
  */
 if (! defined('WP_HOME')) {
     $server = filter_input_array(INPUT_SERVER, array(
@@ -128,21 +127,25 @@ if (! defined('WP_HOME')) {
     $name   = $server['SERVER_NAME'] ? : 'localhost';
     define('WP_HOME', $scheme.$name);
 }
-defined('ABSPATH')        or define('ABSPATH',        realpath({{{WP_INSTALL_PATH}}}));
-defined('WP_SITEURL')     or define('WP_SITEURL',     rtrim(WP_HOME, '/').'/{{{WP_SITEURL}}}');
+
+defined('ABSPATH')    or define('ABSPATH',    realpath({{{WP_INSTALL_PATH}}}));
+defined('WP_SITEURL') or define('WP_SITEURL', rtrim(WP_HOME, '/').'/{{{WP_SITEURL}}}');
 
 /**
  * Define content constants only if needed, or network install screen will complain for no reason
  */
-if (realpath({{{WP_CONTENT_PATH}}}) !== realpath(ABSPATH.'/wp-content')) {
-    defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath({{{WP_CONTENT_PATH}}}));
-    defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_URL}}}');
+$custom_content_dir = realpath({{{WP_CONTENT_PATH}}}) !== realpath(ABSPATH.'/wp-content');
+if ($custom_content_dir && ! defined('WP_CONTENT_DIR')) {
+    define('WP_CONTENT_DIR', realpath({{{WP_CONTENT_PATH}}}));
+}
+if ($custom_content_dir && ! (defined('MULTISITE' ) && MULTISITE) && ! defined('WP_CONTENT_URL')) {
+    define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_URL}}}');
 }
 
 /**
  * Clean up.
  */
-unset($env, $environment, $server, $secure, $scheme, $name);
+unset($env, $environment, $server, $secure, $scheme, $name, $custom_content_dir);
 
 /**
  * Allows to load MU plugins in subfolders.
