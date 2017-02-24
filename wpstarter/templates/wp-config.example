@@ -138,7 +138,7 @@ $custom_content_dir = realpath({{{WP_CONTENT_PATH}}}) !== realpath(ABSPATH.'/wp-
 if ($custom_content_dir && ! defined('WP_CONTENT_DIR')) {
     define('WP_CONTENT_DIR', realpath({{{WP_CONTENT_PATH}}}));
 }
-if ($custom_content_dir && ! (defined('MULTISITE' ) && MULTISITE) && ! defined('WP_CONTENT_URL')) {
+if ($custom_content_dir && ! (defined('MULTISITE') && MULTISITE) && ! defined('WP_CONTENT_URL')) {
     define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_URL}}}');
 }
 
