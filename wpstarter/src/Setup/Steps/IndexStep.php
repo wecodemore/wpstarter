@@ -15,6 +15,7 @@ use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
+use WCM\WPStarter\Setup\Paths;
 
 /**
  * Steps that generates index.php in root folder.
@@ -25,6 +26,8 @@ use WCM\WPStarter\Setup\FileBuilder;
  */
 final class IndexStep implements FileCreationStepInterface, BlockingStepInterface
 {
+    const NAME = 'build-index';
+
     /**
      * @var \WCM\WPStarter\Setup\FileBuilder
      */
@@ -75,36 +78,40 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
      */
     public function name()
     {
-        return 'build-index';
+        return self::NAME;
     }
 
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, \ArrayAccess $paths)
+    public function allowed(Config $config, Paths $paths)
     {
         return true;
     }
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function targetPath(\ArrayAccess $paths)
+    public function targetPath(Paths $paths)
     {
-        return $this->filesystemUtil->normalizePath(
-            "{$paths['root']}/{$paths['wp-parent']}/index.php"
-        );
+        return $paths->wp_parent('index.php');
     }
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function run(\ArrayAccess $paths)
+    public function run(Paths $paths)
     {
-        $from = "{$paths['root']}/{$paths['wp-parent']}";
-        $to = "{$paths['root']}/{$paths['wp']}";
-        $rootPathRel = $this->filesystemUtil->findShortestPathCode($from, $to, true);
-        $build = $this->builder->build($paths, 'index.example', ['BOOTSTRAP_PATH' => $rootPathRel]);
+        $from = $paths->absolute(Paths::WP_PARENT);
+        $to = $paths->absolute(Paths::WP);
+        $build = $this->builder->build(
+            $paths,
+            'index.example',
+            ['BOOTSTRAP_PATH' => $this->filesystemUtil->findShortestPathCode($from, $to, true)]
+        );
+
         if (!$this->filesystem->save($build, $this->targetPath($paths))) {
             $this->error = 'Error creating index.php.';
 

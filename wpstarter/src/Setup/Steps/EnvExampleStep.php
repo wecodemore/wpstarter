@@ -14,6 +14,7 @@ use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\Config;
+use WCM\WPStarter\Setup\Paths;
 use WCM\WPStarter\Setup\UrlDownloader;
 
 /**
@@ -25,6 +26,8 @@ use WCM\WPStarter\Setup\UrlDownloader;
  */
 final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInterface, PostProcessStepInterface
 {
+    const NAME = 'build-env-example';
+
     /**
      * @var \WCM\WPStarter\Setup\IO
      */
@@ -36,14 +39,9 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
     private $config;
 
     /**
-     * @var \ArrayAccess
+     * @var Paths
      */
     private $paths;
-
-    /**
-     * @var \WCM\WPStarter\Setup\FileBuilder
-     */
-    private $builder;
 
     /**
      * @var \WCM\WPStarter\Setup\Filesystem
@@ -77,7 +75,6 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
     public function __construct(IO $io, FileBuilder $builder, Filesystem $filesystem)
     {
         $this->io = $io;
-        $this->builder = $builder;
         $this->filesystem = $filesystem;
     }
 
@@ -92,7 +89,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, \ArrayAccess $paths)
+    public function allowed(Config $config, Paths $paths)
     {
         $this->config = $config;
         $this->paths = $paths;
@@ -103,10 +100,11 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function targetPath(\ArrayAccess $paths)
+    public function targetPath(Paths $paths)
     {
-        return $paths['root'] . '/.env.example';
+        return $paths->root('.env.example');
     }
 
     /**
@@ -128,17 +126,21 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
      */
-    public function run(\ArrayAccess $paths)
+    public function run(Paths $paths)
     {
         $dest = $this->targetPath($paths);
-        $config = $this->config['env-example'];
+
+        $config = $this->config[Config::ENV_EXAMPLE];
+
         if (is_string($config) && $config !== 'ask') {
-            $realpath = realpath($paths['root'] . '/' . $config);
+            $realpath = realpath($paths->root($config));
             if ($realpath && is_file($realpath)) {
                 return $this->copy($paths, $dest, $realpath);
             } elseif (filter_var($config, FILTER_VALIDATE_URL)) {
-                return $this->download($config, $dest, $paths);
+                return $this->download($config, $dest);
             }
             $this->error = "{$config} is not a valid url not a valid relative path.";
 
@@ -150,13 +152,15 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
     public function postProcess(IO $io)
     {
-        if (!is_file($this->paths['root'] . '/' . ltrim($this->config['env-file'], '/\\'))) {
+        if (!is_file($this->paths->root($this->config[Config::ENV_FILE]))) {
             $lines = [
-                'Remember you need a .env file with DB settings',
-                'to make your site fully functional.',
+                'Remember that to make your site fully functional',
+                'you either need to have an .env file with at least DB settings',
+                'or set them in environment variables in some other way (e.g. via webserver).',
             ];
 
             $io->block($lines, 'yellow', false);
@@ -168,14 +172,14 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
      *
      * @param  string $url
      * @param  string $dest
-     * @param  \ArrayAccess $paths
      * @return int
+     * @throws \RuntimeException
      */
-    private function download($url, $dest, \ArrayAccess $paths)
+    private function download($url, $dest)
     {
         $remote = new UrlDownloader($url, $this->io);
         if (!$remote->save($dest)) {
-            $this->error = 'Error on downloading and save .env.example: ' . $remote->error() . '.';
+            $this->error = "Error downloading and saving {$url}: " . $remote->error() . '.';
 
             return self::ERROR;
         }
@@ -186,19 +190,16 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStepInt
     /**
      * Copy a .env.example in root folder.
      *
-     * @param  \ArrayAccess $paths
-     * @param               $dest
-     * @param  null $source
+     * @param  Paths $paths
+     * @param  string $dest
+     * @param  string|null $source
      * @return int
+     * @throws \InvalidArgumentException
      */
-    private function copy(\ArrayAccess $paths, $dest, $source = null)
+    private function copy(Paths $paths, $dest, $source = null)
     {
-        if (is_null($source)) {
-            $pieces = [$paths['starter'], 'templates'];
-            if (!$this->config['is-root']) {
-                array_unshift($pieces, $paths['root']);
-            }
-            $source = implode('/', array_merge($pieces, ['.env.example']));
+        if ($source === null) {
+            $source = $paths->absolute(Paths::WP_STARTER, 'templates/.env.example');
         }
 
         if ($this->filesystem->copyFile($source, $dest)) {

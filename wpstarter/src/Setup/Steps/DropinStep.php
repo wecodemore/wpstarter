@@ -13,6 +13,7 @@ namespace WCM\WPStarter\Setup\Steps;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\OverwriteHelper;
+use WCM\WPStarter\Setup\Paths;
 use WCM\WPStarter\Setup\UrlDownloader;
 
 /**
@@ -76,15 +77,17 @@ final class DropinStep implements FileCreationStepInterface
      */
     public function name()
     {
-        return '__dropin';
+        return 'dropin-' . pathinfo($this->name, PATHINFO_FILENAME);
     }
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function allowed(Config $config, \ArrayAccess $paths)
+    public function allowed(Config $config, Paths $paths)
     {
         $this->actionSource = $this->action($this->url, $paths);
+
         if (empty($this->actionSource[0])) {
             $this->io->error("{$this->url} is not a valid url nor a valid path.");
 
@@ -96,8 +99,10 @@ final class DropinStep implements FileCreationStepInterface
 
     /**
      * @inheritdoc
+     * @throws \RuntimeException
+     * @throws \InvalidArgumentException
      */
-    public function run(\ArrayAccess $paths)
+    public function run(Paths $paths)
     {
         $dest = $this->targetPath($paths);
         if (!$this->overwrite->should($dest)) {
@@ -105,6 +110,7 @@ final class DropinStep implements FileCreationStepInterface
 
             return;
         }
+
         $this->actionSource[0] === 'download'
             ? $this->download($this->actionSource[1], $dest)
             : $this->copy($this->actionSource[1], $dest);
@@ -128,10 +134,11 @@ final class DropinStep implements FileCreationStepInterface
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function targetPath(\ArrayAccess $paths)
+    public function targetPath(Paths $paths)
     {
-        return $paths['root'] . '/' . $paths['wp-content'] . '/' . $this->name;
+        return $paths->absolute(Paths::WP_CONTENT, $this->name);
     }
 
     /**
@@ -139,6 +146,7 @@ final class DropinStep implements FileCreationStepInterface
      *
      * @param string $url
      * @param string $dest
+     * @throws \RuntimeException
      */
     private function download($url, $dest)
     {
@@ -175,12 +183,13 @@ final class DropinStep implements FileCreationStepInterface
      * Return false if none of them.
      *
      * @param  string $url
-     * @param  \ArrayAccess $paths
+     * @param  Paths $paths
      * @return array
+     * @throws \InvalidArgumentException
      */
-    private function action($url, \ArrayAccess $paths)
+    private function action($url, Paths $paths)
     {
-        $realpath = realpath($paths['root'] . "/{$url}");
+        $realpath = realpath($paths->root($url));
         if ($realpath && is_file($realpath)) {
             return ['copy', $realpath];
         } elseif (filter_var($url, FILTER_VALIDATE_URL)) {

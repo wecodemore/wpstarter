@@ -121,13 +121,13 @@ class IO
         array_walk($lines, function (&$line) use ($length) {
             $len = strlen($line);
             if ($len < $length) {
-                $line = $line . str_repeat(' ', $length - $len);
+                $line .= str_repeat(' ', $length - $len);
             }
             $line = "  {$line}  ";
         });
         $space = str_repeat(' ', $length + 4);
         array_unshift($lines, '  <question>' . $space);
-        array_push($lines, $space . '</question>');
+        $lines[] = "{$space}</question>";
         $question = PHP_EOL . implode('</question>' . PHP_EOL . '  <question>', $lines);
         $prompt = PHP_EOL . '    <option=bold>Y</option=bold> or <option=bold>N</option=bold> ';
         $prompt .= $default ? '[Y]' : '[N]';
@@ -139,9 +139,9 @@ class IO
      * Get an array of question lines and a default response and use them to format and ask a
      * question to console.
      *
-     * @param  array $lines
+     * @param array $lines
      * @param array $answers
-     * @param  bool $default
+     * @param string|bool $default
      * @return bool
      */
     public function ask(array $lines, array $answers = [], $default = null)
@@ -159,13 +159,13 @@ class IO
         array_walk($lines, function (&$line) use ($length) {
             $len = strlen($line);
             if ($len < $length) {
-                $line = $line . str_repeat(' ', $length - $len);
+                $line .= str_repeat(' ', $length - $len);
             }
             $line = "  {$line}  ";
         });
         $space = str_repeat(' ', $length + 4);
         array_unshift($lines, '  <question>' . $space);
-        array_push($lines, $space . '</question>');
+        $lines[] = "{$space}</question>";
         $question = PHP_EOL . implode('</question>' . PHP_EOL . '  <question>', $lines);
         $prompt = '';
         foreach ($answers as $expected => $label) {
@@ -185,7 +185,7 @@ class IO
 
             return $answer;
         } catch (\RuntimeException $exception) {
-            if (is_null($default)) {
+            if ($default === null) {
                 reset($answers);
 
                 return key($answers);
@@ -213,7 +213,7 @@ class IO
         array_walk($lines, function (&$line) use ($length) {
             $len = strlen($line);
             if ($len < $length) {
-                $line = $line . str_repeat(' ', $length - $len);
+                $line .= str_repeat(' ', $length - $len);
             }
             $line = "  {$line}  ";
         });
@@ -222,7 +222,7 @@ class IO
         $open = "  <bg={$background};fg={$fg}>";
         $close = "  </bg={$background};fg={$fg}>";
         array_unshift($lines, $open . $space);
-        array_push($lines, $space . $close);
+        $lines[] = $space . $close;
         $func = $is_error ? 'writeError' : 'write';
         call_user_func([$this->io, $func], PHP_EOL . implode($close . PHP_EOL . $open, $lines));
 

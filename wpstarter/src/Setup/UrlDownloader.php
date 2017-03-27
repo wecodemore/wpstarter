@@ -46,6 +46,7 @@ class UrlDownloader
      *
      * @param string $url
      * @param \WCM\WPStarter\Setup\IO $io
+     * @throws \RuntimeException
      */
     public function __construct($url, IO $io)
     {
@@ -62,7 +63,7 @@ class UrlDownloader
         if (filter_var($url, FILTER_VALIDATE_URL)) {
             $this->url = $url;
         } else {
-            $this->error = is_string($url) ? "{$url} is an invalid url." : "Invalid url.";
+            $this->error = is_string($url) ? "{$url} is an invalid url." : 'Invalid url.';
         }
 
         if ($this->url) {

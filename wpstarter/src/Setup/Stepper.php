@@ -64,7 +64,7 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
 
     public function name()
     {
-        return '__stepper';
+        return 'wpstarter';
     }
 
     /**
@@ -101,28 +101,44 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
 
         $scripts = $this->config['scripts'] ?: [];
 
+        $this->runStepScripts($this, $scripts, ['pre-', $paths, Steps\StepInterface::NONE]);
+
         while ($this->steps->valid()) {
+
             /** @var \WCM\WPStarter\Setup\Steps\StepInterface $step */
             $step = $this->steps->current();
             $result = 0;
             $shouldProcess = $this->shouldProcess($step, $paths);
 
             if ($shouldProcess) {
-                $this->runStepsScripts($step, $scripts, 'pre', $paths, Steps\StepInterface::NONE);
+                $stepScriptData = ['pre-', $paths, Steps\StepInterface::NONE];
+                $this->runStepScripts($step, $scripts, $stepScriptData);
                 $result = $step->run($paths);
             }
 
             if (!$this->handleResult($step, $result)) {
+
+                $stepScriptData = ['post-', $paths, Steps\StepInterface::ERROR];
+                $this->runStepScripts($this, $scripts, $stepScriptData);
+
                 return $this->finalMessage();
             }
 
-            $step instanceof Steps\PostProcessStepInterface and $this->postProcessSteps->attach($step);
-            $shouldProcess and $this->runStepsScripts($step, $scripts, 'post', $paths, $result);
+            if ($step instanceof Steps\PostProcessStepInterface) {
+                $this->postProcessSteps->attach($step);
+            }
+
+            if ($shouldProcess) {
+                $stepScriptData = ['post-', $paths, $result];
+                $this->runStepScripts($step, $scripts, $stepScriptData);
+            }
 
             $this->steps->next();
         }
 
         $this->postProcess($this->io);
+
+        $this->runStepScripts($this, $scripts, ['post-', $paths, Steps\StepInterface::SUCCESS]);
 
         return $this->finalMessage();
     }
@@ -225,23 +241,16 @@ final class Stepper implements StepperInterface, Steps\PostProcessStepInterface
     /**
      * @param \WCM\WPStarter\Setup\Steps\StepInterface $step
      * @param array $scripts
-     * @param string $type
-     * @param \ArrayAccess $paths
-     * @param int $result
+     * @param array $data
      */
-    private function runStepsScripts(
-        Steps\StepInterface $step,
-        array $scripts,
-        $type = 'pre',
-        \ArrayAccess $paths,
-        $result
-    ) {
-        $name = $step->name();
-        $toRun = array_key_exists("{$type}-$name", $scripts)
-            ? (array)$scripts["{$type}-$name"]
-            : [];
+    private function runStepScripts(Steps\StepInterface $step, array $scripts, array $data)
+    {
+        list($type, $paths, $result) = $data;
+        $scriptsKey = $type . $step->name();
 
-        array_walk($toRun, function (callable $script) use ($paths, $result) {
+        $toRun = array_key_exists($scriptsKey, $scripts) ? (array)$scripts[$scriptsKey] : [];
+
+        $toRun and array_walk($toRun, function (callable $script) use ($paths, $result) {
             $script($this->config, $paths, $this->io, $result);
         });
     }

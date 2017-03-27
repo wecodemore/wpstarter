@@ -14,8 +14,9 @@ use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\Config;
-use WCM\WPStarter\Setup\LanguagesFetcher;
+use WCM\WPStarter\Setup\LanguageListFetcher;
 use WCM\WPStarter\Setup\OverwriteHelper;
+use WCM\WPStarter\Setup\Paths;
 
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
@@ -25,7 +26,9 @@ use WCM\WPStarter\Setup\OverwriteHelper;
 final class DropinsStep implements StepInterface
 {
 
-    private static $validDropins = [
+    const NAME = 'dropins';
+
+    const DROPINS = [
         'advanced-cache.php',
         'db.php',
         'db-error.php',
@@ -39,12 +42,17 @@ final class DropinsStep implements StepInterface
     ];
 
     /**
+     * @var string[]
+     */
+    private static $allDropins;
+
+    /**
      * @var \WCM\WPStarter\Setup\IO
      */
     private $io;
 
     /**
-     * @var array
+     * @var string[]
      */
     private $dropins;
 
@@ -74,6 +82,8 @@ final class DropinsStep implements StepInterface
         Filesystem $filesystem,
         FileBuilder $filebuilder
     ) {
+        self::$allDropins or self::$allDropins = self::DROPINS;
+
         return new static($io);
     }
 
@@ -90,26 +100,27 @@ final class DropinsStep implements StepInterface
      */
     public function name()
     {
-        return 'dropins';
+        return self::NAME;
     }
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function allowed(Config $config, \ArrayAccess $paths)
+    public function allowed(Config $config, Paths $paths)
     {
         $this->config = $config;
 
-        return !empty($config['dropins']) && !empty($paths['wp-content']);
+        return !empty($config[Config::DROPINS]) && !empty($paths->wp_content());
     }
 
     /**
      * @inheritdoc
      */
-    public function run(\ArrayAccess $paths)
+    public function run(Paths $paths)
     {
         $overwrite = new OverwriteHelper($this->config, $this->io, $paths);
-        is_array($this->dropins) or $this->dropins = $this->config['dropins'];
+        is_array($this->dropins) or $this->dropins = $this->config[Config::DROPINS];
 
         if (empty($this->dropins)) {
             return self::NONE;
@@ -117,7 +128,7 @@ final class DropinsStep implements StepInterface
 
         foreach ($this->dropins as $name => $url) {
             $this->validName(basename($name))
-                ? $this->runStep($name, $url, $paths, $overwrite)
+                ? $this->runStep([$name => $url], $paths, $overwrite)
                 : $this->addMessage("{$name} is not a valid dropin name. Skipped.", 'error');
         }
         if (empty($this->error)) {
@@ -146,13 +157,14 @@ final class DropinsStep implements StepInterface
     }
 
     /**
-     * @param string $name
-     * @param string $url
-     * @param \ArrayAccess $paths
+     * @param $dropin
+     * @param Paths $paths
      * @param \WCM\WPStarter\Setup\OverwriteHelper $overwrite
      */
-    private function runStep($name, $url, \ArrayAccess $paths, OverwriteHelper $overwrite)
+    private function runStep($dropin, Paths $paths, OverwriteHelper $overwrite)
     {
+        list($name, $url) = $dropin;
+
         $step = new DropinStep($name, $url, $this->io, $overwrite);
         if ($step->allowed($this->config, $paths)) {
             $step->run($paths);
@@ -174,22 +186,23 @@ final class DropinsStep implements StepInterface
     private function validName($name)
     {
         if (
-            $this->config['unknown-dropins'] === true
-            || in_array($name, self::$validDropins, true)
+            $this->config[Config::UNKWOWN_DROPINS] === true
+            || in_array($name, self::$allDropins, true)
         ) {
             return true;
         }
+
         $ext = pathinfo($name, PATHINFO_EXTENSION);
-        $ask = $this->config['unknown-dropins'] === 'ask';
+        $ask = $this->config[Config::UNKWOWN_DROPINS] === 'ask';
         if (strtolower($ext) !== 'php') {
             return $ask && $this->ask($name, 0);
         }
 
         $name = substr($name, 0, -4);
-        $fetcher = new LanguagesFetcher($this->io);
-        $languages = $fetcher->fetch($this->config['wp-version']);
+        $fetcher = new LanguageListFetcher($this->io);
+        $languages = $fetcher->fetch($this->config[Config::WP_VERSION]);
         if (is_array($languages) && $languages) {
-            self::$validDropins = array_merge(self::$validDropins, $languages);
+            self::$allDropins = array_merge(self::DROPINS, $languages);
         }
 
         return $languages
@@ -207,10 +220,12 @@ final class DropinsStep implements StepInterface
      */
     private function ask($name, $question = 0)
     {
+        $wp_ver = $this->config[Config::WP_VERSION];
+
         switch ($question) {
             case 2:
                 $lines = [
-                    "{$name} is not a core supported locale for WP " . $this->config['wp-version'],
+                    "{$name} is not a core supported locale for WP {$wp_ver}",
                     "Do you want to proceed with {$name}.php anyway?",
                 ];
                 break;
@@ -225,7 +240,7 @@ final class DropinsStep implements StepInterface
             default:
                 $lines = [
                     "{$name} seems not a valid dropin file.",
-                    "Do you want to proceed with it anyway?",
+                    'Do you want to proceed with it anyway?',
                 ];
                 break;
 
@@ -240,6 +255,6 @@ final class DropinsStep implements StepInterface
      */
     private function addMessage($message, $type)
     {
-        $this->$type .= $message ? $message . PHP_EOL : '';
+        $this->{$type} .= $message ? $message . PHP_EOL : '';
     }
 }

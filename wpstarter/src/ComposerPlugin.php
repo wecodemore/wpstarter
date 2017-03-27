@@ -22,7 +22,6 @@ use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\OverwriteHelper;
 use WCM\WPStarter\Setup\Paths;
 use WCM\WPStarter\Setup\Stepper;
-use WCM\WPStarter\Setup\StepperInterface;
 use WCM\WPStarter\Setup\Steps;
 
 /**
@@ -34,7 +33,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
 {
 
     const WP_PACKAGE_TYPE = 'wordpress-core';
-    const WP_MIN_VER = '4.4.3';
+    const EXTRA_KEY = 'wpstarter';
 
     /**
      * @var \Composer\Composer
@@ -58,7 +57,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     {
         return [
             'post-install-cmd' => 'run',
-            'post-update-cmd' => 'run',
+            'post-update-cmd'  => 'run',
         ];
     }
 
@@ -69,24 +68,40 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     {
         $this->composer = $composer;
         $this->io = $io;
+
         $wpVersion = $this->discoverWpVersion($composer, $io);
+
         // if no or wrong WP found we do nothing, so install() will show an error not findind config
-        if ($this->checkWpVersion($wpVersion)) {
-            $extra = (array)$composer->getPackage()->getExtra();
-            $configs = isset($extra['wpstarter']) && is_array($extra['wpstarter'])
-                ? $extra['wpstarter']
-                : [];
-            $configs['wp-version'] = $wpVersion;
-            $this->config = new Config($configs);
+        if (!$this->checkWpVersion($wpVersion)) {
+            return;
         }
+
+        $extra = (array)$composer->getPackage()->getExtra();
+
+        if (!isset($extra[self::EXTRA_KEY])) {
+            return;
+        }
+
+        $configs = $extra[self::EXTRA_KEY];
+        $dir = getcwd() . DIRECTORY_SEPARATOR;
+        if (is_string($configs) && is_file($dir . $configs) && is_readable($dir . $configs)) {
+            $content = @file_get_contents($dir . $configs);
+            $configs = $content ? @json_decode($content) : [];
+        } elseif (is_array($extra[self::EXTRA_KEY])) {
+            $configs = $extra[self::EXTRA_KEY];
+        }
+
+        $configs[Config::WP_VERSION] = $wpVersion;
+        $this->config = new Config($configs, $composer->getConfig());
     }
 
     /**
      * @inheritdoc
+     * @throws \Symfony\Component\Console\Exception\LogicException
      */
     public function getCommands()
     {
-        return [new Command\WpStarterCommand()];
+        return [new Console\WpStarterCommand()];
     }
 
     /**
@@ -96,6 +111,9 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      *
      * @param array $steps
      * @return void
+     * @throws \RuntimeException
+     * @throws \InvalidArgumentException
+     * @throws \BadMethodCallException
      */
     public function run(array $steps = [])
     {
@@ -103,54 +121,58 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
             $this->io->writeError([
                 'Error running WP Starter command.',
                 'WordPress not found or found in a too old version.',
-                'Minimum required WordPress version is ' . self::WP_MIN_VER . '.',
             ]);
 
             return;
         }
 
-        $this->config->offsetExists('custom-steps') or $this->config['custom-steps'] = [];
-        $this->config->offsetExists('scripts') or $this->config['scripts'] = [];
-        if (!$this->config->offsetExists('verbosity')) {
+        $this->config[Config::CUSTOM_STEPS] or $this->config[Config::CUSTOM_STEPS] = [];
+        $this->config[Config::SCRIPS] or $this->config[Config::SCRIPS] = [];
+
+        if ($this->config[Config::VERBOSITY] === null) {
             $verbosity = ($this->io->isDebug() || $this->io->isVeryVerbose()) ? 2 : 1;
-            $this->config->appendConfig('verbosity', $verbosity);
+            $this->config->appendConfig(Config::VERBOSITY, $verbosity);
         }
 
-        $io = new IO($this->io, $this->config['verbosity']);
+        $io = new IO($this->io, $this->config[Config::VERBOSITY]);
         $paths = new Paths($this->composer);
         $overwrite = new OverwriteHelper($this->config, $io, $paths);
         $stepper = new Stepper($io, $overwrite);
 
+        if (!$stepper->allowed($this->config, $paths)) {
+            $io->block([
+                'WP Starter installation CANCELED.',
+                'wp-config.php was found in root folder and your overwrite settings',
+                'do not allow to proceed.',
+            ], 'yellow');
+
+            return;
+        }
+
         $steps = array_filter($steps, 'is_string');
 
-        if ($this->stepperAllowed($stepper, $this->config, $paths, $io)) {
-            $filesystem = new Filesystem();
-            $fileBuilder = new FileBuilder();
+        $classes = array_merge([
+            Steps\CheckPathStep::NAME   => Steps\CheckPathStep::class,
+            Steps\WPConfigStep::NAME    => Steps\WPConfigStep::class,
+            Steps\IndexStep::NAME       => Steps\IndexStep::class,
+            Steps\EnvExampleStep::NAME  => Steps\EnvExampleStep::class,
+            Steps\DropinsStep::NAME     => Steps\DropinsStep::class,
+            Steps\GitignoreStep::NAME   => Steps\GitignoreStep::class,
+            Steps\MoveContentStep::NAME => Steps\MoveContentStep::class,
+            Steps\ContentDevStep::NAME  => Steps\ContentDevStep::class,
+        ], $this->config[Config::CUSTOM_STEPS]);
 
-            $classes = array_merge([
-                'check-paths' => Steps\CheckPathStep::class,
-                'build-wpconfig' => Steps\WPConfigStep::class,
-                'build-index' => Steps\IndexStep::class,
-                'build-env-example' => Steps\EnvExampleStep::class,
-                'dropins' => Steps\DropinsStep::class,
-                'build-gitignore' => Steps\GitignoreStep::class,
-                'move-content' => Steps\MoveContentStep::class,
-                'publish-content-dev' => Steps\ContentDevStep::class,
-            ], $this->config['custom-steps']);
+        $filesystem = new Filesystem();
+        $fileBuilder = new FileBuilder();
 
-            array_walk(
-                $classes,
-                function ($stepClass) use ($stepper, $fileBuilder, $filesystem, $io, $steps) {
-                    $stepObj = $this->factoryStep($stepClass, $io, $filesystem, $fileBuilder);
-                    $name = $stepObj->name();
-                    if ($name && (!$steps || in_array($name, $steps, true))) {
-                        $stepper->addStep($stepObj);
-                    }
-                }
-            );
+        array_walk($classes, function ($stepClass, $name, \stdClass $info) use ($stepper, $steps) {
+            if ($name && (!$steps || in_array($name, $steps, true))) {
+                $stepper->addStep($this->factoryStep($stepClass, $info));
+            }
 
-            $stepper->run($paths);
-        }
+        }, (object)compact('fileBuilder', 'filesystem', 'io'));
+
+        $stepper->run($paths);
     }
 
     /**
@@ -186,12 +208,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
             return '0.0.0';
         }
 
-        return implode('.', array_pad(array_map(function ($part) {
-            $parts = explode('-', $part, 2);
-            $part = $parts[0];
-
-            return is_numeric($part) ? abs((int)$part) : 0;
-        }, explode('.', $vers[0], 3)), 3, 0));
+        return $this->normalizeVersion($vers[0]);
     }
 
     /**
@@ -200,28 +217,37 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      */
     private function checkWpVersion($version)
     {
-        if (!$version || $version === '0.0.0') {
+        if (!is_string($version) || !$version || $version === '0.0.0') {
             return false;
         }
 
-        return version_compare($version, self::WP_MIN_VER) >= 0;
+        return version_compare($version, '4') >= 0;
     }
 
     /**
-     * Instantiate a step instance using the best method available.
-     *
-     * @param string $stepClass
-     * @param \WCM\WPStarter\Setup\IO $io
-     * @param \WCM\WPStarter\Setup\Filesystem $filesystem
-     * @param \WCM\WPStarter\Setup\FileBuilder $builder
-     * @return \WCM\WPStarter\Setup\Steps\StepInterface
+     * @param string $version
+     * @return string
      */
-    private function factoryStep(
-        $stepClass,
-        IO $io,
-        Filesystem $filesystem,
-        FileBuilder $builder
-    ) {
+    private function normalizeVersion($version)
+    {
+        $matched = preg_match('~^[0-9]{1,2}(?:[0-9\.]+)?+~', $version, $matches);
+
+        if (!$matched) {
+            return '0.0.0';
+        }
+
+        $numbers = explode('.', trim($matches[0], '.'));
+
+        return implode('.', array_replace(['0', '0', '0'], array_slice($numbers, 0, 3)));
+    }
+
+    /**
+     * @param $stepClass
+     * @param \stdClass $factoryData
+     * @return null|Steps\StepInterface
+     */
+    private function factoryStep($stepClass, \stdClass $factoryData)
+    {
         if (
             !is_string($stepClass)
             || !is_subclass_of($stepClass, Steps\StepInterface::class, true)
@@ -234,39 +260,13 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
         if (method_exists($stepClass, 'instance')) {
             /** @var callable $factory */
             $factory = [$stepClass, 'instance'];
-            $step = $factory($io, $filesystem, $builder);
+            $step = $factory($factoryData->io, $factoryData->filesystem, $factoryData->builder);
         }
 
         $step or $step = is_subclass_of($stepClass, Steps\FileCreationStepInterface::class, true)
-            ? new $stepClass($io, $filesystem, $builder)
-            : new $stepClass($io);
+            ? new $stepClass($factoryData->io, $factoryData->filesystem, $factoryData->builder)
+            : new $stepClass($factoryData->io);
 
         return $step instanceof Steps\StepInterface ? $step : null;
-    }
-
-    /**
-     * @param \WCM\WPStarter\Setup\StepperInterface $stepper
-     * @param \WCM\WPStarter\Setup\Config $config
-     * @param \WCM\WPStarter\Setup\Paths $paths
-     * @param \WCM\WPStarter\Setup\IO $io
-     * @return bool
-     */
-    private function stepperAllowed(
-        StepperInterface $stepper,
-        Config $config,
-        Paths $paths,
-        IO $io
-    ) {
-        if (!$stepper->allowed($config, $paths)) {
-            $io->block([
-                'WP Starter installation CANCELED.',
-                'wp-config.php was found in root folder and your overwrite settings',
-                'do not allow to proceed.',
-            ], 'yellow');
-
-            return false;
-        }
-
-        return true;
     }
 }

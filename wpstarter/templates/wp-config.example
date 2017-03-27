@@ -13,41 +13,22 @@
 /**
  * Composer autoload.
  */
-require_once {{{VENDOR_PATH}}}/autoload.php;
+require_once '{{{VENDOR_PATH}}}/autoload.php';
 
 /**
  * A reference to `.env` folder path.
  */
-define('WPSTARTER_PATH', {{{ENV_REL_PATH}}});
+const WPSTARTER_PATH = '{{{ENV_REL_PATH}}}';
 
 /**
- * @return \WCM\WPStarter\Env\Env
+ * Define all WordPress constants from environment variables.
+ * Environment variables will be loaded from file, unless `WPSTARTER_ENV_LOADED` env var is already setup
+ * e.g. via webserver configuration. In that case all environemtn variables are assumed to be set.
+ * Environment variable that are set in the _real_ environment (e.g. via webserver) will not be
+ * overridden from file, even if `WPSTARTER_ENV_LOADED` is not set.
  */
-function wpstarter_env() {
-    return WCM\WPStarter\Env\Env::load({{{ENV_REL_PATH}}}, '{{{ENV_FILE_NAME}}}');
-}
-
-$env = wpstarter_env();
-
-/**
- * Configuration constants.
- *
- * Use environment variables to set WordPress constants.
- * Mandatory settings:
- * - DB_NAME
- * - DB_USER
- * - DB_PASSWORD
- *
- * @var array $allWpVars
- */
-$allWpVars = $env->allWpVars();
-array_walk($allConfVars, function ($name, $i, ArrayAccess $env) {
-    if ($name === 'DB_TABLE_PREFIX') {
-        $GLOBALS['table_prefix'] = preg_replace('#[^\w]#', '', $env[$name]);
-    } elseif(! defined($name) && $env->offsetExists($name)) {
-        define($name, $env[$name]);
-    }
-}, $env);
+WCM\WPStarter\Env\WordPressEnvBridge::load('{{{ENV_REL_PATH}}}', '{{{ENV_FILE_NAME}}}')
+    ->setupWordPress();
 
 /**
  * Set optional database settings if not already set
@@ -135,15 +116,15 @@ if (! defined('WP_HOME')) {
     define('WP_HOME', $scheme.$name);
 }
 
-defined('ABSPATH')        or define('ABSPATH',        realpath({{{WP_INSTALL_PATH}}}));
-defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath({{{WP_CONTENT_PATH}}}));
+defined('ABSPATH')        or define('ABSPATH',        realpath('{{{WP_INSTALL_PATH}}}'));
+defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath('{{{WP_CONTENT_PATH}}}'));
 defined('WP_SITEURL')     or define('WP_SITEURL',     rtrim(WP_HOME, '/').'/{{{WP_SITEURL}}}');
 defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/').'/{{{WP_CONTENT_URL}}}');
 
 /**
  * Clean up.
  */
-unset($env, $allWpVars, $environment, $server, $secure, $scheme, $name);
+unset($environment, $server, $secure, $scheme, $name);
 
 /**
  * Allows to load MU plugins in subfolders.
@@ -159,7 +140,7 @@ WCM\WPStarter\Helpers::addHook(
  * Register default themes inside WordPress package wp-content folder.
  */
 WCM\WPStarter\Helpers::addHook('plugins_loaded', function () {
-    WCM\WPStarter\Helpers::loadThemeFolder({{{REGISTER_THEME_DIR}}});
+    WCM\WPStarter\Helpers::loadThemeFolder('{{{REGISTER_THEME_DIR}}}');
 }, 0);
 
 /**

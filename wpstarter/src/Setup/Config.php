@@ -10,7 +10,9 @@
 
 namespace WCM\WPStarter\Setup;
 
+use WCM\WPStarter\Setup\Steps\GitignoreStep;
 use WCM\WPStarter\Setup\Steps\StepInterface;
+use Composer\Config as ComposerConfig;
 
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
@@ -19,40 +21,53 @@ use WCM\WPStarter\Setup\Steps\StepInterface;
  */
 final class Config implements \ArrayAccess
 {
-    /**
-     * @var array
-     */
-    private static $defaults = [
-        'gitignore' => true,
-        'env-example' => true,
-        'env-file' => '.env',
-        'move-content' => false,
-        'content-dev-op' => 'symlink',
-        'content-dev-dir' => 'content-dev',
-        'register-theme-folder' => true,
-        'prevent-overwrite' => ['.gitignore'],
-        'dropins' => [],
-        'unknown-dropins' => 'ask',
+
+    const GITIGNORE = 'gitignore';
+    const ENV_EXAMPLE = 'env-example';
+    const ENV_FILE = 'env-file';
+    const MOVE_CONTENT = 'move-content';
+    const CONTENT_DEV_OPERATION = 'content-dev-op';
+    const CONTENT_DEV_DIR = 'content-dev-dir';
+    const REGISTER_THEME_FOLDER = 'register-theme-folder';
+    const PREVENT_OVERWRITE = 'prevent-overwrite';
+    const DROPINS = 'dropins';
+    const UNKWOWN_DROPINS = 'unknown-dropins';
+    const VERBOSITY = 'verbosity';
+    const CUSTOM_STEPS = 'custom-steps';
+    const SCRIPS = 'scripts';
+    const WP_VERSION = 'wp-version';
+    const COMPOSER_CONFIG = 'composer';
+
+    const DEFAULTS = [
+        self::GITIGNORE             => true,
+        self::ENV_EXAMPLE           => true,
+        self::ENV_FILE              => '.env',
+        self::MOVE_CONTENT          => false,
+        self::CONTENT_DEV_OPERATION => 'symlink',
+        self::CONTENT_DEV_DIR       => 'content-dev',
+        self::REGISTER_THEME_FOLDER => true,
+        self::PREVENT_OVERWRITE     => ['.gitignore'],
+        self::DROPINS               => [],
+        self::UNKWOWN_DROPINS       => 'ask',
     ];
 
-    /**
-     * @var array
-     */
-    private static $validationMap = [
-        'gitignore' => 'validateGitignore',
-        'env-example' => 'validateBoolOrAskOrUrl',
-        'env-file' => 'validatePath',
-        'register-theme-folder' => 'validateBoolOrAsk',
-        'move-content' => 'validateBoolOrAsk',
-        'content-dev-dir' => 'validatePath',
-        'content-dev-op' => 'validateContentDevOperation',
-        'dropins' => 'validatePathArray',
-        'unknown-dropins' => 'validateBoolOrAsk',
-        'prevent-overwrite' => 'validateOverwrite',
-        'verbosity' => 'validateVerbosity',
-        'custom-steps' => 'validateSteps',
-        'scripts' => 'validateScripts'
+    const VALIDATION_MAP = [
+        self::GITIGNORE             => 'validateGitignore',
+        self::ENV_EXAMPLE           => 'validateBoolOrAskOrUrl',
+        self::ENV_FILE              => 'validatePath',
+        self::MOVE_CONTENT          => 'validateBoolOrAsk',
+        self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
+        self::CONTENT_DEV_DIR       => 'validatePath',
+        self::REGISTER_THEME_FOLDER => 'validateBoolOrAsk',
+        self::PREVENT_OVERWRITE     => 'validateOverwrite',
+        self::DROPINS               => 'validatePathArray',
+        self::UNKWOWN_DROPINS       => 'validateBoolOrAsk',
+        self::VERBOSITY             => 'validateVerbosity',
+        self::CUSTOM_STEPS          => 'validateSteps',
+        self::SCRIPS                => 'validateScripts'
     ];
+
+    const BOOLEANS = [true, false, 1, 0, 'true', 'false', '1', '0', 'yes', 'no', 'on', 'off'];
 
     /**
      * @var array
@@ -63,10 +78,12 @@ final class Config implements \ArrayAccess
      * Constructor.
      *
      * @param array $configs
+     * @param ComposerConfig $composer_config
      */
-    public function __construct(array $configs)
+    public function __construct(array $configs, ComposerConfig $composer_config)
     {
         $this->configs = $this->validate($configs);
+        $this->configs[self::COMPOSER_CONFIG] = $composer_config->all();
     }
 
     /**
@@ -77,24 +94,27 @@ final class Config implements \ArrayAccess
      * @param string $name
      * @param mixed $value
      * @return static
+     * @throws \BadMethodCallException
      */
     public function appendConfig($name, $value)
     {
         if ($this->offsetExists($name)) {
             throw new \BadMethodCallException(
-                "%s is append-ony: %s config is already set",
-                __CLASS__,
-                $name
+                sprintf(
+                    '%s is append-ony: %s config is already set',
+                    __CLASS__,
+                    $name
+                )
             );
         }
 
-        if (array_key_exists($name, self::$validationMap)) {
+        if (array_key_exists($name, self::VALIDATION_MAP)) {
             /** @var callable $validate */
-            $validate = [$this, self::$validationMap[$name]];
+            $validate = [$this, self::VALIDATION_MAP[$name]];
             $value = $validate($validate);
         }
 
-        is_null($value) or $this->configs[$name] = $value;
+        $value === null or $this->configs[$name] = $value;
 
         return $this;
     }
@@ -115,24 +135,25 @@ final class Config implements \ArrayAccess
      */
     private function validate(array $configs)
     {
-        $wpVersion = empty($configs['wp-version']) ? '0.0.0' : $configs['wp-version'];
-        $valid = ['wp-version' => $wpVersion];
-        $parsed = self::$defaults;
+        $parsed = new \ArrayObject(self::DEFAULTS);
 
-        array_walk($configs, function ($value, $key) use (&$parsed) {
+        array_walk($configs, function ($value, $key, \ArrayObject $parsed) {
+
             $validated = $value;
-            if (array_key_exists($key, self::$validationMap)) {
+            if (array_key_exists($key, self::VALIDATION_MAP)) {
                 /** @var callable $validate */
-                $validate = [$this, self::$validationMap[$key]];
+                $validate = [$this, self::VALIDATION_MAP[$key]];
                 $validated = $validate($value);
             }
 
-            is_null($validated) or $parsed[$key] = $validated;
-        });
+            $validated === null or $parsed[$key] = $validated;
+        }, $parsed);
 
-        $parsed['register-theme-folder'] and $parsed['move-content'] = false;
+        $parsed[self::REGISTER_THEME_FOLDER] and $parsed[self::MOVE_CONTENT] = false;
 
-        return array_merge($parsed, $valid);
+        $wpVersion = empty($configs[self::WP_VERSION]) ? '0.0.0' : $configs[self::WP_VERSION];
+
+        return array_merge($parsed->getArrayCopy(), [self::WP_VERSION => $wpVersion]);
     }
 
     /**
@@ -142,15 +163,13 @@ final class Config implements \ArrayAccess
     private function validateGitignore($value)
     {
         if (is_array($value)) {
-            $custom = isset($value['custom']) && is_array($value['custom'])
-                ? array_filter($value['custom'], 'is_string')
+            $custom = isset($value[GitignoreStep::CUSTOM]) && is_array($value[GitignoreStep::CUSTOM])
+                ? array_filter($value[GitignoreStep::CUSTOM], 'is_string')
                 : [];
-            $default = [
-                'wp' => true,
-                'wp-content' => true,
-                'vendor' => true,
-                'common' => true,
-            ];
+
+            $default = GitignoreStep::DEFAULTS;
+            unset($default[GitignoreStep::CUSTOM]);
+
             foreach ($value as $k => $v) {
                 if (array_key_exists($k, $default) && $this->validateBool($v) === false) {
                     $default[$k] = false;
@@ -207,15 +226,11 @@ final class Config implements \ArrayAccess
      */
     private function validatePathArray($value)
     {
-        if (is_array($value)) {
-            array_walk($value, function (&$path) {
-                $path = $this->validatePath($path);
-            });
-
-            return array_unique(array_filter($value));
+        if (!is_array($value)) {
+            return [];
         }
 
-        return [];
+        return array_unique(array_filter(array_map([$this, 'validatePath'], $value)));
     }
 
     /**
@@ -227,7 +242,9 @@ final class Config implements \ArrayAccess
         $ask = $this->validateBoolOrAsk($value);
         if ($ask === 'ask') {
             return 'ask';
-        } elseif (is_string($value)) {
+        }
+
+        if (is_string($value)) {
             return $this->validateUrl(trim(strtolower($value)));
         }
 
@@ -240,8 +257,7 @@ final class Config implements \ArrayAccess
      */
     private function validateBoolOrAsk($value)
     {
-        $asks = ['ask', 'prompt', 'query', 'interrogate', 'demand'];
-        if (in_array(trim(strtolower($value)), $asks, true)) {
+        if (strtolower($value) === 'ask') {
             return 'ask';
         }
 
@@ -291,15 +307,20 @@ final class Config implements \ArrayAccess
         }
 
         $allScripts = [];
+
         foreach ($value as $name => $scripts) {
+
             is_string($name) or $name = '';
+
             if (strpos($name, 'pre-') !== 0 && strpos($name, 'post-') !== 0) {
                 continue;
             }
+
             if (is_callable($scripts)) {
                 $allScripts[$name] = [$scripts];
                 continue;
             }
+
             if (is_array($scripts)) {
                 $scripts = array_filter($scripts, 'is_callable');
                 $scripts and $allScripts[$name] = $scripts;
@@ -333,8 +354,9 @@ final class Config implements \ArrayAccess
      */
     private function validateBool($value)
     {
-        $booleans = [true, false, 1, 0, "true", "false", "1", "0", "yes", "no", "on", "off"];
-        if (in_array(is_string($value) ? strtolower($value) : $value, $booleans, true)) {
+        is_string($value) and $value = strtolower($value);
+
+        if (in_array($value, self::BOOLEANS, true)) {
             return filter_var($value, FILTER_VALIDATE_BOOLEAN);
         }
 
@@ -347,7 +369,7 @@ final class Config implements \ArrayAccess
      */
     private function validateInt($value)
     {
-        return is_numeric($value) ? intval($value) : null;
+        return is_numeric($value) ? (int)$value : null;
     }
 
     /**
@@ -363,22 +385,24 @@ final class Config implements \ArrayAccess
      */
     public function offsetGet($offset)
     {
-        return $this->configs[$offset];
+        return $this->offsetExists($offset) ? $this->configs[$offset] : null;
     }
 
     /**
      * @inheritdoc
+     * @throws \LogicException
      */
     public function offsetSet($offset, $value)
     {
-        throw new \LogicException("Configs can't be set on the fly.");
+        throw new \LogicException('Configs can\'t be set on the fly.');
     }
 
     /**
      * @inheritdoc
+     * @throws \LogicException
      */
     public function offsetUnset($offset)
     {
-        throw new \LogicException("Configs can't be unset on the fly.");
+        throw new \LogicException('Configs can\'t be unset on the fly.');
     }
 }

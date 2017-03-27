@@ -15,7 +15,7 @@ namespace WCM\WPStarter\Setup;
  * @license http://opensource.org/licenses/MIT MIT
  * @package WPStarter
  */
-class LanguagesFetcher
+class LanguageListFetcher
 {
     /**
      * @var array
@@ -52,14 +52,14 @@ class LanguagesFetcher
         $result = $remote->fetch();
 
         if (!$result && $useSsl) {
-            $this->io->comment('Languages download failed, trying with disabled SSL...');
+            $this->io->comment('Language list failed, trying with disabled SSL...');
 
             return $this->fetch($version, false);
         } elseif (!$result && substr_count($version, '.') === 2) {
             $verArray = explode('.', $version);
             array_pop($verArray);
             $version = implode('.', $verArray);
-            $this->io->comment("Languages download failed, trying with version {$version}...");
+            $this->io->comment("Language list download failed, trying with version {$version}...");
 
             return $this->fetch($version, true);
         } elseif (!$result) {
@@ -80,7 +80,7 @@ class LanguagesFetcher
 
         $languages
             ? $this->languages = $languages
-            : $this->io->comment('Error on loading languages from wordpress.org');
+            : $this->io->comment('Error on loading language list from wordpress.org');
 
         return $languages;
     }

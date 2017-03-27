@@ -11,6 +11,7 @@
 namespace WCM\WPStarter\Setup\Steps;
 
 use WCM\WPStarter\Setup\Config;
+use WCM\WPStarter\Setup\Paths;
 
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
@@ -34,10 +35,10 @@ final class NullStep implements StepInterface
      * Implements the interface doing nothing.
      *
      * @param  \WCM\WPStarter\Setup\Config $config
-     * @param  \ArrayAccess $paths
+     * @param  Paths $paths
      * @return bool
      */
-    public function allowed(Config $config, \ArrayAccess $paths)
+    public function allowed(Config $config, Paths $paths)
     {
         return false;
     }
@@ -45,10 +46,10 @@ final class NullStep implements StepInterface
     /**
      * Implements the interface doing nothing.
      *
-     * @param  \ArrayAccess $paths Have to return one of the step constants.
+     * @param  Paths $paths Have to return one of the step constants.
      * @return int
      */
-    public function run(\ArrayAccess $paths)
+    public function run(Paths $paths)
     {
         return self::NONE;
     }

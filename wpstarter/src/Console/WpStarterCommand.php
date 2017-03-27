@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace WCM\WPStarter\Command;
+namespace WCM\WPStarter\Console;
 
 use Composer\Command\BaseCommand;
 use Symfony\Component\Console\Input\InputArgument;
@@ -25,6 +25,7 @@ final class WpStarterCommand extends BaseCommand
 {
     /**
      * @inheritdoc
+     * @throws \Symfony\Component\Console\Exception\InvalidArgumentException
      */
     protected function configure()
     {

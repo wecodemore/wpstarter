@@ -21,40 +21,25 @@ class FileBuilder
 {
 
     /**
-     * @var \Composer\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     */
-    public function __construct()
-    {
-        $this->filesystem = new Filesystem();
-    }
-
-    /**
      * Build a file content starting form a template and a set of replacement variables.
      * Part of those variables (salt keys) are generated using Salter class.
      * Templater class is used to apply the replacements.
      *
-     * @param  \ArrayAccess $paths
+     * @param  Paths $paths
      * @param  string $template
      * @param  array $vars
-     * @return string|bool  file content on success, false on failure
+     * @return string file content on success, false on failure
+     * @throws \InvalidArgumentException
      */
-    public function build(\ArrayAccess $paths, $template, array $vars = [])
+    public function build(Paths $paths, $template, array $vars = [])
     {
-        $template = realpath($this->filesystem->normalizePath(
-            "{$paths['root']}/{$paths['starter']}/templates/{$template}"
-        ));
+        $template = $paths->absolute(Paths::WP_STARTER, "templates/{$template}");
 
         if (!$template || !is_file($template) || !is_readable($template)) {
             return false;
         }
-        /** @var string $content */
-        $content = $this->render(file_get_contents($template), $vars);
 
-        return $content ?: false;
+        return $this->render(file_get_contents($template), $vars);
     }
 
     /**

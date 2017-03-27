@@ -28,16 +28,10 @@ class Helpers
      * @param int $argsNum
      * @return bool
      */
-    public static function addHook($hook, $callable, $priority = 10, $argsNum = 1)
+    public static function addHook($hook, callable $callable, $priority = 10, $argsNum = 1)
     {
-        if (!is_callable($callable)) {
-            return false;
-        }
-
         if (function_exists('add_filter')) {
-            return add_filter($hook, function () use ($callable) {
-                return call_user_func_array($callable, func_get_args());
-            }, $priority, $argsNum);
+            return add_filter($hook, $callable, $priority, $argsNum);
         }
 
         global $wp_filter;
@@ -45,15 +39,15 @@ class Helpers
         array_key_exists($hook, $wp_filter) or $wp_filter[$hook] = [];
         array_key_exists($priority, $wp_filter[$hook]) or $wp_filter[$hook][$priority] = [];
 
-        /** @var \Closure|object $function */
-        $function = is_object($callable)
-            ? $callable
-            : function () use ($callable) {
-                return call_user_func_array($callable, func_get_args());
+        $function = $callable;
+        if (!is_object($function)) {
+            $function = function (...$args) use ($callable) {
+                return $callable(...$args);
             };
+        }
 
         $wp_filter[$hook][$priority][spl_object_hash($function)] = [
-            'function' => $function,
+            'function' => $callable,
             'accepted_args' => $argsNum,
         ];
 
@@ -67,7 +61,7 @@ class Helpers
      */
     public static function loadThemeFolder($register = true)
     {
-        if (defined('ABSPATH') && $register) {
+        if ($register && defined('ABSPATH')) {
             register_theme_directory(ABSPATH . 'wp-content/themes');
         }
     }

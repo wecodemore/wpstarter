@@ -57,6 +57,7 @@ class Filesystem
      * @param string $sourcePath
      * @param string $targetPath
      * @return bool
+     * @throws \RuntimeException
      */
     public function moveFile($sourcePath, $targetPath)
     {
@@ -178,28 +179,25 @@ class Filesystem
         }
 
         $parentDir = dirname($targetPath);
-        while ('.' != $parentDir && !is_dir($parentDir)) {
+        while ('.' !== $parentDir && !is_dir($parentDir)) {
             $parentDir = dirname($parentDir);
         }
 
-        if ($stat = @stat($parentDir)) {
-            $permissions = $stat['mode'] & 0007777;
-        } else {
-            $permissions = 0755;
+        $stat = @stat($parentDir);
+        $permissions = $stat ? $stat['mode'] & 0007777 : 0755;
+
+        if (!@mkdir($targetPath, $permissions, true) && !is_dir($targetPath)) {
+            return false;
         }
 
-        if (@mkdir($targetPath, $permissions, true)) {
-            if ($permissions != ($permissions & ~umask())) {
-                $nameParts = explode('/', substr($targetPath, strlen($parentDir) + 1));
-                for ($i = 1, $count = count($nameParts); $i <= $count; $i++) {
-                    $dirname = $parentDir . '/' . implode('/', array_slice($nameParts, 0, $i));
-                    @chmod($dirname, $permissions);
-                }
+        if ($permissions !== ($permissions & ~umask())) {
+            $nameParts = explode('/', substr($targetPath, strlen($parentDir) + 1));
+            for ($i = 1, $count = count($nameParts); $i <= $count; $i++) {
+                $dirname = $parentDir . '/' . implode('/', array_slice($nameParts, 0, $i));
+                @chmod($dirname, $permissions);
             }
-
-            return true;
         }
 
-        return false;
+        return true;
     }
 }

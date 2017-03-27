@@ -20,6 +20,15 @@ use Composer\Util\Filesystem;
  */
 final class Paths implements \ArrayAccess
 {
+
+    const ROOT = 'root';
+    const VENDOR = 'vendor';
+    const BIN = 'bin';
+    const WP = 'wp';
+    const WP_PARENT = 'wp-parent';
+    const WP_CONTENT = 'wp-content';
+    const WP_STARTER = 'starter';
+
     /**
      * @var \SplObjectStorage
      */
@@ -42,10 +51,12 @@ final class Paths implements \ArrayAccess
 
     /**
      * @param \Composer\Composer $composer
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
      */
     public function __construct(Composer $composer)
     {
-        is_null(self::$parsed) and self::$parsed = new \SplObjectStorage();
+        self::$parsed === null and self::$parsed = new \SplObjectStorage();
         $this->composer = $composer;
         $this->filesystem = new Filesystem();
         $this->paths = self::$parsed->contains($this->composer)
@@ -55,6 +66,8 @@ final class Paths implements \ArrayAccess
 
     /**
      * @return array
+     * @throws \RuntimeException
+     * @throws \InvalidArgumentException
      */
     private function parse()
     {
@@ -71,18 +84,148 @@ final class Paths implements \ArrayAccess
             ? 'wp-content'
             : $this->subdir($cwd, "{$cwd}/{$extra['wordpress-content-dir']}");
 
+        $vendor_dir = $this->composer->getConfig()->get('vendor-dir');
+        $bin_dir = $this->composer->getConfig()->get('bin-dir');
+
         $paths = [
-            'root' => $this->filesystem->normalizePath($cwd),
-            'vendor' => $this->subdir($cwd, $this->composer->getConfig()->get('vendor-dir')),
-            'wp' => $wpInstallDir,
-            'wp-parent' => $this->subdir($cwd, dirname($wpFullDir)),
-            'wp-content' => $wpContent,
-            'starter' => $this->subdir($cwd, dirname(__DIR__)),
+            self::ROOT       => $this->filesystem->normalizePath($cwd),
+            self::VENDOR     => $this->subdir($cwd, $vendor_dir),
+            self::BIN        => $this->subdir($cwd, $bin_dir),
+            self::WP         => $wpInstallDir,
+            self::WP_PARENT  => $this->subdir($cwd, dirname($wpFullDir)),
+            self::WP_CONTENT => $wpContent,
+            self::WP_STARTER => $this->subdir($cwd, dirname(__DIR__)),
         ];
 
         self::$parsed->attach($this->composer, $paths);
 
         return $paths;
+    }
+
+    /**
+     * @param string $path
+     * @param string $to
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function absolute($path, $to = '')
+    {
+        if (!is_string($path)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s requires a string, %s given.', __METHOD__, gettype($path))
+            );
+        }
+
+        if (!array_key_exists($path, $this->paths)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s is not a valid WP Starter path key.', $path)
+            );
+        }
+
+        $to and $to = '/' . ltrim($this->filesystem->normalizePath($to), '/');
+
+        if ($path === self::ROOT) {
+            return $this->root() . $to;
+        }
+
+        $root = rtrim($this->paths[self::ROOT], '\//') . '/';
+
+        return $this->filesystem->normalizePath($root . $this->paths[$path]) . $to;
+    }
+
+    /**
+     * @param string $path
+     * @param string $to
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function relative($path, $to = '')
+    {
+        if (!is_string($path)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s requires a string, %s given.', __METHOD__, gettype($path))
+            );
+        }
+
+        if (!array_key_exists($path, $this->paths)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s is not a valid WP Starter path key.', $path)
+            );
+        }
+
+        $to and $to = '/' . ltrim($this->filesystem->normalizePath($to), '/');
+
+        return $this->paths[self::ROOT] . $to;
+    }
+
+    /**
+     * @param string $to
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function root($to = '')
+    {
+        return $this->relative(self::ROOT, $to);
+    }
+
+    /**
+     * @param string $to
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function vendor($to = '')
+    {
+        return $this->relative(self::VENDOR, $to);
+    }
+
+    /**
+     * @param string $to
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function bin($to = '')
+    {
+        return $this->relative(self::BIN, $to);
+    }
+
+    /**
+     * @param string $to
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function wp($to = '')
+    {
+        return $this->relative(self::WP, $to);
+    }
+
+    /**
+     * @param string $to
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function wp_parent($to = '')
+    {
+        return $this->relative(self::WP_PARENT, $to);
+    }
+
+    /**
+     * @param string $to
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function wp_content($to = '')
+    {
+        return $this->relative(self::WP_CONTENT, $to);
+    }
+
+    /**
+     * @param string $to
+     * @return string
+     * @throws \InvalidArgumentException
+     */
+    public function wp_starter($to = '')
+    {
+        return $this->relative(self::WP_STARTER, $to);
     }
 
     /**
@@ -95,11 +238,14 @@ final class Paths implements \ArrayAccess
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
     public function offsetGet($offset)
     {
         if (!$this->offsetExists($offset)) {
-            throw new \InvalidArgumentException(sprintf("%s is not a valid WP Starter path index."));
+            throw new \InvalidArgumentException(
+                sprintf('%s is not a valid WP Starter path index.', $offset)
+            );
         }
 
         return $this->paths[$offset];
@@ -107,6 +253,7 @@ final class Paths implements \ArrayAccess
 
     /**
      * @inheritdoc
+     * @throws \BadMethodCallException
      */
     public function offsetSet($offset, $value)
     {
@@ -126,6 +273,7 @@ final class Paths implements \ArrayAccess
 
     /**
      * @inheritdoc
+     * @throws \BadMethodCallException
      */
     public function offsetUnset($offset)
     {
@@ -138,6 +286,7 @@ final class Paths implements \ArrayAccess
      * @param  string $root
      * @param  string $path
      * @return string string
+     * @throws \InvalidArgumentException
      */
     private function subdir($root, $path)
     {

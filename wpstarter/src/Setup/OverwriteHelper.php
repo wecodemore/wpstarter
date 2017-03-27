@@ -68,9 +68,7 @@ class OverwriteHelper
         if (is_array($this->config)) {
             $relative = trim(str_replace($this->root, '', $this->normalise($file)), '/');
 
-            return in_array($relative, $this->config, true)
-                ? false
-                : $this->patternCheck($relative);
+            return !in_array($relative, $this->config, true) || $this->patternCheck($relative);
         }
 
         return empty($this->config);

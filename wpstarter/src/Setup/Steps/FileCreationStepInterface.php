@@ -10,6 +10,8 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
+use WCM\WPStarter\Setup\Paths;
+
 /**
  * A step that saves a file.
  *
@@ -22,8 +24,8 @@ interface FileCreationStepInterface extends FileStepInterface
     /**
      * Returns the target path of the file the step will create.
      *
-     * @param  \ArrayAccess $paths
+     * @param  Paths $paths
      * @return string
      */
-    public function targetPath(\ArrayAccess $paths);
+    public function targetPath(Paths $paths);
 }

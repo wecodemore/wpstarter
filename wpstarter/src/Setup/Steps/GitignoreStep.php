@@ -10,11 +10,11 @@
 
 namespace WCM\WPStarter\Setup\Steps;
 
-use Composer\Util\Filesystem as FilesystemUtil;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
+use WCM\WPStarter\Setup\Paths;
 use WCM\WPStarter\Setup\UrlDownloader;
 
 /**
@@ -26,26 +26,25 @@ use WCM\WPStarter\Setup\UrlDownloader;
  */
 final class GitignoreStep implements FileCreationStepInterface, OptionalStepInterface, PostProcessStepInterface
 {
-    /**
-     * @var array
-     */
-    private static $default = [
-        'wp' => true,
-        'wp-content' => true,
-        'vendor' => true,
-        'common' => false,
-        'custom' => [],
+    const NAME = 'build-gitignore';
+
+    const WP = 'wp';
+    const WP_CONTENT = 'wp-content';
+    const VENDOR = 'vendor';
+    const COMMON = 'common';
+    const CUSTOM = 'custom';
+
+    const DEFAULTS = [
+        self::WP_CONTENT => true,
+        self::VENDOR     => true,
+        self::COMMON     => false,
+        self::CUSTOM     => [],
     ];
 
     /**
      * @var mixed
      */
     private $config;
-
-    /**
-     * @var string
-     */
-    private $env;
 
     /**
      * @var \WCM\WPStarter\Setup\IO
@@ -63,14 +62,19 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     private $filesystem;
 
     /**
+     * @var \WCM\WPStarter\Setup\Paths
+     */
+    private $paths;
+
+    /**
      * @var string
      */
     private $error = '';
 
     /**
-     * @var bool
+     * @var string
      */
-    private $found = false;
+    private $action = '';
 
     /**
      * @param \WCM\WPStarter\Setup\IO $io
@@ -103,27 +107,28 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
      */
     public function name()
     {
-        return 'build-gitignore';
+        return self::NAME;
     }
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function allowed(Config $config, \ArrayAccess $paths)
+    public function allowed(Config $config, Paths $paths)
     {
-        $this->config = $config['gitignore'];
-        $this->env = $config['env-file'];
-        $this->found = is_file($this->targetPath($paths));
+        $this->config = $config[Config::GITIGNORE];
+        $this->paths = $paths;
 
         return $this->config !== false;
     }
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function targetPath(\ArrayAccess $paths)
+    public function targetPath(Paths $paths)
     {
-        return $paths['root'] . '/.gitignore';
+        return $paths->root('.gitignore');
     }
 
     /**
@@ -131,8 +136,7 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
      */
     public function askConfirm(Config $config, IO $io)
     {
-        $this->found = false;
-        if ($config['gitignore'] === 'ask') {
+        if ($config[Config::GITIGNORE] === 'ask') {
             $lines = [
                 'Do you want to create a .gitignore file that makes Git ignore',
                 ' - files that contain sensible data (wp-config.php, .env)',
@@ -148,13 +152,15 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
      */
-    public function run(\ArrayAccess $paths)
+    public function run(Paths $paths)
     {
-        $this->found = -1;
         if (is_string($this->config) && $this->config !== 'ask') {
-            $realpath = realpath($paths['root'] . '/' . $this->config);
+            $realpath = realpath($paths->root($this->config));
             if ($realpath && is_file($realpath)) {
+                $this->action = 'copy';
                 $done = $this->filesystem->copyDir($realpath, $this->targetPath($paths));
                 $done or $this->error = 'Error on saving .gitignore.';
 
@@ -174,23 +180,64 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
     public function postProcess(IO $io)
     {
-        $lines = false;
-        if ($this->found === true) {
+        if ($this->error) {
+            return;
+        }
+
+        $target = $this->targetPath($this->paths);
+        $isThere = is_file($target);
+
+        if (!$isThere) {
             $lines = [
-                '.gitignore was found in your project folder.',
-                'Be sure to ignore .env and wp-config.php files.',
+                '.gitignore was not found in your project folder,',
+                '.env and wp-config.php files should be ignored, at least.',
             ];
-        } elseif ($this->found === -1 && empty($this->error)) {
+
+            $io->block($lines, 'yellow', false);
+
+            return;
+        }
+
+        if ($this->action === 'create') {
             $lines = [
                 '.gitignore was saved in your project folder,',
                 'feel free to edit it, but be sure to ignore',
                 '.env and wp-config.php files.',
             ];
+
+            $io->block($lines, 'yellow', false);
+
+            return;
         }
-        $lines and $io->block($lines, 'yellow', false);
+
+        /*
+         * A .gitignore is there, but WP Starter did not created it.
+         * Let's ensure it ignores both wp-config.php and .env file.
+         */
+        $f = ['env' => false, 'config' => false];
+        $content = file($target);
+        $config = $this->paths->wp_parent('wp-config.php');
+        $env = $this->config[Config::ENV_FILE];
+        while ((!$f['env'] || !$f['config']) && $content) {
+            $line = array_shift($content);
+            $f['env'] = $f['env'] || in_array(trim($line), [$env, "/$env"], true);
+            $f['config'] = $f['config'] || in_array(trim($line), [$config, "/$config"], true);
+        }
+
+        if ($f['env'] && $f['config']) {
+            return;
+        }
+
+        $lines = [
+            '.gitignore was found in your project folder.',
+            'But be sure to ignore .env and wp-config.php files.',
+        ];
+
+        $io->block($lines, 'yellow', false);
     }
 
     /**
@@ -220,11 +267,14 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     /**
      * Download .gitignore from a given url.
      *
-     * @param  \ArrayAccess $paths
+     * @param  Paths $paths
      * @return int
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
      */
-    private function download(\ArrayAccess $paths)
+    private function download(Paths $paths)
     {
+        $this->action = 'download';
         $remote = new UrlDownloader($this->config, $this->io);
         if ($remote->save($this->targetPath($paths))) {
             return self::SUCCESS;
@@ -237,27 +287,40 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
     /**
      * Build .gitignore content based on settings.
      *
-     * @param  \ArrayAccess $paths
+     * @param  Paths $paths
      * @return int
+     * @throws \InvalidArgumentException
      */
-    private function create(\ArrayAccess $paths)
+    private function create(Paths $paths)
     {
-        $toDo = is_array($this->config) ? $this->config : self::$default;
-        $filePaths = array_unique(
-            array_filter(
-                array_merge(
-                    [$this->env, $paths['wp-parent'] . '/wp-config.php'],
-                    $toDo['custom'],
-                    $this->paths($toDo, $paths)
-                )
-            )
-        );
-        $content = '### WP Starter' . PHP_EOL . implode(PHP_EOL, $filePaths) . PHP_EOL;
-        if ($toDo['common']) {
+        $this->action = 'create';
+        $toDo = is_array($this->config) ? $this->config : self::DEFAULTS;
+        $custom = isset($toDo[self::CUSTOM]) ? (array)$toDo[self::CUSTOM] : [];
+        unset($toDo[self::CUSTOM]);
+
+        $allPaths = [
+            $this->config[Config::ENV_FILE],
+            $paths->wp_parent('wp-config.php'),
+        ];
+
+        empty($toDo[self::WP]) and $allPaths[] = $paths->wp();
+        empty($toDo[self::WP_CONTENT]) and $allPaths[] = $paths->wp_content();
+        empty($toDo[self::VENDOR]) and $allPaths[] = $paths->vendor();
+
+        $allPaths = array_map(function ($path) {
+            return str_replace('\\', '/', $path);
+        }, array_merge($allPaths, $custom));
+
+        $allPaths = array_unique(array_filter($allPaths));
+
+        $content = '### WP Starter' . PHP_EOL . implode(PHP_EOL, $allPaths) . PHP_EOL;
+
+        if (!empty($toDo[self::COMMON])) {
             $common = trim($this->builder->build($paths, '.gitignore.example'));
             $content = $common ? $content . PHP_EOL . PHP_EOL . $common : $content;
         }
-        if (!$this->filesystem->save($content, $paths['root'] . '/.gitignore')) {
+
+        if (!$this->filesystem->save($content, $paths->root('.gitignore'))) {
             $this->error = 'WP Starter was not able to create .gitignore file.';
 
             return self::ERROR;
@@ -266,58 +329,4 @@ final class GitignoreStep implements FileCreationStepInterface, OptionalStepInte
         return self::SUCCESS;
     }
 
-    /**
-     * @param  array $toDo
-     * @param  \ArrayAccess $paths
-     * @return array
-     */
-    private function paths(array $toDo, \ArrayAccess $paths)
-    {
-        $parsedPaths = [];
-        $toCheck = [
-            'wp',
-            'wp-content',
-            'vendor',
-        ];
-
-        $filesystem = new FilesystemUtil();
-
-        foreach ($toCheck as $key) {
-            $toDo[$key] and $parsedPaths = $this->maybeAdd($paths[$key], $parsedPaths, $filesystem);
-        }
-
-        return $parsedPaths;
-    }
-
-    /**
-     * Takes a path and compare it to already added path to discover if it should be added or not.
-     *
-     * @param  string $path
-     * @param  array $parsedPaths
-     * @param \Composer\Util\Filesystem $filesystem
-     * @return array
-     */
-    private function maybeAdd($path, array $parsedPaths, FilesystemUtil $filesystem)
-    {
-        $rel = $filesystem->normalizePath("{$path}/");
-        $targets = $parsedPaths;
-        $add = null;
-
-        foreach ($targets as $key => $target) {
-            if ($target === $rel || strpos($rel, $target) !== false) {
-                $add = false;
-                // given path is equal or contained in one of the already added paths
-                continue;
-            }
-            if (strpos($target, $rel) !== false) {
-                is_null($add) and $add = true;
-                // given path contains one of the already added paths
-                unset($parsedPaths[$key]);
-                $parsedPaths[] = $rel;
-            }
-        }
-        ($add !== false) and $parsedPaths[] = $rel;
-
-        return array_values(array_unique($parsedPaths));
-    }
 }

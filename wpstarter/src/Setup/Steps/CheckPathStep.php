@@ -14,6 +14,7 @@ use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
+use WCM\WPStarter\Setup\Paths;
 
 /**
  * Steps that check that all paths WP Starter needs have been recognized properly ad exist.
@@ -24,6 +25,8 @@ use WCM\WPStarter\Setup\IO;
  */
 final class CheckPathStep implements BlockingStepInterface, FileStepInterface, PostProcessStepInterface
 {
+    const NAME = 'check-paths';
+
     /**
      * @var string
      */
@@ -40,7 +43,7 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
     private $filesystem;
 
     /**
-     * @var \ArrayAccess
+     * @var Paths
      */
     private $paths;
 
@@ -76,13 +79,13 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
      */
     public function name()
     {
-        return 'check-paths';
+        return self::NAME;
     }
 
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, \ArrayAccess $paths)
+    public function allowed(Config $config, Paths $paths)
     {
         $this->config = $config;
 
@@ -91,14 +94,15 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function run(\ArrayAccess $paths)
+    public function run(Paths $paths)
     {
         $this->paths = $paths;
         $toCheck = [
-            realpath($paths['root'] . '/' . $paths['starter']),
-            realpath($paths['root'] . '/' . $paths['vendor'] . '/autoload.php'),
-            realpath($paths['root'] . '/' . $paths['wp'] . '/wp-settings.php'),
+            realpath($paths->absolute(Paths::WP_STARTER)),
+            realpath($paths->absolute(Paths::VENDOR, '/autoload.php')),
+            realpath($paths->absolute(Paths::WP, '/wp-settings.php')),
         ];
 
         if (array_filter($toCheck) !== $toCheck) {
@@ -108,9 +112,9 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
         }
 
         if (
-            $paths['wp-content']
-            && $paths['wp-parent']
-            && strpos(trim($paths['wp-content'], '\\/'), trim($paths['wp-parent'], '\\/')) !== 0
+            $paths->wp_content()
+            && $paths->wp_parent()
+            && strpos(trim($paths->wp_content(), '\\/'), trim($paths->wp_parent(), '\\/')) !== 0
         ) {
             $this->error =
                 'Content folder must share parent folder with WP folder, or be contained in it.'
@@ -119,8 +123,8 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
             return self::ERROR;
         }
         // no love for this, but https://core.trac.wordpress.org/ticket/31620 makes it necessary
-        if ($paths['wp-content'] && $this->config['move-content'] !== true) {
-            $themeDir = $paths['root'] . '/' . $paths['wp-content'] . '/themes';
+        if ($this->config[Config::MOVE_CONTENT] !== true && $paths->wp_content()) {
+            $themeDir = $paths->absolute(Paths::WP_CONTENT, '/themes');
             $this->themeDir = $this->filesystem->createDir($themeDir);
         }
 
@@ -145,13 +149,14 @@ final class CheckPathStep implements BlockingStepInterface, FileStepInterface, P
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
     public function postProcess(IO $io)
     {
         if (!$this->themeDir) {
             $lines = [
                 'Default theme folder:',
-                '"' . $this->paths['wp-content'] . '/themes" does not exist.',
+                '"' . $this->paths->wp_content('/themes') . '" does not exist.',
                 'The site may be unusable until you create it (even empty).',
             ];
             $io->block($lines, 'red', true);

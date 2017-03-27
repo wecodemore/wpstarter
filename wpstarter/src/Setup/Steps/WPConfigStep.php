@@ -15,6 +15,7 @@ use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\FileBuilder;
+use WCM\WPStarter\Setup\Paths;
 use WCM\WPStarter\Setup\Salter;
 
 /**
@@ -26,6 +27,8 @@ use WCM\WPStarter\Setup\Salter;
  */
 final class WPConfigStep implements FileCreationStepInterface, BlockingStepInterface
 {
+    const NAME = 'build-wpconfig';
+
     /**
      * @var \Composer\Util\Filesystem
      */
@@ -99,13 +102,13 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
      */
     public function name()
     {
-        return 'build-wpconfig';
+        return self::NAME;
     }
 
     /**
      * @inheritdoc
      */
-    public function allowed(Config $config, \ArrayAccess $paths)
+    public function allowed(Config $config, Paths $paths)
     {
         $this->config = $config;
 
@@ -114,50 +117,48 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function targetPath(\ArrayAccess $paths)
+    public function targetPath(Paths $paths)
     {
-        return $this->filesystemUtil->normalizePath(
-            "{$paths['root']}/{$paths['wp-parent']}/wp-config.php"
-        );
+        return $paths->absolute(Paths::WP_PARENT, 'wp-config.php');
     }
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function run(\ArrayAccess $paths)
+    public function run(Paths $paths)
     {
-        $register = $this->config['register-theme-folder'];
+        $register = $this->config[Config::REGISTER_THEME_FOLDER];
         $register === 'ask' and $this->askForRegister();
 
-        $from = $this->filesystemUtil->normalizePath("{$paths['root']}/{$paths['wp-parent']}");
+        $from = $this->filesystemUtil->normalizePath($paths->absolute(Paths::WP_PARENT));
 
-        $relPath = function ($to, $addRoot = true) use ($from, $paths) {
-            $addRoot and $to = "{$paths['root']}/$to";
-
+        $relPath = function ($to) use ($from, $paths) {
             return $this->filesystemUtil->findShortestPathCode($from, $to, true);
         };
 
         $relUrl = function ($path) use ($from, $paths) {
-            if (!$paths['wp-parent']) {
+            if (!$paths->wp_parent()) {
                 return $this->filesystemUtil->normalizePath($path);
             }
 
-            $shortest = $this->filesystemUtil->findShortestPath($from, "{$paths['root']}/{$path}");
+            $shortest = $this->filesystemUtil->findShortestPath($from, $paths->root($path));
             strpos($shortest, './') === 0 and $subdir = substr($shortest, 2);
 
             return $shortest;
         };
 
         $vars = [
-            'VENDOR_PATH' => $relPath($paths['vendor']),
-            'ENV_REL_PATH' => $relPath($paths['root'], false),
-            'WP_INSTALL_PATH' => $relPath($paths['wp']),
-            'WP_CONTENT_PATH' => $relPath($paths['wp-content']),
+            'VENDOR_PATH'        => $relPath($paths->absolute(Paths::VENDOR)),
+            'ENV_REL_PATH'       => $relPath($paths->absolute(Paths::ROOT)),
+            'WP_INSTALL_PATH'    => $relPath($paths->absolute(Paths::WP)),
+            'WP_CONTENT_PATH'    => $relPath($paths->absolute(Paths::WP_CONTENT)),
             'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
-            'ENV_FILE_NAME' => $this->config['env-file'],
-            'WP_SITEURL' => $relUrl($paths['wp']),
-            'WP_CONTENT_URL' => $relUrl($paths['wp-content']),
+            'ENV_FILE_NAME'      => $this->config[Config::ENV_FILE],
+            'WP_SITEURL'         => $relUrl($paths->wp()),
+            'WP_CONTENT_URL'     => $relUrl($paths->wp_content()),
         ];
 
         $build = $this->builder->build(
@@ -203,4 +204,5 @@ final class WPConfigStep implements FileCreationStepInterface, BlockingStepInter
 
         return $this->io->confirm($lines, true);
     }
+
 }

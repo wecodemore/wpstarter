@@ -15,6 +15,7 @@ use WCM\WPStarter\Setup\FileBuilder;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
 use WCM\WPStarter\Setup\Config;
+use WCM\WPStarter\Setup\Paths;
 
 /**
  * Step that moves wp-content contents from WP package folder to project wp-content folder.
@@ -25,6 +26,8 @@ use WCM\WPStarter\Setup\Config;
  */
 final class MoveContentStep implements OptionalStepInterface, FileStepInterface
 {
+    const NAME = 'move-content';
+
     /**
      * @var \Composer\Util\Filesystem
      */
@@ -41,14 +44,14 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
     private $filesystem;
 
     /**
+     * @var \WCM\WPStarter\Setup\Paths
+     */
+    private $paths;
+
+    /**
      * @var string
      */
     private $error = '';
-
-    /**
-     * @var \ArrayAccess
-     */
-    private $paths;
 
     /**
      * @param \WCM\WPStarter\Setup\IO $io
@@ -80,34 +83,34 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
      */
     public function name()
     {
-        return 'move-content';
+        return self::NAME;
     }
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function allowed(Config $config, \ArrayAccess $paths)
+    public function allowed(Config $config, Paths $paths)
     {
         $this->paths = $paths;
 
-        return $config['move-content'] !== false && !empty($paths['wp-content']);
+        return $config[Config::MOVE_CONTENT] !== false && $paths->wp_content();
     }
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
     public function askConfirm(Config $config, IO $io)
     {
-        if ($config['move-content'] !== 'ask') {
+        if ($config[Config::MOVE_CONTENT] !== 'ask') {
             return true;
         }
 
-        $to = $this->filesystemUtil->normalizePath($this->paths['wp-content']);
-        $full = $this->filesystemUtil->normalizePath("{$this->paths['root']}/{$to}");
         $lines = [
             'Do you want to move default plugins and themes from',
             'WordPress package wp-content dir to content folder:',
-            '"' . $full . '"',
+            '"' . $this->paths->absolute(Paths::WP_CONTENT) . '"',
         ];
 
         return $io->confirm($lines, true);
@@ -115,11 +118,13 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function run(\ArrayAccess $paths)
+    public function run(Paths $paths)
     {
-        $from = $this->filesystemUtil->normalizePath("{$paths['root']}/{$paths['wp']}/wp-content");
-        $to = $this->filesystemUtil->normalizePath("{$paths['root']}/wp-content");
+        $from = $paths->absolute(Paths::WP, 'wp-content');
+        $to = $paths->absolute(Paths::WP_CONTENT);
+
         if ($from === $to) {
             return self::NONE;
         }

@@ -44,24 +44,28 @@ class MuLoader
      */
     public function __invoke($refresh = false)
     {
-        if (!defined('WPMU_PLUGIN_DIR') || !is_dir(WPMU_PLUGIN_DIR) || defined('WP_INSTALLING')) {
+        if (!defined('WPMU_PLUGIN_DIR') || defined('WP_INSTALLING') || !is_dir(WPMU_PLUGIN_DIR)) {
             return;
         }
+
         static $phpFiles;
         static $transient;
-        if (is_null($phpFiles)) {
-            $phpFiles = glob(WPMU_PLUGIN_DIR . "/*/*.php");
+
+        if ($phpFiles === null) {
+            $phpFiles = glob(WPMU_PLUGIN_DIR . '/*/*.php');
             if (empty($phpFiles)) {
                 return;
             }
         }
-        if (is_null($transient)) {
+
+        if ($transient === null) {
             $edited = @filemtime(WPMU_PLUGIN_DIR . '/.');
             $edited or $edited = time();
             $transient = md5(__CLASS__ . $edited);
         }
 
         $refresh or $this->plugins = get_site_transient(self::PREFIX . $transient);
+
         if (empty($this->plugins)) {
             $this->plugins = [];
             $refresh = true;
@@ -81,11 +85,12 @@ class MuLoader
     private function loadPlugins($refresh, $transient)
     {
         $toTrigger = [];
-        foreach ($this->plugins as $key => $plugin) {
-            list($file, $mu) = $plugin;
-            $loaded = $this->loadPlugin($key, $file, $refresh, $transient);
+        foreach ($this->plugins as $key => list($file, $mu)) {
+
+            $loaded = $this->loadPlugin((object)compact('key', 'file', 'refresh', 'transient'));
+
             if (!$loaded) {
-                $this->__invoke(true);
+                $this(true);
                 break;
             }
 
@@ -98,31 +103,28 @@ class MuLoader
     /**
      * Check and load a discovered file. Handle problems if file is invalid or unreadable.
      *
-     * @param  string $key
-     * @param  string $file
-     * @param  bool $refresh
-     * @param  string $transient
+     * @param \stdClass $info
      * @return bool
      */
-    private function loadPlugin($key, $file, $refresh, $transient)
+    private function loadPlugin(\stdClass $info)
     {
-        if (is_readable($file)) {
-            wp_register_plugin_realpath($file);
+        if (is_readable($info->file)) {
+            wp_register_plugin_realpath($info->file);
             /** @noinspection PhpIncludeInspection */
-            include_once $file;
+            include_once $info->file;
 
             return true;
         }
 
-        if ($refresh) {
+        if ($info->refresh) {
             // remove non-readable or non-php files from array of files to be saved
-            unset($this->plugins[$key]);
+            unset($this->plugins[$info->key]);
 
             return true;
         }
 
         // If here, a non-readable or non-php file is cached: let's delete cache and restart
-        delete_site_transient(self::PREFIX . $transient);
+        delete_site_transient(self::PREFIX . $info->transient);
         delete_site_transient(self::PREFIX . self::DATA_TRANSIENT);
 
         return false;
@@ -330,8 +332,7 @@ class MuLoader
 
         is_array($data) or $data = [];
         $oldKeys = $data ? array_keys($data) : [];
-        foreach ($this->plugins as $plugin) {
-            list($file, $mu) = $plugin;
+        foreach ($this->plugins as list($file, $mu)) {
             $key = basename($file);
             // remove current  key from old keys, if there
             $oldKeys and $oldKeys = array_diff($oldKeys, [$key]);
@@ -348,8 +349,9 @@ class MuLoader
             unset($data[$key]);
         }
 
-        $refresh and set_site_transient(self::PREFIX . self::DATA_TRANSIENT, $data,
-            WEEK_IN_SECONDS);
+        if ($refresh) {
+            set_site_transient(self::PREFIX . self::DATA_TRANSIENT, $data, WEEK_IN_SECONDS);
+        }
 
         return $data;
     }

@@ -39,11 +39,6 @@ class Salter
     private $result;
 
     /**
-     * @var callable
-     */
-    private $randCb;
-
-    /**
      * Build random keys.
      *
      * @return array
@@ -52,7 +47,6 @@ class Salter
     {
         if (!is_array($this->result)) {
             $this->result = [];
-            $this->randCb = function_exists('mt_rand') ? 'mt_rand' : 'rand';
             foreach (self::$keys as $key) {
                 $this->result[$key] = $this->buildKey(64);
             }
@@ -70,11 +64,28 @@ class Salter
     private function buildKey($length)
     {
         $key = '';
-        $cb = $this->randCb;
         for ($i = 0; $i < $length; $i++) {
-            $key .= self::CHARS[$cb(0, 91)];
+            $key .= self::CHARS[$this->random_number(0, 91)];
         }
 
         return $key;
+    }
+
+    /**
+     * @param $min
+     * @param $max
+     * @return int
+     */
+    private function random_number($min, $max)
+    {
+        /** @var callable $cb */
+        static $cb;
+        if (!$cb) {
+            $cb = function_exists('random_int') ? 'random_int' : null;
+            $cb or $cb = function_exists('mt_rand') ? 'mt_rand' : null;
+            $cb or $cb = 'rand';
+        }
+
+        return $cb($min, $max);
     }
 }

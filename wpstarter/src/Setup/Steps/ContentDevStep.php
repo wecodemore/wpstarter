@@ -13,6 +13,7 @@ namespace WCM\WPStarter\Setup\Steps;
 use WCM\WPStarter\Setup\Config;
 use WCM\WPStarter\Setup\Filesystem;
 use WCM\WPStarter\Setup\IO;
+use WCM\WPStarter\Setup\Paths;
 
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
@@ -21,6 +22,8 @@ use WCM\WPStarter\Setup\IO;
  */
 final class ContentDevStep implements OptionalStepInterface
 {
+    const NAME = 'publish-content-dev';
+
     /**
      * @var \WCM\WPStarter\Setup\IO
      */
@@ -49,21 +52,21 @@ final class ContentDevStep implements OptionalStepInterface
      */
     public function name()
     {
-        return 'publish-content-dev';
+        return self::NAME;
     }
 
     /**
      * Return true if the step is allowed, i.e. the run method have to be called or not
      *
-     * @param  \WCM\WPStarter\Setup\Config $config
-     * @param  \ArrayAccess $paths
+     * @param \WCM\WPStarter\Setup\Config $config
+     * @param Paths $paths
      * @return bool
      */
-    public function allowed(Config $config, \ArrayAccess $paths)
+    public function allowed(Config $config, Paths $paths)
     {
         $this->config = $config;
 
-        return $config['content-dev-op'] && $config['content-dev-dir'];
+        return $config[Config::CONTENT_DEV_OPERATION] && $config[Config::CONTENT_DEV_DIR];
     }
 
     /**
@@ -71,8 +74,8 @@ final class ContentDevStep implements OptionalStepInterface
      */
     public function askConfirm(Config $config, IO $io)
     {
-        $dir = $this->config['content-dev-dir'];
-        if ($this->config['content-dev-op'] !== 'ask' || !$dir) {
+        $dir = $this->config[Config::CONTENT_DEV_DIR];
+        if (!$dir || $this->config[Config::CONTENT_DEV_OPERATION] !== 'ask') {
             return true;
         }
 
@@ -97,32 +100,34 @@ final class ContentDevStep implements OptionalStepInterface
 
     /**
      * @inheritdoc
+     * @throws \InvalidArgumentException
      */
-    public function run(\ArrayAccess $paths)
+    public function run(Paths $paths)
     {
-        $dir = $this->config['content-dev-dir'];
+        $dir = $this->config[Config::CONTENT_DEV_DIR];
         if (!$dir) {
             return self::NONE;
         }
 
-        $source = $paths['root'] . '/' . $dir;
+        $source = $paths->root($dir);
         if (!is_dir($source)) {
             $this->operation = '';
 
             return self::ERROR;
         }
 
-        if (!in_array($this->operation, ['copy', 'symlink'])) {
+        if (!in_array($this->operation, ['copy', 'symlink'], true)) {
             return self::ERROR;
         }
 
-        $target = $paths['root'] . '/' . $paths['wp-content'];
         $filesystem = new Filesystem();
 
         $sourceDirs = glob($source . '/*', GLOB_NOSORT | GLOB_ONLYDIR);
         if (!$sourceDirs) {
             return self::NONE;
         }
+
+        $target = $paths->absolute(Paths::WP_CONTENT);
 
         if ($this->operation === 'copy') {
             return $filesystem->copyDir($source, $target) ? self::SUCCESS : self::ERROR;
@@ -143,8 +148,8 @@ final class ContentDevStep implements OptionalStepInterface
      */
     public function error()
     {
-        $dir = $this->config['content-dev-dir'];
-        if (in_array($this->operation, ['copy', 'symlink'])) {
+        $dir = $this->config[Config::CONTENT_DEV_DIR];
+        if (in_array($this->operation, ['copy', 'symlink'], true)) {
             return "Some errors occurred while {$this->operation}ing content-dev dirs from /{$dir}.";
         }
 
@@ -157,7 +162,7 @@ final class ContentDevStep implements OptionalStepInterface
     public function success()
     {
         $dir = $this->config['content-dev-dir'];
-        if (in_array($this->operation, ['copy', 'symlink'])) {
+        if (in_array($this->operation, ['copy', 'symlink'], true)) {
             $operation = $this->operation === 'copy' ? 'copied' : 'symlinked';
 
             return "Content-dev dirs {$operation} successfully from /{$dir}.";
