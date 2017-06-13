@@ -32,7 +32,7 @@ all of WP Starter configuration. Explanations are provided further down below af
     ],
     "require": {
         "wecodemore/wpstarter": "~2.0",
-        "johnpbloch/wordpress": ">=4.3",
+        "johnpbloch/wordpress-core": "4.7.*@stable",
         "gmazzap/wpstarter-example-files": "*"
     },
     "require-dev": {
