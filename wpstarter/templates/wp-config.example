@@ -32,6 +32,8 @@ define('WPSTARTER_PATH', {{{ENV_REL_PATH}}});
  * @var array $env All the variables stored in environment variables
  */
 $env = WCM\WPStarter\Helpers::settings({{{ENV_REL_PATH}}}, '{{{ENV_FILE_NAME}}}');
+
+global $table_prefix;
 array_walk($env, function ($value, $name) {
     switch ($name) {
         case 'DB_TABLE_PREFIX':

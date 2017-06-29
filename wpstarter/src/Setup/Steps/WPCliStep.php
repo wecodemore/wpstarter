@@ -74,7 +74,8 @@ class WPCliStep implements FileStepInterface, BlockingStepInterface
 	 */
 	public function run( ArrayAccess $paths )
 	{
-		$wp_install_path = rtrim( "{$paths['root']}/{$paths['wp']}", '/' );
+        // wp-cli.yml is stored in root (see targetPath()) so we can use relative path to root
+        $wp_install_path = rtrim( "./{$paths['wp']}", '/' );
 
 		$this->vars  = array( 'WP_INSTALL_PATH' => $wp_install_path, );
 		$build       = $this->builder->build(
