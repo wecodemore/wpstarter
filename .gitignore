@@ -3,7 +3,6 @@ vendor/
 /composer.lock
 
 ### WordPress
-/public
 /wordpress
 
 ### Couscous

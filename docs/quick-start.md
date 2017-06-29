@@ -15,7 +15,7 @@ Done :-)
 That `composer.json` file should contain:
 
  - WP Starter
- - `WCM\WPStarter\Setup::run()` set as `"post-install-cmd"` script
+ - `WeCodeMore\WpStarter\Setup::run()` set as `"post-install-cmd"` script
  - WordPress package (optional) By explicitly requiring WordPress package is possible to choose WP version to install (min version is WP 3.9+)
  - Any desired theme and plugin (optional)
  - WP Starter configuration in `"extra"` setting (optional)

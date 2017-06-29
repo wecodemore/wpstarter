@@ -156,7 +156,7 @@ In the example above it is used to tell Composer to create optimized autoloader 
 
 ### `"scripts"` section
 
-The first entry in this section adds the method `WCM\WPStarter\Setup::run()` as `"post-install-cmd"` script. (See [Composer docs](https://getcomposer.org/doc/articles/scripts.md)). This is the only mandatory entry.
+The first entry in this section adds the method `WeCodeMore\WpStarter\Setup::run()` as `"post-install-cmd"` script. (See [Composer docs](https://getcomposer.org/doc/articles/scripts.md)). This is the only mandatory entry.
 
 The second entry adds the same method as `"post-update-cmd"` script. This makes Composer to run again WP Starter routine after any update. The reason is that files copied by WP Starter via "dropins" configuration (see below) may be updated, so the updated file should be copied again in content folder.
 
