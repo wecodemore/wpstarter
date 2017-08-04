@@ -10,13 +10,13 @@
  * and edit it according to your needs.
  */
 
-/** Composer autoload. */
+/* Composer autoload. */
 require_once '{{{AUTOLOAD_PATH}}}';
 
-/** A reference to `.env` folder path. */
+/* A reference to `.env` folder path. */
 const WPSTARTER_PATH = '{{{ENV_REL_PATH}}}';
 
-/**
+/*
  * Define all WordPress constants from environment variables.
  * Environment variables will be loaded from file, unless `WPSTARTER_ENV_LOADED` env var is already
  * setup e.g. via webserver configuration.
@@ -27,21 +27,21 @@ const WPSTARTER_PATH = '{{{ENV_REL_PATH}}}';
 WeCodeMore\WpStarter\Env\WordPressEnvBridge::load('{{{ENV_REL_PATH}}}', '{{{ENV_FILE_NAME}}}')
     ->setupWordPress();
 
-/**
+/*
  * Set optional database settings if not already set
  */
 defined('DB_HOST') or define('DB_HOST', 'localhost');
 defined('DB_CHARSET') or define('DB_CHARSET', 'utf8');
 defined('DB_COLLATE') or define('DB_COLLATE', '');
 
-/**
+/*
  * Set WordPress Database Table prefix if not already set.
  *
  * @global string $table_prefix
  */
 empty($table_prefix) or $table_prefix = 'wp_';
 
-/**
+/*
  * Set unique authentication keys if not already set via environment variables.
  */
 defined('AUTH_KEY') or define('AUTH_KEY', '{{{AUTH_KEY}}}');
@@ -53,7 +53,7 @@ defined('SECURE_AUTH_SALT') or define('SECURE_AUTH_SALT', '{{{SECURE_AUTH_SALT}}
 defined('LOGGED_IN_SALT') or define('LOGGED_IN_SALT', '{{{LOGGED_IN_SALT}}}');
 defined('NONCE_SALT') or define('NONCE_SALT', '{{{NONCE_SALT}}}');
 
-/**
+/*
  * Environment-aware settings. Be creative, but avoid to set sensitive settings here.
  */
 $environment = getenv('WORDPRESS_ENV');
@@ -85,7 +85,7 @@ switch ($environment) {
         break;
 }
 
-/**
+/*
  * Fix `is_ssl()` behind load balancers.
  */
 if (
@@ -95,7 +95,7 @@ if (
     $_SERVER['HTTPS'] = 'on';
 }
 
-/**
+/*
  * Set WordPress home URL if not set via environment variable, which is highly recommended.
  */
 if (!defined('WP_HOME')) {
@@ -109,7 +109,7 @@ if (!defined('WP_HOME')) {
     define('WP_HOME', $scheme . $name);
 }
 
-/**
+/*
  * Set WordPress constants if not set via environment variables.
  */
 defined('ABSPATH') or define('ABSPATH', realpath('{{{WP_INSTALL_PATH}}}') . '/');
@@ -117,13 +117,13 @@ defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath('{{{WP_CONTENT_PA
 defined('WP_SITEURL') or define('WP_SITEURL', rtrim(WP_HOME, '/') . '/{{{WP_SITEURL}}}');
 defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/') . '/{{{WP_CONTENT_URL}}}');
 
-/** Clean up. */
+/* Clean up. */
 unset($environment, $server, $secure, $scheme, $name);
 
-/** Load plugin.php early, so we can call `add_action` below. */
-require_once ABSPATH . 'wp-includes/plugin.php';
+/* Load plugin.php early, so we can call `add_action` below. */
+require_once ABSPATH.'wp-includes/plugin.php';
 
-/**
+/*
  * Load early hooks file if any.
  * Early hooks file allows to add hooks that are triggered before plugins are loaded, e.g.
  * "enable_loading_advanced_cache_dropin" or to just-in-time define configuration constants.
@@ -134,14 +134,21 @@ if ('{{{EARLY_HOOKS_FILE}}}' && file_exists('{{{EARLY_HOOKS_FILE}}}') && is_read
 
 /** Register default themes inside WordPress package wp-content folder.*/
 filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN) and add_action('plugins_loaded', function () {
-    register_theme_directory(ABSPATH . 'wp-content/themes');
+    register_theme_directory(ABSPATH.'wp-content/themes');
 }, 0);
 
 /*
- * I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion.
- * I watched C-beams glitter in the dark near the Tannhauser gate.
- * All those moments will be lost in time, like tears in rain. Time to die.
+ * Allow changing admin color scheme. Useful to distinguish different dashboards on different envs.
  */
+add_filter( 'get_user_option_admin_color', function($admin_color) {
+    return getenv('WORDPRESS_ADMIN_COLOR') ?: $admin_color;
+});
+
+###################################################################################################
+#  I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion.  #
+#                 I watched C-beams glitter in the dark near the Tannhauser gate.                 #
+#            All those moments will be lost in time, like tears in rain. Time to die.             #
+###################################################################################################
 
 /* That's all, stop editing! Happy blogging. */
 
