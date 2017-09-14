@@ -20,100 +20,100 @@ use WCM\WPStarter\Setup\FileBuilder;
  */
 class WPCliStep implements FileStepInterface, BlockingStepInterface
 {
-	/**
-	 * @var \WCM\WPStarter\Setup\FileBuilder
-	 */
-	private $builder;
+    /**
+     * @var \WCM\WPStarter\Setup\FileBuilder
+     */
+    private $builder;
 
-	/**
-	 * @var array
-	 */
-	private $vars;
+    /**
+     * @var array
+     */
+    private $vars;
 
-	/**
-	 * @var string
-	 */
-	private $error = '';
+    /**
+     * @var string
+     */
+    private $error = '';
 
-	/**
-	 * @param \WCM\WPStarter\Setup\FileBuilder $builder
-	 */
-	public function __construct( FileBuilder $builder )
-	{
-		$this->builder = $builder;
-	}
+    /**
+     * @param \WCM\WPStarter\Setup\FileBuilder $builder
+     */
+    public function __construct(FileBuilder $builder)
+    {
+        $this->builder = $builder;
+    }
 
-	/**
-	 * Returns the target path of the file the step will create.
-	 *
-	 * @param  \ArrayAccess $paths
-	 * @return string
-	 */
-	public function targetPath( ArrayAccess $paths )
-	{
-		return rtrim( $paths['root'], "/" )."/wp-cli.yml";
-	}
+    /**
+     * Returns the target path of the file the step will create.
+     *
+     * @param  \ArrayAccess $paths
+     * @return string
+     */
+    public function targetPath(ArrayAccess $paths)
+    {
+        return rtrim($paths['root'], "/")."/wp-cli.yml";
+    }
 
-	/**
-	 * Return true if the step is allowed, i.e. the run method have to be called or not
-	 *
-	 * @param  \WCM\WPStarter\Setup\Config $config
-	 * @param  \ArrayAccess                $paths
-	 * @return bool
-	 */
-	public function allowed( Config $config, ArrayAccess $paths )
-	{
-		return true;
-	}
+    /**
+     * Return true if the step is allowed, i.e. the run method have to be called or not
+     *
+     * @param  \WCM\WPStarter\Setup\Config $config
+     * @param  \ArrayAccess                $paths
+     * @return bool
+     */
+    public function allowed(Config $config, ArrayAccess $paths)
+    {
+        return true;
+    }
 
-	/**
-	 * Process the step.
-	 *
-	 * @param  \ArrayAccess $paths Have to return one of the step constants.
-	 * @return int
-	 */
-	public function run( ArrayAccess $paths )
-	{
+    /**
+     * Process the step.
+     *
+     * @param  \ArrayAccess $paths Have to return one of the step constants.
+     * @return int
+     */
+    public function run(ArrayAccess $paths)
+    {
         // wp-cli.yml is stored in root (see targetPath()) so we can use relative path to root
-        $wp_install_path = rtrim( "./{$paths['wp']}", '/' );
+        $wp_install_path = rtrim("./{$paths['wp']}", '/');
 
-		$this->vars  = array( 'WP_INSTALL_PATH' => $wp_install_path, );
-		$build       = $this->builder->build(
-			$paths,
-			'wp-cli.yml.example',
-			$this->vars
-		);
+        $this->vars  = array( 'WP_INSTALL_PATH' => $wp_install_path, );
+        $build       = $this->builder->build(
+            $paths,
+            'wp-cli.yml.example',
+            $this->vars
+        );
 
-		if ( ! $this->builder->save(
-			$build,
-			dirname( $this->targetPath( $paths ) ),
-			'wp-cli.yml'
-		) ) {
-			$this->error = 'Error while creating wp-cli.yml';
+        if (! $this->builder->save(
+            $build,
+            dirname($this->targetPath($paths)),
+            'wp-cli.yml'
+        ) ) {
+            $this->error = 'Error while creating wp-cli.yml';
 
-			return self::ERROR;
-		}
+            return self::ERROR;
+        }
 
-		return self::SUCCESS;
-	}
+        return self::SUCCESS;
+    }
 
-	/**
-	 * Return error message if any.
-	 *
-	 * @return string
-	 */
-	public function error()
-	{
-		return $this->error;
-	}
+    /**
+     * Return error message if any.
+     *
+     * @return string
+     */
+    public function error()
+    {
+        return $this->error;
+    }
 
-	/**
-	 * Return success message if any.
-	 *
-	 * @return string
-	 */
-	public function success()
-	{
-		return '<comment>wp-cli.yml</comment> saved successfully.';
-	}
+    /**
+     * Return success message if any.
+     *
+     * @return string
+     */
+    public function success()
+    {
+        return '<comment>wp-cli.yml</comment> saved successfully.';
+    }
 }

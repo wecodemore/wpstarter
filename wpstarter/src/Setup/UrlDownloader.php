@@ -121,8 +121,7 @@ class UrlDownloader
         $info = curl_getinfo($ch);
         $code = (int) $info['http_code'];
         $wanted = $json ? 'application/json' : 'text/plain';
-        if (
-            !empty($response)
+        if (!empty($response)
             && empty($error)
             && $code === 200
             && $this->contentType($info['content_type']) === $wanted

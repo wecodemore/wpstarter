@@ -57,13 +57,11 @@ class Helpers
     public static function addHook($hook, $callable, $priority = 10, $argsNum = 1)
     {
         // sanity check
-        if (
-            !is_callable($callable)
+        if (!is_callable($callable)
             || !is_scalar($hook)
             || !$hook
             || !is_numeric($priority)
             || !is_int($argsNum)) {
-
             return;
         }
 
@@ -75,8 +73,7 @@ class Helpers
             return;
         }
 
-        if (
-            defined(ABSPATH)
+        if (defined(ABSPATH)
             && is_file(ABSPATH.'wp-includes/class-wp-hook.php')
             && is_file(ABSPATH.'wp-includes/plugin.php')
         ) {
