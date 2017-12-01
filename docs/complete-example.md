@@ -23,11 +23,11 @@ all of WP Starter configuration. Explanations are provided further down below af
         },
         {
             "type": "vcs",
-            "url": "https://gist.github.com/Giuseppe-Mazzapica/e8c8e4dfc8e65f1903ac.git"
+            "url": "https://gist.github.com/gmazzap/e8c8e4dfc8e65f1903ac.git"
         },
         {
             "type": "vcs",
-            "url": "https://gist.github.com/Giuseppe-Mazzapica/9939793dfb2a2361cd0f.git"
+            "url": "https://gist.github.com/gmazzap/9939793dfb2a2361cd0f.git"
         }
     ],
     "require": {
