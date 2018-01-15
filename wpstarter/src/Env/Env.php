@@ -252,14 +252,14 @@ final class Env
                     case in_array($var, self::$isBool, true):
                         $values[$var] = (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
                         break;
-                    case in_array($var, self::$isBoolOrInt, true) :
+                    case in_array($var, self::$isBoolOrInt, true):
                         if (is_numeric($value)) {
                             $values[$var] = (int) $value;
                             break;
                         }
                         $values[$var] = (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
                         break;
-                    case in_array($var, self::$isMod, true) :
+                    case in_array($var, self::$isMod, true):
                         $check = $this->checkMod($value);
                         is_null($check) or $values[$var] = $check;
                         break;

@@ -67,8 +67,7 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
 
             return self::ERROR;
         }
-        if (
-            $paths['wp-content']
+        if ($paths['wp-content']
             && $paths['wp-parent']
             && strpos(trim($paths['wp-content'], '\\/'), trim($paths['wp-parent'], '\\/')) !== 0
         ) {
