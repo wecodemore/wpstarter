@@ -73,7 +73,7 @@ class PluginAsMuLoader
     private function installPlugin($plugin)
     {
         $basename = plugin_basename($plugin);
-        $isUninstall = array_key_exists($this->uninstall, $basename);
+        $isUninstall = array_key_exists($basename, $this->uninstall);
         if (
             has_action("deactivate_{$basename}")
             || file_exists(dirname($plugin).'/uninstall.php')
