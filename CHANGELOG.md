@@ -1,6 +1,6 @@
 # Change Log for WPStarter
 
-## [Unreleased]
+## [2.4.3] - 2018-05-07
 * Templates: Add EOF lines. See [#67].
 * Removed check for required env vars [#63]
 
