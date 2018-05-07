@@ -230,7 +230,6 @@ class DropinsStep implements StepInterface
                     'Do you want to proceed with it anyway?',
                 );
                 break;
-
         }
 
         return $this->io->ask($lines, false);
