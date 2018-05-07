@@ -26,24 +26,7 @@ class Helpers
      */
     public static function settings($dir, $file = '.env')
     {
-        $env = Env\Env::load($dir, $file);
-
-        $settings = $env->allVars();
-
-        $required = array(
-            'DB_NAME',
-            'DB_USER',
-            'DB_PASSWORD',
-        );
-
-        foreach ($required as $key) {
-            if (!isset($settings[$key]) || empty($settings[$key])) {
-                $names = implode(', ', $required);
-                throw new \RuntimeException($names.' environment variables are required.');
-            }
-        }
-
-        return $settings;
+        return Env\Env::load($dir, $file)->allVars();
     }
 
     /**

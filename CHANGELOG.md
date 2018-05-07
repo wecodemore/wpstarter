@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 * Templates: Add EOF lines. See [#67].
+* Removed check for required env vars [#63]
 
 ## [2.4.2] - 2017-06-29
 * Define `WP_CONTENT_URL` only on single site. See [#48], [#57].
