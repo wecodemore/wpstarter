@@ -155,10 +155,10 @@ class Setup
             ? $extra['wordpress-install-dir']
             : 'wordpress';
         $wpFullDir = "{$cwd}/{$wpInstallDir}";
-        $wpSubdir = $this->subdir($cwd, $wpFullDir);
+        $wpSubdir = '/' . $this->subdir($cwd, $wpFullDir);
         $wpContent = isset($extra['wordpress-content-dir'])
-            ? $this->subdir($cwd, $cwd.'/'.$extra['wordpress-content-dir'])
-            : 'wp-content';
+            ? '/' . $this->subdir($cwd, $cwd.'/'.$extra['wordpress-content-dir'])
+            : '/wp-content';
 
         return new ArrayObject($this->normalisePaths(array(
             'root' => $cwd,
