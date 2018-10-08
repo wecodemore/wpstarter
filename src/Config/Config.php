@@ -28,6 +28,7 @@ final class Config implements \ArrayAccess
     const PREVENT_OVERWRITE = 'prevent-overwrite';
     const REGISTER_THEME_FOLDER = 'register-theme-folder';
     const SCRIPTS = 'scripts';
+    const TEMPLATES_DIR = 'templates-dir';
     const UNKWOWN_DROPINS = 'unknown-dropins';
     const WP_CLI_COMMANDS = 'wp-cli-commands';
     const WP_CLI_FILES = 'wp-cli-files';
@@ -50,6 +51,7 @@ final class Config implements \ArrayAccess
         self::PREVENT_OVERWRITE => [],
         self::REGISTER_THEME_FOLDER => true,
         self::SCRIPTS => [],
+        self::TEMPLATES_DIR => null,
         self::UNKWOWN_DROPINS => OptionalStep::ASK,
         self::WP_CLI_COMMANDS => [],
         self::WP_CLI_FILES => [],
@@ -72,6 +74,7 @@ final class Config implements \ArrayAccess
         self::MU_PLUGIN_LIST => 'validatePathArray',
         self::PREVENT_OVERWRITE => 'validateOverwrite',
         self::REGISTER_THEME_FOLDER => 'validateBoolOrAsk',
+        self::TEMPLATES_DIR => 'validatePath',
         self::SCRIPTS => 'validateScripts',
         self::UNKWOWN_DROPINS => 'validateBoolOrAsk',
         self::WP_CLI_COMMANDS => 'validateWpCliCommands',
@@ -136,7 +139,7 @@ final class Config implements \ArrayAccess
     {
         // phpcs:enable
 
-        if ($this->offsetExists($name) && $this->offsetGet($name) !== null) {
+        if ($this->offsetExists($name) && $this->offsetGet($name)->notEmpty()) {
             throw new \BadMethodCallException(
                 sprintf(
                     '%s is append-ony: %s config is already set',
