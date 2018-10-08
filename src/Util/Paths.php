@@ -10,6 +10,7 @@ namespace WeCodeMore\WpStarter\Util;
 
 use Composer\Composer;
 use Composer\Util\Filesystem;
+use WeCodeMore\WpStarter\Config\Config;
 
 final class Paths implements \ArrayAccess
 {
@@ -42,6 +43,11 @@ final class Paths implements \ArrayAccess
     private $composer;
 
     /**
+     * @var string|null
+     */
+    private $customTemplatesDir;
+
+    /**
      * @param \Composer\Composer $composer
      * @param Filesystem $filesystem
      */
@@ -53,8 +59,19 @@ final class Paths implements \ArrayAccess
         $this->paths = self::$parsed->contains($this->composer)
             ? self::$parsed->offsetGet($this->composer)
             : $this->parse();
+    }
 
-        $this->relative(self::WP_STARTER, 'templates');
+    /**
+     * @param Config $config
+     */
+    public function initTemplates(Config $config)
+    {
+        if (!$config[Config::TEMPLATES_DIR]->notEmpty()) {
+            return;
+        }
+
+        $dir = $config[Config::TEMPLATES_DIR]->unwrapOrFallback();
+        is_dir($dir) and $this->customTemplatesDir = $dir;
     }
 
     /**
@@ -207,6 +224,19 @@ final class Paths implements \ArrayAccess
     public function wpStarter(string $to = ''): string
     {
         return $this->absolute(self::WP_STARTER, $to);
+    }
+
+    /**
+     * @param string $filename
+     * @return string
+     */
+    public function template(string $filename): string
+    {
+        if ($this->customTemplatesDir && is_file("{$this->customTemplatesDir}/{$filename}")) {
+            return "{$this->customTemplatesDir}/{$filename}";
+        }
+
+        return $this->root("templates/{$filename}");
     }
 
     /**

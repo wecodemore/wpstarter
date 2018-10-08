@@ -23,7 +23,7 @@ class FileBuilder
      */
     public function build(Paths $paths, string $template, array $vars = []): string
     {
-        $template = $paths->wpStarter("templates/{$template}");
+        $template = $paths->template($template);
 
         if (!$template || !is_file($template) || !is_readable($template)) {
             return '';

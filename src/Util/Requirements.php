@@ -136,6 +136,7 @@ final class Requirements
         $this->io = new Io($io);
         $this->composerIo = $io;
         $this->composerConfig = Factory::createConfig($io);
+        $this->paths->initTemplates($this->config);
     }
 
     /**

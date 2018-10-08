@@ -305,7 +305,7 @@ class Validator
             return Result::ok($realpath);
         }
 
-        $fullRealpath = realpath($this->paths->root('/') . $path);
+        $fullRealpath = realpath($this->paths->root("/{$path}"));
 
         return $fullRealpath ? Result::ok($fullRealpath) : Result::error();
     }

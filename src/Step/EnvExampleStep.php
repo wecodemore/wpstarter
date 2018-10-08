@@ -177,7 +177,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
     private function copy(Paths $paths, string $dest, string $source = null): int
     {
         if ($source === null) {
-            $source = $paths->wpStarter('templates/.env.example');
+            $source = $paths->template('.env.example');
         }
 
         if ($this->filesystem->copyFile($source, $dest)) {
