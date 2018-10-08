@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 /*
  * This file is part of the WP Starter package.
- *
- * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,65 +14,77 @@ use Composer\IO\IOInterface;
 use Composer\Plugin\PluginInterface;
 use Composer\Plugin\Capability\CommandProvider;
 use Composer\Script\Event;
-use WeCodeMore\WpStarter\Utils\Activator;
-use WeCodeMore\WpStarter\Utils\WpVersion;
-use WeCodeMore\WpStarter\Utils\Config;
-use WeCodeMore\WpStarter\Utils\FileBuilder;
-use WeCodeMore\WpStarter\Utils\Filesystem;
-use WeCodeMore\WpStarter\Utils\IO;
-use WeCodeMore\WpStarter\Utils\OverwriteHelper;
-use WeCodeMore\WpStarter\Utils\Paths;
-use WeCodeMore\WpStarter\Utils\Stepper;
+use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Util;
 use WeCodeMore\WpStarter\Step;
+use WeCodeMore\WpStarter\Util\Steps;
 
-/**
- * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
- * @license http://opensource.org/licenses/MIT MIT
- * @package WeCodeMore\WpStarter
- */
 final class ComposerPlugin implements PluginInterface, EventSubscriberInterface, CommandProvider
 {
 
     const EXTRA_KEY = 'wpstarter';
-    const EXTRA_KEY_OVERRIDE = 'wpstarter-override';
+
+    const STEP_CLASSES = [
+        Step\CheckPathStep::NAME => Step\CheckPathStep::class,
+        Step\WpConfigStep::NAME => Step\WpConfigStep::class,
+        Step\IndexStep::NAME => Step\IndexStep::class,
+        Step\MuLoaderStep::NAME => Step\MuLoaderStep::class,
+        Step\EnvExampleStep::NAME => Step\EnvExampleStep::class,
+        Step\DropinsStep::NAME => Step\DropinsStep::class,
+        Step\MoveContentStep::NAME => Step\MoveContentStep::class,
+        Step\ContentDevStep::NAME => Step\ContentDevStep::class,
+    ];
 
     /**
-     * @var \Composer\Composer
+     * @var Util\Locator
      */
-    private $composer;
+    private $locator;
 
     /**
-     * @var \WeCodeMore\WpStarter\Utils\IO
+     * @var IOInterface
      */
-    private $io;
+    private $composerIo;
 
     /**
-     * @var \WeCodeMore\WpStarter\Utils\Paths
+     * phpcs:disable Inpsyde.CodeQuality.NoAccessors
      */
-    private $paths;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Utils\Config
-     */
-    private $config;
-
-    /**
-     * @inheritdoc
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
+        // phpcs:enable
+
         return [
             'post-install-cmd' => 'run',
-            'post-update-cmd'  => 'run',
+            'post-update-cmd' => 'run',
         ];
     }
 
     /**
-     * @inheritdoc
+     * phpcs:disable Inpsyde.CodeQuality.NoAccessors
+     */
+    public function getCapabilities(): array
+    {
+        // phpcs:enable
+
+        return [CommandProvider::class => __CLASS__];
+    }
+
+    /**
+     * phpcs:disable Inpsyde.CodeQuality.NoAccessors
+     */
+    public function getCommands(): array
+    {
+        // phpcs:enable
+
+        return [new WpStarterCommand()];
+    }
+
+    /**
+     * @param Composer $composer
+     * @param IOInterface $io
      */
     public function activate(Composer $composer, IOInterface $io)
     {
-        $wpVersionDiscover = new WpVersion($composer, $io);
+        $wpVersionDiscover = new Util\WpVersion($composer, $io);
         $wpVersion = $wpVersionDiscover->discover();
 
         // If no or wrong WP ver found do nothing, so run() will show an error not findind config
@@ -82,21 +92,11 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
             return;
         }
 
-        $activator = new Activator($composer, $io, $wpVersion);
-
-        $this->composer = $composer;
-        $this->paths = $activator->paths();
-        $this->config = $activator->config();
-        $this->io = $activator->io();
-    }
-
-    /**
-     * @inheritdoc
-     * @throws \Symfony\Component\Console\Exception\LogicException
-     */
-    public function getCommands()
-    {
-        return [new WpStarterCommand()];
+        $this->composerIo = $io;
+        $this->locator = new Util\Locator(
+            new Util\Requirements($composer, $io, $wpVersion),
+            $composer
+        );
     }
 
     /**
@@ -105,174 +105,137 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      * It is possible to provide the names of steps to run.
      *
      * @param Event|null $event
-     * @param array $stepsOnly
+     * @param array $selectedSteps
      * @return void
      */
-    public function run(Event $event = null, $stepsOnly = [])
+    public function run(Event $event = null, array $selectedSteps = [])
     {
-        if (
-            !$this->config instanceof Config
-            || !$this->io instanceof IO
-            || !$this->paths instanceof Paths
-        ) {
-            $this->io->error('Error running WP Starter command.');
-            $this->io->error('WordPress not found or found in a too old version.');
+        if (!$this->locator) {
+            // If here, activate() bailed earlier.
+            $this->composerIo->writeError('Error running WP Starter command.');
+            $this->composerIo->writeError('WordPress not found or found in a too old version.');
 
             return;
         }
 
-        $overwrite = new OverwriteHelper($this->config, $this->io, $this->paths);
-        $stepper = new Stepper($this->io, $overwrite);
+        $steps = new Util\Steps($this->locator);
 
-        if (!$stepper->allowed($this->config, $this->paths)) {
-            $this->io->block([
-                'WP Starter installation CANCELED.',
-                'wp-config.php was found in root folder and your overwrite settings',
-                'do not allow to proceed.',
-            ], 'yellow');
+        if (!$steps->allowed($this->locator->config(), $this->locator->paths())) {
+            $this->locator->io()->block(
+                [
+                    'WP Starter installation CANCELED.',
+                    'wp-config.php was found in root folder and your overwrite settings',
+                    'do not allow to proceed.',
+                ],
+                'yellow'
+            );
 
             return;
         }
 
-        $stepsOnly = array_filter($stepsOnly, 'is_string');
+        $selectedSteps = array_filter($selectedSteps, 'is_string');
+        $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
+        $stepClasses = array_merge(self::STEP_CLASSES, $customSteps);
+        $hasWpCli = false;
 
-        $stepClasses = array_merge([
-            Step\CheckPathStep::NAME   => Step\CheckPathStep::class,
-            Step\WPConfigStep::NAME    => Step\WPConfigStep::class,
-            Step\IndexStep::NAME       => Step\IndexStep::class,
-            Step\MuLoaderStep::NAME    => Step\MuLoaderStep::class,
-            Step\EnvExampleStep::NAME  => Step\EnvExampleStep::class,
-            Step\DropinsStep::NAME     => Step\DropinsStep::class,
-            Step\GitignoreStep::NAME   => Step\GitignoreStep::class,
-            Step\MoveContentStep::NAME => Step\MoveContentStep::class,
-            Step\ContentDevStep::NAME  => Step\ContentDevStep::class,
-        ], $this->config[Config::CUSTOM_STEPS]);
+        $this->factorySteps($steps, $stepClasses, $selectedSteps, $hasWpCli);
+        $this->createExecutor($hasWpCli, $steps, $this->locator->config());
+        $this->logo();
+        $steps->run($this->locator->config(), $this->locator->paths());
+    }
 
-        $filesystem = new Filesystem();
-        $fileBuilder = new FileBuilder();
+    /**
+     * @param Util\Steps $steps
+     * @param array $stepClasses
+     * @param array $selectedSteps
+     * @param bool $hasWpCliStep
+     */
+    private function factorySteps(
+        Util\Steps $steps,
+        array $stepClasses,
+        array $selectedSteps,
+        bool &$hasWpCliStep
+    ) {
 
-        $hasWpCliStep = $hasRoboStep = false;
         $stepsAdded = [];
 
         foreach ($stepClasses as $stepName => $stepClass) {
-
-            if (
-                !$stepName
-                || ($stepsOnly && !in_array($stepName, $stepsOnly, true))
+            if (!$stepName
+                || ($selectedSteps && !in_array($stepName, $selectedSteps, true))
                 || in_array($stepName, $stepsAdded, true)
             ) {
                 continue;
             }
 
-            $step = $this->factoryStep($stepClass, $filesystem, $fileBuilder);
-
+            $step = $this->factoryStep($stepClass);
             if ($step->name() === $stepName) {
                 $stepName === Step\WpCliCommandsStep::NAME and $hasWpCliStep = true;
-                $stepName === Step\RoboStep::NAME and $hasRoboStep = true;
-                $stepper->addStep($step);
+                $steps->addStep($step);
                 $stepsAdded[] = $stepName;
             }
         }
-
-        $this->createExecutors($hasWpCliStep, $hasRoboStep, $stepper);
-
-        $this->logo();
-
-        $stepper->run($this->paths, $this->config[Config::VERBOSITY]);
     }
 
     /**
-     * @param $stepClass
-     * @param Filesystem $filesystem
-     * @param FileBuilder $fileBuilder
-     * @return Step\StepInterface
+     * @param string $stepClass
+     * @return Step\Step
      */
-    private function factoryStep($stepClass, Filesystem $filesystem, FileBuilder $fileBuilder)
+    private function factoryStep(string $stepClass): Step\Step
     {
-        if (
-            !is_string($stepClass)
-            || !is_subclass_of($stepClass, Step\StepInterface::class, true)
-        ) {
+        if (!is_subclass_of($stepClass, Step\Step::class, true)) {
             return new Step\NullStep();
         }
 
-        $step = null;
-
-        switch (true) {
-            case (method_exists($stepClass, 'instance')):
-                /** @var callable $factory */
-                $factory = [$stepClass, 'instance'];
-                $step = $factory($this->io, $filesystem, $fileBuilder);
-                break;
-            case (is_subclass_of($stepClass, Step\FileCreationStepInterface::class, true)):
-                return new $stepClass($this->io, $filesystem, $fileBuilder);
-            case (is_subclass_of($stepClass, Step\FileStepInterface::class, true)):
-                return new $stepClass($this->io, $filesystem);
-        }
-
-        $step or $step = new $stepClass($this->io);
-
-        return $step instanceof Step\StepInterface ? $step : new Step\NullStep();
+        return new $stepClass($this->locator);
     }
 
     /**
      * @param bool $hasWpCliStep
-     * @param bool $hasRoboStep
-     * @param Stepper $stepper
+     * @param Steps $steps
+     * @param Config $config
      */
-    private function createExecutors($hasWpCliStep, $hasRoboStep, Stepper $stepper)
+    private function createExecutor(bool $hasWpCliStep, Steps $steps, Config $config)
     {
-        if (!$hasWpCliStep && $this->config[Config::WP_CLI_COMMANDS]) {
-            $stepper->addStep(new Step\WpCliCommandsStep($this->io));
+        if (!$hasWpCliStep && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
+            $steps->addStep(new Step\WpCliCommandsStep($this->locator));
             $hasWpCliStep = true;
         }
 
-        if (!$hasRoboStep && $this->config[Config::ROBO_FILE]) {
-            $stepper->addStep(new Step\RoboStep($this->io));
-            $hasRoboStep = true;
-        }
-
-        if (!$hasWpCliStep && !$hasRoboStep) {
+        if (!$hasWpCliStep) {
             return;
         }
 
-        $executorFactory = new PhpCliTool\CommandExecutorFactory(
-            $this->paths,
-            $this->io,
-            $this->config,
-            $this->composer
+        $config = $this->locator->config();
+
+        $executorFactory = new WpCli\ExecutorFactory(
+            $this->locator->paths(),
+            $this->locator->io(),
+            $this->locator->urlDownloader(),
+            $config,
+            $this->locator->composer()
         );
 
-        if ($hasWpCliStep) {
-            $wpCliExecutor = $executorFactory->create(new WpCli\Tool($this->config));
-            $this->config->appendConfig(Config::WP_CLI_EXECUTOR, $wpCliExecutor);
-        }
-
-        if ($hasRoboStep) {
-            $roboExecutor = $executorFactory->create(new Robo\Tool($this->config, $this->paths));
-            $this->config->appendConfig(Config::ROBO_EXECUTOR, $roboExecutor);
-        }
+        $wpCliCommand = new WpCli\Command($config, $this->locator->urlDownloader());
+        $wpCliExecutor = $executorFactory->create($wpCliCommand);
+        $config->appendConfig(Config::WP_CLI_EXECUTOR, $wpCliExecutor);
     }
 
+    /**
+     * @return void
+     */
     private function logo()
     {
-        if ($this->config[Config::VERBOSITY] < 1) {
-            return;
-        }
-
-        $m = '<fg=magenta>';
-        $y = ' </><fg=yellow>';
+        $magenta = '<fg=magenta>';
+        $yellow = ' </><fg=yellow>';
         ob_start();
         ?>
 
-        <?= $m ?>__      __ ___ <?= $y ?> ___  _____  _    ___  _____  ___  ___  </>
-        <?= $m ?>\ \    / /| _ \<?= $y ?>/ __||_   _|/_\  | _ \|_   _|| __|| _ \ </>
-        <?= $m ?> \ \/\/ / |  _/<?= $y ?>\__ \  | | / _ \ |   /  | |  | _| |   / </>
-        <?= $m ?>  \_/\_/  |_|  <?= $y ?>|___/  |_|/_/ \_\|_|_\  |_|  |___||_|_\ </>
+        <?= $magenta ?>__      __ ___ <?= $yellow ?> ___  _____  _    ___  _____  ___  ___  </>
+        <?= $magenta ?>\ \    / /| _ \<?= $yellow ?>/ __||_   _|/_\  | _ \|_   _|| __|| _ \ </>
+        <?= $magenta ?> \ \/\/ / |  _/<?= $yellow ?>\__ \  | | / _ \ |   /  | |  | _| |   / </>
+        <?= $magenta ?>  \_/\_/  |_|  <?= $yellow ?>|___/  |_|/_/ \_\|_|_\  |_|  |___||_|_\ </>
 
         <?php
-        $logo = ob_get_clean();
-
-        $this->io->write($logo);
+        $this->locator->io()->write(ob_get_clean());
     }
 }

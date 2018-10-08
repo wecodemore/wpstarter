@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 /*
  * This file is part of the WP Starter package.
- *
- * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,16 +13,10 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
- * @license http://opensource.org/licenses/MIT MIT
- * @package WeCodeMore\WpStarter
- */
 final class WpStarterCommand extends BaseCommand
 {
     /**
-     * @inheritdoc
-     * @throws \Symfony\Component\Console\Exception\InvalidArgumentException
+     * @return void
      */
     protected function configure()
     {
@@ -39,18 +31,24 @@ final class WpStarterCommand extends BaseCommand
     }
 
     /**
-     * @inheritdoc
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     *
+     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        // phpcs:enable
+
         try {
             $plugin = new ComposerPlugin();
             $plugin->activate($this->getComposer(false, false), $this->getIO());
             $plugin->run(null, $input->getArgument('steps') ?: []);
 
             return 0;
-        } catch (\Exception $e) {
-            $output->writeln($e->getMessage());
+        } catch (\Throwable $throwable) {
+            $output->writeln($throwable->getMessage());
 
             return 1;
         }

@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 /*
  * This file is part of the WP Starter package.
- *
- * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -10,60 +8,55 @@
 
 namespace WeCodeMore\WpStarter\Step;
 
-use WeCodeMore\WpStarter\Utils\Config;
-use WeCodeMore\WpStarter\Utils\Filesystem;
-use WeCodeMore\WpStarter\Utils\IO;
-use WeCodeMore\WpStarter\Utils\FileBuilder;
-use WeCodeMore\WpStarter\Utils\Paths;
+use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Util\Locator;
+use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * Steps that generates index.php in root folder.
- *
- * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
- * @license http://opensource.org/licenses/MIT MIT
- * @package WeCodeMore\WpStarter
  */
-final class IndexStep implements FileCreationStepInterface, BlockingStepInterface
+final class IndexStep implements FileCreationStepInterface, BlockingStep
 {
     const NAME = 'build-index';
 
     /**
-     * @var \WeCodeMore\WpStarter\Utils\FileBuilder
+     * @var \WeCodeMore\WpStarter\Util\FileBuilder
      */
     private $builder;
 
     /**
-     * @var \WeCodeMore\WpStarter\Utils\Filesystem
+     * @var \WeCodeMore\WpStarter\Util\Filesystem
      */
     private $filesystem;
+
     /**
      * @var string
      */
     private $error = '';
 
     /**
-     * @param IO $io
-     * @param \WeCodeMore\WpStarter\Utils\Filesystem $filesystem
-     * @param \WeCodeMore\WpStarter\Utils\FileBuilder $builder
+     * @param Locator $locator
      */
-    public function __construct(IO $io, Filesystem $filesystem, FileBuilder $builder)
+    public function __construct(Locator $locator)
     {
-        $this->builder = $builder;
-        $this->filesystem = $filesystem;
+        $this->builder = $locator->fileBuilder();
+        $this->filesystem = $locator->filesystem();
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function name()
+    public function name(): string
     {
         return self::NAME;
     }
 
     /**
-     * @inheritdoc
+     * @param Config $config
+     * @param Paths $paths
+     * @return bool
      */
-    public function allowed(Config $config, Paths $paths)
+    public function allowed(Config $config, Paths $paths): bool
     {
         return true;
     }
@@ -72,23 +65,24 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
      * @inheritdoc
      * @throws \InvalidArgumentException
      */
-    public function targetPath(Paths $paths)
+    public function targetPath(Paths $paths): string
     {
-        return $paths->wp_parent('index.php');
+        return $paths->wpParent('index.php');
     }
 
     /**
-     * @inheritdoc
-     * @throws \InvalidArgumentException
+     * @param Config $config
+     * @param Paths $paths
+     * @return int
      */
-    public function run(Paths $paths, $verbosity)
+    public function run(Config $config, Paths $paths): int
     {
-        $from = $paths->wp_parent();
+        $from = $paths->wpParent();
         $to = $paths->wp('index.php');
 
         $indexPath = $this->filesystem->composerFilesystem()->findShortestPath($from, $to);
 
-        $build = $this->builder->build($paths, 'index.example', ['BOOTSTRAP_PATH' => $indexPath]);
+        $build = $this->builder->build($paths, 'index.php', ['BOOTSTRAP_PATH' => $indexPath]);
 
         if (!$this->filesystem->save($build, $this->targetPath($paths))) {
             $this->error = 'Error creating index.php.';
@@ -100,17 +94,17 @@ final class IndexStep implements FileCreationStepInterface, BlockingStepInterfac
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function error()
+    public function error(): string
     {
         return $this->error;
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function success()
+    public function success(): string
     {
         return '<comment>index.php</comment> saved successfully.';
     }

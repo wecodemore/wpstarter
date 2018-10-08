@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 /*
  * This file is part of the WP Starter package.
- *
- * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -10,100 +8,90 @@
 
 namespace WeCodeMore\WpStarter\Step;
 
-use WeCodeMore\WpStarter\Utils\Config;
-use WeCodeMore\WpStarter\Utils\Filesystem;
-use WeCodeMore\WpStarter\Utils\IO;
-use WeCodeMore\WpStarter\Utils\FileBuilder;
-use WeCodeMore\WpStarter\Utils\Paths;
+use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Util\Locator;
+use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * Steps that generates wpstarter-mu-loader.php in mu-plugins folder.
- *
- * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
- * @license http://opensource.org/licenses/MIT MIT
- * @package WeCodeMore\WpStarter
  */
-final class MuLoaderStep implements FileCreationStepInterface, BlockingStepInterface
+final class MuLoaderStep implements FileCreationStepInterface, BlockingStep
 {
     const NAME = 'build-mu-loader';
+    const TARGET_FILE_NAME = 'wpstarter-mu-loader.php';
 
     /**
-     * @var \WeCodeMore\WpStarter\Utils\FileBuilder
+     * @var \WeCodeMore\WpStarter\Util\FileBuilder
      */
     private $builder;
 
     /**
-     * @var \WeCodeMore\WpStarter\Utils\Filesystem
+     * @var \WeCodeMore\WpStarter\Util\Filesystem
      */
     private $filesystem;
 
     /**
-     * @var string[]
+     * @param Locator $locator
      */
-    private $plugins_list;
-
-    /**
-     * @param \WeCodeMore\WpStarter\Utils\IO $io
-     * @param \WeCodeMore\WpStarter\Utils\Filesystem $filesystem
-     * @param \WeCodeMore\WpStarter\Utils\FileBuilder $filebuilder
-     */
-    public function __construct(IO $io, Filesystem $filesystem, FileBuilder $filebuilder)
+    public function __construct(Locator $locator)
     {
-        $this->filesystem = $filesystem;
-        $this->builder = $filebuilder;
+        $this->filesystem = $locator->filesystem();
+        $this->builder = $locator->fileBuilder();
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function name()
+    public function name(): string
     {
         return self::NAME;
     }
 
     /**
-     * @inheritdoc
+     * @param Config $config
+     * @param Paths $paths
+     * @return bool
      */
-    public function allowed(Config $config, Paths $paths)
+    public function allowed(Config $config, Paths $paths): bool
     {
-        if ($config[Config::MU_PLUGIN_LIST]) {
-
-            $this->plugins_list = $config[Config::MU_PLUGIN_LIST];
-
-            return true;
-        }
-
-        return false;
+        return $config[Config::MU_PLUGIN_LIST]->notEmpty();
     }
 
     /**
-     * @inheritdoc
-     * @throws \InvalidArgumentException
+     * @param Paths $paths
+     * @return string
      */
-    public function targetPath(Paths $paths)
+    public function targetPath(Paths $paths): string
     {
-        return $paths->wp_content('mu-plugins/wpstarter-mu-loader.php');
+        return $paths->wpContent('mu-plugins/' . self::TARGET_FILE_NAME);
     }
 
     /**
-     * @inheritdoc
-     * @throws \InvalidArgumentException
+     * @param Config $config
+     * @param Paths $paths
+     * @return int
      */
-    public function run(Paths $paths, $verbosity)
+    public function run(Config $config, Paths $paths): int
     {
-        $list = array_reduce($this->plugins_list, function ($list, $plugin) use ($paths) {
+        $pluginsConfig = $config[Config::MU_PLUGIN_LIST]->unwrapOrFallback([]);
+        $list = is_array($pluginsConfig) ? array_filter($pluginsConfig, 'is_string') : [];
 
-            $to = $paths->root($plugin);
-            $from = $paths->wp_content('mu-plugins');
+        $from = $paths->wpContent('mu-plugins');
 
-            $list[] = $this->filesystem->composerFilesystem()->findShortestPath($from, $to);
+        $list = array_reduce(
+            $list,
+            function (array $list, string $plugin) use ($paths, $from): array {
+                $path = $this->findPath($paths, $from, $plugin);
+                $path and $list[] = $path;
 
-            return $list;
-        });
+                return $list;
+            },
+            []
+        );
 
         $build = $this->builder->build(
             $paths,
-            'wpstarter-mu-loader.example',
+            'wpstarter-mu-loader.php',
             ['MU_PLUGINS_LIST' => implode(",\n", $list)]
         );
 
@@ -115,19 +103,34 @@ final class MuLoaderStep implements FileCreationStepInterface, BlockingStepInter
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function error()
+    public function error(): string
     {
         return 'Error creating MU plugin loader.';
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function success()
+    public function success(): string
     {
-
         return '<comment>MU plugin loader</comment> saved successfully.';
+    }
+
+    /**
+     * @param Paths $paths
+     * @param string $from
+     * @param string $plugin
+     * @return string
+     */
+    private function findPath(Paths $paths, string $from, string $plugin): string
+    {
+        $to = $paths->root($plugin);
+        try {
+            return $this->filesystem->composerFilesystem()->findShortestPath($from, $to);
+        } catch (\Throwable $exception) {
+            return '';
+        }
     }
 }

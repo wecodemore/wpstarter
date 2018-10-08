@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<ruleset>
+
+    <file>./src</file>
+
+    <arg value="sp"/>
+
+    <rule ref="Inpsyde">
+        <exclude name="WordPress.XSS"/>
+        <exclude name="WordPress.VIP"/>
+        <exclude name="WordPress.PHP.DiscouragedPHPFunctions"/>
+    </rule>
+
+    <rule ref="Inpsyde.CodeQuality.Psr4">
+        <properties>
+            <property
+                name="psr4"
+                type="array"
+                value="WeCodeMore\WpStarter\=>src,WeCodeMore\WpStarter\Tests\=>tests\src,WeCodeMore\WpStarter\Tests\Unit=>tests\unit"/>
+        </properties>
+    </rule>
+
+    <rule ref="Inpsyde.CodeQuality.ElementNameMinimalLength">
+        <properties>
+            <property name="allowedShortNames" type="array" value="i,id,to,up,ok,no,go,it,db,is,wp,io" />
+        </properties>
+    </rule>
+
+</ruleset>

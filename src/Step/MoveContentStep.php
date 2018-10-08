@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 /*
  * This file is part of the WP Starter package.
- *
- * (c) Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -10,40 +8,25 @@
 
 namespace WeCodeMore\WpStarter\Step;
 
-use Composer\Util\Filesystem as FilesystemUtil;
-use WeCodeMore\WpStarter\Utils\Filesystem;
-use WeCodeMore\WpStarter\Utils\IO;
-use WeCodeMore\WpStarter\Utils\Config;
-use WeCodeMore\WpStarter\Utils\Paths;
+use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Util\Locator;
+use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * Step that moves wp-content contents from WP package folder to project wp-content folder.
- *
- * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
- * @license http://opensource.org/licenses/MIT MIT
- * @package WeCodeMore\WpStarter
  */
-final class MoveContentStep implements OptionalStepInterface, FileStepInterface
+final class MoveContentStep implements OptionalStep
 {
     const NAME = 'move-content';
 
     /**
-     * @var \Composer\Util\Filesystem
-     */
-    private $filesystemUtil;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Utils\IO
-     */
-    private $io;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Utils\Filesystem
+     * @var \WeCodeMore\WpStarter\Util\Filesystem
      */
     private $filesystem;
 
     /**
-     * @var \WeCodeMore\WpStarter\Utils\Paths
+     * @var \WeCodeMore\WpStarter\Util\Paths
      */
     private $paths;
 
@@ -53,62 +36,61 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
     private $error = '';
 
     /**
-     * @param \WeCodeMore\WpStarter\Utils\IO $io
-     * @param \WeCodeMore\WpStarter\Utils\Filesystem $filesystem
+     * @param Locator $locator
      */
-    public function __construct(IO $io, Filesystem $filesystem)
+    public function __construct(Locator $locator)
     {
-        $this->io = $io;
-        $this->filesystem = $filesystem;
-        $this->filesystemUtil = new FilesystemUtil();
+        $this->filesystem = $locator->filesystem();
+        $this->paths = $locator->paths();
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function name()
+    public function name(): string
     {
         return self::NAME;
     }
 
     /**
-     * @inheritdoc
-     * @throws \InvalidArgumentException
+     * @param Config $config
+     * @param Paths $paths
+     * @return bool
      */
-    public function allowed(Config $config, Paths $paths)
+    public function allowed(Config $config, Paths $paths): bool
     {
-        $this->paths = $paths;
-
-        return $config[Config::MOVE_CONTENT] !== false && $paths->wp_content();
+        return $config[Config::MOVE_CONTENT]->not(false) && $paths->wpContent();
     }
 
     /**
-     * @inheritdoc
-     * @throws \InvalidArgumentException
+     * @param Config $config
+     * @param Io $io
+     * @return bool
      */
-    public function askConfirm(Config $config, IO $io)
+    public function askConfirm(Config $config, Io $io): bool
     {
-        if ($config[Config::MOVE_CONTENT] !== 'ask') {
+        if (!$config[Config::MOVE_CONTENT]->is(OptionalStep::ASK)) {
             return true;
         }
 
         $lines = [
             'Do you want to move default plugins and themes from',
             'WordPress package wp-content dir to content folder:',
-            '"' . $this->paths->wp_content() . '"',
+            '"' . $this->paths->wpContent() . '"',
         ];
 
         return $io->confirm($lines, true);
     }
 
     /**
-     * @inheritdoc
-     * @throws \InvalidArgumentException
+     * @param Config $config
+     * @param Paths $paths
+     * @return int
      */
-    public function run(Paths $paths, $verbosity)
+    public function run(Config $config, Paths $paths): int
     {
         $from = $paths->wp('wp-content');
-        $to = $paths->wp_content();
+        $to = $paths->wpContent();
 
         if ($from === $to) {
             return self::NONE;
@@ -122,25 +104,25 @@ final class MoveContentStep implements OptionalStepInterface, FileStepInterface
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function error()
+    public function error(): string
     {
         return trim($this->error);
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function skipped()
+    public function skipped(): string
     {
         return '  - wp-content folder contents moving skipped.';
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function success()
+    public function success(): string
     {
         return '<comment>wp-content</comment> folder contents moved successfully.';
     }

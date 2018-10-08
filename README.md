@@ -10,7 +10,7 @@ WP Starter is the easiest and fastest way to bootstrap WordPress sites entirely 
 
 # System Requirements
 
- - PHP 5.3.2+
+ - PHP 7.0+
  - [Composer](https://getcomposer.org/)
 
 # License
@@ -19,8 +19,7 @@ MIT. See LICENSE file.
 
 # Dependencies
 
- - John P. Bloch [WordPress package](https://github.com/johnpbloch/wordpress)
- - [Dotenv](https://github.com/vlucas/phpdotenv) by Vance Lucas
+ - [Symfony Dotenv](https://symfony.com/doc/3.4/components/dotenv.html)
 
 # Contributing
 
