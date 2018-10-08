@@ -67,7 +67,7 @@ final class Config implements \ArrayAccess
         self::CUSTOM_STEPS => 'validateSteps',
         self::DROPINS => 'validatePathArray',
         self::EARLY_HOOKS_FILE => 'validatePath',
-        self::ENV_EXAMPLE => 'validateEnvExample',
+        self::ENV_EXAMPLE => 'validateBoolOrAskOrUrlOrPath',
         self::ENV_FILE => 'validatePath',
         self::INSTALL_WP_CLI => 'validateBool',
         self::MOVE_CONTENT => 'validateBoolOrAsk',

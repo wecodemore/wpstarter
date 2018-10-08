@@ -88,13 +88,13 @@ final class Paths implements \ArrayAccess
             : $extra['wordpress-install-dir'];
 
         $wpFullDir = realpath("{$cwd}/{$wpInstallDir}");
+        $wpParent = $wpFullDir ? dirname($wpFullDir) : $cwd;
 
         $wpContent = empty($extra['wordpress-content-dir'])
             ? $this->filesystem->normalizePath($cwd . '/wp-content')
             : $this->filesystem->normalizePath($cwd . "/{$extra['wordpress-content-dir']}");
 
-        $vendorDir = realpath($this->composer->getConfig()->get('vendor-dir'));
-
+        $vendorDir = $this->composer->getConfig()->get('vendor-dir');
         $binDir = $this->composer->getConfig()->get('bin-dir');
 
         $wpStarterDir = realpath(dirname(dirname(__DIR__)));
@@ -104,7 +104,7 @@ final class Paths implements \ArrayAccess
             self::VENDOR => $this->filesystem->normalizePath($vendorDir),
             self::BIN => $this->filesystem->normalizePath($binDir),
             self::WP => $this->filesystem->normalizePath($wpFullDir),
-            self::WP_PARENT => $this->filesystem->normalizePath(dirname($wpFullDir)),
+            self::WP_PARENT => $this->filesystem->normalizePath($wpParent),
             self::WP_CONTENT => $this->filesystem->normalizePath($wpContent),
             self::WP_STARTER => $this->filesystem->normalizePath($wpStarterDir),
         ];

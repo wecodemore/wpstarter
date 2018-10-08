@@ -6,15 +6,18 @@
  * file that was distributed with this source code.
  */
 
-namespace WeCodeMore\WpStarter\Util;
+namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Step;
+use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Util\Locator;
+use WeCodeMore\WpStarter\Util\OverwriteHelper;
+use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * A step whose routine consists in running other steps routines.
  */
-final class Steps implements Step\PostProcessStep
+final class Steps implements PostProcessStep
 {
     /**
      * @var Locator
@@ -55,10 +58,10 @@ final class Steps implements Step\PostProcessStep
     }
 
     /**
-     * @param Step\Step $step
+     * @param Step $step
      * @return Steps
      */
-    public function addStep(Step\Step $step): Steps
+    public function addStep(Step $step): Steps
     {
         $this->steps->attach($step);
 
@@ -92,7 +95,7 @@ final class Steps implements Step\PostProcessStep
         $io = $this->locator->io();
 
         $scripts = $config[Config::SCRIPTS]->unwrapOrFallback([]);
-        $this->runStepScripts($this, $io, $paths, $scripts, 'pre-', Step\Step::NONE);
+        $this->runStepScripts($this, $io, $paths, $scripts, 'pre-', Step::NONE);
 
         while ($this->steps->valid()) {
 
@@ -105,17 +108,17 @@ final class Steps implements Step\PostProcessStep
             $shouldProcess or $io->writeIfVerbose('Step "' . $step->name() . '" skipped.');
 
             if ($shouldProcess) {
-                $this->runStepScripts($step, $io, $paths, $scripts, 'pre-', Step\Step::NONE);
+                $this->runStepScripts($step, $io, $paths, $scripts, 'pre-', Step::NONE);
                 $result = $step->run($config, $paths);
             }
 
             if (!$this->handleResult($step, $io, $result)) {
-                $this->runStepScripts($step, $io, $paths, $scripts, 'pre-', Step\Step::ERROR);
+                $this->runStepScripts($step, $io, $paths, $scripts, 'pre-', Step::ERROR);
 
                 return $this->finalMessage($io);
             }
 
-            if ($step instanceof Step\PostProcessStep) {
+            if ($step instanceof PostProcessStep) {
                 $this->postProcessSteps->attach($step);
             }
 
@@ -128,7 +131,7 @@ final class Steps implements Step\PostProcessStep
 
         $this->postProcess($io);
 
-        $this->runStepScripts($this, $io, $paths, $scripts, 'pre-', Step\Step::SUCCESS);
+        $this->runStepScripts($this, $io, $paths, $scripts, 'pre-', Step::SUCCESS);
 
         return $this->finalMessage($io);
     }
@@ -184,19 +187,19 @@ final class Steps implements Step\PostProcessStep
      * @param  Paths $paths
      * @return bool
      */
-    private function shouldProcess(Step\Step $step, Paths $paths): bool
+    private function shouldProcess(Step $step, Paths $paths): bool
     {
         $comment = '';
         $process = $step->allowed($this->locator->config(), $paths);
 
-        if ($process && $step instanceof Step\FileCreationStepInterface) {
+        if ($process && $step instanceof FileCreationStepInterface) {
             /** @var \WeCodeMore\WpStarter\Step\FileCreationStepInterface $step */
             $path = $step->targetPath($paths);
             $process = $this->locator->overwriteHelper()->shouldOverwite($path);
             $comment = $process ? '' : '- ' . basename($path) . ' exists and will be preserved.';
         }
 
-        if ($process && $step instanceof Step\OptionalStep) {
+        if ($process && $step instanceof OptionalStep) {
             /** @var \WeCodeMore\WpStarter\Step\OptionalStep $step */
             $process = $step->askConfirm($this->locator->config(), $this->locator->io());
             $comment = $process ? '' : $step->skipped();
@@ -217,16 +220,16 @@ final class Steps implements Step\PostProcessStep
      * @param  int $result
      * @return bool
      */
-    private function handleResult(Step\Step $step, Io $io, int $result): bool
+    private function handleResult(Step $step, Io $io, int $result): bool
     {
-        if (($result & Step\Step::SUCCESS) === Step\Step::SUCCESS) {
+        if (($result & Step::SUCCESS) === Step::SUCCESS) {
             $this->printMessages($io, $step->success(), false);
         }
 
-        if (($result & Step\Step::ERROR) === Step\Step::ERROR) {
+        if (($result & Step::ERROR) === Step::ERROR) {
             $this->printMessages($io, $step->error(), true);
             $this->errors++;
-            if ($step instanceof Step\BlockingStep) {
+            if ($step instanceof BlockingStep) {
                 return false;
             }
         }
@@ -235,7 +238,7 @@ final class Steps implements Step\PostProcessStep
     }
 
     /**
-     * @param Step\Step $step
+     * @param Step $step
      * @param Io $io
      * @param Paths $paths
      * @param array $scripts
@@ -243,7 +246,7 @@ final class Steps implements Step\PostProcessStep
      * @param int $result
      */
     private function runStepScripts(
-        Step\Step $step,
+        Step $step,
         Io $io,
         Paths $paths,
         array $scripts,

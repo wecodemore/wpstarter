@@ -17,7 +17,6 @@ use Composer\Script\Event;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util;
 use WeCodeMore\WpStarter\Step;
-use WeCodeMore\WpStarter\Util\Steps;
 
 final class ComposerPlugin implements PluginInterface, EventSubscriberInterface, CommandProvider
 {
@@ -118,7 +117,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
             return;
         }
 
-        $steps = new Util\Steps($this->locator);
+        $steps = new Step\Steps($this->locator);
 
         if (!$steps->allowed($this->locator->config(), $this->locator->paths())) {
             $this->locator->io()->block(
@@ -145,13 +144,13 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     }
 
     /**
-     * @param Util\Steps $steps
+     * @param Step\Steps $steps
      * @param array $stepClasses
      * @param array $selectedSteps
      * @param bool $hasWpCliStep
      */
     private function factorySteps(
-        Util\Steps $steps,
+        Step\Steps $steps,
         array $stepClasses,
         array $selectedSteps,
         bool &$hasWpCliStep
@@ -191,10 +190,10 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
 
     /**
      * @param bool $hasWpCliStep
-     * @param Steps $steps
+     * @param Step\Steps $steps
      * @param Config $config
      */
-    private function createExecutor(bool $hasWpCliStep, Steps $steps, Config $config)
+    private function createExecutor(bool $hasWpCliStep, Step\Steps $steps, Config $config)
     {
         if (!$hasWpCliStep && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
             $steps->addStep(new Step\WpCliCommandsStep($this->locator));

@@ -35,6 +35,11 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
     private $filesystem;
 
     /**
+     * @var \WeCodeMore\WpStarter\Util\UrlDownloader
+     */
+    private $urlDownloader;
+
+    /**
      * @var \WeCodeMore\WpStarter\Util\Salter
      */
     private $salter;
@@ -57,6 +62,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         $this->io = $locator->io();
         $this->builder = $locator->fileBuilder();
         $this->filesystem = $locator->filesystem();
+        $this->urlDownloader = $locator->urlDownloader();
         $this->salter = $locator->salter();
         $this->config = $locator->config();
     }
@@ -98,33 +104,19 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         $register = $this->config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback();
         $register === OptionalStep::ASK and $this->askForRegister();
 
-        $filesystem = $this->filesystem->composerFilesystem();
-
-        $from = $filesystem->normalizePath($paths->wpParent());
-
-        $relPath = function (string $to, bool $bothDirs = true) use ($from, $filesystem): string {
-            return $filesystem->findShortestPath($from, $to, $bothDirs);
-        };
-
-        $relUrl = function (string $path): string {
-            strpos($path, './') === 0 and $subdir = substr($path, 2);
-
-            return $path;
-        };
-
-        $earlyHookFile = Config::EARLY_HOOKS_FILE ? $paths->root(Config::EARLY_HOOKS_FILE) : '';
-        $earlyHookFile and $earlyHookFile = realpath($earlyHookFile);
+        $from = $this->filesystem->composerFilesystem()->normalizePath($paths->wpParent());
+        $earlyHookFile = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback();
 
         $vars = [
-            'AUTOLOAD_PATH' => $relPath($paths->vendor('autoload.php'), false),
-            'ENV_REL_PATH' => $relPath($paths->root()),
-            'WP_INSTALL_PATH' => $relPath($paths->wp()),
-            'WP_CONTENT_PATH' => $relPath($paths->wpContent()),
+            'AUTOLOAD_PATH' => $this->relPath($from, $paths->vendor('autoload.php'), false),
+            'ENV_REL_PATH' => $this->relPath($from, $paths->root()),
+            'ENV_FILE_NAME' => $this->config[Config::ENV_FILE]->unwrapOrFallback('.env'),
+            'WP_INSTALL_PATH' => $this->relPath($from, $paths->wp()),
+            'WP_CONTENT_PATH' => $this->relPath($from, $paths->wpContent()),
             'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
-            'ENV_FILE_NAME' => $this->config[Config::ENV_FILE],
-            'WP_SITEURL' => $relUrl($paths->relative(Paths::WP)),
-            'WP_CONTENT_URL' => $relUrl($paths->relative(Paths::WP_CONTENT)),
-            'EARLY_HOOKS_FILE' => $earlyHookFile ? $relPath($earlyHookFile) : '',
+            'WP_SITEURL' => $this->stripDot($paths->relative(Paths::WP)),
+            'WP_CONTENT_URL' => $this->stripDot($paths->relative(Paths::WP_CONTENT)),
+            'EARLY_HOOKS_FILE' => $earlyHookFile ? $this->relPath($from, $earlyHookFile) : '',
         ];
 
         $build = $this->builder->build(
@@ -169,5 +161,28 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         ];
 
         return $this->io->confirm($lines, true);
+    }
+
+    /**
+     * @param string $from
+     * @param string $to
+     * @param bool $bothDirs
+     * @return string
+     */
+    private function relPath(string $from, string $to, bool $bothDirs = true): string
+    {
+        return $this->filesystem->composerFilesystem()->findShortestPath($from, $to, $bothDirs);
+    }
+
+    /**
+     * @param string $path
+     * @return string
+     */
+    private function stripDot(string $path): string
+    {
+        strpos($path, './') === 0 and $subdir = substr($path, 2);
+        strpos($path, '../') === 0 and $subdir = dirname($path);
+
+        return $path;
     }
 }

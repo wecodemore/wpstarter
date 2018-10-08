@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\StringInput;
 use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Step\OptionalStep;
 use WeCodeMore\WpStarter\Step\Step;
+use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\WpCli;
 
@@ -48,11 +49,11 @@ class Validator
     public function validateOverwrite($value): Result
     {
         if (is_array($value)) {
-            return $this->validatePathArray($value);
+            return $this->validateGlobPathArray($value);
         }
 
-        if (trim(strtolower((string)$value)) === 'hard') {
-            return Result::ok('hard');
+        if (trim(strtolower((string)$value)) === OverwriteHelper::HARD) {
+            return Result::ok(OverwriteHelper::HARD);
         }
 
         return $this->validateBoolOrAsk($value);
@@ -87,16 +88,19 @@ class Validator
      */
     public function validateScripts($value): Result
     {
-        if (!is_array($value)) {
+        if (!is_array($value) || !$value) {
             return Result::ok([]);
         }
 
         $allScripts = [];
 
         foreach ($value as $name => $scripts) {
-            is_string($name) or $name = '';
+            if (!is_string($name)) {
+                continue;
+            }
 
-            if (strpos($name, 'pre-') !== 0 && strpos($name, 'post-') !== 0) {
+            $name = strtolower($name);
+            if (!preg_match('~^(?:pre|post)\-.+$~', $name)) {
                 continue;
             }
 
@@ -120,16 +124,18 @@ class Validator
      */
     public function validateContentDevOperation($value): Result
     {
-        is_string($value) and $value = trim(strtolower($value));
-
-        if (in_array($value, ContentDevStep::OPERATIONS, true) || $value === OptionalStep::ASK) {
+        if ($value === OptionalStep::ASK) {
             return Result::ok($value);
         }
 
-        $bool = $this->validateBool($value);
-        ($bool === true) and $bool = ContentDevStep::OP_SYMLINK;
+        is_string($value) and $value = trim(strtolower($value));
+        if (in_array($value, ContentDevStep::OPERATIONS, true)) {
+            return Result::ok($value);
+        }
 
-        return Result::ok($bool);
+        return $this->validateBool($value)->is(true)
+            ? Result::ok(ContentDevStep::OP_SYMLINK)
+            : Result::ok(ContentDevStep::OP_NONE);
     }
 
     /**
@@ -138,8 +144,12 @@ class Validator
      */
     public function validateWpCliCommands($value): Result
     {
-        if (is_file($value)) {
-            return $this->validateWpCliCommandsFileList($value);
+        if (is_string($value)) {
+            $path = $this->validatePath($value);
+
+            return $path->notEmpty()
+                ? $this->validateWpCliCommandsFileList($path->unwrap())
+                : Result::ok([]);
         }
 
         if (!is_array($value)) {
@@ -149,8 +159,8 @@ class Validator
         $commands = array_reduce(
             $value,
             function (array $commands, $command): array {
-                $command = $this->validateWpCliCommand($command)->unwrapOrFallback();
-                $command and $commands[] = $command;
+                $command = $this->validateWpCliCommand($command);
+                $command->notEmpty() and $commands[] = $command->unwrap();
 
                 return $commands;
             },
@@ -173,14 +183,14 @@ class Validator
         strpos($value, 'wp ') === 0 and $value = substr($value, 3);
 
         try {
+            $hasPath = preg_match('~^(.+)(\-\-path=[^ ]+)(.+)?$~', $value, $matches);
+            $hasPath and $value = trim($matches[1] . $matches[3]);
             $command = (string)new StringInput($value);
         } catch (\Throwable $exception) {
             return Result::error(new \Error($exception->getMessage(), 0, $exception));
         }
 
-        $hasPath = preg_match('~^(.*?)+(--path=[^ ]+)+(.*?)+$~', $command, $matches);
-
-        return $hasPath ? Result::ok(trim($matches[1] . $matches[3])) : Result::ok($command);
+        return Result::ok($command);
     }
 
     /**
@@ -199,9 +209,9 @@ class Validator
             $value,
             function (array $files, $file): array {
                 try {
-                    $file = is_array($file) ? WpCli\FileData::fromArray($file) : null;
-                    (!$file && is_string($file)) and $file = WpCli\FileData::fromPath($file);
-                    $file->valid() and $files[] = $file;
+                    $data = is_array($file) ? WpCli\FileData::fromArray($file) : null;
+                    (!$data && is_string($file)) and $data = WpCli\FileData::fromPath($file);
+                    $data->valid() and $files[] = $data;
 
                     return $files;
                 } catch (\Throwable $exception) {
@@ -220,21 +230,24 @@ class Validator
      */
     public function validateWpCliCommandsFileList($path): Result
     {
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-        $isPhp = $extension === 'php';
-        $isJson = $extension === 'json';
-        if (!$isPhp && !$isJson) {
+        $validPath = $this->validatePath($path);
+        if (!$validPath->notEmpty()) {
             return Result::ok([]);
         }
 
-        $fullpath = $this->filesystem->normalizePath(getcwd() . "/{$path}");
+        $fullpath = $validPath->unwrap();
         if (!is_file($fullpath) || !is_readable($fullpath)) {
             return Result::ok([]);
         }
 
+        $extension = strtolower((string)pathinfo($fullpath, PATHINFO_EXTENSION));
+        $isJson = $extension === 'json';
+        if ($extension !== 'php' && !$isJson) {
+            return Result::ok([]);
+        }
+
         $data = $isJson
-            ? @json_decode(file_get_contents($fullpath))
+            ? @json_decode(file_get_contents($fullpath), true)
             : @include $fullpath;
 
         return is_array($data) ? $this->validateWpCliCommands($data) : Result::ok([]);
@@ -255,33 +268,83 @@ class Validator
      */
     public function validateWpVersion($value): Result
     {
-        return is_string($value) && preg_match('/^[0-9]{1,2}\.[0-9]+\.[0-9]+$/', $value)
-            ? Result::ok($value)
-            : Result::ok('0.0.0');
+        if (!is_string($value) && !is_int($value)) {
+            return Result::error();
+        }
+
+        $value = (string)$value;
+
+        if (!preg_match('/^[0-9]+/', $value)) {
+            return Result::error();
+        }
+
+        $noAlpha = explode('-', $value);
+        $parts = array_map('intval', array_filter(explode('.', $noAlpha[0]), 'is_numeric'));
+        if ($parts[0] > 9) {
+            return Result::error();
+        }
+
+        return Result::ok(implode('.', array_slice(array_pad($parts, 3, 0), 0, 3)));
     }
 
     /**
      * @param mixed $value
      * @return Result
      */
-    public function validateEnvExample($value): Result
+    public function validateBoolOrAskOrUrlOrPath($value): Result
     {
-        $isPath = null;
+        $boolOrAskOrUrl = $this->validateBoolOrAskOrUrl($value);
+        if ($boolOrAskOrUrl->notEmpty()) {
+            return $boolOrAskOrUrl;
+        }
+
+        return $this->validatePath($value);
+    }
+
+    /**
+     * @param mixed $value
+     * @return Result
+     */
+    public function validateBoolOrAskOrUrl($value): Result
+    {
         $boolOrAsk = $this->validateBoolOrAsk($value);
-        if ($boolOrAsk === OptionalStep::ASK) {
+
+        if ($boolOrAsk->notEmpty()) {
+            return $boolOrAsk;
+        }
+
+        if (is_string($value)) {
+            return $this->validateUrl(trim(strtolower($value)));
+        }
+
+        return Result::error();
+    }
+
+    /**
+     * @param string|bool $value
+     * @return Result
+     */
+    public function validateBoolOrAsk($value): Result
+    {
+        if ($value === OptionalStep::ASK) {
             return Result::ok(OptionalStep::ASK);
         }
 
-        $isString = is_string($value);
+        return $this->validateBool($value);
+    }
 
-        $maybeUrl = $isString ? $this->validateUrl($value) : null;
-        if ($maybeUrl && $maybeUrl->notEmpty()) {
-            return $maybeUrl;
+    /**
+     * @param string|bool $value
+     * @return Result
+     */
+    public function validateUrlOrPath($value): Result
+    {
+        $url = $this->validateUrl($value);
+        if ($url->notEmpty()) {
+            return $url;
         }
 
-        $isPath = $isString ? $this->validatePath($value) : null;
-
-        return $isPath->notEmpty() ? $isPath : Result::ok($boolOrAsk);
+        return $this->validatePath($value);
     }
 
     /**
@@ -294,20 +357,47 @@ class Validator
             ? filter_var(str_replace('\\', '/', $value), FILTER_SANITIZE_URL)
             : null;
 
-        $path = $this->filesystem->normalizePath($path);
-
         if (!$path) {
             return Result::error();
         }
 
-        $realpath = realpath($path);
-        if ($realpath) {
-            return Result::ok($realpath);
+        if (is_file($path) || is_dir($path)) {
+            return Result::ok($this->filesystem->normalizePath($path));
         }
 
-        $fullRealpath = realpath($this->paths->root("/{$path}"));
+        $fullpath = $this->paths->root("/{$path}");
 
-        return $fullRealpath ? Result::ok($fullRealpath) : Result::error();
+        return is_file($path) || is_dir($path)
+            ? Result::ok($this->filesystem->normalizePath($fullpath))
+            : Result::error();
+    }
+
+    /**
+     * @param $value
+     * @return Result
+     */
+    public function validateGlobPath($value): Result
+    {
+        if (!substr_count($value, '*')) {
+            return $this->validatePath($value);
+        }
+
+        $path = is_string($value)
+            ? filter_var(str_replace('\\', '/', $value), FILTER_SANITIZE_URL)
+            : null;
+
+        $paths = @glob($path);
+        if (!$paths) {
+            return Result::error();
+        }
+
+        try {
+            $this->validatePathArray($paths)->unwrap();
+
+            return Result::ok($path);
+        } catch (\Error $error) {
+            return Result::error($error);
+        }
     }
 
     /**
@@ -316,44 +406,35 @@ class Validator
      */
     public function validatePathArray($value): Result
     {
-        if (!is_array($value)) {
+        if (!is_array($value) || !$value) {
             return Result::ok([]);
         }
 
-        $paths = array_unique(array_filter(array_map([$this, 'validatePath'], $value)));
+        $validated = [];
+        foreach ($value as $maybePath) {
+            $path = $this->validatePath($maybePath);
+            $path->notEmpty() and $validated[] = $path->unwrap();
+        }
 
-        return Result::ok($paths);
+        return Result::ok($validated);
     }
 
     /**
-     * @param mixed $value
+     * @param string[] $value
      * @return Result
      */
-    public function validateBoolOrAskOrUrl($value): Result
+    public function validateGlobPathArray($value): Result
     {
-        $boolOrAsk = $this->validateBoolOrAsk($value);
-        if ($boolOrAsk === OptionalStep::ASK) {
-            return Result::ok(OptionalStep::ASK);
+        if (!is_array($value) || !$value) {
+            return Result::ok([]);
         }
 
-        if (is_string($value)) {
-            return Result::ok($this->validateUrl(trim(strtolower($value))));
+        $validated = [];
+        foreach ($value as $maybePath) {
+            $this->validateGlobPath($maybePath)->notEmpty() and $validated[] = $maybePath;
         }
 
-        return Result::ok($boolOrAsk);
-    }
-
-    /**
-     * @param string|bool $value
-     * @return Result
-     */
-    public function validateBoolOrAsk($value): Result
-    {
-        if (strtolower($value) === OptionalStep::ASK) {
-            return Result::ok(OptionalStep::ASK);
-        }
-
-        return $this->validateBool($value);
+        return $validated ? Result::ok($validated) : Result::ok([]);
     }
 
     /**
@@ -373,7 +454,12 @@ class Validator
      */
     public function validateBool($value): Result
     {
-        return Result::ok((bool)filter_var($value, FILTER_VALIDATE_BOOLEAN));
+        $bool = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if ($bool === null) {
+            return Result::error();
+        }
+
+        return Result::ok($bool);
     }
 
     /**

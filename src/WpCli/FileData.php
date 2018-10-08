@@ -108,7 +108,7 @@ final class FileData
 
         $data = array_replace(self::DEFAULTS, $this->raw);
 
-        if (!$data[self::FILE] || !filter_var($data[self::FILE], FILTER_SANITIZE_URL)) {
+        if (!$data[self::FILE] || !is_string($data[self::FILE]) || !is_file($data[self::FILE])) {
             $this->parsed = self::DEFAULTS;
 
             return;

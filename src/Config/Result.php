@@ -30,6 +30,10 @@ final class Result
     {
         // phpcs:enable
 
+        if ($value instanceof Result) {
+            return $value->error ? new static(null, $value->error) : new static($value->value);
+        }
+
         return new static($value);
     }
 
@@ -47,7 +51,7 @@ final class Result
      */
     public static function error(\Error $error = null): Result
     {
-        return new static(null, $error ?: new \Error());
+        return new static(null, $error ?: new \Error('Error.'));
     }
 
     /**
@@ -80,7 +84,7 @@ final class Result
     {
         // phpcs:enable
 
-        return $this->error ? false : (bool)$this->value;
+        return $this->error ? false : $this->value !== null;
     }
 
     /**
@@ -144,7 +148,7 @@ final class Result
      *
      * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
-    public function unwrapOrBail()
+    public function unwrap()
     {
         // phpcs:enable
         if ($this->error) {
