@@ -19,4 +19,12 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
         parent::setUp();
     }
+
+    /**
+     * @return string
+     */
+    protected function fixturesPath(): string
+    {
+        return getenv('TESTS_FIXTURES_PATH');
+    }
 }

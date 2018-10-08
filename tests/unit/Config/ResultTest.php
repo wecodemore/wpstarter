@@ -18,7 +18,7 @@ class ResultTest extends TestCase
         $result = Result::ok('ok!');
 
         static::assertSame('ok!', $result->unwrapOrFallback('meh'));
-        static::assertSame('ok!', $result->unwrapOrBail());
+        static::assertSame('ok!', $result->unwrap());
         static::assertTrue($result->is('ok!'));
         static::assertFalse($result->is('no!'));
         static::assertFalse($result->not('ok!'));
@@ -33,7 +33,7 @@ class ResultTest extends TestCase
         $result = Result::none();
 
         static::assertSame(null, $result->unwrapOrFallback('meh'));
-        static::assertSame(null, $result->unwrapOrBail());
+        static::assertSame(null, $result->unwrap());
         static::assertFalse($result->is('ok!'));
         static::assertTrue($result->not('ok!'));
         static::assertFalse($result->either('no!', 'ok!'));
@@ -56,7 +56,7 @@ class ResultTest extends TestCase
         $result = Result::error();
 
         $this->expectException(\Error::class);
-        $result->unwrapOrBail();
+        $result->unwrap();
     }
 
     public function testErroredBail()
@@ -65,6 +65,6 @@ class ResultTest extends TestCase
 
         $this->expectException(\Error::class);
         $this->expectExceptionMessage('Meh!');
-        $result->unwrapOrBail();
+        $result->unwrap();
     }
 }
