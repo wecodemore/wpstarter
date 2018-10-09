@@ -620,7 +620,7 @@ class Validator
     }
 
     /**
-     * Check if given value is an array of valid paths (existing files or directories).
+     * Validate given value to be an array of valid paths (existing files or directories).
      *
      * Basically applies validatePath on each item of given array.
      *
@@ -652,7 +652,7 @@ class Validator
     }
 
     /**
-     * Check if given value is an array of valid files or directory names.
+     * Validate given value to be an array of valid files or directory names.
      *
      * No check is done on the actual existence of paths. Basically it applies either
      * validateFileName() or validateDirName() (decision made based on the presence of slashes) on
@@ -693,7 +693,7 @@ class Validator
     }
 
     /**
-     * Check if given value is an array of valid glob paths.
+     * Validate given value to be an array of valid glob paths.
      *
      * Basically applies validateGlobPath() on each item of given array.
      *
@@ -727,7 +727,7 @@ class Validator
     }
 
     /**
-     * Checks given value is  a valid URL.
+     * Validate given value to be a valid URL.
      *
      * @param string $value
      * @return Result
@@ -750,10 +750,10 @@ class Validator
     }
 
     /**
-     * Checks given value is a boolean-like value.
+     * Validate given value to be a boolean-like value.
      *
      * Besides of actual booleans, strings "true" / "false", "yes" / "no", "on" / "off" and
-     * integres 0 / 1 are all valid input.
+     * integres 0 / 1 are all valid input and returned result will return a values casted to bool.
      *
      * @param string|int|bool $value
      * @return Result
@@ -773,9 +773,9 @@ class Validator
     }
 
     /**
-     * Checks given value is an integer.
+     * Validate given value to be either and integer, a float or a string representing them.
      *
-     * Numeric strings and floats are accepted (and casted in the result).
+     * In case of success the returned result will return a values casted to int.
      *
      * @param int|string|float $value
      * @return Result

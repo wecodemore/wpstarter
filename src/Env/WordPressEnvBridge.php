@@ -16,111 +16,111 @@ use Symfony\Component\Dotenv\Dotenv;
 final class WordPressEnvBridge implements \ArrayAccess
 {
     const CONSTANTS = [
-        'ALLOW_UNFILTERED_UPLOADS' => 'bool',
-        'ALTERNATE_WP_CRON' => 'bool',
-        'AUTOMATIC_UPDATER_DISABLED' => 'bool',
-        'ALLOW_SUBDIRECTORY_INSTALL' => 'bool',
-        'COMPRESS_CSS' => 'bool',
-        'COMPRESS_SCRIPTS' => 'bool',
-        'CONCATENATE_SCRIPTS' => 'bool',
-        'CORE_UPGRADE_SKIP_NEW_BUNDLED' => 'bool',
-        'DIEONDBERROR' => 'bool',
-        'DISABLE_WP_CRON' => 'bool',
-        'DISALLOW_FILE_EDIT' => 'bool',
-        'DISALLOW_FILE_MODS' => 'bool',
-        'DISALLOW_UNFILTERED_HTML' => 'bool',
-        'DO_NOT_UPGRADE_GLOBAL_TABLES' => 'bool',
-        'ENFORCE_GZIP' => 'bool',
-        'IMAGE_EDIT_OVERWRITE' => 'bool',
-        'MEDIA_TRASH' => 'bool',
-        'MULTISITE' => 'bool',
-        'FORCE_SSL_LOGIN' => 'bool',
-        'FORCE_SSL_ADMIN' => 'bool',
-        'FTP_SSH' => 'bool',
-        'FTP_SSL' => 'bool',
-        'SAVEQUERIES' => 'bool',
-        'SCRIPT_DEBUG' => 'bool',
-        'SUBDOMAIN_INSTALL' => 'bool',
-        'WP_ALLOW_MULTISITE' => 'bool',
-        'WP_ALLOW_REPAIR' => 'bool',
-        'WP_AUTO_UPDATE_CORE' => 'bool',
-        'WP_HTTP_BLOCK_EXTERNAL' => 'bool',
-        'WP_CACHE' => 'bool',
-        'WP_DEBUG' => 'bool',
-        'WP_DEBUG_DISPLAY' => 'bool',
-        'WP_DEBUG_LOG' => 'bool',
-        'WPMU_ACCEL_REDIRECT' => 'bool',
-        'WPMU_SENDFILE' => 'bool',
-        'AUTOSAVE_INTERVAL' => 'int',
-        'EMPTY_TRASH_DAYS' => 'int',
-        'FS_TIMEOUT' => 'int',
-        'FS_CONNECT_TIMEOUT' => 'int',
-        'WP_CRON_LOCK_TIMEOUT' => 'int',
-        'WP_MAIL_INTERVAL' => 'int',
-        'SITE_ID_CURRENT_SITE' => 'int',
-        'BLOG_ID_CURRENT_SITE' => 'int',
-        'WP_PROXY_PORT' => 'int',
-        'ABSPATH' => 'string',
-        'ADMIN_COOKIE_PATH' => 'string',
-        'AUTH_COOKIE' => 'string',
-        'BLOGUPLOADDIR' => 'string',
-        'COOKIEHASH' => 'string',
-        'COOKIEPATH' => 'string',
-        'COOKIE_DOMAIN' => 'string',
-        'CUSTOM_USER_META_TABLE' => 'string',
-        'CUSTOM_USER_TABLE' => 'string',
-        'DB_CHARSET' => 'string',
-        'DB_COLLATE' => 'string',
-        'DB_HOST' => 'string',
-        'DB_NAME' => 'string',
-        'DB_PASSWORD' => 'string',
-        'DB_TABLE_PREFIX' => 'string',
-        'DB_USER' => 'string',
-        'DOMAIN_CURRENT_SITE' => 'string',
-        'ERRORLOGFILE' => 'string',
-        'FS_METHOD' => 'string',
-        'FTP_BASE' => 'string',
-        'FTP_CONTENT_DIR' => 'string',
-        'FTP_HOST' => 'string',
-        'FTP_PASS' => 'string',
-        'FTP_PLUGIN_DIR' => 'string',
-        'FTP_PRIKEY' => 'string',
-        'FTP_PUBKEY' => 'string',
-        'FTP_USER' => 'string',
-        'LOGGED_IN_COOKIE' => 'string',
-        'MU_BASE' => 'string',
-        'NOBLOGREDIRECT' => 'string',
-        'PASS_COOKIE' => 'string',
-        'PATH_CURRENT_SITE' => 'string',
-        'PLUGINS_COOKIE_PATH' => 'string',
-        'SECURE_AUTH_COOKIE' => 'string',
-        'SITECOOKIEPATH' => 'string',
-        'TEST_COOKIE' => 'string',
-        'UPLOADBLOGSDIR' => 'string',
-        'UPLOADS' => 'string',
-        'USER_COOKIE' => 'string',
-        'WPLANG' => 'string',
-        'WPMU_PLUGIN_DIR' => 'string',
-        'WPMU_PLUGIN_URL' => 'string',
-        'WP_ACCESSIBLE_HOSTS' => 'string',
-        'WP_CONTENT_DIR' => 'string',
-        'WP_CONTENT_URL' => 'string',
-        'WP_DEFAULT_THEME' => 'string',
-        'WP_HOME' => 'string',
-        'WP_LANG_DIR' => 'string',
-        'WP_MAX_MEMORY_LIMIT' => 'string',
-        'WP_MEMORY_LIMIT' => 'string',
-        'WP_PLUGIN_DIR' => 'string',
-        'WP_PLUGIN_URL' => 'string',
-        'WP_PROXY_BYPASS_HOSTS' => 'string',
-        'WP_PROXY_HOST' => 'string',
-        'WP_PROXY_PASSWORD' => 'string',
-        'WP_PROXY_USERNAME' => 'string',
-        'WP_SITEURL' => 'string',
-        'WP_TEMP_DIR' => 'string',
-        'WP_POST_REVISIONS' => 'int|bool',
-        'FS_CHMOD_DIR' => 'mod',
-        'FS_CHMOD_FILE' => 'mod',
+        'ALLOW_UNFILTERED_UPLOADS' => Filters::FILTER_BOOL,
+        'ALTERNATE_WP_CRON' => Filters::FILTER_BOOL,
+        'AUTOMATIC_UPDATER_DISABLED' => Filters::FILTER_BOOL,
+        'ALLOW_SUBDIRECTORY_INSTALL' => Filters::FILTER_BOOL,
+        'COMPRESS_CSS' => Filters::FILTER_BOOL,
+        'COMPRESS_SCRIPTS' => Filters::FILTER_BOOL,
+        'CONCATENATE_SCRIPTS' => Filters::FILTER_BOOL,
+        'CORE_UPGRADE_SKIP_NEW_BUNDLED' => Filters::FILTER_BOOL,
+        'DIEONDBERROR' => Filters::FILTER_BOOL,
+        'DISABLE_WP_CRON' => Filters::FILTER_BOOL,
+        'DISALLOW_FILE_EDIT' => Filters::FILTER_BOOL,
+        'DISALLOW_FILE_MODS' => Filters::FILTER_BOOL,
+        'DISALLOW_UNFILTERED_HTML' => Filters::FILTER_BOOL,
+        'DO_NOT_UPGRADE_GLOBAL_TABLES' => Filters::FILTER_BOOL,
+        'ENFORCE_GZIP' => Filters::FILTER_BOOL,
+        'IMAGE_EDIT_OVERWRITE' => Filters::FILTER_BOOL,
+        'MEDIA_TRASH' => Filters::FILTER_BOOL,
+        'MULTISITE' => Filters::FILTER_BOOL,
+        'FORCE_SSL_LOGIN' => Filters::FILTER_BOOL,
+        'FORCE_SSL_ADMIN' => Filters::FILTER_BOOL,
+        'FTP_SSH' => Filters::FILTER_BOOL,
+        'FTP_SSL' => Filters::FILTER_BOOL,
+        'SAVEQUERIES' => Filters::FILTER_BOOL,
+        'SCRIPT_DEBUG' => Filters::FILTER_BOOL,
+        'SUBDOMAIN_INSTALL' => Filters::FILTER_BOOL,
+        'WP_ALLOW_MULTISITE' => Filters::FILTER_BOOL,
+        'WP_ALLOW_REPAIR' => Filters::FILTER_BOOL,
+        'WP_AUTO_UPDATE_CORE' => Filters::FILTER_BOOL,
+        'WP_HTTP_BLOCK_EXTERNAL' => Filters::FILTER_BOOL,
+        'WP_CACHE' => Filters::FILTER_BOOL,
+        'WP_DEBUG' => Filters::FILTER_BOOL,
+        'WP_DEBUG_DISPLAY' => Filters::FILTER_BOOL,
+        'WP_DEBUG_LOG' => Filters::FILTER_BOOL,
+        'WPMU_ACCEL_REDIRECT' => Filters::FILTER_BOOL,
+        'WPMU_SENDFILE' => Filters::FILTER_BOOL,
+        'AUTOSAVE_INTERVAL' => Filters::FILTER_INT,
+        'EMPTY_TRASH_DAYS' => Filters::FILTER_INT,
+        'FS_TIMEOUT' => Filters::FILTER_INT,
+        'FS_CONNECT_TIMEOUT' => Filters::FILTER_INT,
+        'WP_CRON_LOCK_TIMEOUT' => Filters::FILTER_INT,
+        'WP_MAIL_INTERVAL' => Filters::FILTER_INT,
+        'SITE_ID_CURRENT_SITE' => Filters::FILTER_INT,
+        'BLOG_ID_CURRENT_SITE' => Filters::FILTER_INT,
+        'WP_PROXY_PORT' => Filters::FILTER_INT,
+        'ABSPATH' => Filters::FILTER_STRING,
+        'ADMIN_COOKIE_PATH' => Filters::FILTER_STRING,
+        'AUTH_COOKIE' => Filters::FILTER_STRING,
+        'BLOGUPLOADDIR' => Filters::FILTER_STRING,
+        'COOKIEHASH' => Filters::FILTER_STRING,
+        'COOKIEPATH' => Filters::FILTER_STRING,
+        'COOKIE_DOMAIN' => Filters::FILTER_STRING,
+        'CUSTOM_USER_META_TABLE' => Filters::FILTER_STRING,
+        'CUSTOM_USER_TABLE' => Filters::FILTER_STRING,
+        'DB_CHARSET' => Filters::FILTER_STRING,
+        'DB_COLLATE' => Filters::FILTER_STRING,
+        'DB_HOST' => Filters::FILTER_STRING,
+        'DB_NAME' => Filters::FILTER_STRING,
+        'DB_PASSWORD' => Filters::FILTER_STRING,
+        'DB_TABLE_PREFIX' => Filters::FILTER_STRING,
+        'DB_USER' => Filters::FILTER_STRING,
+        'DOMAIN_CURRENT_SITE' => Filters::FILTER_STRING,
+        'ERRORLOGFILE' => Filters::FILTER_STRING,
+        'FS_METHOD' => Filters::FILTER_STRING,
+        'FTP_BASE' => Filters::FILTER_STRING,
+        'FTP_CONTENT_DIR' => Filters::FILTER_STRING,
+        'FTP_HOST' => Filters::FILTER_STRING,
+        'FTP_PASS' => Filters::FILTER_STRING,
+        'FTP_PLUGIN_DIR' => Filters::FILTER_STRING,
+        'FTP_PRIKEY' => Filters::FILTER_STRING,
+        'FTP_PUBKEY' => Filters::FILTER_STRING,
+        'FTP_USER' => Filters::FILTER_STRING,
+        'LOGGED_IN_COOKIE' => Filters::FILTER_STRING,
+        'MU_BASE' => Filters::FILTER_STRING,
+        'NOBLOGREDIRECT' => Filters::FILTER_STRING,
+        'PASS_COOKIE' => Filters::FILTER_STRING,
+        'PATH_CURRENT_SITE' => Filters::FILTER_STRING,
+        'PLUGINS_COOKIE_PATH' => Filters::FILTER_STRING,
+        'SECURE_AUTH_COOKIE' => Filters::FILTER_STRING,
+        'SITECOOKIEPATH' => Filters::FILTER_STRING,
+        'TEST_COOKIE' => Filters::FILTER_STRING,
+        'UPLOADBLOGSDIR' => Filters::FILTER_STRING,
+        'UPLOADS' => Filters::FILTER_STRING,
+        'USER_COOKIE' => Filters::FILTER_STRING,
+        'WPLANG' => Filters::FILTER_STRING,
+        'WPMU_PLUGIN_DIR' => Filters::FILTER_STRING,
+        'WPMU_PLUGIN_URL' => Filters::FILTER_STRING,
+        'WP_ACCESSIBLE_HOSTS' => Filters::FILTER_STRING,
+        'WP_CONTENT_DIR' => Filters::FILTER_STRING,
+        'WP_CONTENT_URL' => Filters::FILTER_STRING,
+        'WP_DEFAULT_THEME' => Filters::FILTER_STRING,
+        'WP_HOME' => Filters::FILTER_STRING,
+        'WP_LANG_DIR' => Filters::FILTER_STRING,
+        'WP_MAX_MEMORY_LIMIT' => Filters::FILTER_STRING,
+        'WP_MEMORY_LIMIT' => Filters::FILTER_STRING,
+        'WP_PLUGIN_DIR' => Filters::FILTER_STRING,
+        'WP_PLUGIN_URL' => Filters::FILTER_STRING,
+        'WP_PROXY_BYPASS_HOSTS' => Filters::FILTER_STRING,
+        'WP_PROXY_HOST' => Filters::FILTER_STRING,
+        'WP_PROXY_PASSWORD' => Filters::FILTER_STRING,
+        'WP_PROXY_USERNAME' => Filters::FILTER_STRING,
+        'WP_SITEURL' => Filters::FILTER_STRING,
+        'WP_TEMP_DIR' => Filters::FILTER_STRING,
+        'WP_POST_REVISIONS' => Filters::FILTER_INT_OR_BOOL,
+        'FS_CHMOD_DIR' => Filters::FILTER_OCTAL_MOD,
+        'FS_CHMOD_FILE' => Filters::FILTER_OCTAL_MOD,
     ];
 
     /**
@@ -129,38 +129,34 @@ final class WordPressEnvBridge implements \ArrayAccess
     private static $loaded;
 
     /**
-     * @var null|Dotenv
+     * @var Filters
      */
-    private $dotenv;
-
-    /**
-     * @var string
-     */
-    private $dotEnvFile;
+    private $filters;
 
     /**
      * @var bool
      */
-    private $unloaded = false;
+    private $fileLoadingSkipped = false;
 
     /**
      * @param  string $path Environment file path
      * @param  string $file Environment file path relative to `$path`
      * @return \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public static function load(string $path, string $file = '.env'): WordPressEnvBridge
+    public static function load(string $path = null, string $file = '.env'): WordPressEnvBridge
     {
         if (self::$loaded) {
             return self::$loaded;
         }
 
-        if (getenv('WPSTARTER_ENV_LOADED') !== false) {
+        if (getenv('WPSTARTER_ENV_LOADED')) {
             self::$loaded = new static();
-            self::$loaded->unloaded = true;
+            self::$loaded->fileLoadingSkipped = true;
 
             return self::$loaded;
         }
 
+        $path === null and $path = getcwd();
         $path = realpath(rtrim($path, '\\/') . "/{$file}");
 
         if (!$path || !is_file($path) || !is_readable($path)) {
@@ -169,19 +165,11 @@ final class WordPressEnvBridge implements \ArrayAccess
             );
         }
 
-        self::$loaded = new static($path);
+        self::$loaded = new static();
+        $dotEnv = new Dotenv();
+        $dotEnv->load($path);
 
         return self::$loaded;
-    }
-
-    /**
-     * @param string $dotEnvFile
-     * @param Dotenv|null $dotenv
-     */
-    public function __construct(string $dotEnvFile = null, Dotenv $dotenv = null)
-    {
-        $this->dotenv = $dotenv;
-        $this->dotEnvFile = $dotEnvFile;
     }
 
     /**
@@ -191,11 +179,6 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     public function setupWordPress()
     {
-        if ($this->dotEnvFile) {
-            $this->dotenv or $this->dotenv = new Dotenv();
-            $this->dotenv->load($this->dotEnvFile);
-        }
-
         $names = array_keys(self::CONSTANTS);
         array_walk($names, [$this, 'defineWpConstant']);
     }
@@ -206,10 +189,13 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     public function offsetExists($offset)
     {
+        // Unfortunately we can't type-declare `string` having to stick with ArrayAccess signature.
+        $this->assertString($offset, __METHOD__);
+
         return
             array_key_exists($offset, $_ENV)
             || array_key_exists($offset, $_SERVER)
-            || getenv($offset) !== false;
+            || (getenv($offset) !== false);
     }
 
     /**
@@ -218,7 +204,10 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     public function offsetGet($offset)
     {
-        $defined = $this->unloaded ? defined($offset) : false;
+        // Unfortunately we can't type-declare `string` having to stick with ArrayAccess signature.
+        $this->assertString($offset, __METHOD__);
+
+        $defined = defined($offset);
 
         if (!$this->offsetExists($offset) && !$defined) {
             return null;
@@ -228,13 +217,15 @@ final class WordPressEnvBridge implements \ArrayAccess
             return constant($offset);
         }
 
-        $value = $_ENV[$offset] ?? $_SERVER[$offset] ?? getenv($offset);
+        $value = $_ENV[$offset] ?? $_SERVER[$offset] ?? getenv($offset) ?: null;
 
         if (!array_key_exists($offset, self::CONSTANTS)) {
             return $value;
         }
 
-        return $this->filterValue($value, self::CONSTANTS[$offset]);
+        $this->filters or $this->filters = new Filters();
+
+        return $this->filters->filter(self::CONSTANTS[$offset], $value);
     }
 
     /**
@@ -278,7 +269,10 @@ final class WordPressEnvBridge implements \ArrayAccess
     }
 
     /**
-     * Sets the table prefix global from DB_TABLE_PREFIX env var.
+     * DB table prefix is a global variable in WP, so it differs from other settings to be set
+     * from environment variables because those are constants in WP.
+     *
+     * WP Starter makes up the `DB_TABLE_PREFIX` environment variable to set DB table prefix.
      */
     private function defineTablePrexix()
     {
@@ -291,34 +285,23 @@ final class WordPressEnvBridge implements \ArrayAccess
     }
 
     /**
-     * @param string $value
-     * @param string $type
-     * @return mixed
+     * @param $value
+     * @param string $method
      *
-     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
+     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
-    private function filterValue(string $value, string $type)
+    private function assertString($value, string $method)
     {
         // phpcs:enable
 
-        switch ($type) {
-            case 'bool':
-                return (bool)filter_var($value, FILTER_VALIDATE_BOOLEAN);
-            case 'int':
-                return (int)filter_var($value, FILTER_SANITIZE_NUMBER_INT);
-            case 'string':
-                return (int)filter_var($value, FILTER_SANITIZE_STRING);
-            case 'int|bool':
-                return is_numeric($value)
-                    ? (int)filter_var($value, FILTER_SANITIZE_NUMBER_INT)
-                    : (bool)filter_var($value, FILTER_VALIDATE_BOOLEAN);
-            case 'mod':
-                (is_string($value) && $value[0] === '0') and $value = substr($value, 1);
-                return strlen($value) === 3 && str_replace(range(1, 7), '', $value) === ''
-                    ? octdec($value)
-                    : null;
+        if (!is_string($value)) {
+            throw new \TypeError(
+                sprintf(
+                    'Argument 1 passed to %s() must be of the type string, %s given.',
+                    $method,
+                    gettype($value)
+                )
+            );
         }
-
-        return $value;
     }
 }

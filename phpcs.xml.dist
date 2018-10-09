@@ -16,7 +16,7 @@
             <property
                 name="psr4"
                 type="array"
-                value="WeCodeMore\WpStarter\=>src,WeCodeMore\WpStarter\Tests\=>tests\src,WeCodeMore\WpStarter\Tests\Unit=>tests\unit"/>
+                value="WeCodeMore\WpStarter=>src,WeCodeMore\WpStarter\Tests=>tests\src,WeCodeMore\WpStarter\Tests\Unit=>tests\unit,WeCodeMore\WpStarter\Tests\Integration=>tests\integration"/>
         </properties>
     </rule>
 
