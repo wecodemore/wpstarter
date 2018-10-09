@@ -27,4 +27,30 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
         return getenv('TESTS_FIXTURES_PATH');
     }
+
+    /**
+     * @param array $extra
+     * @param string $vendorDir
+     * @param string $binDir
+     * @return \WeCodeMore\WpStarter\Config\Validator
+     */
+    protected function makeValidator(
+        array $extra = [],
+        string $vendorDir = __DIR__,
+        string $binDir = __DIR__
+    ): \WeCodeMore\WpStarter\Config\Validator {
+
+        $config = \Mockery::mock(\Composer\Config::class);
+        $config->shouldReceive('get')->with('vendor-dir')->andReturn($vendorDir);
+        $config->shouldReceive('get')->with('bin-dir')->andReturn($binDir);
+        $composer = \Mockery::mock(\Composer\Composer::class);
+        $composer->shouldReceive('getConfig')->andReturn($config);
+        $composer->shouldReceive('getPackage->getExtra')->andReturn($extra);
+
+        $filesystem = new \Composer\Util\Filesystem();
+
+        $paths = new \WeCodeMore\WpStarter\Util\Paths($composer, $filesystem);
+
+        return new \WeCodeMore\WpStarter\Config\Validator($paths, $filesystem);
+    }
 }

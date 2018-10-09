@@ -33,12 +33,11 @@ final class Config implements \ArrayAccess
     const WP_CLI_COMMANDS = 'wp-cli-commands';
     const WP_CLI_FILES = 'wp-cli-files';
     const WP_CLI_EXECUTOR = 'wp-cli-executor';
-    const WP_CLI_CONFIG = 'wp-cli-config';
     const WP_VERSION = 'wp-version';
 
     const DEFAULTS = [
         self::COMPOSER_CONFIG => [],
-        self::CONTENT_DEV_OPERATION => null,
+        self::CONTENT_DEV_OPERATION => ContentDevStep::OP_SYMLINK,
         self::CONTENT_DEV_DIR => 'content-dev',
         self::CUSTOM_STEPS => [],
         self::DROPINS => [],
@@ -55,7 +54,6 @@ final class Config implements \ArrayAccess
         self::UNKWOWN_DROPINS => OptionalStep::ASK,
         self::WP_CLI_COMMANDS => [],
         self::WP_CLI_FILES => [],
-        self::WP_CLI_CONFIG => [],
         self::WP_CLI_EXECUTOR => null,
         self::WP_VERSION => '0.0.0',
     ];
@@ -68,7 +66,7 @@ final class Config implements \ArrayAccess
         self::DROPINS => 'validatePathArray',
         self::EARLY_HOOKS_FILE => 'validatePath',
         self::ENV_EXAMPLE => 'validateBoolOrAskOrUrlOrPath',
-        self::ENV_FILE => 'validatePath',
+        self::ENV_FILE => 'validateFileName',
         self::INSTALL_WP_CLI => 'validateBool',
         self::MOVE_CONTENT => 'validateBoolOrAsk',
         self::MU_PLUGIN_LIST => 'validatePathArray',
@@ -79,7 +77,6 @@ final class Config implements \ArrayAccess
         self::UNKWOWN_DROPINS => 'validateBoolOrAsk',
         self::WP_CLI_COMMANDS => 'validateWpCliCommands',
         self::WP_CLI_FILES => 'validateWpCliCommandsFileList',
-        self::WP_CLI_CONFIG => 'validateWpCliConfig',
         self::WP_CLI_EXECUTOR => 'validateCliExecutor',
         self::WP_VERSION => 'validateWpVersion',
     ];
@@ -96,7 +93,7 @@ final class Config implements \ArrayAccess
 
     /**
      * @param array $configs
-     * @param Validator|null $validator
+     * @param Validator $validator
      */
     public function __construct(array $configs, Validator $validator)
     {
@@ -126,7 +123,8 @@ final class Config implements \ArrayAccess
     /**
      * Append-only setter.
      *
-     * Allows to use config class as a DTO among steps.
+     * The reason for this to exist is that because steps have access to Config, adding additional
+     * arbitrary values to it means steps can "communicate".
      *
      * @param string $name
      * @param mixed $value

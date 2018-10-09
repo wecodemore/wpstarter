@@ -8,39 +8,16 @@
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Config;
 
-use Composer\Util\Filesystem;
-use WeCodeMore\WpStarter\Config\Validator;
 use WeCodeMore\WpStarter\Step\CheckPathStep;
 use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Step\OptionalStep;
 use WeCodeMore\WpStarter\Step\WpConfigStep;
 use WeCodeMore\WpStarter\Tests\TestCase;
 use WeCodeMore\WpStarter\Util\OverwriteHelper;
-use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\WpCli\FileData;
 
 class ValidatorTest extends TestCase
 {
-    private function makeValidator(
-        array $extra = [],
-        string $vendorDir = __DIR__,
-        string $binDir = __DIR__
-    ): Validator {
-
-        $config = \Mockery::mock(\Composer\Config::class);
-        $config->shouldReceive('get')->with('vendor-dir')->andReturn($vendorDir);
-        $config->shouldReceive('get')->with('bin-dir')->andReturn($binDir);
-        $composer = \Mockery::mock(\Composer\Composer::class);
-        $composer->shouldReceive('getConfig')->andReturn($config);
-        $composer->shouldReceive('getPackage->getExtra')->andReturn($extra);
-
-        $filesystem = new Filesystem();
-
-        $paths = new Paths($composer, $filesystem);
-
-        return new Validator($paths, $filesystem);
-    }
-
     public function testValidateOverwrite()
     {
         $validator = $this->makeValidator();
@@ -65,10 +42,10 @@ class ValidatorTest extends TestCase
     {
         $validator = $this->makeValidator();
 
-        static::assertTrue($validator->validateSteps([])->is([]));
-        static::assertTrue($validator->validateSteps(['xxx'])->is([]));
-        static::assertTrue($validator->validateSteps('')->is([]));
-        static::assertTrue($validator->validateSteps(null)->is([]));
+        static::assertFalse($validator->validateSteps([])->notEmpty());
+        static::assertFalse($validator->validateSteps(['xxx'])->notEmpty());
+        static::assertFalse($validator->validateSteps('')->notEmpty());
+        static::assertFalse($validator->validateSteps(null)->notEmpty());
 
         $steps = [
             CheckPathStep::NAME => CheckPathStep::class,
@@ -81,11 +58,11 @@ class ValidatorTest extends TestCase
     {
         $validator = $this->makeValidator();
 
-        static::assertTrue($validator->validateScripts([])->is([]));
-        static::assertTrue($validator->validateScripts([])->is([]));
-        static::assertTrue($validator->validateScripts(['xxx'])->is([]));
-        static::assertTrue($validator->validateScripts('')->is([]));
-        static::assertTrue($validator->validateScripts(null)->is([]));
+        static::assertFalse($validator->validateScripts([])->notEmpty());
+        static::assertFalse($validator->validateScripts([])->notEmpty());
+        static::assertFalse($validator->validateScripts(['xxx'])->notEmpty());
+        static::assertFalse($validator->validateScripts('')->notEmpty());
+        static::assertFalse($validator->validateScripts(null)->notEmpty());
 
         $cb1 = static function () {
         };
@@ -95,8 +72,9 @@ class ValidatorTest extends TestCase
         $cbsOut = ['pre-a' => [$cb1], 'post-b' => [$cb2]];
         $join = ['pre-x' => [$cb1, $cb2]];
 
+        static::assertFalse($validator->validateScripts([$cb1, $cb2])->notEmpty());
+
         static::assertTrue($validator->validateScripts($cbsIn)->is($cbsOut));
-        static::assertTrue($validator->validateScripts([$cb1, $cb2])->is([]));
         static::assertTrue($validator->validateScripts($join)->is($join));
     }
 
@@ -104,20 +82,22 @@ class ValidatorTest extends TestCase
     {
         $validator = $this->makeValidator();
 
-        static::assertTrue($validator->validateContentDevOperation([])
-            ->is(ContentDevStep::OP_NONE));
-        static::assertTrue($validator->validateContentDevOperation(null)
-            ->is(ContentDevStep::OP_NONE));
-        static::assertTrue($validator->validateContentDevOperation('')
-            ->is(ContentDevStep::OP_NONE));
+        static::assertFalse($validator->validateContentDevOperation([])->notEmpty());
+        static::assertFalse($validator->validateContentDevOperation(null)->notEmpty());
+        static::assertFalse($validator->validateContentDevOperation('')->notEmpty());
+
         static::assertTrue($validator->validateContentDevOperation(false)
             ->is(ContentDevStep::OP_NONE));
+
         static::assertTrue($validator->validateContentDevOperation(true)
             ->is(ContentDevStep::OP_SYMLINK));
+
         static::assertTrue($validator->validateContentDevOperation(ContentDevStep::OP_SYMLINK)
             ->is(ContentDevStep::OP_SYMLINK));
+
         static::assertTrue($validator->validateContentDevOperation(ContentDevStep::OP_NONE)
             ->is(ContentDevStep::OP_NONE));
+
         static::assertTrue($validator->validateContentDevOperation(ContentDevStep::OP_COPY)
             ->is(ContentDevStep::OP_COPY));
     }
@@ -126,10 +106,10 @@ class ValidatorTest extends TestCase
     {
         $validator = $this->makeValidator();
 
-        static::assertTrue($validator->validateWpCliCommands(null)->is([]));
-        static::assertTrue($validator->validateWpCliCommands('foo')->is([]));
-        static::assertTrue($validator->validateWpCliCommands([])->is([]));
-        static::assertTrue($validator->validateWpCliCommands(true)->is([]));
+        static::assertFalse($validator->validateWpCliCommands(null)->notEmpty());
+        static::assertFalse($validator->validateWpCliCommands('foo')->notEmpty());
+        static::assertFalse($validator->validateWpCliCommands([])->notEmpty());
+        static::assertFalse($validator->validateWpCliCommands(true)->notEmpty());
 
         $phpList = $this->fixturesPath() . '/cli-commands-list.php';
         $actualFromPhp = $validator->validateWpCliCommands($phpList);
@@ -163,9 +143,12 @@ class ValidatorTest extends TestCase
     {
         $validator = $this->makeValidator();
 
-        static::assertTrue($validator->validateWpCliFiles(null)->is([]));
-        static::assertTrue($validator->validateWpCliFiles([])->is([]));
-        static::assertTrue($validator->validateWpCliFiles(true)->is([]));
+        static::assertFalse($validator->validateWpCliFiles(null)->notEmpty());
+        static::assertFalse($validator->validateWpCliFiles([])->notEmpty());
+        static::assertFalse($validator->validateWpCliFiles(true)->notEmpty());
+
+        $jsonFile = $this->fixturesPath() . '/cli-commands-list.json';
+        static::assertFalse($validator->validateWpCliFiles($jsonFile)->notEmpty());
 
         $commandFile = $this->fixturesPath() . '/cli-command-file.php';
         /** @var FileData $data */
@@ -175,9 +158,6 @@ class ValidatorTest extends TestCase
         static::assertSame($data->args(), []);
         static::assertFalse($data->skipWordpress());
         static::assertTrue($data->valid());
-
-        $jsonFile = $this->fixturesPath() . '/cli-commands-list.json';
-        static::assertTrue($validator->validateWpCliFiles($jsonFile)->is([]));
     }
 
     public function testValidateWpVersion()
@@ -224,26 +204,37 @@ class ValidatorTest extends TestCase
     {
         $validator = $this->makeValidator();
 
-        static::assertFalse($validator->validateGlobPath('foo')->notEmpty());
-        static::assertFalse($validator->validateGlobPath('foo/*')->notEmpty());
+        static::assertFalse($validator->validateGlobPath('f!oo')->notEmpty());
+        static::assertFalse($validator->validateGlobPath('fo"o/*')->notEmpty());
 
-        $dir = str_replace('\\', '/', __DIR__);
-        $file = str_replace('\\', '/', __FILE__);
+        static::assertTrue($validator->validateGlobPath("some/*.*")->is("some/*.*"));
+        static::assertTrue($validator->validateGlobPath("some/*.php")->is("some/*.php"));
+        static::assertTrue($validator->validateGlobPath("../foo/*.*")->is("../foo/*.*"));
+        static::assertTrue($validator->validateGlobPath("./foo")->is("./foo"));
+    }
 
-        static::assertTrue($validator->validateGlobPath("{$dir}/*.*")->is("{$dir}/*.*"));
-        static::assertTrue($validator->validateGlobPath("{$dir}/*.php")->is("{$dir}/*.php"));
-        static::assertTrue($validator->validateGlobPath($dir)->is($dir));
-        static::assertTrue($validator->validateGlobPath($file)->is($file));
+    public function testValidateFilaName()
+    {
+        $validator = $this->makeValidator();
+
+        static::assertFalse($validator->validateFileName(1)->notEmpty());
+        static::assertFalse($validator->validateFileName(true)->notEmpty());
+        static::assertFalse($validator->validateFileName('foo/bar')->notEmpty());
+        static::assertFalse($validator->validateFileName('foo\bar')->notEmpty());
+        static::assertFalse($validator->validateFileName('foo\*')->notEmpty());
+        static::assertFalse($validator->validateFileName('foo?')->notEmpty());
+        static::assertTrue($validator->validateFileName('foo.php')->is('foo.php'));
+        static::assertTrue($validator->validateFileName('.env')->is('.env'));
     }
 
     public function testValidatePathArray()
     {
         $validator = $this->makeValidator();
 
-        static::assertTrue($validator->validatePathArray(null)->is([]));
-        static::assertTrue($validator->validatePathArray('/')->is([]));
-        static::assertTrue($validator->validatePathArray(true)->is([]));
-        static::assertTrue($validator->validatePathArray([])->is([]));
+        static::assertFalse($validator->validatePathArray(null)->notEmpty());
+        static::assertFalse($validator->validatePathArray('/')->notEmpty());
+        static::assertFalse($validator->validatePathArray(true)->notEmpty());
+        static::assertFalse($validator->validatePathArray([])->notEmpty());
 
         $dir = str_replace('\\', '/', __DIR__);
         $file = str_replace('\\', '/', __FILE__);
@@ -255,16 +246,14 @@ class ValidatorTest extends TestCase
     {
         $validator = $this->makeValidator();
 
-        static::assertTrue($validator->validateGlobPathArray(null)->is([]));
-        static::assertTrue($validator->validateGlobPathArray('/')->is([]));
-        static::assertTrue($validator->validateGlobPathArray(true)->is([]));
-        static::assertTrue($validator->validateGlobPathArray([])->is([]));
+        static::assertFalse($validator->validateGlobPathArray(null)->notEmpty());
+        static::assertFalse($validator->validateGlobPathArray('/')->notEmpty());
+        static::assertFalse($validator->validateGlobPathArray(true)->notEmpty());
+        static::assertFalse($validator->validateGlobPathArray([])->notEmpty());
 
-        $dir = str_replace('\\', '/', __DIR__);
-        $file = str_replace('\\', '/', __FILE__);
-        $paths = [$dir, $file, 'foo', "{$dir}/*.*"];
+        $paths = ['foo', '../bar', 'f!oo', 'baz/*.*'];
 
         static::assertTrue($validator->validateGlobPathArray($paths)
-            ->is([$dir, $file, "{$dir}/*.*"]));
+            ->is(['foo', '../bar', 'baz/*.*']));
     }
 }
