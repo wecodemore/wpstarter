@@ -16,6 +16,7 @@ use WeCodeMore\WpStarter\Step\OptionalStep;
 use WeCodeMore\WpStarter\Step\Step;
 use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\Util\Paths;
+use WeCodeMore\WpStarter\Util\WpVersion;
 use WeCodeMore\WpStarter\WpCli;
 
 /**
@@ -306,15 +307,11 @@ class Validator
         $files = array_reduce(
             $value,
             function (array $files, $file): array {
-                try {
-                    $data = is_array($file) ? WpCli\FileData::fromArray($file) : null;
-                    (!$data && is_string($file)) and $data = WpCli\FileData::fromPath($file);
-                    $data->valid() and $files[] = $data;
+                $data = is_array($file) ? WpCli\FileData::fromArray($file) : null;
+                (!$data && is_string($file)) and $data = WpCli\FileData::fromPath($file);
+                $data->valid() and $files[] = $data;
 
-                    return $files;
-                } catch (\Throwable $exception) {
-                    return $files;
-                }
+                return $files;
             },
             []
         );
@@ -382,8 +379,8 @@ class Validator
     /**
      * Validate WP version.
      *
-     * Checks that given value represnet a valid WP version. It does not check that the verison
-     * actually exists, just that the value looks like a valid version, e.g "4.9.8" or "1.0-alpha".
+     * Checks that given value represnet a valid WP version. It does not check that the version
+     * actually exists, just that the value _looks like_ valid version, e.g "4.9.8" or "1.0-alpha".
      * Something like "8.5.1.5" will be considered valid, even if that version does not exist (yet).
      * The returned result in case of success wraps a normalized value in the form "x.x.x".
      *
@@ -396,19 +393,12 @@ class Validator
             return Result::errored('WP version is expected to be a string or an integer.');
         }
 
-        $value = (string)$value;
-
-        if (!preg_match('/^[0-9]+/', $value)) {
+        $normalized = WpVersion::normalize((string)$value);
+        if (!$normalized) {
             return Result::errored("{$value} does not represent a valid WP version.");
         }
 
-        $noAlpha = explode('-', $value);
-        $parts = array_map('intval', array_filter(explode('.', $noAlpha[0]), 'is_numeric'));
-        if ($parts[0] > 9) {
-            return Result::errored("{$value} does not represent a valid WP version.");
-        }
-
-        return Result::ok(implode('.', array_slice(array_pad($parts, 3, 0), 0, 3)));
+        return Result::ok($normalized);
     }
 
     /**

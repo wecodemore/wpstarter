@@ -27,6 +27,29 @@ class WpVersion
     private $io;
 
     /**
+     * @param string $version
+     * @return string
+     */
+    public static function normalize(string $version): string
+    {
+        $pattern = '~^(?P<numbers>(?:[0-9]+)+(?:[0-9\.]+)?)+(?P<anything>.*?)?$~';
+        $matched = preg_match($pattern, $version, $matches);
+
+        if (!$matched) {
+            return '';
+        }
+
+        $numeric = explode('.', trim($matches['numbers'], '.'));
+        $numbers = array_map('intval', array_replace([0, 0, 0], array_slice($numeric, 0, 3)));
+
+        if ($numbers[0] > 9 || $numbers[1] > 9) { // [0] beacuse will take years, [1] is WP special
+            return '';
+        }
+
+        return implode('.', $numbers);
+    }
+
+    /**
      * @param Composer $composer
      * @param IOInterface $io
      */
@@ -60,49 +83,19 @@ class WpVersion
         if (count($vers) > 1) {
             $this->io->writeError([
                 'Seems that more WordPress core packages are provided.',
-                'WP Starter only support a single WordPress core package.',
+                'WP Starter only supports a single WordPress core package.',
                 'WP Starter will NOT work.',
             ]);
 
             return '';
         }
 
-        $version = $this->normalize($vers[0]);
+        $version = static::normalize((string)$vers[0]);
 
-        if (! $this->check($version)) {
+        if (!$version || !version_compare($version, self::MIN_WP_VERSION, '>=')) {
             return '';
         }
 
         return $version;
-    }
-
-    /**
-     * @param string $version
-     * @return bool
-     */
-    private function check(string $version): bool
-    {
-        if (!is_string($version) || !$version || $version === '0.0.0') {
-            return false;
-        }
-
-        return version_compare($version, self::MIN_WP_VERSION) >= 0;
-    }
-
-    /**
-     * @param string $version
-     * @return string
-     */
-    private function normalize(string $version): string
-    {
-        $matched = preg_match('~^([0-9]{1,2}(?:[0-9\.]+)?)?~', $version, $matches);
-
-        if (!$matched) {
-            return '0.0.0';
-        }
-
-        $numbers = explode('.', trim($matches[1], '.'));
-
-        return implode('.', array_replace(['0', '0', '0'], array_slice($numbers, 0, 3)));
     }
 }
