@@ -1,11 +1,3 @@
-### Composer
 vendor/
 /composer.lock
-
-### WordPress
-/wordpress
-
-### Couscous
-website/
-couscous-theme/
-/couscous.*
+/phpunit.xml
