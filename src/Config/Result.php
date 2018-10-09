@@ -69,7 +69,7 @@ final class Result
      */
     public static function errored(string $message): Result
     {
-        return new static(null, new \Error($message));
+        return static::error(new \Error($message));
     }
 
     /**
