@@ -13,6 +13,20 @@ use WeCodeMore\WpStarter\Tests\TestCase;
 
 class ResultTest extends TestCase
 {
+    public function testIdentityInConstructor()
+    {
+        $result = Result::ok('ok!');
+        $result2 = Result::ok($result);
+
+        $error = Result::errored('Meh!');
+        $error2 = Result::ok($error);
+
+        static::assertTrue($result2->is('ok!'));
+
+        $this->expectExceptionMessage('Meh!');
+        $error2->unwrap();
+    }
+    
     public function testOk()
     {
         $result = Result::ok('ok!');
