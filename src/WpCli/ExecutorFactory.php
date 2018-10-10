@@ -8,14 +8,20 @@
 
 namespace WeCodeMore\WpStarter\WpCli;
 
-use Composer\Composer;
+use Composer\Installer\InstallationManager;
+use Composer\Repository\RepositoryInterface;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
-use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class ExecutorFactory
 {
+    /**
+     * @var Config
+     */
+    private $config;
+
     /**
      * @var Paths
      */
@@ -27,60 +33,63 @@ class ExecutorFactory
     private $io;
 
     /**
-     * @var UrlDownloader
+     * @var PharInstaller
      */
-    private $urlDownloader;
+    private $pharInstaller;
 
     /**
-     * @var Config
+     * @var RepositoryInterface
      */
-    private $config;
+    private $packageRepo;
 
     /**
-     * @var Composer
+     * @var InstallationManager
      */
-    private $composer;
+    private $installationManager;
 
     /**
-     * @param Paths $paths
-     * @param Io $io
-     * @param UrlDownloader $urlDownloader
-     * @param Config $config
-     * @param Composer $composer
+     * @param Locator $locator
+     * @param RepositoryInterface $packageRepo
+     * @param InstallationManager $installationManager
      */
     public function __construct(
-        Paths $paths,
-        Io $io,
-        UrlDownloader $urlDownloader,
-        Config $config,
-        Composer $composer
+        Locator $locator,
+        RepositoryInterface $packageRepo,
+        InstallationManager $installationManager
     ) {
 
-        $this->paths = $paths;
-        $this->io = $io;
-        $this->urlDownloader = $urlDownloader;
-        $this->config = $config;
-        $this->composer = $composer;
+        $this->config = $locator->config();
+        $this->paths = $locator->paths();
+        $this->io = $locator->io();
+        $this->pharInstaller = $locator->pharInstaller();
+        $this->packageRepo = $packageRepo;
+        $this->installationManager = $installationManager;
     }
 
     /**
      * @param Command $command
+     * @param string $phpPath
      * @return null|Executor
      */
-    public function create(Command $command)
+    public function create(Command $command, string $phpPath)
     {
         $fsPath = $this->lookForPackage($command);
 
         // Installed via Composer, build executor and return
         if ($fsPath) {
-            return new Executor($fsPath, $this->paths, $this->io, $command);
+            return new Executor($phpPath, $fsPath, $this->paths, $this->io, $command);
+        }
+
+        $targetPath = $command->pharTarget($this->paths);
+        if (file_exists($targetPath)) {
+            return new Executor($phpPath, $targetPath, $this->paths, $this->io, $command);
         }
 
         $pharUrl = $command->pharUrl();
 
         // If not installed via Composer and phar download is disabled, return nothing
         if (!$pharUrl) {
-            $this->io->error(
+            $this->io->writeError(
                 sprintf(
                     'Failed installation for %s: '
                     . 'phar download URL is invalid or phar download is disabled',
@@ -91,10 +100,11 @@ class ExecutorFactory
             return null;
         }
 
-        $installedPath = (new PharInstaller($this->io, $this->urlDownloader))->install($command);
+        $installedPath = $this->pharInstaller->install($command, $targetPath);
+
         // Phar installation was successfull, build executor and return
         if ($installedPath) {
-            return new Executor($installedPath, $this->paths, $this->io, $command);
+            return new Executor($phpPath, $installedPath, $this->paths, $this->io, $command);
         }
 
         return null;
@@ -108,9 +118,7 @@ class ExecutorFactory
      */
     private function lookForPackage(Command $command): string
     {
-        /** @var \Composer\Package\PackageInterface[] $packages */
-        $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
-        $installationManager = $this->composer->getInstallationManager();
+        $packages = $this->packageRepo->getPackages();
 
         foreach ($packages as $package) {
             if ($package->getName() !== $command->packageName()) {
@@ -121,7 +129,7 @@ class ExecutorFactory
             $minVersion = $command->minVersion();
 
             if ($minVersion && version_compare($version, $minVersion, '<')) {
-                $this->io->error(
+                $this->io->writeError(
                     sprintf(
                         'Installed %s version %s is lower than minimimun required %s.',
                         $command->niceName(),
@@ -133,7 +141,7 @@ class ExecutorFactory
                 return '';
             }
 
-            return $command->executableFile($installationManager->getInstallPath($package));
+            return $command->executableFile($this->installationManager->getInstallPath($package));
         }
 
         return '';

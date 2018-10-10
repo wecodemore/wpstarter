@@ -27,6 +27,7 @@ final class Config implements \ArrayAccess
     const MU_PLUGIN_LIST = 'mu-plugin-list';
     const PREVENT_OVERWRITE = 'prevent-overwrite';
     const REGISTER_THEME_FOLDER = 'register-theme-folder';
+    const REQUIRE_WP = 'require-wp';
     const SCRIPTS = 'scripts';
     const TEMPLATES_DIR = 'templates-dir';
     const UNKWOWN_DROPINS = 'unknown-dropins';
@@ -49,13 +50,14 @@ final class Config implements \ArrayAccess
         self::MU_PLUGIN_LIST => [],
         self::PREVENT_OVERWRITE => [],
         self::REGISTER_THEME_FOLDER => true,
+        self::REQUIRE_WP => true,
         self::SCRIPTS => [],
         self::TEMPLATES_DIR => null,
         self::UNKWOWN_DROPINS => OptionalStep::ASK,
         self::WP_CLI_COMMANDS => [],
         self::WP_CLI_FILES => [],
         self::WP_CLI_EXECUTOR => null,
-        self::WP_VERSION => '0.0.0',
+        self::WP_VERSION => null,
     ];
 
     const VALIDATION_MAP = [
@@ -72,6 +74,7 @@ final class Config implements \ArrayAccess
         self::MU_PLUGIN_LIST => 'validatePathArray',
         self::PREVENT_OVERWRITE => 'validateOverwrite',
         self::REGISTER_THEME_FOLDER => 'validateBoolOrAsk',
+        self::REQUIRE_WP => 'validateBool',
         self::TEMPLATES_DIR => 'validatePath',
         self::SCRIPTS => 'validateScripts',
         self::UNKWOWN_DROPINS => 'validateBoolOrAsk',

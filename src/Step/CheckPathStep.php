@@ -77,7 +77,6 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
         $wpContent = $paths->wpContent();
 
         $toCheck = [
-            $paths->wpStarter(),
             realpath($paths->vendor('/autoload.php')),
             realpath($paths->wp('/wp-settings.php')),
             $wpContent,
@@ -133,7 +132,7 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
                 'The site may be unusable until you create it (even empty).',
             ];
 
-            $io->block($lines, 'red', true);
+            $io->writeBlock($lines, 'red', true);
         }
     }
 }

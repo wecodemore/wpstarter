@@ -46,7 +46,7 @@ class ResultTest extends TestCase
     {
         $result = Result::none();
 
-        static::assertSame(null, $result->unwrapOrFallback('meh'));
+        static::assertSame('meh', $result->unwrapOrFallback('meh'));
         static::assertSame(null, $result->unwrap());
         static::assertFalse($result->is('ok!'));
         static::assertTrue($result->not('ok!'));

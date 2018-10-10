@@ -79,7 +79,7 @@ final class MoveContentStep implements OptionalStep
             '"' . $this->paths->wpContent() . '"',
         ];
 
-        return $io->confirm($lines, true);
+        return $io->askConfirm($lines, true);
     }
 
     /**

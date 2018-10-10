@@ -9,12 +9,10 @@
 namespace WeCodeMore\WpStarter\Config;
 
 use Composer\Util\Filesystem;
-use Composer\Util\Platform;
 use Symfony\Component\Console\Input\StringInput;
 use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Step\OptionalStep;
 use WeCodeMore\WpStarter\Step\Step;
-use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\WpVersion;
 use WeCodeMore\WpStarter\WpCli;
@@ -60,12 +58,12 @@ class Validator
      */
     public function validateOverwrite($value): Result
     {
-        if (is_array($value)) {
-            return $this->validateGlobPathArray($value);
+        if ($value === null) {
+            return Result::none();
         }
 
-        if (trim(strtolower((string)$value)) === OverwriteHelper::HARD) {
-            return Result::ok(OverwriteHelper::HARD);
+        if (is_array($value)) {
+            return $this->validateGlobPathArray($value);
         }
 
         return $this->validateBoolOrAsk($value);
@@ -181,6 +179,10 @@ class Validator
      */
     public function validateContentDevOperation($value): Result
     {
+        if ($value === null) {
+            return Result::none();
+        }
+
         if ($value === OptionalStep::ASK) {
             return Result::ok($value);
         }
@@ -329,15 +331,19 @@ class Validator
      * It is expected a string, that is a path to a PHP or JSON file. The file must return (if PHP)
      * or contain (if JSON) an array of WP CLI commands as they would be run in the terminal.
      *
-     * @param string $path
+     * @param string $value
      * @return Result
      */
-    public function validateWpCliCommandsFileList($path): Result
+    public function validateWpCliCommandsFileList($value): Result
     {
+        if ($value === null) {
+            return Result::none();
+        }
+
         $error = 'WP CLI commands must be either provided as path to a PHP file returning an array '
             .'of commands or as path to a JSON file containing the array.';
 
-        $validPath = $this->validatePath($path);
+        $validPath = $this->validatePath($value);
         if (!$validPath->notEmpty()) {
             return Result::errored($error);
         }
@@ -371,6 +377,10 @@ class Validator
      */
     public function validateCliExecutor($value): Result
     {
+        if ($value === null) {
+            return Result::none();
+        }
+
         return $value instanceof WpCli\Executor
             ? Result::ok($value)
             : Result::errored('WP CLI executor must be an instance of WpCli\Executor.');
@@ -389,6 +399,10 @@ class Validator
      */
     public function validateWpVersion($value): Result
     {
+        if ($value === null) {
+            return Result::none();
+        }
+
         if (!is_string($value) && !is_int($value)) {
             return Result::errored('WP version is expected to be a string or an integer.');
         }
@@ -568,11 +582,18 @@ class Validator
             $trimmed = $relStartMatch[1];
         }
 
-        if ($trimmed === $normalized
-            && Platform::isWindows()
-            && preg_match('~^[a-z]{1}:/(.+)~i', $normalized, $driveStartMatch)
-        ) {
-            $trimmed = $driveStartMatch[1];
+        if (!substr_count($trimmed, '/')) {
+            if (!$this->validateFileName($trimmed)->notEmpty()) {
+                return Result::errored("{$value} is not a valid folder name.");
+            }
+
+            return Result::ok($normalized);
+        }
+
+        // extract a prefix being a protocol://, protocol:, protocol://drive: or simply drive:
+        $regex = '{^(?:[0-9a-z]{2,}+:(?://(?:[a-z]:)?)?|[a-z]:)(?:/?(.+))+}i';
+        if ($trimmed === $normalized && preg_match($regex, $trimmed, $driveStartMatch)) {
+            $trimmed = $driveStartMatch[1] ?? '';
         }
 
         foreach (explode('/', $trimmed) as $part) {

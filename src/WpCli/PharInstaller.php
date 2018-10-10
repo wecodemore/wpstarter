@@ -46,21 +46,21 @@ class PharInstaller
         $path or $path = getcwd() . '/' . basename($url);
 
         if (!$this->urlDownloader->save($url, $path) || !file_exists($path)) {
-            $this->io->error(sprintf('Failed to download %s phar from %s.', $name, $url));
-            $this->io->error($this->urlDownloader->error());
+            $this->io->writeError(sprintf('Failed to download %s phar from %s.', $name, $url));
+            $this->io->writeError($this->urlDownloader->error());
 
             return '';
         }
 
-        $postInstall = $command->postPharChecker();
+        if (!$command->checkPhar($path, $this->io)) {
+            $this->io->writeError('Phar validation failed. Downloaed phar is probably corrupted.');
 
-        if ($postInstall && !$postInstall($path, $this->io)) {
             return '';
         }
 
         @chmod($path, 0550);
 
-        $this->io->ok("{$name} installed successfully.");
+        $this->io->writeSuccess("{$name} installed successfully.");
 
         return $path;
     }

@@ -14,6 +14,8 @@ use Composer\IO\IOInterface;
 use Composer\Plugin\PluginInterface;
 use Composer\Plugin\Capability\CommandProvider;
 use Composer\Script\Event;
+use Composer\Util\Filesystem;
+use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util;
 use WeCodeMore\WpStarter\Step;
@@ -43,6 +45,11 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      * @var IOInterface
      */
     private $composerIo;
+
+    /**
+     * @var Composer
+     */
+    private $composer;
 
     /**
      * phpcs:disable Inpsyde.CodeQuality.NoAccessors
@@ -83,19 +90,31 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      */
     public function activate(Composer $composer, IOInterface $io)
     {
-        $wpVersionDiscover = new Util\WpVersion($composer, $io);
-        $wpVersion = $wpVersionDiscover->discover();
+        $this->composer = $composer;
+        $this->composerIo = $io;
+        $filesystem = new Filesystem();
+        $requirements = new Util\Requirements($composer, $io, $filesystem);
 
-        // If no or wrong WP ver found do nothing, so run() will show an error not findind config
-        if (!$wpVersion) {
+        $config = $requirements->config();
+        $requireWp = $config[Config::REQUIRE_WP]->not(false);
+
+        $wpVersion = null;
+        if ($requireWp) {
+            $wpVersionDiscover = new Util\WpVersion($composer, $io);
+            $wpVersion = $wpVersionDiscover->discover();
+        }
+
+        // If no or wrong WP ver found do nothing, so run() will show an error not findind locator
+        if (!$wpVersion && $requireWp) {
             return;
         }
 
-        $this->composerIo = $io;
-        $this->locator = new Util\Locator(
-            new Util\Requirements($composer, $io, $wpVersion),
-            $composer
-        );
+        // If a WP version was found and nno verison is hardcoded in congifs, let's update it
+        if ($wpVersion && !$config[Config::WP_VERSION]->notEmpty()) {
+            $config->appendConfig(Config::WP_VERSION, $wpVersion);
+        }
+
+        $this->locator = new Util\Locator($requirements, $composer->getConfig(), $io, $filesystem);
     }
 
     /**
@@ -111,36 +130,49 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     {
         if (!$this->locator) {
             // If here, activate() bailed earlier.
-            $this->composerIo->writeError('Error running WP Starter command.');
-            $this->composerIo->writeError('WordPress not found or found in a too old version.');
-
-            return;
-        }
-
-        $steps = new Step\Steps($this->locator);
-
-        if (!$steps->allowed($this->locator->config(), $this->locator->paths())) {
-            $this->locator->io()->block(
+            $this->composerIo->writeError(
                 [
-                    'WP Starter installation CANCELED.',
-                    'wp-config.php was found in root folder and your overwrite settings',
-                    'do not allow to proceed.',
-                ],
-                'yellow'
+                    "<bg=red;fg=white;option=bold>                                             </>",
+                    "<bg=red;fg=white;option=bold>    Error running WP Starter.                </>",
+                    "<bg=red;fg=white;option=bold>    No supported WordPress version found.    </>",
+                    "<bg=red;fg=white;option=bold>                                             </>",
+                ]
             );
 
-            return;
+            $event or exit(1);
         }
 
-        $selectedSteps = array_filter($selectedSteps, 'is_string');
-        $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
-        $stepClasses = array_merge(self::STEP_CLASSES, $customSteps);
-        $hasWpCli = false;
+        try {
+            $steps = new Step\Steps($this->locator, $this->composer);
 
-        $this->factorySteps($steps, $stepClasses, $selectedSteps, $hasWpCli);
-        $this->createExecutor($hasWpCli, $steps, $this->locator->config());
-        $this->logo();
-        $steps->run($this->locator->config(), $this->locator->paths());
+            if (!$steps->allowed($this->locator->config(), $this->locator->paths())) {
+                $this->locator->io()->writeBlock(
+                    [
+                        'WP Starter installation CANCELED.',
+                        'wp-config.php was found in root folder and your overwrite settings',
+                        'do not allow to proceed.',
+                    ],
+                    'red',
+                    true
+                );
+
+                $event or exit(1);
+            }
+
+            $selectedSteps = array_filter($selectedSteps, 'is_string');
+            $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
+            $stepClasses = array_merge(self::STEP_CLASSES, $customSteps);
+            $hasWpCli = false;
+
+            $this->factorySteps($steps, $stepClasses, $selectedSteps, $hasWpCli);
+            $this->createExecutor($hasWpCli, $steps, $this->locator->config());
+            $this->logo();
+            $steps->run($this->locator->config(), $this->locator->paths());
+        } catch (\Throwable $throwable) {
+            $this->locator->io()->writeError($throwable->getMessage());
+
+            $event or exit(1);
+        }
     }
 
     /**
@@ -185,7 +217,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
             return new Step\NullStep();
         }
 
-        return new $stepClass($this->locator);
+        return new $stepClass($this->locator, $this->composer);
     }
 
     /**
@@ -204,18 +236,20 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
             return;
         }
 
-        $config = $this->locator->config();
-
         $executorFactory = new WpCli\ExecutorFactory(
-            $this->locator->paths(),
-            $this->locator->io(),
-            $this->locator->urlDownloader(),
-            $config,
-            $this->locator->composer()
+            $this->locator,
+            $this->composer->getRepositoryManager()->getLocalRepository(),
+            $this->composer->getInstallationManager()
         );
 
+        $php = (new PhpExecutableFinder())->find();
+        if (!$php) {
+            throw new \Exception('PHP executable not found.');
+        }
+
+        $config = $this->locator->config();
         $wpCliCommand = new WpCli\Command($config, $this->locator->urlDownloader());
-        $wpCliExecutor = $executorFactory->create($wpCliCommand);
+        $wpCliExecutor = $executorFactory->create($wpCliCommand, $php);
         $config->appendConfig(Config::WP_CLI_EXECUTOR, $wpCliExecutor);
     }
 
@@ -224,17 +258,15 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      */
     private function logo()
     {
-        $magenta = '<fg=magenta>';
-        $yellow = ' </><fg=yellow>';
-        ob_start();
-        ?>
+        // phpcs:disable
+        $logo = <<<LOGO
+<fg=magenta> __      __ ___ </><fg=yellow> ___  _____  _    ___  _____  ___  ___  </>
+<fg=magenta> \ \    / /| _ \</><fg=yellow>/ __||_   _|/_\  | _ \|_   _|| __|| _ \ </>
+<fg=magenta>  \ \/\/ / |  _/</><fg=yellow>\__ \  | | / _ \ |   /  | |  | _| |   / </>
+<fg=magenta>   \_/\_/  |_|  </><fg=yellow>|___/  |_|/_/ \_\|_|_\  |_|  |___||_|_\ </>
+LOGO;
+        // phpcs:enable
 
-        <?= $magenta ?>__      __ ___ <?= $yellow ?> ___  _____  _    ___  _____  ___  ___  </>
-        <?= $magenta ?>\ \    / /| _ \<?= $yellow ?>/ __||_   _|/_\  | _ \|_   _|| __|| _ \ </>
-        <?= $magenta ?> \ \/\/ / |  _/<?= $yellow ?>\__ \  | | / _ \ |   /  | |  | _| |   / </>
-        <?= $magenta ?>  \_/\_/  |_|  <?= $yellow ?>|___/  |_|/_/ \_\|_|_\  |_|  |___||_|_\ </>
-
-        <?php
-        $this->locator->io()->write(ob_get_clean());
+        $this->composerIo->write("\n{$logo}\n");
     }
 }

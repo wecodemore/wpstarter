@@ -15,14 +15,9 @@ use WeCodeMore\WpStarter\Util\Paths;
 class Executor
 {
     /**
-     * @var bool
-     */
-    private static $executing = false;
-
-    /**
      * @var string
      */
-    private static $php;
+    private $phpPath;
 
     /**
      * @var string
@@ -45,25 +40,21 @@ class Executor
     private $command;
 
     /**
-     * @return bool
-     */
-    public static function executing(): bool
-    {
-        return self::$executing;
-    }
-
-    /**
+     * @param string $phpPath
      * @param string $cliPath
      * @param Paths $paths
      * @param Io $io
      * @param Command $command
      */
-    public function __construct(string $cliPath, Paths $paths, Io $io, Command $command)
-    {
-        if (self::$php === null) {
-            self::$php = (new PhpExecutableFinder())->find() ?: '';
-        }
+    public function __construct(
+        string $phpPath,
+        string $cliPath,
+        Paths $paths,
+        Io $io,
+        Command $command
+    ) {
 
+        $this->phpPath = $phpPath;
         $this->cliPath = $cliPath;
         $this->paths = $paths;
         $this->io = $io;
@@ -75,35 +66,9 @@ class Executor
      */
     public function execute(string $command)
     {
-        self::$executing = $this->command->packageName();
-
+        $this->command->packageName();
         $command = $this->command->prepareCommand($command, $this->paths);
 
-        if ($this->checkPhpExecutor($command)) {
-            passthru(self::$php . " {$this->cliPath} {$command}");
-        }
-
-        self::$executing = false;
-    }
-
-    /**
-     * @param string $command
-     * @return bool
-     */
-    private function checkPhpExecutor(string $command): bool
-    {
-        if (!self::$php) {
-            $this->io->error(
-                sprintf(
-                    'Can\'t execute %s `%s`: unable to locate PHP executable.',
-                    $this->command->niceName(),
-                    $command
-                )
-            );
-
-            return false;
-        }
-
-        return true;
+        passthru("{$this->phpPath} {$this->cliPath} {$command}");
     }
 }

@@ -13,8 +13,6 @@ class FileBuilder
 
     /**
      * Build a file content starting form a template and a set of replacement variables.
-     * Part of those variables (salt keys) are generated using Salter class.
-     * Templater class is used to apply the replacements.
      *
      * @param  Paths $paths
      * @param  string $template
@@ -26,7 +24,7 @@ class FileBuilder
         $template = $paths->template($template);
 
         if (!$template || !is_file($template) || !is_readable($template)) {
-            return '';
+            throw new \Exception("Can't build file from template {$template}: file not found.");
         }
 
         return $this->render(file_get_contents($template), $vars);
@@ -37,7 +35,7 @@ class FileBuilder
      * @param  array $vars
      * @return string
      */
-    public function render(string $content, array $vars): string
+    private function render(string $content, array $vars): string
     {
         foreach ($vars as $key => $value) {
             $content = str_replace('{{{' . $key . '}}}', $value, $content);

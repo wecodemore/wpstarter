@@ -28,10 +28,8 @@ class ValidatorTest extends TestCase
         $validator = $this->makeValidator();
 
         $ask = OptionalStep::ASK;
-        $hard = OverwriteHelper::HARD;
 
         static::assertTrue($validator->validateOverwrite($ask)->is($ask));
-        static::assertTrue($validator->validateOverwrite($hard)->is($hard));
         static::assertFalse($validator->validateOverwrite('foo')->notEmpty());
         static::assertTrue($validator->validateOverwrite(false)->is(false));
         static::assertTrue($validator->validateOverwrite(true)->is(true));

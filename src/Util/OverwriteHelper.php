@@ -13,8 +13,6 @@ use WeCodeMore\WpStarter\Step\OptionalStep;
 
 class OverwriteHelper
 {
-    const HARD = 'hard';
-
     /**
      * @var bool|string|array
      */
@@ -39,13 +37,25 @@ class OverwriteHelper
      * @param Config $config
      * @param Io $io
      * @param Paths $paths
+     * @param \Composer\Util\Filesystem $filesystem
      */
-    public function __construct(Config $config, Io $io, Paths $paths)
-    {
-        $this->preventFor = $config['prevent-overwrite']->unwrapOrFallback([]);
+    public function __construct(
+        Config $config,
+        Io $io,
+        Paths $paths,
+        \Composer\Util\Filesystem $filesystem
+    ) {
+
+        $this->preventFor = $config['prevent-overwrite']->unwrapOrFallback(false);
+        if (is_array($this->preventFor)) {
+            $trim = function (string $path): string {
+                return trim($path, '/');
+            };
+            $this->preventFor = array_map($trim, $this->preventFor);
+        }
         $this->io = $io;
         $this->root = $paths->root();
-        $this->filesystem = new \Composer\Util\Filesystem();
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -63,9 +73,9 @@ class OverwriteHelper
 
         if ($this->preventFor === OptionalStep::ASK) {
             $name = basename($file);
-            $lines = ["{$name} found in target folder. Do you want to overwrite it?"];
+            $lines = ["{$name} found in target folder", 'Do you want to overwrite it?'];
 
-            return $this->io->confirm($lines, true);
+            return $this->io->askConfirm($lines, true);
         }
 
         if (is_array($this->preventFor)) {
@@ -86,15 +96,15 @@ class OverwriteHelper
     /**
      * Check if a file is set to not be overwritten using shell patterns.
      *
-     * @param  string $file
+     * @param  string $pattern
      * @return bool
      */
-    private function patternCheck(string $file): bool
+    private function patternCheck(string $pattern): bool
     {
         $overwrite = true;
         $config = $this->preventFor;
         while ($overwrite === true && !empty($config)) {
-            $overwrite = fnmatch(array_shift($config), $file, FNM_NOESCAPE) ? false : true;
+            $overwrite = !fnmatch(array_shift($config), $pattern, FNM_NOESCAPE);
         }
 
         return $overwrite;

@@ -96,7 +96,7 @@ final class DropinsStep implements Step
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
     public function name(): string
     {
@@ -131,6 +131,7 @@ final class DropinsStep implements Step
                 ? $this->runStep($name, $url, $paths)
                 : $this->addMessage("{$name} is not a valid dropin name. Skipped.", 'error');
         }
+
         if (!$this->error) {
             return self::SUCCESS;
         }
@@ -143,7 +144,7 @@ final class DropinsStep implements Step
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
     public function error(): string
     {
@@ -151,7 +152,7 @@ final class DropinsStep implements Step
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
     public function success(): string
     {
@@ -175,8 +176,10 @@ final class DropinsStep implements Step
 
         if ($step->allowed($this->config, $paths)) {
             $step->run($this->config, $paths);
-            $this->addMessage($step->error(), 'error');
-            $this->addMessage($step->success(), 'success');
+            $error = $step->error();
+            $success = $step->success();
+            $error and $this->addMessage($error, 'error');
+            $success and $this->addMessage($success, 'success');
         }
     }
 
@@ -205,8 +208,8 @@ final class DropinsStep implements Step
         }
 
         if (!is_array(self::$languages)) {
-            $ver = $this->config[Config::WP_VERSION]->unwrapOrFallback('0.0');
-            $languages = $this->languagesFetcher->fetch($ver);
+            $ver = $this->config[Config::WP_VERSION]->unwrapOrFallback();
+            $languages = $ver ? $this->languagesFetcher->fetch($ver) : [];
             is_array($languages) and self::$languages = $languages;
         }
 
@@ -231,12 +234,13 @@ final class DropinsStep implements Step
      */
     private function ask(string $name, int $question = 0): bool
     {
-        $wpVer = $this->config[Config::WP_VERSION]->unwrapOrFallback();
+        $wpVer = $this->config[Config::WP_VERSION]->unwrapOrFallback('');
+        $forWp = $wpVer ? " for WP '{$wpVer}'" : '';
 
         switch ($question) {
             case self::QUESTION_NO_LOCALE:
                 $lines = [
-                    "{$name} is not a core supported locale for WP {$wpVer}",
+                    "{$name} is not a core supported locale{$forWp}.",
                     "Do you want to proceed with {$name}.php anyway?",
                 ];
                 break;
@@ -256,7 +260,7 @@ final class DropinsStep implements Step
                 break;
         }
 
-        return $this->io->confirm($lines, false);
+        return $this->io->askConfirm($lines, false);
     }
 
     /**

@@ -105,7 +105,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
                 'your project folder?',
             ];
 
-            return $io->confirm($lines, true);
+            return $io->askConfirm($lines, true);
         }
 
         return true;

@@ -160,7 +160,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
             'as additional theme folder for your project?',
         ];
 
-        return $this->io->confirm($lines, true);
+        return $this->io->askConfirm($lines, true);
     }
 
     /**

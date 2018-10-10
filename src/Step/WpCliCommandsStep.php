@@ -85,9 +85,9 @@ final class WpCliCommandsStep implements Step
             return self::NONE;
         }
 
-        $this->io->comment('Running WP CLI commands...');
+        $this->io->writeComment('Running WP CLI commands...');
         $this->executor->execute('cli version');
-        $this->io->comment(str_repeat('-', 69));
+        $this->io->writeComment(str_repeat('-', 69));
         $fileCommands = [];
         if ($this->files) {
             $fileCommands = array_filter(array_map([$this, 'evalFileCommand'], $this->files));
@@ -105,7 +105,7 @@ final class WpCliCommandsStep implements Step
 
         $this->io->write('starting now...');
         array_walk($this->commands, [$this->executor, 'execute']);
-        $this->io->comment(str_repeat('-', 69));
+        $this->io->writeComment(str_repeat('-', 69));
 
         return self::SUCCESS;
     }

@@ -8,13 +8,13 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
-use Composer\Composer;
-use Composer\Factory;
-use Composer\Util\RemoteFilesystem;
-use WeCodeMore\WpStarter\Config\Config;
-use Composer\Util\Filesystem as ComposerFilesystem;
 use Composer\Config as ComposerConfig;
+use Composer\Factory;
 use Composer\IO\IOInterface as ComposerIo;
+use Composer\Util\RemoteFilesystem;
+use Composer\Util\Filesystem as ComposerFilesystem;
+use WeCodeMore\WpStarter\WpCli\PharInstaller;
+use WeCodeMore\WpStarter\Config\Config;
 
 final class Locator
 {
@@ -25,19 +25,25 @@ final class Locator
 
     /**
      * @param Requirements $requirements
-     * @param Composer $composer
+     * @param ComposerConfig $config
+     * @param ComposerIo $io
+     * @param ComposerFilesystem $filesystem
      */
-    public function __construct(Requirements $requirements, Composer $composer)
-    {
+    public function __construct(
+        Requirements $requirements,
+        ComposerConfig $config,
+        ComposerIo $io,
+        ComposerFilesystem $filesystem
+    ) {
+
         if (!$this->objects) {
             $this->objects = [
                 Config::class => $requirements->config(),
                 Paths::class => $requirements->paths(),
                 Io::class => $requirements->io(),
-                Composer::class => $composer,
-                ComposerConfig::class => $requirements->composerConfig(),
-                ComposerIo::class => $requirements->composerIo(),
-                ComposerFilesystem::class => $requirements->composerFilesystem(),
+                ComposerConfig::class => $config,
+                ComposerIo::class => $io,
+                ComposerFilesystem::class => $filesystem,
             ];
         }
     }
@@ -64,14 +70,6 @@ final class Locator
     public function io(): Io
     {
         return $this->objects[Io::class];
-    }
-
-    /**
-     * @return Composer
-     */
-    public function composer(): Composer
-    {
-        return $this->objects[Composer::class];
     }
 
     /**
@@ -161,7 +159,8 @@ final class Locator
             $this->objects[OverwriteHelper::class] = new OverwriteHelper(
                 $this->config(),
                 $this->io(),
-                $this->paths()
+                $this->paths(),
+                $this->composerFilesystem()
             );
         }
 
@@ -187,6 +186,21 @@ final class Locator
     {
         if (empty($this->objects[LanguageListFetcher::class])) {
             $this->objects[LanguageListFetcher::class] = new LanguageListFetcher(
+                $this->io(),
+                $this->urlDownloader()
+            );
+        }
+
+        return $this->objects[LanguageListFetcher::class];
+    }
+
+    /**
+     * @return PharInstaller
+     */
+    public function pharInstaller(): PharInstaller
+    {
+        if (empty($this->objects[PharInstaller::class])) {
+            $this->objects[PharInstaller::class] = new PharInstaller(
                 $this->io(),
                 $this->urlDownloader()
             );

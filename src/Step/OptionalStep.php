@@ -23,7 +23,7 @@ interface OptionalStep extends Step
      *
      * To actually display the question on screen, use `$io->confirm()`.
      *
-     * @see \WeCodeMore\WpStarter\Util\Io::confirm()
+     * @see \WeCodeMore\WpStarter\Util\Io::askConfirm()
      *
      * @param  \WeCodeMore\WpStarter\Config\Config $config
      * @param  \WeCodeMore\WpStarter\Util\Io $io

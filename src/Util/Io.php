@@ -11,7 +11,7 @@ namespace WeCodeMore\WpStarter\Util;
 use Composer\IO\IOInterface;
 
 /**
- * Wrapper around Composer IO class.
+ * Wrapper around Composer IO.
  */
 class Io
 {
@@ -34,13 +34,12 @@ class Io
      * @param string $message
      * @return bool
      */
-    public function error(string $message): bool
+    public function writeError(string $message): bool
     {
-        $tag = 'bg=red;fg=white;option=bold>';
         $lines = $this->ensureLength($message);
         $this->io->write('');
         foreach ($lines as $line) {
-            $this->io->writeError("  <{$tag}  " . $line . "  </{$tag}");
+            $this->io->writeError("  <bg=red;fg=white;option=bold>  {$line}  </>");
         }
         $this->io->write('');
 
@@ -51,7 +50,7 @@ class Io
      * @param  string $message
      * @return bool
      */
-    public function ok(string $message): bool
+    public function writeSuccess(string $message): bool
     {
         $lines = $this->ensureLength($message);
         foreach ($lines as $i => $line) {
@@ -66,7 +65,7 @@ class Io
      * @param  string $message
      * @return bool
      */
-    public function comment(string $message): bool
+    public function writeComment(string $message): bool
     {
         $lines = $this->ensureLength($message);
         foreach ($lines as $line) {
@@ -77,6 +76,22 @@ class Io
     }
 
     /**
+     * @param string $line
+     */
+    public function write(string $line)
+    {
+        $this->io->write("  {$line}");
+    }
+
+    /**
+     * @param string $line
+     */
+    public function writeIfVerbose(string $line)
+    {
+        $this->io->write("  {$line}", IOInterface::VERBOSE);
+    }
+
+    /**
      * Get an array of question lines and a default response and use them to format and ask a
      * confirmation to console.
      *
@@ -84,9 +99,9 @@ class Io
      * @param  bool $default
      * @return bool
      */
-    public function confirm(array $lines, bool $default = true): bool
+    public function askConfirm(array $lines, bool $default = true): bool
     {
-        array_unshift($lines, 'QUESTION');
+        array_unshift($lines, 'QUESTION:');
 
         $length = max(array_map('strlen', $lines));
 
@@ -94,21 +109,19 @@ class Io
             $lines,
             function (string &$line) use ($length) {
                 $len = strlen($line);
-                if ($len < $length) {
-                    $line .= str_repeat(' ', $length - $len);
-                }
+                ($len < $length) and $line .= str_repeat(' ', $length - $len);
                 $line = "  {$line}  ";
             }
         );
 
         $space = str_repeat(' ', $length + 4);
-        array_unshift($lines, '  <question>' . $space);
+        array_unshift($lines, "  <question>{$space}");
         $lines[] = "{$space}</question>";
-        $question = PHP_EOL . implode('</question>' . PHP_EOL . '  <question>', $lines);
-        $prompt = PHP_EOL . '    <option=bold>Y</option=bold> or <option=bold>N</option=bold> ';
+        $question = "\n" . implode("</question>\n  <question>", $lines);
+        $prompt = "\n    <option=bold>Y</option=bold> or <option=bold>N</option=bold> ";
         $prompt .= $default ? '[Y]' : '[N]';
 
-        return $this->io->askConfirmation($question . PHP_EOL . $prompt, $default);
+        return $this->io->askConfirmation("{$question}\n{$prompt}", $default);
     }
 
     /**
@@ -122,6 +135,7 @@ class Io
      *
      * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
+     * phpcs:disable Generic.Metrics.NestingLevel
      */
     public function ask(array $lines, array $answers = [], $default = null)
     {
@@ -132,34 +146,41 @@ class Io
         is_string($default) && array_key_exists($default, $answers) or $default = null;
 
         array_unshift($lines, 'QUESTION');
-        $length = max(array_map('strlen', $lines));
-        array_walk(
-            $lines,
-            function (string &$line) use ($length) {
-                $len = strlen($line);
-                $len < $length and $line .= str_repeat(' ', $length - $len);
-                $line = "  {$line}  ";
-            }
-        );
 
-        $space = str_repeat(' ', $length + 4);
-        array_unshift($lines, '  <question>' . $space);
-        $lines[] = "{$space}</question>";
-        $question = PHP_EOL . implode('</question>' . PHP_EOL . '  <question>', $lines);
+        $length = max(array_map('strlen', $lines));
+        $length < 56 and $length = 56;
+
+        $block = [];
+        foreach ($lines as $line) {
+            $len = strlen($line);
+            ($len < $length) and $line .= str_repeat(' ', $length - $len);
+            $block[] = "<question>  {$line}  </question>";
+        }
+
+        $whiteLine = '<question>' . str_repeat(' ', $length + 4) . '</question>';
+        $question = "{$whiteLine}\n";
+        $question .= implode("\n", $block);
+        $question .= "\n{$whiteLine}\n{$whiteLine}\n{$whiteLine}";
+
         $prompt = '';
         foreach ($answers as $expected => $label) {
-            $prompt and $prompt .= '|';
+            $prompt and $prompt .= ' | ';
             $prompt .= '<option=bold>' . $label . '</option=bold>';
         }
 
-        $default and $prompt .= "[{$answers[$default]}]";
-        $question .= PHP_EOL . PHP_EOL . '    ' . $prompt;
+        $default and $prompt .= " [{$answers[$default]}]";
+        $question .= "\n{$prompt}";
 
         try {
             $answer = $this->io->ask($question, $default);
+            $count = 0;
             while (!array_key_exists(strtolower(trim($answer)), $answers)) {
-                $this->io->write('<comment>Invalid answer.</comment>');
+                if ($count > 5) {
+                    throw new \Exception('Too much tries.');
+                }
+                $this->write('<comment>Invalid answer.</comment>');
                 $answer = $this->io->ask($question, $default);
+                $count++;
             }
 
             return $answer;
@@ -182,70 +203,48 @@ class Io
      * @param  bool $isError
      * @return bool
      */
-    public function block(array $lines, string $background = 'green', bool $isError = false): bool
-    {
-        $length = max(array_map('strlen', $lines));
-        array_walk(
-            $lines,
-            function (string &$line) use ($length) {
-                $len = strlen($line);
-                ($len < $length) and $line .= str_repeat(' ', $length - $len);
-                $line = "  {$line}  ";
-            }
-        );
+    public function writeBlock(
+        array $lines,
+        string $background = 'green',
+        bool $isError = false
+    ): bool {
 
-        $front = $isError ? 'white;option=bold' : 'black';
-        $space = str_repeat(' ', $length + 4);
-        $open = "  <bg={$background};fg={$front}>";
-        $close = "  </bg={$background};fg={$front}>";
-        array_unshift($lines, $open . $space);
-        $lines[] = $space . $close;
-        $func = $isError ? 'writeError' : 'write';
-        $this->io->{$func}(PHP_EOL . implode($close . PHP_EOL . $open, $lines));
+        $length = max(array_map('strlen', $lines));
+
+        $frontground = $isError ? 'white;option=bold' : 'black';
+        $open = "  <bg={$background};fg={$frontground}>";
+        $close = "  </bg={$background};fg={$frontground}>";
+        $whiteLine = $open . str_repeat(' ', $length + 4) . $close;
+
+        $block = [$whiteLine];
+        foreach ($lines as $line) {
+            $len = strlen($line);
+            ($len < $length) and $line .= str_repeat(' ', $length - $len);
+            $block[] = "{$open}  {$line}  {$close}";
+        }
+        $block[] = $whiteLine;
+
+        $isError ? $this->io->writeError($block) : $this->io->write($block);
 
         return !$isError;
     }
 
     /**
-     * @param string $line
-     */
-    public function write(string $line)
-    {
-        $this->io->write("  {$line}");
-    }
-
-    /**
-     * @param string $line
-     */
-    public function writeIfVerbose(string $line)
-    {
-        $this->io->write("  {$line}", IOInterface::VERBOSE);
-    }
-
-    /**
-     * @return \Composer\IO\IOInterface
-     */
-    public function composerIo(): IOInterface
-    {
-        return clone $this->io;
-    }
-
-    /**
-     * Return an array where each item is a slice of the given string with less than 70 chars.
+     * Return an array where each item is a slice of the given string with less than 51 characters.
      *
      * @param  string $text
      * @return array
      */
-    private function ensureLength(string $text): array
+    public function ensureLength(string $text): array
     {
-        if (strlen($text) < 70) {
+        if (strlen($text) < 51) {
             return [$text];
         }
 
         $words = explode(' ', $text);
         $line = '';
         foreach ($words as $i => $word) {
-            if (strlen($line) + strlen($word) < 70) {
+            if (strlen($line . $word) < 51) {
                 $line .= "{$word} ";
                 continue;
             }
@@ -256,6 +255,6 @@ class Io
 
         $lines[] = trim($line);
 
-        return $lines;
+        return array_filter($lines);
     }
 }

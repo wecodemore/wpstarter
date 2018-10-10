@@ -40,52 +40,53 @@ class LanguageListFetcher
      * @param bool $useSsl
      * @return array
      */
-    public function fetch(string $version = '0.0.0', bool $useSsl = true): array
+    public function fetch(string $version, bool $useSsl = true): array
     {
         if ($this->languages) {
             return $this->languages;
         }
 
-        $url = $useSsl ? 'https' : 'http';
-        $url .= '://api.wordpress.org/translations/core/1.0/?version=';
+        $url = $useSsl ? 'https://' : 'http://';
+        $url .= 'api.wordpress.org/translations/core/1.0/?version=';
         $result = $this->urlDownloader->fetch($url);
 
         if (!$result && $useSsl) {
-            $this->io->comment('Language list failed, trying with disabled SSL...');
+            $this->io->writeComment('Language list failed, trying with disabled SSL...');
 
             return $this->fetch($version, false);
         }
 
-        if (!$result && substr_count($version, '.') === 2) {
+        if (!$result && substr_count($version, '.') > 2) {
             $verArray = explode('.', $version);
             array_pop($verArray);
             $version = implode('.', $verArray);
-            $this->io->comment("Language list download failed, trying with version {$version}...");
+            $this->io->writeComment("Language list download failed, trying with version {$version}...");
 
             return $this->fetch($version);
         }
 
         if (!$result) {
+            $this->io->writeComment('Error on loading language list from wordpress.org');
             return [];
         }
 
-        try {
-            $all = (array)@json_decode($result, true);
-            $languages = [];
-            if (empty($all['translations'])) {
-                throw new \Exception('No languages.');
-            }
-            foreach ((array)$all['translations'] as $lang) {
-                empty($lang['language']) or $languages[] = $lang['language'];
-            }
-        } catch (\Throwable $exception) {
-            $languages = [];
+        $all = (array)@json_decode($result, true);
+        $this->languages = [];
+        if (empty($all['translations']) || !is_array($all['translations'])) {
+            $this->io->writeComment('Error on loading language list from wordpress.org');
+
+            return [];
         }
 
-        $languages
-            ? $this->languages = $languages
-            : $this->io->comment('Error on loading language list from wordpress.org');
+        foreach ($all['translations'] as $lang) {
+            $language = $lang['language'] ?? '';
+            ($language && is_string($language)) and $this->languages[] = strip_tags($language);
+        }
 
-        return $languages;
+        if (!$this->languages) {
+            $this->io->writeComment('Error on loading language list from wordpress.org');
+        }
+
+        return $this->languages;
     }
 }

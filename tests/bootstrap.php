@@ -15,6 +15,6 @@ if (!realpath($vendor)) {
 require_once $vendor.'autoload.php';
 unset($vendor);
 
-putenv('TESTS_BASEPATH='.__DIR__);
-putenv('TESTS_BASEPATH_UNIT='.__DIR__.'/unit');
+putenv('PACKAGE_PATH='.dirname(__DIR__));
+putenv('TESTS_PATH='.__DIR__);
 putenv('TESTS_FIXTURES_PATH='.__DIR__.'/fixtures');

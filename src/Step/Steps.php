@@ -8,10 +8,10 @@
 
 namespace WeCodeMore\WpStarter\Step;
 
+use Composer\Composer;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util\Io;
 use WeCodeMore\WpStarter\Util\Locator;
-use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\Util\Paths;
 
 /**
@@ -23,6 +23,11 @@ final class Steps implements PostProcessStep
      * @var Locator
      */
     private $locator;
+
+    /**
+     * @var Composer
+     */
+    private $composer;
 
     /**
      * @var \SplObjectStorage
@@ -41,12 +46,14 @@ final class Steps implements PostProcessStep
 
     /**
      * @param Locator $locator
+     * @param Composer $composer
      */
-    public function __construct(Locator $locator)
+    public function __construct(Locator $locator, Composer $composer)
     {
         $this->locator = $locator;
         $this->steps = new \SplObjectStorage();
         $this->postProcessSteps = new \SplObjectStorage();
+        $this->composer = $composer;
     }
 
     /**
@@ -75,10 +82,6 @@ final class Steps implements PostProcessStep
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        if (is_file($paths->wpParent('/wp-config.php'))) {
-            return $config[Config::PREVENT_OVERWRITE]->not(OverwriteHelper::HARD);
-        }
-
         return true;
     }
 
@@ -95,35 +98,15 @@ final class Steps implements PostProcessStep
         $io = $this->locator->io();
 
         $scripts = $config[Config::SCRIPTS]->unwrapOrFallback([]);
-        $this->runStepScripts($this, $io, $paths, $scripts, 'pre-', Step::NONE);
+        $this->runStepScripts($this, $io, $scripts, 'pre-', Step::NONE);
 
         while ($this->steps->valid()) {
 
             /** @var \WeCodeMore\WpStarter\Step\Step $step */
             $step = $this->steps->current();
-            $result = 0;
-            $shouldProcess = $this->shouldProcess($step, $paths);
 
-            $io->writeIfVerbose('Initiliazing "' . $step->name() . '" step.');
-            $shouldProcess or $io->writeIfVerbose('Step "' . $step->name() . '" skipped.');
-
-            if ($shouldProcess) {
-                $this->runStepScripts($step, $io, $paths, $scripts, 'pre-', Step::NONE);
-                $result = $step->run($config, $paths);
-            }
-
-            if (!$this->handleResult($step, $io, $result)) {
-                $this->runStepScripts($step, $io, $paths, $scripts, 'pre-', Step::ERROR);
-
-                return $this->finalMessage($io);
-            }
-
-            if ($step instanceof PostProcessStep) {
-                $this->postProcessSteps->attach($step);
-            }
-
-            if ($shouldProcess) {
-                $this->runStepScripts($step, $io, $paths, $scripts, 'pre-', $result);
+            if (!$this->runStep($step, $config, $io, $paths, $scripts)) {
+                return Step::ERROR;
             }
 
             $this->steps->next();
@@ -131,7 +114,7 @@ final class Steps implements PostProcessStep
 
         $this->postProcess($io);
 
-        $this->runStepScripts($this, $io, $paths, $scripts, 'pre-', Step::SUCCESS);
+        $this->runStepScripts($this, $io, $scripts, 'post-', Step::SUCCESS);
 
         return $this->finalMessage($io);
     }
@@ -178,8 +161,47 @@ final class Steps implements PostProcessStep
                 'or set them in environment variables in some other way (e.g. via webserver).',
             ];
 
-            $io->block($lines, 'yellow', false);
+            $io->writeBlock($lines, 'yellow', false);
         }
+    }
+
+    /**
+     * @param Step $step
+     * @param Config $config
+     * @param Io $io
+     * @param Paths $paths
+     * @param array $scripts
+     * @return bool
+     */
+    private function runStep(Step $step, Config $config, Io $io, Paths $paths, array $scripts): bool
+    {
+        $io->writeIfVerbose('Initiliazing "' . $step->name() . '" step.');
+        $step instanceof PostProcessStep and $this->postProcessSteps->attach($step);
+
+        if (!$this->shouldProcess($step, $paths)) {
+            $io->writeIfVerbose('Step "' . $step->name() . '" skipped.');
+
+            return true;
+        }
+
+        $this->runStepScripts($step, $io, $scripts, 'pre-', Step::NONE);
+
+        try {
+            $result = $step->run($config, $paths);
+        } catch (\Throwable $throwable) {
+            $this->printMessages($io, $throwable->getMessage(), true);
+            $result = self::ERROR;
+        }
+
+        $this->runStepScripts($step, $io, $scripts, 'post-', Step::ERROR);
+
+        if (!$this->continueOnResult($step, $io, $result)) {
+            $this->finalMessage($io);
+
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -205,7 +227,7 @@ final class Steps implements PostProcessStep
             $comment = $process ? '' : $step->skipped();
         }
 
-        $process or $this->locator->io()->comment($comment);
+        $process or $this->locator->io()->writeComment($comment);
 
         return $process;
     }
@@ -220,7 +242,7 @@ final class Steps implements PostProcessStep
      * @param  int $result
      * @return bool
      */
-    private function handleResult(Step $step, Io $io, int $result): bool
+    private function continueOnResult(Step $step, Io $io, int $result): bool
     {
         if (($result & Step::SUCCESS) === Step::SUCCESS) {
             $this->printMessages($io, $step->success(), false);
@@ -240,7 +262,6 @@ final class Steps implements PostProcessStep
     /**
      * @param Step $step
      * @param Io $io
-     * @param Paths $paths
      * @param array $scripts
      * @param string $prefix
      * @param int $result
@@ -248,7 +269,6 @@ final class Steps implements PostProcessStep
     private function runStepScripts(
         Step $step,
         Io $io,
-        Paths $paths,
         array $scripts,
         string $prefix,
         int $result
@@ -256,16 +276,35 @@ final class Steps implements PostProcessStep
 
         $scriptsKey = $prefix . $step->name();
 
-        $toRun = array_key_exists($scriptsKey, $scripts) ? (array)$scripts[$scriptsKey] : [];
+        $toRun = array_key_exists($scriptsKey, $scripts) ? (array)$scripts[$scriptsKey] : null;
+        if (!$toRun) {
+            return;
+        }
 
-        if ($toRun) {
-            $io->writeIfVerbose("Running '{$scriptsKey}' scripts...");
+        $runner = function (callable $script) use ($io, $result, $scriptsKey) {
+            $this->runStepScript($script, $scriptsKey, $result, $io);
+        };
 
-            array_walk(
-                $toRun,
-                function (callable $script) use ($paths, $result) {
-                    $script($this->locator, $result);
-                }
+        $io->writeIfVerbose("Running '{$scriptsKey}' scripts...");
+        array_walk($toRun, $runner);
+    }
+
+    /**
+     * @param callable $script
+     * @param string $scriptsKey
+     * @param int $result
+     * @param Io $io
+     */
+    private function runStepScript(callable $script, string $scriptsKey, int $result, Io $io)
+    {
+        try {
+            $script($this->locator, $this->composer, $result);
+        } catch (\Throwable $error) {
+            $io->writeBlock(
+                [
+                    "Error running a script of event '{$scriptsKey}':",
+                    $error->getMessage(),
+                ]
             );
         }
     }
@@ -281,7 +320,7 @@ final class Steps implements PostProcessStep
     {
         $messages = explode(PHP_EOL, $message);
         foreach ($messages as $line) {
-            $error ? $io->error($line) : $io->ok($line);
+            $error ? $io->writeError($line) : $io->writeSuccess($line);
         }
     }
 
@@ -294,12 +333,12 @@ final class Steps implements PostProcessStep
     private function finalMessage(Io $io): int
     {
         if ($this->errors > 0) {
-            $io->block([$this->error()], 'red', true);
+            $io->writeBlock([$this->error()], 'red', true);
 
             return self::ERROR;
         }
 
-        $io->block([$this->success()], 'green', false);
+        $io->writeBlock([$this->success()], 'green', false);
 
         return self::SUCCESS;
     }

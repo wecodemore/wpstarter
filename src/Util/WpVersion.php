@@ -81,11 +81,14 @@ class WpVersion
         }
 
         if (count($vers) > 1) {
-            $this->io->writeError([
-                'Seems that more WordPress core packages are provided.',
-                'WP Starter only supports a single WordPress core package.',
-                'WP Starter will NOT work.',
-            ]);
+            $red = '<bg=red;fg=white;option=bold>  ';
+            $this->io->writeError(
+                [
+                    "{$red}  Seems that more WordPress core packages are provided.      </>",
+                    "{$red}  WP Starter only supports a single WordPress core package.  </>",
+                    "{$red}  WP Starter will NOT work.                                  </>",
+                ]
+            );
 
             return '';
         }

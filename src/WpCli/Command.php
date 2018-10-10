@@ -31,7 +31,7 @@ class Command
      */
     public function __construct(Config $config, UrlDownloader $urlDownloader)
     {
-        $this->downloadEnabled = (bool)$config[Config::INSTALL_WP_CLI]->unwrapOrFallback(false);
+        $this->downloadEnabled = (bool)$config[Config::INSTALL_WP_CLI]->unwrapOrFallback(true);
         $this->urlDownloader = $urlDownloader;
     }
 
@@ -67,9 +67,7 @@ class Command
      */
     public function pharTarget(Paths $paths): string
     {
-        return $this->downloadEnabled
-            ? $paths->root('wp.phar')
-            : '';
+        return $paths->root('wp.phar');
     }
 
     /**
@@ -90,31 +88,30 @@ class Command
     }
 
     /**
-     * @return callable
+     * @param string $pharPath
+     * @param Io $io
+     * @return bool
      */
-    public function postPharChecker(): callable
+    public function checkPhar(string $pharPath, Io $io): bool
     {
-        return function (string $pharPath, Io $io): bool {
+        list($algo, $hashUrl) = $this->hashAlgoUrl($io);
 
-            list($algo, $hashUrl) = $this->hashAlgoUrl($io);
+        $hash = $this->urlDownloader->fetch($hashUrl);
 
-            $hash = $this->urlDownloader->fetch($hashUrl);
+        if (!$hash) {
+            $io->writeError("Failed to download {$algo} hash from {$hashUrl}.");
+            $io->writeError($this->urlDownloader->error());
 
-            if (!$hash) {
-                $io->error("Failed to download {$algo} hash from {$hashUrl}.");
-                $io->error($this->urlDownloader->error());
+            return false;
+        }
 
-                return false;
-            }
+        if (hash($algo, file_get_contents($pharPath)) !== $hash) {
+            $io->writeError("{$algo} hash check failed for downloaded WP CLI phar.");
 
-            if (hash($algo, file_get_contents($pharPath)) !== $hash) {
-                $io->error("{$algo} hash check failed for downloaded WP CLI phar.");
+            return false;
+        }
 
-                return false;
-            }
-
-            return true;
-        };
+        return true;
     }
 
     /**
@@ -141,7 +138,7 @@ class Command
             return ['sha512', $this->pharUrl() . '.sha512'];
         }
 
-        $io->comment(
+        $io->writeComment(
             'NOTICE: SHA-512 algorithm is not available on the system,'
             . ' WP Starter will use the less secure MD5 to check WP CLI phar integrity.'
         );

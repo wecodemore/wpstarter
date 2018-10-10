@@ -8,24 +8,33 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
-use Composer\Composer;
 use Composer\Installer\InstallationManager;
 use Composer\Package\PackageInterface;
+use Composer\Repository\RepositoryInterface;
 
 class MuPluginList
 {
+    /**
+     * @var RepositoryInterface
+     */
+    private $packageRepo;
 
     /**
-     * @var Composer
+     * @var InstallationManager
      */
-    private $composer;
+    private $installationManager;
 
     /**
-     * @param Composer $composer
+     * @param RepositoryInterface $packageRepo
+     * @param InstallationManager $installationManager
      */
-    public function __construct(Composer $composer)
-    {
-        $this->composer = $composer;
+    public function __construct(
+        RepositoryInterface $packageRepo,
+        InstallationManager $installationManager
+    ) {
+
+        $this->packageRepo = $packageRepo;
+        $this->installationManager = $installationManager;
     }
 
     /**
@@ -36,11 +45,10 @@ class MuPluginList
         $list = [];
 
         /** @var \Composer\Package\PackageInterface[] $packages */
-        $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
-        $installationManager = $this->composer->getInstallationManager();
+        $packages = $this->packageRepo->getPackages();
         foreach ($packages as $package) {
             if ($package->getType() === 'wordpress-muplugin') {
-                $path = $this->pathForPluginPackage($installationManager, $package);
+                $path = $this->pathForPluginPackage($this->installationManager, $package);
                 $path and $list[$package->getName()] = $path;
             }
         }

@@ -9,16 +9,18 @@
 namespace WeCodeMore\WpStarter\Util;
 
 use Composer\Composer;
-use Composer\Factory;
 use Composer\IO\IOInterface;
 use Composer\Util\Filesystem;
-use Composer\Config as ComposerConfig;
 use WeCodeMore\WpStarter\ComposerPlugin;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Config\Validator;
 
 final class Requirements
 {
+    /**
+     * @var Paths
+     */
+    private $paths;
 
     /**
      * @var Config
@@ -31,39 +33,33 @@ final class Requirements
     private $io;
 
     /**
-     * @var Paths
-     */
-    private $paths;
-
-    /**
-     * @var string
-     */
-    private $wpVersion;
-
-    /**
-     * @var Filesystem
-     */
-    private $composerFilesystem;
-
-    /**
-     * @var ComposerConfig
-     */
-    private $composerConfig;
-
-    /**
-     * @var IOInterface
-     */
-    private $composerIo;
-
-    /**
      * @param Composer $composer
      * @param IOInterface $io
-     * @param string $wpVersion
+     * @param Filesystem $filesystem
      */
-    public function __construct(Composer $composer, IOInterface $io, string $wpVersion)
-    {
-        $this->init($composer, $io);
-        $this->wpVersion = $wpVersion;
+    public function __construct(
+        Composer $composer,
+        IOInterface $io,
+        Filesystem $filesystem
+    ) {
+
+        $config = $this->extractConfig($composer->getPackage()->getExtra());
+
+        empty($config[Config::CUSTOM_STEPS]) and $config[Config::CUSTOM_STEPS] = [];
+        empty($config[Config::SCRIPTS]) and $config[Config::SCRIPTS] = [];
+
+        $packageRepo = $composer->getRepositoryManager()->getLocalRepository();
+        $installationManager = $composer->getInstallationManager();
+        $muPluginList = new MuPluginList($packageRepo, $installationManager);
+        $config[Config::MU_PLUGIN_LIST] = $muPluginList->pluginsList();
+
+        $config[Config::COMPOSER_CONFIG] = $composer->getConfig()->all();
+        $config[Config::WP_CLI_EXECUTOR] = null;
+
+        $this->paths = new Paths($composer, $filesystem);
+        $this->config = new Config($config, new Validator($this->paths, $filesystem));
+        $this->io = new Io($io);
+        $this->paths->initTemplates($this->config);
     }
 
     /**
@@ -91,62 +87,11 @@ final class Requirements
     }
 
     /**
-     * @return ComposerConfig
-     */
-    public function composerConfig(): ComposerConfig
-    {
-        return $this->composerConfig;
-    }
-
-    /**
-     * @return IOInterface
-     */
-    public function composerIo(): IOInterface
-    {
-        return $this->composerIo;
-    }
-
-    /**
-     * @return Filesystem
-     */
-    public function composerFilesystem(): Filesystem
-    {
-        return $this->composerFilesystem;
-    }
-
-    /**
-     * @param Composer $composer
-     * @param IOInterface $io
-     */
-    private function init(Composer $composer, IOInterface $io)
-    {
-        $config = $this->extractConfig($composer);
-
-        empty($config[Config::CUSTOM_STEPS]) and $config[Config::CUSTOM_STEPS] = [];
-        empty($config[Config::SCRIPTS]) and $config[Config::SCRIPTS] = [];
-
-        $config[Config::WP_VERSION] = $this->wpVersion;
-        $config[Config::MU_PLUGIN_LIST] = (new MuPluginList($composer))->pluginsList();
-        $config[Config::COMPOSER_CONFIG] = $composer->getConfig()->all();
-        $config[Config::WP_CLI_EXECUTOR] = null;
-
-        $this->composerFilesystem = new Filesystem();
-        $this->paths = new Paths($composer, $this->composerFilesystem);
-        $this->config = new Config($config, new Validator($this->paths, $this->composerFilesystem));
-        $this->io = new Io($io);
-        $this->composerIo = $io;
-        $this->composerConfig = Factory::createConfig($io);
-        $this->paths->initTemplates($this->config);
-    }
-
-    /**
-     * @param Composer $composer
+     * @param array $extra
      * @return array
      */
-    private function extractConfig(Composer $composer): array
+    private function extractConfig(array $extra): array
     {
-        $extra = (array)$composer->getPackage()->getExtra();
-
         $configs = empty($extra[ComposerPlugin::EXTRA_KEY])
             ? []
             : $extra[ComposerPlugin::EXTRA_KEY];

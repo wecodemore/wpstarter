@@ -149,7 +149,7 @@ final class Result
     {
         // phpcs:enable
 
-        return $this->error ? $fallback : $this->value;
+        return $this->notEmpty() ? $this->value : $fallback;
     }
 
     /**

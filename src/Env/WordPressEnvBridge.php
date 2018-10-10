@@ -141,10 +141,15 @@ final class WordPressEnvBridge implements \ArrayAccess
     /**
      * @param  string $path Environment file path
      * @param  string $file Environment file path relative to `$path`
+     * @param Dotenv|null $dotEnv
      * @return \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public static function load(string $path = null, string $file = '.env'): WordPressEnvBridge
-    {
+    public static function load(
+        string $path = null,
+        string $file = '.env',
+        Dotenv $dotEnv = null
+    ): WordPressEnvBridge {
+
         if (self::$loaded) {
             return self::$loaded;
         }
@@ -166,7 +171,7 @@ final class WordPressEnvBridge implements \ArrayAccess
         }
 
         self::$loaded = new static();
-        $dotEnv = new Dotenv();
+        $dotEnv or $dotEnv = new Dotenv();
         $dotEnv->load($path);
 
         return self::$loaded;

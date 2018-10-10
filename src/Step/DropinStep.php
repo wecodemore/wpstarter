@@ -98,7 +98,7 @@ final class DropinStep implements FileCreationStepInterface
         $this->actionSource = $this->action($this->url, $paths);
 
         if (empty($this->actionSource[0])) {
-            $this->io->error("{$this->url} is not a valid url nor a valid path.");
+            $this->io->writeError("{$this->url} is not a valid url nor a valid path.");
 
             return false;
         }
@@ -115,7 +115,7 @@ final class DropinStep implements FileCreationStepInterface
     {
         $dest = $this->targetPath($paths);
         if (!$this->overwrite->shouldOverwite($dest)) {
-            $this->io->comment("  - {$this->name} skipped because existing.");
+            $this->io->writeComment("  - {$this->name} skipped because existing.");
 
             return self::NONE;
         }
