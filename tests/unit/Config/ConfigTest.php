@@ -31,8 +31,6 @@ class ConfigTest extends TestCase
 
         $config->appendConfig('foo', 'bar');
 
-        define('DIE', 1);
-
         $dir = str_replace('\\', '/', __DIR__);
         $config->appendConfig(Config::TEMPLATES_DIR, $dir);
 

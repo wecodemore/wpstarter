@@ -622,6 +622,13 @@ class Validator
             return Result::errored("Glob path must be in a non-empty string.");
         }
 
+        if (!str_replace(['*', '.', '/', '?'], '', $value)
+            && !substr_count($value, '..')
+            && !substr_count($value, '//')
+        ) {
+            return Result::ok($value);
+        }
+
         $path1 = str_replace(['*', '?', '[', ']'], ['aa', 'a', '', ''], $value);
         $path2 = str_replace(['*', '?', '[', ']'], ['', 'a', '', ''], $value);
 

@@ -159,7 +159,7 @@ final class Locator
             $this->objects[OverwriteHelper::class] = new OverwriteHelper(
                 $this->config(),
                 $this->io(),
-                $this->paths(),
+                $this->paths()->root(),
                 $this->composerFilesystem()
             );
         }

@@ -36,25 +36,26 @@ class OverwriteHelper
     /**
      * @param Config $config
      * @param Io $io
-     * @param Paths $paths
+     * @param string $root
      * @param \Composer\Util\Filesystem $filesystem
      */
     public function __construct(
         Config $config,
         Io $io,
-        Paths $paths,
+        string $root,
         \Composer\Util\Filesystem $filesystem
     ) {
 
-        $this->preventFor = $config['prevent-overwrite']->unwrapOrFallback(false);
+        $this->preventFor = $config[Config::PREVENT_OVERWRITE]->unwrapOrFallback(false);
+
         if (is_array($this->preventFor)) {
-            $trim = function (string $path): string {
-                return trim($path, '/');
+            $trim = function (string $path) use ($filesystem): string {
+                return trim($filesystem->normalizePath($path), '/');
             };
             $this->preventFor = array_map($trim, $this->preventFor);
         }
         $this->io = $io;
-        $this->root = $paths->root();
+        $this->root = $filesystem->normalizePath($root);
         $this->filesystem = $filesystem;
     }
 
@@ -67,6 +68,10 @@ class OverwriteHelper
      */
     public function shouldOverwite(string $file): bool
     {
+        if (is_dir($file)) {
+            return false;
+        }
+
         if (!is_file($file)) {
             return true;
         }
@@ -80,14 +85,14 @@ class OverwriteHelper
 
         if (is_array($this->preventFor)) {
             $path = $this->filesystem->normalizePath($file);
-            preg_match('#^' . $this->root . '/(.+)#', $path, $matches);
+            preg_match('#^' . preg_quote($this->root, '#') . '/(.+)#', $path, $matches);
             if (empty($matches[1])) {
                 return false;
             }
 
             $relative = trim($matches[1], '/');
 
-            return !in_array($relative, $this->preventFor, true) || $this->patternCheck($relative);
+            return $this->patternCheck($relative);
         }
 
         return !$this->preventFor;
@@ -96,15 +101,16 @@ class OverwriteHelper
     /**
      * Check if a file is set to not be overwritten using shell patterns.
      *
-     * @param  string $pattern
+     * @param  string $path
      * @return bool
      */
-    private function patternCheck(string $pattern): bool
+    private function patternCheck(string $path): bool
     {
         $overwrite = true;
         $config = $this->preventFor;
         while ($overwrite === true && !empty($config)) {
-            $overwrite = !fnmatch(array_shift($config), $pattern, FNM_NOESCAPE);
+            $pattern = array_shift($config);
+            $overwrite = !fnmatch($pattern, $path, FNM_NOESCAPE);
         }
 
         return $overwrite;

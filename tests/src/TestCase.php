@@ -62,9 +62,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
         $filesystem = new Composer\Util\Filesystem();
 
-        $paths = new Util\Paths($composer, $filesystem);
-
-        return new Config\Validator($paths, $filesystem);
+        return new Config\Validator($this->makePaths(), $filesystem);
     }
 
     /**

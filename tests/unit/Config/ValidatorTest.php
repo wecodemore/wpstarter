@@ -274,10 +274,12 @@ class ValidatorTest extends TestCase
         static::assertFalse($validator->validateGlobPath('fo"o/*')->notEmpty());
         static::assertFalse($validator->validateGlobPath(123)->notEmpty());
 
-        static::assertTrue($validator->validateGlobPath("some/*.*")->is("some/*.*"));
-        static::assertTrue($validator->validateGlobPath("some/*.php")->is("some/*.php"));
-        static::assertTrue($validator->validateGlobPath("../foo/*.*")->is("../foo/*.*"));
-        static::assertTrue($validator->validateGlobPath("./foo")->is("./foo"));
+        static::assertTrue($validator->validateGlobPath('some/*.*')->is('some/*.*'));
+        static::assertTrue($validator->validateGlobPath('some/*.php')->is('some/*.php'));
+        static::assertTrue($validator->validateGlobPath('../foo/*.*')->is('../foo/*.*'));
+        static::assertTrue($validator->validateGlobPath('./foo')->is('./foo'));
+        static::assertTrue($validator->validateGlobPath('*/*.*')->is('*/*.*'));
+        static::assertTrue($validator->validateGlobPath('**/**/*.txt')->is('**/**/*.txt'));
     }
 
     /**
