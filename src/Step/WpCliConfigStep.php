@@ -68,13 +68,13 @@ final class WpCliConfigStep implements FileCreationStepInterface
      */
     public function run(Config $config, Util\Paths $paths): int
     {
-        $build = $this->builder->build(
+        $built = $this->builder->build(
             $paths,
             'wp-cli.yml',
             ['WP_INSTALL_PATH' => $paths->relativeToRoot(Util\Paths::WP)]
         );
 
-        if (!$this->filesystem->save($build, $this->targetPath($paths))) {
+        if (!$this->filesystem->save($built, $this->targetPath($paths))) {
             return self::ERROR;
         }
 

@@ -78,13 +78,13 @@ final class MuLoaderStep implements FileCreationStepInterface, BlockingStep
             ? array_filter($pluginsConfig, 'is_string')
             : [];
 
-        $build = $this->builder->build(
+        $built = $this->builder->build(
             $paths,
             'wpstarter-mu-loader.php',
             ['MU_PLUGINS_LIST' => implode(', ', $muPluginsPathList)]
         );
 
-        if (!$this->filesystem->save($build, $this->targetPath($paths))) {
+        if (!$this->filesystem->save($built, $this->targetPath($paths))) {
             return self::ERROR;
         }
 

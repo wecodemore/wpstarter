@@ -101,8 +101,8 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        $register = $this->config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback();
-        $register === OptionalStep::ASK and $this->askForRegister();
+        $register = $this->config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback(false);
+        ($register === OptionalStep::ASK) and $register = $this->askForRegister();
 
         $filesystem = $this->filesystem->composerFilesystem();
 
@@ -124,13 +124,13 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
             'EARLY_HOOKS_FILE' => $earlyHookFile ? $this->relPath($from, $earlyHookFile) : '',
         ];
 
-        $build = $this->builder->build(
+        $built = $this->builder->build(
             $paths,
             'wp-config.php',
             array_merge($vars, $this->salter->keys())
         );
 
-        if (!$this->filesystem->save($build, $this->targetPath($paths))) {
+        if (!$this->filesystem->save($built, $this->targetPath($paths))) {
             $this->error = 'Error on create wp-config.php.';
 
             return self::ERROR;
