@@ -96,13 +96,12 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
             return self::ERROR;
         }
 
-        // no love for this, but https://core.trac.wordpress.org/ticket/31620 makes it necessary
-        if ($config[Config::MOVE_CONTENT]->is(true) && $paths->wpContent()) {
+        // no love for this, but https://core.trac.wordpress.org/ticket/31620 makes it necessary.
+        if ($config[Config::MOVE_CONTENT]->not(true) && $paths->wpContent()) {
             $this->themeDir = $this->filesystem->createDir("{$wpContent}/themes");
+            // missing plugins dir isn't as serious as missing themes dir, just cause a PHP warning.
+            $this->filesystem->createDir("{$wpContent}/plugins");
         }
-
-        // This is to avoid a warning in case no plugin dependencies are there
-        $this->filesystem->createDir("{$wpContent}/plugins");
 
         return self::SUCCESS;
     }
