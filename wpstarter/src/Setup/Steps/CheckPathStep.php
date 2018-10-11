@@ -78,11 +78,15 @@ class CheckPathStep implements BlockingStepInterface, PostProcessStepInterface
 
             return self::ERROR;
         }
+
         // no love for this, but https://core.trac.wordpress.org/ticket/31620 makes it necessary
         if ($paths['wp-content'] && $this->config['move-content'] !== true) {
             try {
-                $dir = $paths['root'].'/'.$paths['wp-content'].'/themes';
-                $this->themeDir = is_dir($dir) || mkdir($dir, 0755, true);
+                $themes = $paths['root'].'/'.$paths['wp-content'].'/themes';
+                $plugins = $paths['root'].'/'.$paths['wp-content'].'/plugins';
+                $this->themeDir = is_dir($themes) || mkdir($themes, 0755, true);
+                // missing plugins dir will cause a silenced warning, nothing serious as for themes
+                is_dir($plugins) || mkdir($plugins, 0755, true);
             } catch (Exception $e) {
                 $this->themeDir = false;
             }
