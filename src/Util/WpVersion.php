@@ -8,7 +8,6 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
-use Composer\Composer;
 use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
 
