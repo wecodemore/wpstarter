@@ -66,9 +66,8 @@ class Executor
      */
     public function execute(string $command)
     {
-        $this->command->packageName();
-        $command = $this->command->prepareCommand($command, $this->paths);
+        $preparedCommand = $this->command->prepareCommand($command, $this->paths);
 
-        passthru("{$this->phpPath} {$this->cliPath} {$command}");
+        passthru("{$this->phpPath} {$this->cliPath} {$preparedCommand}");
     }
 }
