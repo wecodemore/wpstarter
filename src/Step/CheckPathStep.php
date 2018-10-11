@@ -101,6 +101,9 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
             $this->themeDir = $this->filesystem->createDir("{$wpContent}/themes");
         }
 
+        // This is to avoid a warning in case no plugin dependencies are there
+        $this->filesystem->createDir("{$wpContent}/plugins");
+
         return self::SUCCESS;
     }
 
