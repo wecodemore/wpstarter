@@ -34,6 +34,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
         Step\DropinsStep::NAME => Step\DropinsStep::class,
         Step\MoveContentStep::NAME => Step\MoveContentStep::class,
         Step\ContentDevStep::NAME => Step\ContentDevStep::class,
+        Step\WpCliConfigStep::NAME => Step\WpCliConfigStep::class,
     ];
 
     /**
