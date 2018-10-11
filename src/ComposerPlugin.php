@@ -100,16 +100,25 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
 
         $wpVersion = null;
         if ($requireWp) {
-            $wpVersionDiscover = new Util\WpVersion($composer, $io);
-            $wpVersion = $wpVersionDiscover->discover();
+            $wpVersionDiscover = new Util\WpVersion($io);
+            $packages = $composer->getRepositoryManager()->getLocalRepository()->getPackages();
+            $wpVersion = $wpVersionDiscover->discover(...$packages);
         }
 
-        // If no or wrong WP ver found do nothing, so run() will show an error not findind locator
         if (!$wpVersion && $requireWp) {
+            $this->composerIo->writeError(
+                [
+                    "<bg=red;fg=white;option=bold>                                             </>",
+                    "<bg=red;fg=white;option=bold>    Error running WP Starter.                </>",
+                    "<bg=red;fg=white;option=bold>    No supported WordPress version found.    </>",
+                    "<bg=red;fg=white;option=bold>                                             </>",
+                ]
+            );
+
             return;
         }
 
-        // If a WP version was found and nno verison is hardcoded in congifs, let's update it
+        // If WP version was found and no version is set in configs, let's set it with the finding.
         if ($wpVersion && !$config[Config::WP_VERSION]->notEmpty()) {
             $config->appendConfig(Config::WP_VERSION, $wpVersion);
         }
@@ -123,51 +132,31 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      * It is possible to provide the names of steps to run.
      *
      * @param Event|null $event
-     * @param array $selectedSteps
+     * @param array $selectedStepNames
      * @return void
      */
-    public function run(Event $event = null, array $selectedSteps = [])
+    public function run(Event $event = null, array $selectedStepNames = [])
     {
         if (!$this->locator) {
-            // If here, activate() bailed earlier.
-            $this->composerIo->writeError(
-                [
-                    "<bg=red;fg=white;option=bold>                                             </>",
-                    "<bg=red;fg=white;option=bold>    Error running WP Starter.                </>",
-                    "<bg=red;fg=white;option=bold>    No supported WordPress version found.    </>",
-                    "<bg=red;fg=white;option=bold>                                             </>",
-                ]
-            );
-
             $event or exit(1);
+
+            return;
         }
 
         try {
             $steps = new Step\Steps($this->locator, $this->composer);
-
-            if (!$steps->allowed($this->locator->config(), $this->locator->paths())) {
-                $this->locator->io()->writeBlock(
-                    [
-                        'WP Starter installation CANCELED.',
-                        'wp-config.php was found in root folder and your overwrite settings',
-                        'do not allow to proceed.',
-                    ],
-                    'red',
-                    true
-                );
-
-                $event or exit(1);
-            }
-
-            $selectedSteps = array_filter($selectedSteps, 'is_string');
+            $selectedStepNames = array_filter($selectedStepNames, 'is_string');
             $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
-            $stepClasses = array_merge(self::STEP_CLASSES, $customSteps);
+            $skippedSteps = $this->locator->config()[Config::SKIP_STEPS]->unwrapOrFallback([]);
+            $stepClasses = array_diff(array_merge(self::STEP_CLASSES, $customSteps), $skippedSteps);
             $hasWpCli = false;
 
-            $this->factorySteps($steps, $stepClasses, $selectedSteps, $hasWpCli);
+            $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCli);
             $this->createExecutor($hasWpCli, $steps, $this->locator->config());
             $this->logo();
             $steps->run($this->locator->config(), $this->locator->paths());
+
+            $event or exit(0);
         } catch (\Throwable $throwable) {
             $this->locator->io()->writeError($throwable->getMessage());
 
@@ -178,13 +167,13 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     /**
      * @param Step\Steps $steps
      * @param array $stepClasses
-     * @param array $selectedSteps
+     * @param array $selectedStepNames
      * @param bool $hasWpCliStep
      */
     private function factorySteps(
         Step\Steps $steps,
         array $stepClasses,
-        array $selectedSteps,
+        array $selectedStepNames,
         bool &$hasWpCliStep
     ) {
 
@@ -192,7 +181,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
 
         foreach ($stepClasses as $stepName => $stepClass) {
             if (!$stepName
-                || ($selectedSteps && !in_array($stepName, $selectedSteps, true))
+                || ($selectedStepNames && !in_array($stepName, $selectedStepNames, true))
                 || in_array($stepName, $stepsAdded, true)
             ) {
                 continue;
@@ -200,7 +189,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
 
             $step = $this->factoryStep($stepClass);
             if ($step->name() === $stepName) {
-                $stepName === Step\WpCliCommandsStep::NAME and $hasWpCliStep = true;
+                $hasWpCliStep = $hasWpCliStep || ($stepName === Step\WpCliCommandsStep::NAME);
                 $steps->addStep($step);
                 $stepsAdded[] = $stepName;
             }

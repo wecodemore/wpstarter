@@ -30,7 +30,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function fixturesPath(): string
     {
-        return getenv('TESTS_FIXTURES_PATH');
+        return str_replace('\\', '/', getenv('TESTS_FIXTURES_PATH'));
     }
 
     /**
@@ -38,7 +38,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function packagePath(): string
     {
-        return getenv('PACKAGE_PATH');
+        return str_replace('\\', '/', getenv('PACKAGE_PATH'));
     }
 
     /**

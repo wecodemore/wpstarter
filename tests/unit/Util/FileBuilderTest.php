@@ -8,7 +8,6 @@
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
-use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Tests\TestCase;
 use WeCodeMore\WpStarter\Util\FileBuilder;
 
@@ -17,9 +16,8 @@ class FileBuilderTest extends TestCase
     public function testBuild()
     {
         $templates = $this->packagePath() . '/templates';
-        $config = new Config([Config::TEMPLATES_DIR => $templates], $this->makeValidator());
         $paths = $this->makePaths();
-        $paths->initTemplates($config);
+        $paths->useCustomTemplatesDir($templates);
 
         $builder = new FileBuilder();
 

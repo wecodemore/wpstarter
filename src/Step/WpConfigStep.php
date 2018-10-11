@@ -104,18 +104,23 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         $register = $this->config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback();
         $register === OptionalStep::ASK and $this->askForRegister();
 
-        $from = $this->filesystem->composerFilesystem()->normalizePath($paths->wpParent());
+        $filesystem = $this->filesystem->composerFilesystem();
+
+        $from = $filesystem->normalizePath($paths->wpParent());
         $earlyHookFile = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback();
+        $envBootstrapDir = $config[Config::ENV_BOOTSTRAP_DIR]->unwrapOrFallback('');
+        $envBootstrapDir and $envBootstrapDir = $filesystem->normalizePath($envBootstrapDir);
 
         $vars = [
             'AUTOLOAD_PATH' => $this->relPath($from, $paths->vendor('autoload.php'), false),
             'ENV_REL_PATH' => $this->relPath($from, $paths->root()),
             'ENV_FILE_NAME' => $this->config[Config::ENV_FILE]->unwrapOrFallback('.env'),
+            'ENV_BOOTSTRAP_DIR' => $this->relPath($from, $paths->root($envBootstrapDir), false),
             'WP_INSTALL_PATH' => $this->relPath($from, $paths->wp()),
             'WP_CONTENT_PATH' => $this->relPath($from, $paths->wpContent()),
             'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
-            'WP_SITEURL' => $this->stripDot($paths->relative(Paths::WP)),
-            'WP_CONTENT_URL' => $this->stripDot($paths->relative(Paths::WP_CONTENT)),
+            'WP_SITEURL_RELATIVE' => $this->stripDot($paths->relativeToRoot(Paths::WP)),
+            'WP_CONTENT_URL_RELATIVE' => $this->stripDot($paths->relativeToRoot(Paths::WP_CONTENT)),
             'EARLY_HOOKS_FILE' => $earlyHookFile ? $this->relPath($from, $earlyHookFile) : '',
         ];
 
@@ -180,8 +185,8 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      */
     private function stripDot(string $path): string
     {
-        strpos($path, './') === 0 and $subdir = substr($path, 2);
-        strpos($path, '../') === 0 and $subdir = dirname($path);
+        strpos($path, './') === 0 and $path = substr($path, 2);
+        strpos($path, '../') === 0 and $path = dirname($path);
 
         return $path;
     }

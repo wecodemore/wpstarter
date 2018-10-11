@@ -17,6 +17,8 @@ use WeCodeMore\WpStarter\Config\Validator;
 
 final class Requirements
 {
+    const CONFIG_FILE = 'wpstarter.json';
+
     /**
      * @var Paths
      */
@@ -43,23 +45,22 @@ final class Requirements
         Filesystem $filesystem
     ) {
 
-        $config = $this->extractConfig($composer->getPackage()->getExtra());
-
-        empty($config[Config::CUSTOM_STEPS]) and $config[Config::CUSTOM_STEPS] = [];
-        empty($config[Config::SCRIPTS]) and $config[Config::SCRIPTS] = [];
-
         $packageRepo = $composer->getRepositoryManager()->getLocalRepository();
         $installationManager = $composer->getInstallationManager();
         $muPluginList = new MuPluginList($packageRepo, $installationManager);
-        $config[Config::MU_PLUGIN_LIST] = $muPluginList->pluginsList();
-
-        $config[Config::COMPOSER_CONFIG] = $composer->getConfig()->all();
-        $config[Config::WP_CLI_EXECUTOR] = null;
 
         $this->paths = new Paths($composer, $filesystem);
+        $root = $this->paths->root();
+
+        $config = $this->extractConfig($root, $composer->getPackage()->getExtra());
+        $config[Config::MU_PLUGIN_LIST] = $muPluginList->pluginsList();
+        $config[Config::COMPOSER_CONFIG] = $composer->getConfig()->all();
+
         $this->config = new Config($config, new Validator($this->paths, $filesystem));
         $this->io = new Io($io);
-        $this->paths->initTemplates($this->config);
+
+        $templatesDir = $this->config[Config::TEMPLATES_DIR];
+        $templatesDir->notEmpty() and $this->paths->useCustomTemplatesDir($templatesDir->unwrap());
     }
 
     /**
@@ -87,23 +88,22 @@ final class Requirements
     }
 
     /**
+     * @param string $rootPath
      * @param array $extra
      * @return array
      */
-    private function extractConfig(array $extra): array
+    private function extractConfig(string $rootPath, array $extra): array
     {
         $configs = empty($extra[ComposerPlugin::EXTRA_KEY])
             ? []
             : $extra[ComposerPlugin::EXTRA_KEY];
 
-        $dir = getcwd() . DIRECTORY_SEPARATOR;
-
-        $file = is_string($configs) ? trim(basename($configs), '/\\') : 'wpstarter.json';
+        $file = is_string($configs) ? trim(basename($configs), '/\\') : self::CONFIG_FILE;
 
         // Extract config from a separate JSON file
         $fileConfigs = null;
-        if (is_file($dir . $file) && is_readable($dir . $file)) {
-            $content = @file_get_contents($dir . $configs);
+        if (is_file("{$rootPath}/{$file}") && is_readable("{$rootPath}/{$file}")) {
+            $content = @file_get_contents("{$rootPath}/{$file}");
             $fileConfigs = $content ? @json_decode($content, true) : null;
             is_object($fileConfigs) and $fileConfigs = get_object_vars($fileConfigs);
         }

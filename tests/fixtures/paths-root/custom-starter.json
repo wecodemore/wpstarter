@@ -1,0 +1,20 @@
+{
+  "content-dev-op": "copy",
+  "content-dev-dir": "./my-files/",
+  "custom-steps": [],
+  "dropins": [],
+  "early-hook-file": "./public/boot-hooks.php",
+  "env-bootstrap-dir": "./public/boot-env/",
+  "env-example": false,
+  "env-file": "my.env",
+  "install-wp-cli": true,
+  "move-content": true,
+  "prevent-overwrite": "hard",
+  "register-theme-folder": false,
+  "require-wp": false,
+  "scripts": [],
+  "unknown-dropins": true,
+  "wp-cli-commands": [],
+  "wp-cli-files": [],
+  "wp-version": "4.9.9"
+}

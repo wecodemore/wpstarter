@@ -39,6 +39,7 @@ defined('DB_COLLATE') or define('DB_COLLATE', '');
  *
  * @global string $table_prefix
  */
+global $table_prefix;
 empty($table_prefix) or $table_prefix = 'wp_';
 
 /*
@@ -56,7 +57,13 @@ defined('NONCE_SALT') or define('NONCE_SALT', '{{{NONCE_SALT}}}');
 /*
  * Environment-aware settings. Be creative, but avoid to set sensitive settings here.
  */
-$environment = getenv('WORDPRESS_ENV');
+$environment = getenv('WP_ENV') ?: getenv('WORDPRESS_ENV');
+if ($environment
+    && file_exists("{{{ENV_BOOTSTRAP_DIR}}}/{$environment}.php")
+    && is_readable("{{{ENV_BOOTSTRAP_DIR}}}/{$environment}.php")
+) {
+    require_once __DIR__ . "{$environment}.php";
+}
 switch ($environment) {
     case 'development':
         defined('WP_DEBUG') or define('WP_DEBUG', true);
@@ -81,6 +88,7 @@ switch ($environment) {
         defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', false);
         break;
 }
+unset($environment);
 
 /*
  * Fix `is_ssl()` behind load balancers.
@@ -92,20 +100,10 @@ if (array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER)
 }
 
 /*
- * Set WordPress home URL if not set via environment variable, which is highly recommended.
+ * Set WordPress home URL if not set via environment variable, which is **highly** recommended.
  */
 if (!defined('WP_HOME')) {
-    $server = filter_input_array(
-        INPUT_SERVER,
-        [
-            'HTTPS' => FILTER_SANITIZE_STRING,
-            'SERVER_PORT' => FILTER_SANITIZE_NUMBER_INT,
-            'SERVER_NAME' => FILTER_SANITIZE_URL,
-        ]
-    );
-    $scheme = in_array((string)$server['HTTPS'], ['on', '1'], true) ? 'https://' : 'http://';
-    $name = $server['SERVER_NAME'] ?: 'localhost';
-    define('WP_HOME', $scheme . $name);
+    define('WP_HOME', set_url_scheme(($_SERVER['SERVER_NAME'] ?? '') ?: 'localhost'));
 }
 
 /*
@@ -113,11 +111,8 @@ if (!defined('WP_HOME')) {
  */
 defined('ABSPATH') or define('ABSPATH', realpath('{{{WP_INSTALL_PATH}}}') . '/');
 defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath('{{{WP_CONTENT_PATH}}}'));
-defined('WP_SITEURL') or define('WP_SITEURL', rtrim(WP_HOME, '/') . '/{{{WP_SITEURL}}}');
-defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/') . '/{{{WP_CONTENT_URL}}}');
-
-/* Clean up. */
-unset($environment, $server, $secure, $scheme, $name);
+defined('WP_SITEURL') or define('WP_SITEURL', rtrim(WP_HOME, '/') . '/{{{WP_SITEURL_RELATIVE}}}');
+defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/') . '/{{{WP_CONTENT_URL_RELATIVE}}}');
 
 /* Load plugin.php early, so we can call `add_action` below. */
 require_once ABSPATH . 'wp-includes/plugin.php';

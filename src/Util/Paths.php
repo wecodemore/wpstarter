@@ -61,16 +61,13 @@ final class Paths implements \ArrayAccess
     }
 
     /**
-     * @param Config $config
+     * @param string $teamplatesRootDir
      */
-    public function initTemplates(Config $config)
+    public function useCustomTemplatesDir(string $teamplatesRootDir)
     {
-        if (!$config[Config::TEMPLATES_DIR]->notEmpty()) {
-            return;
+        if (is_dir($teamplatesRootDir)) {
+            $this->customTemplatesDir = rtrim($teamplatesRootDir, '/');
         }
-
-        $dir = $config[Config::TEMPLATES_DIR]->unwrapOrFallback();
-        is_dir($dir) and $this->customTemplatesDir = $dir;
     }
 
     /**
@@ -123,18 +120,15 @@ final class Paths implements \ArrayAccess
             );
         }
 
-        $to and $to = '/' . ltrim($this->filesystem->normalizePath($to), '/');
-
-        return $this->paths[$pathName] . $to;
+        return $this->paths[$pathName] . $this->to($to);
     }
 
     /**
      * @param string $pathName Use one of the class constants
      * @param string $to
-     * @param bool $isFile
      * @return string
      */
-    public function relative(string $pathName, string $to = '', bool $isFile = false): string
+    public function relativeToRoot(string $pathName, string $to = ''): string
     {
         if (!array_key_exists($pathName, $this->paths)) {
             throw new \InvalidArgumentException(
@@ -142,18 +136,16 @@ final class Paths implements \ArrayAccess
             );
         }
 
-        $to and $to = '/' . ltrim($this->filesystem->normalizePath($to), '/');
-
         if ($pathName === self::ROOT) {
-            return $to ?: './';
+            return $this->to($to) ?: './';
         }
 
         $subdir = $this->filesystem->findShortestPath(
             $this->paths[self::ROOT],
-            $this->paths[$pathName],
-            !$isFile
+            $this->paths[$pathName]
         );
 
+        $to = $this->to($to);
         $to and $subdir = rtrim($subdir, '/\\') . $to;
 
         return $subdir;
@@ -242,7 +234,7 @@ final class Paths implements \ArrayAccess
     public function offsetGet($offset)
     {
         if (!$this->offsetExists($offset)) {
-            throw new \BadMethodCallException(
+            throw new \OutOfRangeException(
                 sprintf('%s is not a valid WP Starter path index.', $offset)
             );
         }
@@ -278,5 +270,20 @@ final class Paths implements \ArrayAccess
     public function offsetUnset($offset)
     {
         throw new \BadMethodCallException(sprintf('%s class does not support unset.', __CLASS__));
+    }
+
+    /**
+     * @param string $to
+     * @return string
+     */
+    private function to(string $to): string
+    {
+        if ($to) {
+            $trail = strlen($to) > 1 && in_array(substr($to, -1, 1), ['\\', '/'], true);
+            $to = '/' . ltrim($this->filesystem->normalizePath($to), '/');
+            $trail and $to .= '/';
+        }
+
+        return $to;
     }
 }
