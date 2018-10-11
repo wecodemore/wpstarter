@@ -63,7 +63,7 @@ final class WpCliCommandsStep implements Step
     public function allowed(Config $config, Paths $paths): bool
     {
         $executor = $config[Config::WP_CLI_EXECUTOR]->unwrapOrFallback();
-        if ($executor) {
+        if ($executor instanceof WpCli\Executor) {
             $this->executor = $executor;
             $this->commands = $config[Config::WP_CLI_COMMANDS]->unwrapOrFallback([]);
             $this->files = $config[Config::WP_CLI_FILES]->unwrapOrFallback([]);
@@ -87,10 +87,9 @@ final class WpCliCommandsStep implements Step
 
         $this->io->writeComment('Running WP CLI commands...');
         $this->executor->execute('cli version');
-        $this->io->writeComment(str_repeat('-', 69));
         $fileCommands = [];
         if ($this->files) {
-            $fileCommands = array_filter(array_map([$this, 'evalFileCommand'], $this->files));
+            $fileCommands = array_filter(array_map([$this, 'buildEvalFileCommand'], $this->files));
         }
 
         $commands = array_merge($fileCommands, $this->commands);
@@ -105,7 +104,6 @@ final class WpCliCommandsStep implements Step
 
         $this->io->write('starting now...');
         array_walk($this->commands, [$this->executor, 'execute']);
-        $this->io->writeComment(str_repeat('-', 69));
 
         return self::SUCCESS;
     }
@@ -131,7 +129,7 @@ final class WpCliCommandsStep implements Step
      * @param Paths $paths
      * @return string
      */
-    private function evalFileCommand(WpCli\FileData $fileData, Paths $paths): string
+    private function buildEvalFileCommand(WpCli\FileData $fileData, Paths $paths): string
     {
         $fullpath = $paths->root($fileData->file());
         if (!file_exists($fullpath)) {

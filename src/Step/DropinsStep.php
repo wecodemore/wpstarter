@@ -129,7 +129,7 @@ final class DropinsStep implements Step
         foreach ($this->dropins as $name => $url) {
             $this->isKnownDropin(basename($name))
                 ? $this->runStep($name, $url, $paths)
-                : $this->addMessage("{$name} is not a valid dropin name. Skipped.", 'error');
+                : $this->error .= "{$name} is not a valid dropin name. Skipped.\n";
         }
 
         if (!$this->error) {
@@ -174,12 +174,18 @@ final class DropinsStep implements Step
             $this->overwriteHelper
         );
 
-        if ($step->allowed($this->config, $paths)) {
-            $step->run($this->config, $paths);
-            $error = $step->error();
-            $success = $step->success();
-            $error and $this->addMessage($error, 'error');
-            $success and $this->addMessage($success, 'success');
+        if (!$step->allowed($this->config, $paths)) {
+            return;
+        }
+
+        $result = $step->run($this->config, $paths);
+        switch ($result) {
+            case Step::SUCCESS:
+                $this->success .= $step->success() . "\n";
+                break;
+            case Step::ERROR:
+                $this->error .= $step->error() . "\n";
+                break;
         }
     }
 
@@ -190,21 +196,21 @@ final class DropinsStep implements Step
      * Via "unknown-dropins" config is possible to change how this method acts in case of unknown
      * dropins.
      *
-     * @param  string $name
+     * @param  string $filename
      * @return bool
      */
-    private function isKnownDropin(string $name): bool
+    private function isKnownDropin(string $filename): bool
     {
         if ($this->config[Config::UNKWOWN_DROPINS]->is(true)
-            || in_array($name, self::DROPINS, true)
+            || in_array($filename, self::DROPINS, true)
         ) {
             return true;
         }
 
         $shouldAsk = $this->config[Config::UNKWOWN_DROPINS]->is(OptionalStep::ASK);
-        $ext = pathinfo($name, PATHINFO_EXTENSION);
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
         if (strtolower($ext) !== 'php') {
-            return $shouldAsk && $this->ask($name, self::QUESTION_NO_DROPIN);
+            return $shouldAsk && $this->ask($filename, self::QUESTION_NO_DROPIN);
         }
 
         if (!is_array(self::$languages)) {
@@ -213,62 +219,55 @@ final class DropinsStep implements Step
             is_array($languages) and self::$languages = $languages;
         }
 
-        $name = substr($name, 0, -4);
+        $language = pathinfo($filename, PATHINFO_FILENAME);
 
         if (!self::$languages || !is_array(self::$languages)) {
-            return $shouldAsk && $this->ask($name, self::QUESTION_LOCALES_ERROR);
+            return $shouldAsk && $this->ask($filename, self::QUESTION_LOCALES_ERROR);
         }
 
         return
-            in_array($name, self::$languages, true)
-            || ($shouldAsk && $this->ask($name, self::QUESTION_NO_LOCALE));
+            in_array($language, self::$languages, true)
+            || ($shouldAsk && $this->ask($filename, self::QUESTION_NO_LOCALE));
     }
 
     /**
      * Asks to user what to do in case of unknown dropins.
      * Question is different based on situations.
      *
-     * @param string $name
+     * @param string $filename
      * @param int $question
      * @return bool
      */
-    private function ask(string $name, int $question = 0): bool
+    private function ask(string $filename, int $question = 0): bool
     {
-        $wpVer = $this->config[Config::WP_VERSION]->unwrapOrFallback('');
+        $wpVer = $this->config[Config::WP_VERSION]->unwrapOrFallback();
         $forWp = $wpVer ? " for WP '{$wpVer}'" : '';
+
+        $language = pathinfo($filename, PATHINFO_FILENAME);
 
         switch ($question) {
             case self::QUESTION_NO_LOCALE:
                 $lines = [
-                    "{$name} is not a core supported locale{$forWp}.",
-                    "Do you want to proceed with {$name}.php anyway?",
+                    "{$language} is not a core supported locale{$forWp}.",
+                    "Do you want to proceed with {$filename} anyway?",
                 ];
                 break;
             case self::QUESTION_LOCALES_ERROR:
                 $lines = [
                     'WP Starter failed to get languages from wordpress.org API,',
-                    "so it isn't possible to verify that {$name} is a supported locale.",
-                    "Do you want to proceed with {$name}.php anyway?",
+                    "so it isn't possible to verify that {$language} is a supported locale.",
+                    "Do you want to proceed with {$filename} anyway?",
                 ];
                 break;
             case self::QUESTION_NO_DROPIN:
             default:
                 $lines = [
-                    "{$name} seems not a valid dropin file.",
+                    "{$filename} seems not a valid dropin file.",
                     'Do you want to proceed with it anyway?',
                 ];
                 break;
         }
 
         return $this->io->askConfirm($lines, false);
-    }
-
-    /**
-     * @param string $message
-     * @param string $type
-     */
-    private function addMessage(string $message, string $type)
-    {
-        $this->{$type} .= $message ? $message . PHP_EOL : '';
     }
 }

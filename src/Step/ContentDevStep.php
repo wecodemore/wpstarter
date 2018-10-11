@@ -43,7 +43,7 @@ final class ContentDevStep implements OptionalStep
     /**
      * @var string
      */
-    private $operation = self::OP_NONE;
+    private $operation;
 
     /**
      * @var string
@@ -86,7 +86,7 @@ final class ContentDevStep implements OptionalStep
      */
     public function askConfirm(Config $config, Io $io): bool
     {
-        $dir = $config[Config::CONTENT_DEV_DIR]->unwrapOrFallback();
+        $dir = $config[Config::CONTENT_DEV_DIR]->unwrap();
         if (!$dir || $config[Config::CONTENT_DEV_OPERATION]->not(self::ASK)) {
             return true;
         }
@@ -94,7 +94,7 @@ final class ContentDevStep implements OptionalStep
         $operation = $this->io->ask(
             [
                 'Which operation do you want to perform',
-                "for content-dev folders in /{$dir}",
+                "for content development folders in /{$dir}",
                 'to make them available in WP content dir?',
             ],
             ['s' => '[S]ymlink', 'c' => '[C]opy', 'n' => '[N]othing'],
@@ -121,30 +121,13 @@ final class ContentDevStep implements OptionalStep
     public function run(Config $config, Paths $paths): int
     {
         $this->config = $config;
-        $operation = $config[Config::CONTENT_DEV_OPERATION]->unwrapOrFallback(self::OP_NONE);
+        $operation = $this->operation ?: $config[Config::CONTENT_DEV_OPERATION]->unwrap();
 
-        if ($operation === self::OP_NONE) {
+        if ($operation === self::OP_NONE || $operation === self::ASK) {
             return Step::NONE;
         }
 
-        $dir = $config[Config::CONTENT_DEV_DIR]->unwrapOrFallback();
-
-        if (!is_dir($dir)) {
-            $format = "Configured 'content-dev' dir %s, doesn\'t exist. Can\'t %s into it.";
-            $this->error = sprintf($format, $dir, $operation);
-
-            return Step::ERROR;
-        }
-
-        $srcBase = $paths->root($dir);
-
-        if (!is_dir($srcBase) || !in_array($operation, [self::OP_COPY, self::OP_SYMLINK], true)) {
-            $format = "'content-dev' operation %s, is not valid, only '%s' or '%s' are accepted.";
-            $this->error = sprintf($format, $operation, self::OP_COPY, self::OP_SYMLINK);
-
-            return Step::ERROR;
-        }
-
+        $srcBase = $config[Config::CONTENT_DEV_DIR]->unwrap();
         $sourceSubDirs = glob("{$srcBase}/*", GLOB_ONLYDIR | GLOB_NOSORT);
         $targetBase = $paths->wpContent();
 
@@ -177,9 +160,9 @@ final class ContentDevStep implements OptionalStep
      */
     public function success(): string
     {
-        $dir = $this->config[Config::CONTENT_DEV_DIR]->unwrapOrFallback();
+        $dir = $this->config[Config::CONTENT_DEV_DIR]->unwrap();
 
-        return "<comment>Development content</comment> publishing done successfully from '/{$dir}'.";
+        return "<comment>Development content</comment> published successfully from '/{$dir}'.";
     }
 
     /**
@@ -191,48 +174,46 @@ final class ContentDevStep implements OptionalStep
     }
 
     /**
-     * @param string $sourceBase
-     * @param array $sourceSubDirs
+     * @param string $srcBase
+     * @param array $srcSubDirs
      * @param string $targetBase
      * @return bool
      */
-    private function copyDirs(string $sourceBase, array $sourceSubDirs, string $targetBase): bool
+    private function copyDirs(string $srcBase, array $srcSubDirs, string $targetBase): bool
     {
         $done = $all = 0;
 
-        foreach ($sourceSubDirs as $sourceSubDir) {
-            $sourceFullPath = "{$sourceBase}/{$sourceSubDir}";
-
-            if (!is_dir($sourceFullPath)) {
+        foreach ($srcSubDirs as $sourceSubDir) {
+            if (!is_dir("{$srcBase}/{$sourceSubDir}")) {
                 continue;
             }
 
             $all++;
             $targetFullPath = "{$targetBase}/{$sourceSubDir}";
 
-            $this->filesystem->copyDir($sourceFullPath, $targetFullPath) and $done++;
+            $this->filesystem->copyDir("{$srcBase}/{$sourceSubDir}", $targetFullPath) and $done++;
         }
 
         return $done === $all;
     }
 
     /**
-     * @param string $sourceBase
-     * @param array $sourceSubDirs
+     * @param string $srcBase
+     * @param array $srcSubDirs
      * @param string $targetBase
      * @return bool
      */
-    private function symlinkDirs(string $sourceBase, array $sourceSubDirs, string $targetBase): bool
+    private function symlinkDirs(string $srcBase, array $srcSubDirs, string $targetBase): bool
     {
         $done = $all = 0;
 
-        foreach ($sourceSubDirs as $sourceSubDir) {
-            $sourceInner = glob("{$sourceBase}/{$sourceSubDir}/*", GLOB_NOSORT);
+        foreach ($srcSubDirs as $sourceSubDir) {
+            $srcInnerPaths = glob("{$srcBase}/{$sourceSubDir}/*", GLOB_NOSORT);
             $this->filesystem->createDir("{$targetBase}/{$sourceSubDir}/");
-            foreach ($sourceInner as $sourceInnerItem) {
+            foreach ($srcInnerPaths as $srcInnerPath) {
                 $all++;
-                $targetName = "{$targetBase}/{$sourceSubDir}/" . basename($sourceInnerItem);
-                $this->filesystem->symlink($sourceInnerItem, $targetName) and $done++;
+                $targetName = "{$targetBase}/{$sourceSubDir}/" . basename($srcInnerPath);
+                $this->filesystem->symlink($srcInnerPath, $targetName) and $done++;
             }
         }
 
@@ -256,8 +237,11 @@ final class ContentDevStep implements OptionalStep
         $files = glob("{$sourceBase}/*.*", GLOB_NOSORT);
         foreach ($files as $file) {
             $all++;
-            $method = $operation === self::OP_COPY ? 'copyFile' : 'symlink';
-            $this->filesystem->{$method}($file, "{$targetBase}/" . basename($file)) and $done++;
+            $success = $operation === self::OP_COPY
+                ? $this->filesystem->copyFile($file, "{$targetBase}/" . basename($file))
+                : $this->filesystem->symlink($file, "{$targetBase}/" . basename($file));
+
+            $success and $done++;
         }
 
         return $done === $all;

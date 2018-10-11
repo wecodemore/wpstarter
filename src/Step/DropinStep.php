@@ -19,6 +19,9 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
  */
 final class DropinStep implements FileCreationStepInterface
 {
+    const ACTION_COPY = 'copy';
+    const ACTION_DOWNLOAD = 'download';
+
     /**
      * @var string
      */
@@ -30,9 +33,9 @@ final class DropinStep implements FileCreationStepInterface
     private $url;
 
     /**
-     * @var array
+     * @var \stdClass
      */
-    private $actionSource;
+    private $actionAndSource;
 
     /**
      * @var \WeCodeMore\WpStarter\Util\Io
@@ -74,7 +77,7 @@ final class DropinStep implements FileCreationStepInterface
         OverwriteHelper $overwrite
     ) {
 
-        $this->name = filter_var($name, FILTER_SANITIZE_URL);
+        $this->name = basename($name);
         $this->url = $url;
         $this->io = $io;
         $this->urlDownloader = $urlDownloader;
@@ -82,7 +85,7 @@ final class DropinStep implements FileCreationStepInterface
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
     public function name(): string
     {
@@ -90,18 +93,21 @@ final class DropinStep implements FileCreationStepInterface
     }
 
     /**
-     * @inheritdoc
-     * @throws \InvalidArgumentException
+     * @param Config $config
+     * @param Paths $paths
+     * @return bool
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        $this->actionSource = $this->action($this->url, $paths);
+        list($action, $source) = $this->determineActionAndSource($this->url, $paths);
 
-        if (empty($this->actionSource[0])) {
-            $this->io->writeError("{$this->url} is not a valid url nor a valid path.");
+        if (!$action || !$source) {
+            $this->io->writeError("{$this->url} is not a valid URL nor a valid path.");
 
             return false;
         }
+
+        $this->actionAndSource = (object)compact('action', 'source');
 
         return true;
     }
@@ -113,6 +119,10 @@ final class DropinStep implements FileCreationStepInterface
      */
     public function run(Config $config, Paths $paths): int
     {
+        if (!$this->actionAndSource) {
+            return self::NONE;
+        }
+
         $dest = $this->targetPath($paths);
         if (!$this->overwrite->shouldOverwite($dest)) {
             $this->io->writeComment("  - {$this->name} skipped because existing.");
@@ -120,9 +130,9 @@ final class DropinStep implements FileCreationStepInterface
             return self::NONE;
         }
 
-        return $this->actionSource[0] === 'download'
-            ? $this->download($this->actionSource[1], $dest)
-            : $this->copy($this->actionSource[1], $dest);
+        return $this->actionAndSource->action === self::ACTION_DOWNLOAD
+            ? $this->download($this->actionAndSource->source, $dest)
+            : $this->copy($this->actionAndSource->source, $dest);
     }
 
     /**
@@ -162,12 +172,12 @@ final class DropinStep implements FileCreationStepInterface
         $name = basename($dest);
         if (!$this->urlDownloader->save($url, $dest)) {
             $error = $this->urlDownloader->error();
-            $this->error .= "\nIt was not possible to download and save {$name}: {$error}";
+            $this->error .= "It was not possible to download and save {$name}: {$error}";
 
             return self::ERROR;
         }
 
-        $this->success .= "\n<comment>{$name}</comment> downloaded and saved successfully.";
+        $this->success .= "<comment>{$name}</comment> downloaded and saved successfully.";
 
         return self::SUCCESS;
     }
@@ -186,12 +196,12 @@ final class DropinStep implements FileCreationStepInterface
         try {
             $copied = copy($source, $dest);
             $copied
-                ? $this->success .= "\n<comment>{$name}</comment> copied successfully."
-                : $this->error .= "\nImpossible to copy {$sourceBase} to {$name}.";
+                ? $this->success .= "<comment>{$name}</comment> copied successfully."
+                : $this->error .= "Impossible to copy {$sourceBase} to {$name}.";
 
             return $copied ? self::SUCCESS : self::ERROR;
         } catch (\Throwable $exception) {
-            $this->error .= "\nImpossible to copy {$sourceBase} to {$name}.";
+            $this->error .= "Impossible to copy {$sourceBase} to {$name}.";
 
             return self::ERROR;
         }
@@ -204,16 +214,16 @@ final class DropinStep implements FileCreationStepInterface
      * @param  Paths $paths
      * @return array
      */
-    private function action(string $url, Paths $paths): array
+    private function determineActionAndSource(string $url, Paths $paths): array
     {
+        if (filter_var($url, FILTER_VALIDATE_URL)) {
+            return [self::ACTION_DOWNLOAD, $url];
+        }
+
         $realpath = realpath($paths->root($url));
 
         if ($realpath && is_file($realpath)) {
-            return ['copy', $realpath];
-        }
-
-        if (filter_var($url, FILTER_VALIDATE_URL)) {
-            return ['download', $url];
+            return [self::ACTION_COPY, $realpath];
         }
 
         return [null, null];

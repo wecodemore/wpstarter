@@ -51,9 +51,9 @@ final class Steps implements PostProcessStep
     public function __construct(Locator $locator, Composer $composer)
     {
         $this->locator = $locator;
+        $this->composer = $composer;
         $this->steps = new \SplObjectStorage();
         $this->postProcessSteps = new \SplObjectStorage();
-        $this->composer = $composer;
     }
 
     /**

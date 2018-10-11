@@ -73,26 +73,15 @@ final class MuLoaderStep implements FileCreationStepInterface, BlockingStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        $pluginsConfig = $config[Config::MU_PLUGIN_LIST]->unwrapOrFallback([]);
-        $list = is_array($pluginsConfig) ? array_filter($pluginsConfig, 'is_string') : [];
-
-        $from = $paths->wpContent('mu-plugins');
-
-        $list = array_reduce(
-            $list,
-            function (array $list, string $plugin) use ($paths, $from): array {
-                $path = $this->findPath($paths, $from, $plugin);
-                $path and $list[] = $path;
-
-                return $list;
-            },
-            []
-        );
+        $pluginsConfig = $config[Config::MU_PLUGIN_LIST]->unwrap();
+        $muPluginsPathList = is_array($pluginsConfig)
+            ? array_filter($pluginsConfig, 'is_string')
+            : [];
 
         $build = $this->builder->build(
             $paths,
             'wpstarter-mu-loader.php',
-            ['MU_PLUGINS_LIST' => implode(",\n", $list)]
+            ['MU_PLUGINS_LIST' => implode(', ', $muPluginsPathList)]
         );
 
         if (!$this->filesystem->save($build, $this->targetPath($paths))) {
@@ -116,21 +105,5 @@ final class MuLoaderStep implements FileCreationStepInterface, BlockingStep
     public function success(): string
     {
         return '<comment>MU plugin loader</comment> saved successfully.';
-    }
-
-    /**
-     * @param Paths $paths
-     * @param string $from
-     * @param string $plugin
-     * @return string
-     */
-    private function findPath(Paths $paths, string $from, string $plugin): string
-    {
-        $to = $paths->root($plugin);
-        try {
-            return $this->filesystem->composerFilesystem()->findShortestPath($from, $to);
-        } catch (\Throwable $exception) {
-            return '';
-        }
     }
 }
