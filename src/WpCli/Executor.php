@@ -8,7 +8,6 @@
 
 namespace WeCodeMore\WpStarter\WpCli;
 
-use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Util\Io;
 use WeCodeMore\WpStarter\Util\Paths;
 
