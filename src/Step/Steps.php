@@ -175,7 +175,7 @@ final class Steps implements PostProcessStep
      */
     private function runStep(Step $step, Config $config, Io $io, Paths $paths, array $scripts): bool
     {
-        $io->writeIfVerbose('Initiliazing "' . $step->name() . '" step.');
+        $io->writeIfVerbose('Initializing "' . $step->name() . '" step.');
         $step instanceof PostProcessStep and $this->postProcessSteps->attach($step);
 
         if (!$this->shouldProcess($step, $paths)) {

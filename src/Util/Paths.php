@@ -61,12 +61,12 @@ final class Paths implements \ArrayAccess
     }
 
     /**
-     * @param string $teamplatesRootDir
+     * @param string $templatesRootDir
      */
-    public function useCustomTemplatesDir(string $teamplatesRootDir)
+    public function useCustomTemplatesDir(string $templatesRootDir)
     {
-        if (is_dir($teamplatesRootDir)) {
-            $this->customTemplatesDir = rtrim($teamplatesRootDir, '/');
+        if (is_dir($templatesRootDir)) {
+            $this->customTemplatesDir = rtrim($templatesRootDir, '/');
         }
     }
 

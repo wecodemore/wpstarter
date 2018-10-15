@@ -187,7 +187,7 @@ class Filesystem
      */
     public function createDir(string $targetPath): bool
     {
-        $targetPath = $this->filesystem->normalizePath($targetPath) ?: '/';
+        $targetPath = $this->filesystem->normalizePath($targetPath);
 
         if (file_exists($targetPath)) {
             return @is_dir($targetPath);
