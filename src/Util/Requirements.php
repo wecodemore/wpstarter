@@ -20,6 +20,11 @@ final class Requirements
     const CONFIG_FILE = 'wpstarter.json';
 
     /**
+     * @var Filesystem
+     */
+    private $filesystem;
+
+    /**
      * @var Paths
      */
     private $paths;
@@ -47,6 +52,7 @@ final class Requirements
 
         $packageRepo = $composer->getRepositoryManager()->getLocalRepository();
         $installationManager = $composer->getInstallationManager();
+        $this->filesystem = $filesystem;
         $muPluginList = new MuPluginList($packageRepo, $installationManager);
 
         $this->paths = new Paths($composer, $filesystem);
@@ -85,6 +91,14 @@ final class Requirements
     public function paths(): Paths
     {
         return $this->paths;
+    }
+
+    /**
+     * @return Filesystem
+     */
+    public function filesystem(): Filesystem
+    {
+        return $this->filesystem;
     }
 
     /**

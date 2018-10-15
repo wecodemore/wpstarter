@@ -53,6 +53,11 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     private $composer;
 
     /**
+     * @var Util\Requirements
+     */
+    private $requirements;
+
+    /**
      * phpcs:disable Inpsyde.CodeQuality.NoAccessors
      */
     public static function getSubscribedEvents(): array
@@ -93,38 +98,7 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     {
         $this->composer = $composer;
         $this->composerIo = $io;
-        $filesystem = new Filesystem();
-        $requirements = new Util\Requirements($composer, $io, $filesystem);
-
-        $config = $requirements->config();
-        $requireWp = $config[Config::REQUIRE_WP]->not(false);
-
-        $wpVersion = null;
-        if ($requireWp) {
-            $wpVersionDiscover = new Util\WpVersion($io);
-            $packages = $composer->getRepositoryManager()->getLocalRepository()->getPackages();
-            $wpVersion = $wpVersionDiscover->discover(...$packages);
-        }
-
-        if (!$wpVersion && $requireWp) {
-            $this->composerIo->writeError(
-                [
-                    "<bg=red;fg=white;option=bold>                                             </>",
-                    "<bg=red;fg=white;option=bold>    Error running WP Starter.                </>",
-                    "<bg=red;fg=white;option=bold>    No supported WordPress version found.    </>",
-                    "<bg=red;fg=white;option=bold>                                             </>",
-                ]
-            );
-
-            return;
-        }
-
-        // If WP version was found and no version is set in configs, let's set it with the finding.
-        if ($wpVersion && !$config[Config::WP_VERSION]->notEmpty()) {
-            $config->appendConfig(Config::WP_VERSION, $wpVersion);
-        }
-
-        $this->locator = new Util\Locator($requirements, $composer->getConfig(), $io, $filesystem);
+        $this->requirements = new Util\Requirements($composer, $io, new Filesystem());
     }
 
     /**
@@ -138,11 +112,45 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
      */
     public function run(Event $event = null, array $selectedStepNames = [])
     {
-        if (!$this->locator) {
+        $config = $this->requirements->config();
+        $requireWp = $config[Config::REQUIRE_WP]->not(false);
+
+        $wpVersion = null;
+        if ($requireWp) {
+            $wpVersionDiscover = new Util\WpVersion($this->composerIo);
+            $composer = $this->composer;
+            $packages = $composer->getRepositoryManager()->getLocalRepository()->getPackages();
+            $wpVersion = $wpVersionDiscover->discover(...$packages);
+        }
+
+        if (!$wpVersion && $requireWp) {
+            $this->composerIo->writeError(
+                [
+                    '',
+                    "<bg=red;fg=white;option=bold>                                             </>",
+                    "<bg=red;fg=white;option=bold>    Error running WP Starter.                </>",
+                    "<bg=red;fg=white;option=bold>    No supported WordPress version found.    </>",
+                    "<bg=red;fg=white;option=bold>                                             </>",
+                    '',
+                ]
+            );
+
             $event or exit(1);
 
             return;
         }
+
+        // If WP version was found and no version is set in configs, let's set it with the finding.
+        if ($wpVersion && !$config[Config::WP_VERSION]->notEmpty()) {
+            $config->appendConfig(Config::WP_VERSION, $wpVersion);
+        }
+
+        $this->locator = new Util\Locator(
+            $this->requirements,
+            $this->composer->getConfig(),
+            $this->composerIo,
+            $this->requirements->filesystem()
+        );
 
         try {
             $steps = new Step\Steps($this->locator, $this->composer);
@@ -250,10 +258,10 @@ final class ComposerPlugin implements PluginInterface, EventSubscriberInterface,
     {
         // phpcs:disable
         $logo = <<<LOGO
-<fg=magenta> __      __ ___ </><fg=yellow> ___  _____  _    ___  _____  ___  ___  </>
-<fg=magenta> \ \    / /| _ \</><fg=yellow>/ __||_   _|/_\  | _ \|_   _|| __|| _ \ </>
-<fg=magenta>  \ \/\/ / |  _/</><fg=yellow>\__ \  | | / _ \ |   /  | |  | _| |   / </>
-<fg=magenta>   \_/\_/  |_|  </><fg=yellow>|___/  |_|/_/ \_\|_|_\  |_|  |___||_|_\ </>
+<fg=magenta> __      __ ___  </><fg=yellow>  ___  _____  _    ___  _____  ___  ___  </>
+<fg=magenta> \ \    / /| _ \ </><fg=yellow> / __||_   _|/_\  | _ \|_   _|| __|| _ \ </>
+<fg=magenta>  \ \/\/ / |  _/ </><fg=yellow> \__ \  | | / _ \ |   /  | |  | _| |   / </>
+<fg=magenta>   \_/\_/  |_|   </><fg=yellow> |___/  |_|/_/ \_\|_|_\  |_|  |___||_|_\ </>
 LOGO;
         // phpcs:enable
 
