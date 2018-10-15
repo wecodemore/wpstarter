@@ -260,10 +260,10 @@ final class ComposerPlugin implements
     {
         // phpcs:disable
         $logo = <<<LOGO
-<fg=magenta>  __      __ ___  </><fg=yellow>  ___  _____  _    ___  _____  ___  ___  </>
-<fg=magenta>  \ \    / /| _ \ </><fg=yellow> / __||_   _|/_\  | _ \|_   _|| __|| _ \ </>
-<fg=magenta>   \ \/\/ / |  _/ </><fg=yellow> \__ \  | | / _ \ |   /  | |  | _| |   / </>
-<fg=magenta>    \_/\_/  |_|   </><fg=yellow> |___/  |_|/_/ \_\|_|_\  |_|  |___||_|_\ </>
+<fg=magenta>    __      __ ___  </><fg=yellow>   ___  _____  _    ___  _____  ___  ___  </>
+<fg=magenta>    \ \    / /| _ \ </><fg=yellow>  / __||_   _|/_\  | _ \|_   _|| __|| _ \ </>
+<fg=magenta>     \ \/\/ / |  _/ </><fg=yellow>  \__ \  | | / _ \ |   /  | |  | _| |   / </>
+<fg=magenta>      \_/\_/  |_|   </><fg=yellow>  |___/  |_|/_/ \_\|_|_\  |_|  |___||_|_\ </>
 LOGO;
         // phpcs:enable
 
