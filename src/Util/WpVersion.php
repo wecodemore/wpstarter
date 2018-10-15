@@ -90,18 +90,14 @@ class WpVersion
 
         $isDevPackage = $vers[0][1];
         $fallback = $this->fallbackVersion ? static::normalize($this->fallbackVersion) : null;
-
-        if ($isDevPackage && !$fallback) {
-            return $this->bail('dev-wp');
-        }
-
-        $version = $isDevPackage ? $fallback : static::normalize((string)$vers[0][0]);
+        $version = static::normalize((string)$vers[0][0]) ?: $fallback;
 
         if (!$version) {
-            return $this->bail('invalid-wp');
+            return $isDevPackage ? $this->bail('dev-wp') : $this->bail('invalid-wp');
         }
 
         if (!version_compare($version, self::MIN_WP_VERSION, '>=')) {
+            $version = '';
             $min = self::MIN_WP_VERSION;
             Io::writeFormattedError(
                 $this->io,

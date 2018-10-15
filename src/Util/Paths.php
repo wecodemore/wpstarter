@@ -20,6 +20,7 @@ final class Paths implements \ArrayAccess
     const WP = 'wp';
     const WP_PARENT = 'wp-parent';
     const WP_CONTENT = 'wp-content';
+    const WP_STARTER = 'wp-starter';
 
     /**
      * @var \SplObjectStorage
@@ -100,6 +101,7 @@ final class Paths implements \ArrayAccess
             self::WP => $this->filesystem->normalizePath($wpFullDir),
             self::WP_PARENT => $this->filesystem->normalizePath($wpParent),
             self::WP_CONTENT => $this->filesystem->normalizePath($wpContent),
+            self::WP_STARTER => $this->filesystem->normalizePath(dirname(__DIR__, 2)),
         ];
 
         self::$parsed->attach($this->composer, $paths);
@@ -206,6 +208,15 @@ final class Paths implements \ArrayAccess
     }
 
     /**
+     * @param string $to
+     * @return string
+     */
+    public function wpStarter(string $to = ''): string
+    {
+        return $this->absolute(self::WP_STARTER, $to);
+    }
+
+    /**
      * @param string $filename
      * @return string
      */
@@ -215,7 +226,7 @@ final class Paths implements \ArrayAccess
             return "{$this->customTemplatesDir}/{$filename}";
         }
 
-        return $this->root("templates/{$filename}");
+        return $this->wpStarter("templates/{$filename}");
     }
 
     /**

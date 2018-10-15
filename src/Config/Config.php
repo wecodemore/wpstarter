@@ -20,6 +20,7 @@ final class Config implements \ArrayAccess
     const DROPINS = 'dropins';
     const EARLY_HOOKS_FILE = 'early-hook-file';
     const ENV_BOOTSTRAP_DIR = 'env-bootstrap-dir';
+    const ENV_DIR = 'env-dir';
     const ENV_EXAMPLE = 'env-example';
     const ENV_FILE = 'env-file';
     const INSTALL_WP_CLI = 'install-wp-cli';
@@ -45,6 +46,7 @@ final class Config implements \ArrayAccess
         self::DROPINS => null,
         self::EARLY_HOOKS_FILE => '',
         self::ENV_BOOTSTRAP_DIR => null,
+        self::ENV_DIR => null,
         self::ENV_EXAMPLE => true,
         self::ENV_FILE => '.env',
         self::INSTALL_WP_CLI => true,
@@ -71,6 +73,7 @@ final class Config implements \ArrayAccess
         self::DROPINS => 'validatePathArray',
         self::EARLY_HOOKS_FILE => 'validateFileName',
         self::ENV_BOOTSTRAP_DIR => 'validateDirName',
+        self::ENV_DIR => 'validatePath',
         self::ENV_EXAMPLE => 'validateBoolOrAskOrUrlOrPath',
         self::ENV_FILE => 'validateFileName',
         self::INSTALL_WP_CLI => 'validateBool',

@@ -57,9 +57,6 @@ class PathsTest extends TestCase
     {
         $paths = $this->makePaths();
 
-        $base = $this->fixturesPath();
-        static::assertSame("{$base}/paths-root/templates/index.php", $paths->template('index.php'));
-
         $custom = $this->packagePath() . '/templates';
         $paths->useCustomTemplatesDir($custom);
 

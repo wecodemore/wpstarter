@@ -27,14 +27,18 @@ class WpVersionTest extends TestCase
 
     public function testDiscoverFindsNothingIfNoPackages()
     {
-        $wpVer = new WpVersion(\Mockery::mock(IOInterface::class));
+        $io = \Mockery::mock(IOInterface::class);
+        $io->shouldReceive('writeError');
+        $wpVer = new WpVersion($io);
 
         static::assertSame('', $wpVer->discover());
     }
 
     public function testDiscoverFindsNothingIfWrongPackageTypes()
     {
-        $wpVer = new WpVersion(\Mockery::mock(IOInterface::class));
+        $io = \Mockery::mock(IOInterface::class);
+        $io->shouldReceive('writeError');
+        $wpVer = new WpVersion($io);
 
         $package1 = \Mockery::mock(PackageInterface::class);
         $package1->shouldReceive('getType')->andReturn('library');
@@ -52,6 +56,39 @@ class WpVersionTest extends TestCase
         $package1 = \Mockery::mock(PackageInterface::class);
         $package1->shouldReceive('getType')->andReturn('wordpress-core');
         $package1->shouldReceive('getVersion')->andReturn('4.8');
+        $package1->shouldReceive('isDev')->andReturn(false);
+
+        $package2 = \Mockery::mock(PackageInterface::class);
+        $package2->shouldReceive('getType')->andReturn('wordpress-plugin');
+
+        static::assertSame('4.8.0', $wpVer->discover($package1, $package2));
+    }
+
+    public function testDiscoverFailForDevWordPress()
+    {
+        $io = \Mockery::mock(IOInterface::class);
+        $io->shouldReceive('writeError');
+        $wpVer = new WpVersion($io);
+
+        $package1 = \Mockery::mock(PackageInterface::class);
+        $package1->shouldReceive('getType')->andReturn('wordpress-core');
+        $package1->shouldReceive('getVersion')->andReturn('99999-dev');
+        $package1->shouldReceive('isDev')->andReturn(true);
+
+        $package2 = \Mockery::mock(PackageInterface::class);
+        $package2->shouldReceive('getType')->andReturn('wordpress-plugin');
+
+        static::assertSame('', $wpVer->discover($package1, $package2));
+    }
+
+    public function testDiscoverSuccessForDevNumericVersion()
+    {
+        $wpVer = new WpVersion(\Mockery::mock(IOInterface::class));
+
+        $package1 = \Mockery::mock(PackageInterface::class);
+        $package1->shouldReceive('getType')->andReturn('wordpress-core');
+        $package1->shouldReceive('getVersion')->andReturn('4.8-alpha1');
+        $package1->shouldReceive('isDev')->andReturn(true);
 
         $package2 = \Mockery::mock(PackageInterface::class);
         $package2->shouldReceive('getType')->andReturn('wordpress-plugin');
@@ -61,11 +98,14 @@ class WpVersionTest extends TestCase
 
     public function testDiscoverReturnsEmptyIfWpVerIsTooOld()
     {
-        $wpVer = new WpVersion(\Mockery::mock(IOInterface::class));
+        $io = \Mockery::mock(IOInterface::class);
+        $io->shouldReceive('writeError');
+        $wpVer = new WpVersion($io);
 
         $package1 = \Mockery::mock(PackageInterface::class);
         $package1->shouldReceive('getType')->andReturn('wordpress-core');
         $package1->shouldReceive('getVersion')->andReturn('1');
+        $package1->shouldReceive('isDev')->andReturn(false);
 
         $package2 = \Mockery::mock(PackageInterface::class);
         $package2->shouldReceive('getType')->andReturn('wordpress-plugin');
@@ -76,15 +116,13 @@ class WpVersionTest extends TestCase
     public function testDiscoverPrintsErrorForMoreWordPressPackages()
     {
         $io = \Mockery::mock(IOInterface::class);
-        $io->shouldReceive('writeError')
-            ->once()
-            ->with(\Mockery::type('array'));
-
+        $io->shouldReceive('writeError');
         $wpVer = new WpVersion($io);
 
         $package1 = \Mockery::mock(PackageInterface::class);
         $package1->shouldReceive('getType')->andReturn('wordpress-core');
         $package1->shouldReceive('getVersion')->andReturn('5');
+        $package1->shouldReceive('isDev')->andReturn(false);
 
         $package2 = clone $package1;
 

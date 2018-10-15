@@ -107,21 +107,26 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         $filesystem = $this->filesystem->composerFilesystem();
 
         $from = $filesystem->normalizePath($paths->wpParent());
-        $earlyHookFile = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback();
+
+        $envDir = $this->config[Config::ENV_DIR]->unwrapOrFallback() ?: $paths->root();
+
+        $earlyHookFile = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback('');
+        $earlyHookFile and $earlyHookFile = $this->relPath($from, $earlyHookFile, false);
+
         $envBootstrapDir = $config[Config::ENV_BOOTSTRAP_DIR]->unwrapOrFallback('');
         $envBootstrapDir and $envBootstrapDir = $filesystem->normalizePath($envBootstrapDir);
 
         $vars = [
             'AUTOLOAD_PATH' => $this->relPath($from, $paths->vendor('autoload.php'), false),
-            'ENV_REL_PATH' => $this->relPath($from, $paths->root()),
+            'ENV_REL_PATH' => $this->relPath($from, $envDir),
             'ENV_FILE_NAME' => $this->config[Config::ENV_FILE]->unwrapOrFallback('.env'),
-            'ENV_BOOTSTRAP_DIR' => $this->relPath($from, $paths->root($envBootstrapDir), false),
+            'ENV_BOOTSTRAP_DIR' => $this->relPath($from, $paths->root($envBootstrapDir)),
             'WP_INSTALL_PATH' => $this->relPath($from, $paths->wp()),
             'WP_CONTENT_PATH' => $this->relPath($from, $paths->wpContent()),
             'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
             'WP_SITEURL_RELATIVE' => $this->stripDot($paths->relativeToRoot(Paths::WP)),
             'WP_CONTENT_URL_RELATIVE' => $this->stripDot($paths->relativeToRoot(Paths::WP_CONTENT)),
-            'EARLY_HOOKS_FILE' => $earlyHookFile ? $this->relPath($from, $earlyHookFile) : '',
+            'EARLY_HOOKS_FILE' => $earlyHookFile,
         ];
 
         $built = $this->builder->build(
@@ -161,8 +166,8 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
     private function askForRegister(): bool
     {
         $lines = [
-            'Do you want to register WordPress package wp-content folder',
-            'as additional theme folder for your project?',
+            'Do you want to register WordPress package wp-content folder '
+            . 'as additional theme folder for your project?',
         ];
 
         return $this->io->askConfirm($lines, true);
@@ -176,7 +181,14 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      */
     private function relPath(string $from, string $to, bool $bothDirs = true): string
     {
-        return $this->filesystem->composerFilesystem()->findShortestPath($from, $to, $bothDirs);
+        if ($from === $to && $bothDirs) {
+            return '.';
+        }
+
+        $filesystem = $this->filesystem->composerFilesystem();
+        $path = $filesystem->findShortestPath($from, $to, $bothDirs);
+
+        return rtrim('./' . $filesystem->normalizePath($path), '/');
     }
 
     /**

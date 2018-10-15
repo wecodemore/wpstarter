@@ -10,13 +10,13 @@
  * and edit it according to your needs.
  */
 
-/* Composer autoload. */
-require_once '{{{AUTOLOAD_PATH}}}';
+/** Composer autoload. */
+require_once realpath('{{{AUTOLOAD_PATH}}}');
 
-/* A reference to `.env` folder path. */
-const WPSTARTER_PATH = '{{{ENV_REL_PATH}}}';
+/** A reference to `.env` folder path. */
+define('WPSTARTER_PATH', realpath('{{{ENV_REL_PATH}}}'));
 
-/*
+/**
  * Define all WordPress constants from environment variables.
  * Environment variables will be loaded from file, unless `WPSTARTER_ENV_LOADED` env var is already
  * setup e.g. via webserver configuration.
@@ -24,26 +24,16 @@ const WPSTARTER_PATH = '{{{ENV_REL_PATH}}}';
  * Environment variables that are set in the *real* environment (e.g. via webserver) will not be
  * overridden from file, even if `WPSTARTER_ENV_LOADED` is not set.
  */
-WeCodeMore\WpStarter\Env\WordPressEnvBridge::load('{{{ENV_REL_PATH}}}', '{{{ENV_FILE_NAME}}}')
+WeCodeMore\WpStarter\Env\WordPressEnvBridge::load(WPSTARTER_PATH, '{{{ENV_FILE_NAME}}}')
     ->setupWordPress();
 
-/*
- * Set optional database settings if not already set
- */
+/** Set optional database settings if not already set. */
 defined('DB_HOST') or define('DB_HOST', 'localhost');
 defined('DB_CHARSET') or define('DB_CHARSET', 'utf8');
 defined('DB_COLLATE') or define('DB_COLLATE', '');
 
-/*
- * Set WordPress Database Table prefix if not already set.
- *
- * @global string $table_prefix
- */
-global $table_prefix;
-empty($table_prefix) or $table_prefix = 'wp_';
-
-/*
- * Set unique authentication keys if not already set via environment variables.
+/**#@+
+ * Authentication Unique Keys and Salts.
  */
 defined('AUTH_KEY') or define('AUTH_KEY', '{{{AUTH_KEY}}}');
 defined('SECURE_AUTH_KEY') or define('SECURE_AUTH_KEY', '{{{SECURE_AUTH_KEY}}}');
@@ -54,15 +44,21 @@ defined('SECURE_AUTH_SALT') or define('SECURE_AUTH_SALT', '{{{SECURE_AUTH_SALT}}
 defined('LOGGED_IN_SALT') or define('LOGGED_IN_SALT', '{{{LOGGED_IN_SALT}}}');
 defined('NONCE_SALT') or define('NONCE_SALT', '{{{NONCE_SALT}}}');
 
-/*
- * Environment-aware settings. Be creative, but avoid to set sensitive settings here.
+/**#@-*/
+
+/**
+ * WordPress Database Table prefix.
  */
+global $table_prefix;
+empty($table_prefix) or $table_prefix = 'wp_';
+
+/** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
 $environment = getenv('WP_ENV') ?: getenv('WORDPRESS_ENV');
 if ($environment
     && file_exists("{{{ENV_BOOTSTRAP_DIR}}}/{$environment}.php")
     && is_readable("{{{ENV_BOOTSTRAP_DIR}}}/{$environment}.php")
 ) {
-    require_once __DIR__ . "{$environment}.php";
+    require_once "{{{ENV_BOOTSTRAP_DIR}}}/{$environment}.php";
 }
 switch ($environment) {
     case 'development':
@@ -90,34 +86,14 @@ switch ($environment) {
 }
 unset($environment);
 
-/*
- * Fix `is_ssl()` behind load balancers.
- */
+/** Fix `is_ssl()` behind load balancers. */
 if (array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER)
     && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
 ) {
     $_SERVER['HTTPS'] = 'on';
 }
 
-/*
- * Set WordPress home URL if not set via environment variable, which is **highly** recommended.
- */
-if (!defined('WP_HOME')) {
-    define('WP_HOME', set_url_scheme(($_SERVER['SERVER_NAME'] ?? '') ?: 'localhost'));
-}
-
-/*
- * Set WordPress constants if not set via environment variables.
- */
-defined('ABSPATH') or define('ABSPATH', realpath('{{{WP_INSTALL_PATH}}}') . '/');
-defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath('{{{WP_CONTENT_PATH}}}'));
-defined('WP_SITEURL') or define('WP_SITEURL', rtrim(WP_HOME, '/') . '/{{{WP_SITEURL_RELATIVE}}}');
-defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/') . '/{{{WP_CONTENT_URL_RELATIVE}}}');
-
-/* Load plugin.php early, so we can call `add_action` below. */
-require_once ABSPATH . 'wp-includes/plugin.php';
-
-/*
+/**
  * Load early hooks file if any.
  * Early hooks file allows to add hooks that are triggered before plugins are loaded, e.g.
  * "enable_loading_advanced_cache_dropin" or to just-in-time define configuration constants.
@@ -129,7 +105,21 @@ if ('{{{EARLY_HOOKS_FILE}}}'
     require_once '{{{EARLY_HOOKS_FILE}}}';
 }
 
-/** Register default themes inside WordPress package wp-content folder.*/
+/** Set WordPress content constants if not set via environment variables. */
+defined('WP_HOME') or define('WP_HOME', set_url_scheme(($_SERVER['SERVER_NAME'] ?? '') ?: 'localhost'));
+defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath('{{{WP_CONTENT_PATH}}}'));
+defined('WP_SITEURL') or define('WP_SITEURL', rtrim(WP_HOME, '/') . '/{{{WP_SITEURL_RELATIVE}}}');
+defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/') . '/{{{WP_CONTENT_URL_RELATIVE}}}');
+
+/* That's all, stop editing! Happy blogging. */
+
+/** Absolute path to the WordPress directory. */
+defined('ABSPATH') or define('ABSPATH', realpath('{{{WP_INSTALL_PATH}}}') . '/');
+
+/** Load plugin.php early, so we can call `add_action` below. */
+require_once ABSPATH . 'wp-includes/plugin.php';
+
+/** Register default themes inside WordPress package wp-content folder. */
 if (filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN)) {
     add_action(
         'plugins_loaded',
@@ -140,9 +130,7 @@ if (filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN)) {
     );
 }
 
-/*
- * Allow changing admin color scheme. Useful to distinguish different dashboards on different envs.
- */
+/** Allow changing admin color scheme. Useful to distinguish different envs in dashbaoard. */
 add_filter(
     'get_user_option_admin_color',
     function ($color) {
@@ -155,8 +143,6 @@ add_filter(
 #                 I watched C-beams glitter in the dark near the Tannhauser gate.                 #
 #            All those moments will be lost in time, like tears in rain. Time to die.             #
 ###################################################################################################
-
-/* That's all, stop editing! Happy blogging. */
 
 /** Sets up WordPress vars and included files. */
 require_once ABSPATH . 'wp-settings.php';
