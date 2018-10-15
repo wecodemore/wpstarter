@@ -11,6 +11,7 @@ namespace WeCodeMore\WpStarter;
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\IO\IOInterface;
+use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
 use Composer\Plugin\Capability\CommandProvider;
 use Composer\Script\Event;
@@ -20,7 +21,11 @@ use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util;
 use WeCodeMore\WpStarter\Step;
 
-final class ComposerPlugin implements PluginInterface, EventSubscriberInterface, CommandProvider
+final class ComposerPlugin implements
+    PluginInterface,
+    EventSubscriberInterface,
+    Capable,
+    CommandProvider
 {
 
     const EXTRA_KEY = 'wpstarter';
