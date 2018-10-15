@@ -36,14 +36,7 @@ class Io
      */
     public function writeError(string $message): bool
     {
-        $lines = $this->ensureLength($message);
-        $this->io->write('');
-        foreach ($lines as $line) {
-            $this->io->writeError("  <bg=red;fg=white;option=bold>  {$line}  </>");
-        }
-        $this->io->write('');
-
-        return false;
+        return $this->writeBlock($this->ensureLength($message), 'red', true);
     }
 
     /**
@@ -216,13 +209,14 @@ class Io
         $close = "  </bg={$background};fg={$frontground}>";
         $whiteLine = $open . str_repeat(' ', $length + 4) . $close;
 
-        $block = [$whiteLine];
+        $block = ['', $whiteLine];
         foreach ($lines as $line) {
             $len = strlen($line);
             ($len < $length) and $line .= str_repeat(' ', $length - $len);
             $block[] = "{$open}  {$line}  {$close}";
         }
         $block[] = $whiteLine;
+        $block[] = '';
 
         $isError ? $this->io->writeError($block) : $this->io->write($block);
 
