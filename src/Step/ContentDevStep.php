@@ -86,7 +86,7 @@ final class ContentDevStep implements OptionalStep
      */
     public function askConfirm(Config $config, Io $io): bool
     {
-        $dir = $config[Config::CONTENT_DEV_DIR]->unwrap();
+        $dir = $config[Config::CONTENT_DEV_DIR]->unwrapOrFallback();
         if (!$dir || $config[Config::CONTENT_DEV_OPERATION]->not(self::ASK)) {
             return true;
         }
@@ -100,8 +100,6 @@ final class ContentDevStep implements OptionalStep
             ['s' => '[S]ymlink', 'c' => '[C]opy', 'n' => '[N]othing'],
             'n'
         );
-
-        is_string($operation) and $operation = strtolower($operation);
 
         if ($operation === 'n') {
             return false;

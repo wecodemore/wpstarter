@@ -31,11 +31,6 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
     private $filesystem;
 
     /**
-     * @var Paths
-     */
-    private $paths;
-
-    /**
      * @var bool
      */
     private $themeDir = true;
@@ -73,8 +68,17 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        $this->paths = $paths;
         $wpContent = $paths->wpContent();
+
+        if (strpos($wpContent, $paths->wpParent()) !== 0) {
+            $this->error =
+                'WP content folder must share parent folder with WP folder, or be contained in it.'
+                . ' Use the "wordpress-content-dir" setting to properly set it';
+
+            return self::ERROR;
+        }
+
+        $this->filesystem->createDir($wpContent);
 
         $toCheck = [
             realpath($paths->vendor('/autoload.php')),
@@ -84,14 +88,6 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
 
         if (array_filter($toCheck) !== $toCheck) {
             $this->error = 'WP Starter was not able to find some required folder or files.';
-
-            return self::ERROR;
-        }
-
-        if (strpos($wpContent, $paths->wpParent()) !== 0) {
-            $this->error =
-                'WP content folder must share parent folder with WP folder, or be contained in it.'
-                . ' Use the "wordpress-content-dir" setting to properly set it';
 
             return self::ERROR;
         }
@@ -129,8 +125,7 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
     {
         if (!$this->themeDir) {
             $lines = [
-                'Default theme folder: ',
-                '"' . $this->paths->wpContent('/themes') . '" does not exist.',
+                'Default theme folder does not exist.',
                 'The site may be unusable until you create it (even empty).',
             ];
 
