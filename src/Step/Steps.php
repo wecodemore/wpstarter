@@ -156,9 +156,9 @@ final class Steps implements PostProcessStep
         $env = $this->locator->config()[Config::ENV_FILE]->unwrapOrFallback('.env');
         if (!is_file($this->locator->paths()->root($env))) {
             $lines = [
-                'Remember that to make your site fully functional',
-                'you either need to have an .env file with at least DB settings',
-                'or set them in environment variables in some other way (e.g. via webserver).',
+                'Remember that to make your site fully functional you either need to have an .env '
+                .'file with at least DB settings or set them in environment variables in some other '
+                .'way (e.g. via webserver).',
             ];
 
             $io->writeYellowBlock(...$lines);
@@ -179,7 +179,7 @@ final class Steps implements PostProcessStep
         $step instanceof PostProcessStep and $this->postProcessSteps->attach($step);
 
         if (!$this->shouldProcess($step, $paths)) {
-            $io->writeIfVerbose('Step "' . $step->name() . '" skipped.');
+            $io->writeIfVerbose('- step "' . $step->name() . '" skipped.');
 
             return true;
         }

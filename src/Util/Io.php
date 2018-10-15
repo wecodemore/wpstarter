@@ -29,9 +29,10 @@ class Io
      */
     public static function writeFormattedError(IOInterface $io, string ...$lines)
     {
-        $open = '<bg=red;fg=white;option=bold>  ';
-
-        $io->writeError(self::createBlock($open, '  </>', ...$lines));
+        if ($lines) {
+            $open = '<bg=red;fg=white;option=bold>  ';
+            $io->writeError(self::createBlock($open, '  </>', ...$lines));
+        }
     }
 
     /**
@@ -39,25 +40,42 @@ class Io
      *
      * @param string ...$lines
      * @return array
+     *
+     * phpcs:disable Generic.Metrics.NestingLevel
      */
     public static function ensureLength(string ...$lines): array
     {
-        $text = implode("\n", $lines);
+        if (!$lines) {
+            return [];
+        }
 
         $parsed = [];
-        $lines = preg_split('~\n+~', $text);
+        $lines = preg_split('~\n+~', implode("\n", $lines));
 
         foreach ($lines as $line) {
             $words = preg_split('~\s+~', trim($line));
             $buffer = '';
-            foreach ($words as $i => $word) {
-                $continue = strlen($buffer . $word) < 51;
-                $continue or $parsed[] = trim($buffer);
-                $buffer = $continue ? $buffer . "{$word} " : "{$word} ";
+            foreach ($words as $word) {
+                if (!$word) {
+                    continue;
+                }
+                if (!trim(strip_tags($word))) {
+                    $buffer .= $word;
+                    continue;
+                }
+                if (strlen(strip_tags($buffer . $word)) > 51) {
+                    $parsed[] = trim($buffer);
+                    $buffer = "{$word} ";
+                    continue;
+                }
+
+                $buffer .= "{$word} ";
             }
 
             $parsed[] = trim($buffer);
         }
+
+        // phpcs:enable
 
         return array_filter($parsed);
     }
@@ -74,17 +92,26 @@ class Io
         string ...$lines
     ): array {
 
+        if (!$lines) {
+            return [];
+        }
+
         $lines = static::ensureLength(...$lines);
-        $length = max(array_map('strlen', $lines));
-        $whiteLine = $before . str_repeat(' ', $length + 4) . $after;
+        $topLength = max(array_map('strlen', array_map('trim', array_map('strip_tags', $lines))));
+        $length = 56;
+        $leftSpace = (int)floor(($length - $topLength) / 2);
+
+        $whiteLine = $before . str_repeat(' ', 60) . $after;
         $block = ['', $whiteLine];
         foreach ($lines as $line) {
-            $len = strlen($line);
-            ($len < $length) and $line .= str_repeat(' ', $length - $len);
+            $len = strlen(strip_tags($line));
+            if ($len < $length) {
+                $rightSpace = (56 - $leftSpace) - $len;
+                $line = str_repeat(' ', $leftSpace) . trim($line) . str_repeat(' ', $rightSpace);
+            }
             $block[] = "{$before}  {$line}  {$after}";
         }
         $block[] = $whiteLine;
-        $block[] = '';
 
         return $block;
     }
@@ -150,7 +177,7 @@ class Io
      */
     public function writeIfVerbose(string $line)
     {
-        $this->io->write("  {$line}", IOInterface::VERBOSE);
+        $this->io->write("  {$line}", true, IOInterface::VERBOSE);
     }
 
     /**
