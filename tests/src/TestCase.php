@@ -140,6 +140,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         );
 
         $paths = new Util\Paths($composer, new Composer\Util\Filesystem());
+        $paths->offsetExists(Util\Paths::ROOT); // to trigger parse() before root si restored
 
         chdir($cwd);
 

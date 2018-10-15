@@ -21,14 +21,19 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
     const NAME = 'check-paths';
 
     /**
-     * @var string
-     */
-    private $error = '';
-
-    /**
      * @var \WeCodeMore\WpStarter\Util\Filesystem
      */
     private $filesystem;
+
+    /**
+     * @var Io
+     */
+    private $io;
+
+    /**
+     * @var string
+     */
+    private $error = '';
 
     /**
      * @var bool
@@ -36,11 +41,17 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
     private $themeDir = true;
 
     /**
+     * @var string
+     */
+    private $envInWebRoot = '';
+
+    /**
      * @param Locator $locator
      */
     public function __construct(Locator $locator)
     {
         $this->filesystem = $locator->filesystem();
+        $this->io = $locator->io();
     }
 
     /**
@@ -68,6 +79,9 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
      */
     public function run(Config $config, Paths $paths): int
     {
+        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback() ?: $paths->root();
+        $this->envInWebRoot = $envDir === $paths->wpParent() ? $envDir : '';
+
         $wpContent = $paths->wpContent();
 
         if (strpos($wpContent, $paths->wpParent()) !== 0) {
@@ -79,24 +93,30 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
         }
 
         $this->filesystem->createDir($wpContent);
-
-        $toCheck = [
-            realpath($paths->vendor('/autoload.php')),
-            realpath($paths->wp('/wp-settings.php')),
-            $wpContent,
-        ];
-
-        if (array_filter($toCheck) !== $toCheck) {
-            $this->error = 'WP Starter was not able to find some required folder or files.';
-
-            return self::ERROR;
-        }
-
         // no love for this, but https://core.trac.wordpress.org/ticket/31620 makes it necessary.
         if ($config[Config::MOVE_CONTENT]->not(true) && $paths->wpContent()) {
             $this->themeDir = $this->filesystem->createDir("{$wpContent}/themes");
             // missing plugins dir isn't as serious as missing themes dir, just cause a PHP warning.
             $this->filesystem->createDir("{$wpContent}/plugins");
+        }
+
+        $toCheck = [
+            'Autoload' => $paths->vendor('/autoload.php'),
+            'WordPress' => $paths->wp('/wp-settings.php'),
+            'WordPress content' => $wpContent,
+        ];
+
+        $error = '';
+        foreach ($toCheck as $name => $path) {
+            if (!realpath($path)) {
+                $error .= "{$name} path '{$path}' not found.\n";
+            }
+        }
+
+        if ($error) {
+            $this->error = trim($error);
+
+            return self::ERROR;
         }
 
         return self::SUCCESS;
@@ -123,6 +143,13 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
      */
     public function postProcess(Io $io)
     {
+        if ($this->envInWebRoot) {
+            $io->writeYellowBlock(
+                "The .env file is expected to be placed in '{$this->envInWebRoot}' which is the webroot.",
+                'It is strongly suggested to place .env file ouside of webroot for security reasons.'
+            );
+        }
+
         if (!$this->themeDir) {
             $lines = [
                 'Default theme folder does not exist.',

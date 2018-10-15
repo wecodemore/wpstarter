@@ -110,23 +110,28 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
 
         $envDir = $this->config[Config::ENV_DIR]->unwrapOrFallback() ?: $paths->root();
 
-        $earlyHookFile = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback('');
-        $earlyHookFile and $earlyHookFile = $this->relPath($from, $earlyHookFile, false);
+        $earlyHook = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback('');
+        $earlyHook and $earlyHook = $this->relPath("{$from}/index.php", $earlyHook, false);
 
         $envBootstrapDir = $config[Config::ENV_BOOTSTRAP_DIR]->unwrapOrFallback('');
-        $envBootstrapDir and $envBootstrapDir = $filesystem->normalizePath($envBootstrapDir);
+        if ($envBootstrapDir) {
+            $envBootstrapDir = $this->relPath($from, $paths->root($envBootstrapDir));
+        }
+
+        $wpRelDir = $this->relPath($from, $paths->wp());
+        $contentRelDir = $this->relPath($from, $paths->wpContent());
 
         $vars = [
-            'AUTOLOAD_PATH' => $this->relPath($from, $paths->vendor('autoload.php'), false),
+            'AUTOLOAD_PATH' => $this->relPath("{$from}/index.php", $paths->vendor('autoload.php'), false),
             'ENV_REL_PATH' => $this->relPath($from, $envDir),
             'ENV_FILE_NAME' => $this->config[Config::ENV_FILE]->unwrapOrFallback('.env'),
-            'ENV_BOOTSTRAP_DIR' => $this->relPath($from, $paths->root($envBootstrapDir)),
-            'WP_INSTALL_PATH' => $this->relPath($from, $paths->wp()),
-            'WP_CONTENT_PATH' => $this->relPath($from, $paths->wpContent()),
+            'ENV_BOOTSTRAP_DIR' => $envBootstrapDir ? "{$envBootstrapDir}/" : '',
+            'WP_INSTALL_PATH' => $wpRelDir,
+            'WP_CONTENT_PATH' => $contentRelDir,
             'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
-            'WP_SITEURL_RELATIVE' => $this->stripDot($paths->relativeToRoot(Paths::WP)),
-            'WP_CONTENT_URL_RELATIVE' => $this->stripDot($paths->relativeToRoot(Paths::WP_CONTENT)),
-            'EARLY_HOOKS_FILE' => $earlyHookFile,
+            'WP_SITEURL_RELATIVE' => $this->stripDot($wpRelDir),
+            'WP_CONTENT_URL_RELATIVE' => $this->stripDot($contentRelDir),
+            'EARLY_HOOKS_FILE' => $earlyHook,
         ];
 
         $built = $this->builder->build(
@@ -181,14 +186,10 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      */
     private function relPath(string $from, string $to, bool $bothDirs = true): string
     {
-        if ($from === $to && $bothDirs) {
-            return '.';
-        }
-
         $filesystem = $this->filesystem->composerFilesystem();
-        $path = $filesystem->findShortestPath($from, $to, $bothDirs);
+        $path = $filesystem->normalizePath($filesystem->findShortestPath($from, $to, $bothDirs));
 
-        return rtrim('./' . $filesystem->normalizePath($path), '/');
+        return "/{$path}";
     }
 
     /**
@@ -197,6 +198,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      */
     private function stripDot(string $path): string
     {
+        $path = ltrim($path, '/');
         strpos($path, './') === 0 and $path = substr($path, 2);
         strpos($path, '../') === 0 and $path = dirname($path);
 

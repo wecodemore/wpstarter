@@ -11,10 +11,10 @@
  */
 
 /** Composer autoload. */
-require_once realpath('{{{AUTOLOAD_PATH}}}');
+require_once __DIR__ . '{{{AUTOLOAD_PATH}}}';
 
 /** A reference to `.env` folder path. */
-define('WPSTARTER_PATH', realpath('{{{ENV_REL_PATH}}}'));
+define('WPSTARTER_PATH', realpath(__DIR__ . '{{{ENV_REL_PATH}}}'));
 
 /**
  * Define all WordPress constants from environment variables.
@@ -55,10 +55,10 @@ empty($table_prefix) or $table_prefix = 'wp_';
 /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
 $environment = getenv('WP_ENV') ?: getenv('WORDPRESS_ENV');
 if ($environment
-    && file_exists("{{{ENV_BOOTSTRAP_DIR}}}/{$environment}.php")
-    && is_readable("{{{ENV_BOOTSTRAP_DIR}}}/{$environment}.php")
+    && file_exists("{{{ENV_BOOTSTRAP_DIR}}}{$environment}.php")
+    && is_readable("{{{ENV_BOOTSTRAP_DIR}}}{$environment}.php")
 ) {
-    require_once "{{{ENV_BOOTSTRAP_DIR}}}/{$environment}.php";
+    require_once "{{{ENV_BOOTSTRAP_DIR}}}{$environment}.php";
 }
 switch ($environment) {
     case 'development':
@@ -107,14 +107,14 @@ if ('{{{EARLY_HOOKS_FILE}}}'
 
 /** Set WordPress content constants if not set via environment variables. */
 defined('WP_HOME') or define('WP_HOME', set_url_scheme(($_SERVER['SERVER_NAME'] ?? '') ?: 'localhost'));
-defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath('{{{WP_CONTENT_PATH}}}'));
+defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath(__DIR__ . '{{{WP_CONTENT_PATH}}}'));
 defined('WP_SITEURL') or define('WP_SITEURL', rtrim(WP_HOME, '/') . '/{{{WP_SITEURL_RELATIVE}}}');
 defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/') . '/{{{WP_CONTENT_URL_RELATIVE}}}');
 
 /* That's all, stop editing! Happy blogging. */
 
 /** Absolute path to the WordPress directory. */
-defined('ABSPATH') or define('ABSPATH', realpath('{{{WP_INSTALL_PATH}}}') . '/');
+defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
 
 /** Load plugin.php early, so we can call `add_action` below. */
 require_once ABSPATH . 'wp-includes/plugin.php';

@@ -10,7 +10,6 @@ namespace WeCodeMore\WpStarter\Util;
 
 use Composer\Composer;
 use Composer\Util\Filesystem;
-use WeCodeMore\WpStarter\Config\Config;
 
 final class Paths implements \ArrayAccess
 {
@@ -23,9 +22,9 @@ final class Paths implements \ArrayAccess
     const WP_STARTER = 'wp-starter';
 
     /**
-     * @var \SplObjectStorage
+     * @var \Composer\Composer
      */
-    private static $parsed;
+    private $composer;
 
     /**
      * @var Filesystem
@@ -33,19 +32,14 @@ final class Paths implements \ArrayAccess
     private $filesystem;
 
     /**
-     * @var array
-     */
-    private $paths = [];
-
-    /**
-     * @var \Composer\Composer
-     */
-    private $composer;
-
-    /**
      * @var string|null
      */
     private $customTemplatesDir;
+
+    /**
+     * @var array
+     */
+    private $paths;
 
     /**
      * @param \Composer\Composer $composer
@@ -53,12 +47,8 @@ final class Paths implements \ArrayAccess
      */
     public function __construct(Composer $composer, Filesystem $filesystem)
     {
-        self::$parsed === null and self::$parsed = new \SplObjectStorage();
         $this->composer = $composer;
         $this->filesystem = $filesystem;
-        $this->paths = self::$parsed->contains($this->composer)
-            ? self::$parsed->offsetGet($this->composer)
-            : $this->parse();
     }
 
     /**
@@ -72,51 +62,13 @@ final class Paths implements \ArrayAccess
     }
 
     /**
-     * @return array
-     */
-    private function parse(): array
-    {
-        $extra = $this->composer->getPackage()->getExtra();
-
-        $cwd = realpath(getcwd());
-
-        $wpInstallDir = empty($extra['wordpress-install-dir'])
-            ? 'wordpress'
-            : $extra['wordpress-install-dir'];
-
-        $wpFullDir = realpath("{$cwd}/{$wpInstallDir}");
-        $wpParent = $wpFullDir ? dirname($wpFullDir) : $cwd;
-
-        $wpContent = empty($extra['wordpress-content-dir'])
-            ? $this->filesystem->normalizePath($cwd . '/wp-content')
-            : $this->filesystem->normalizePath($cwd . "/{$extra['wordpress-content-dir']}");
-
-        $vendorDir = $this->composer->getConfig()->get('vendor-dir');
-        $binDir = $this->composer->getConfig()->get('bin-dir');
-
-        $paths = [
-            self::ROOT => $this->filesystem->normalizePath($cwd),
-            self::VENDOR => $this->filesystem->normalizePath($vendorDir),
-            self::BIN => $this->filesystem->normalizePath($binDir),
-            self::WP => $this->filesystem->normalizePath($wpFullDir),
-            self::WP_PARENT => $this->filesystem->normalizePath($wpParent),
-            self::WP_CONTENT => $this->filesystem->normalizePath($wpContent),
-            self::WP_STARTER => $this->filesystem->normalizePath(dirname(__DIR__, 2)),
-        ];
-
-        self::$parsed->attach($this->composer, $paths);
-
-        return $paths;
-    }
-
-    /**
      * @param string $pathName Use one of the class constants
      * @param string $to
      * @return string
      */
     public function absolute(string $pathName, string $to = ''): string
     {
-        if (!array_key_exists($pathName, $this->paths)) {
+        if (!$this->offsetExists($pathName)) {
             throw new \InvalidArgumentException(
                 sprintf('%s is not a valid WP Starter path key.', $pathName)
             );
@@ -132,7 +84,7 @@ final class Paths implements \ArrayAccess
      */
     public function relativeToRoot(string $pathName, string $to = ''): string
     {
-        if (!array_key_exists($pathName, $this->paths)) {
+        if (!$this->offsetExists($pathName)) {
             throw new \InvalidArgumentException(
                 sprintf('%s is not a valid WP Starter path key.', $pathName)
             );
@@ -235,6 +187,10 @@ final class Paths implements \ArrayAccess
      */
     public function offsetExists($offset)
     {
+        if (!is_array($this->paths)) {
+            $this->paths = $this->parse();
+        }
+
         return array_key_exists($offset, $this->paths);
     }
 
@@ -270,7 +226,6 @@ final class Paths implements \ArrayAccess
         }
 
         $this->paths[$offset] = $value;
-        self::$parsed->attach($this->composer, $this->paths);
     }
 
     /**
@@ -281,6 +236,40 @@ final class Paths implements \ArrayAccess
     public function offsetUnset($offset)
     {
         throw new \BadMethodCallException(sprintf('%s class does not support unset.', __CLASS__));
+    }
+
+    /**
+     * @return array
+     */
+    private function parse(): array
+    {
+        $extra = $this->composer->getPackage()->getExtra();
+
+        $cwd = $this->filesystem->normalizePath(getcwd());
+
+        $wpInstallDir = empty($extra['wordpress-install-dir'])
+            ? 'wordpress'
+            : $extra['wordpress-install-dir'];
+
+        $wpFullDir = "{$cwd}/{$wpInstallDir}";
+        $wpParent = dirname($wpFullDir);
+
+        $wpContent = empty($extra['wordpress-content-dir'])
+            ? $this->filesystem->normalizePath($cwd . '/wp-content')
+            : $this->filesystem->normalizePath($cwd . "/{$extra['wordpress-content-dir']}");
+
+        $vendorDir = $this->composer->getConfig()->get('vendor-dir');
+        $binDir = $this->composer->getConfig()->get('bin-dir');
+
+        return [
+            self::ROOT => $this->filesystem->normalizePath($cwd),
+            self::VENDOR => $this->filesystem->normalizePath($vendorDir),
+            self::BIN => $this->filesystem->normalizePath($binDir),
+            self::WP => $this->filesystem->normalizePath($wpFullDir),
+            self::WP_PARENT => $this->filesystem->normalizePath($wpParent),
+            self::WP_CONTENT => $this->filesystem->normalizePath($wpContent),
+            self::WP_STARTER => $this->filesystem->normalizePath(dirname(__DIR__, 2)),
+        ];
     }
 
     /**
