@@ -119,34 +119,26 @@ final class ComposerPlugin implements
     {
         $config = $this->requirements->config();
         $requireWp = $config[Config::REQUIRE_WP]->not(false);
+        $fallbackVer = $config[Config::WP_VERSION]->notEmpty()
+            ? $config[Config::WP_VERSION]->unwrap()
+            : null;
 
         $wpVersion = null;
         if ($requireWp) {
-            $wpVersionDiscover = new Util\WpVersion($this->composerIo);
+            $wpVersionDiscover = new Util\WpVersion($this->composerIo, $fallbackVer);
             $composer = $this->composer;
             $packages = $composer->getRepositoryManager()->getLocalRepository()->getPackages();
             $wpVersion = $wpVersionDiscover->discover(...$packages);
         }
 
         if (!$wpVersion && $requireWp) {
-            $this->composerIo->writeError(
-                [
-                    '',
-                    "<bg=red;fg=white;option=bold>                                             </>",
-                    "<bg=red;fg=white;option=bold>    Error running WP Starter.                </>",
-                    "<bg=red;fg=white;option=bold>    No supported WordPress version found.    </>",
-                    "<bg=red;fg=white;option=bold>                                             </>",
-                    '',
-                ]
-            );
-
             $event or exit(1);
 
             return;
         }
 
         // If WP version was found and no version is set in configs, let's set it with the finding.
-        if ($wpVersion && !$config[Config::WP_VERSION]->notEmpty()) {
+        if ($wpVersion && !$fallbackVer) {
             $config->appendConfig(Config::WP_VERSION, $wpVersion);
         }
 
