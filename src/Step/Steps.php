@@ -161,7 +161,7 @@ final class Steps implements PostProcessStep
                 'or set them in environment variables in some other way (e.g. via webserver).',
             ];
 
-            $io->writeBlock($lines, 'yellow', false);
+            $io->writeYellowBlock(...$lines);
         }
     }
 
@@ -300,11 +300,9 @@ final class Steps implements PostProcessStep
         try {
             $script($this->locator, $this->composer, $result);
         } catch (\Throwable $error) {
-            $io->writeBlock(
-                [
-                    "Error running a script of event '{$scriptsKey}':",
-                    $error->getMessage(),
-                ]
+            $io->writeErrorBlock(
+                "Error running a script of event '{$scriptsKey}':",
+                $error->getMessage()
             );
         }
     }
@@ -333,12 +331,12 @@ final class Steps implements PostProcessStep
     private function finalMessage(Io $io): int
     {
         if ($this->errors > 0) {
-            $io->writeBlock([$this->error()], 'red', true);
+            $io->writeError($this->error());
 
             return self::ERROR;
         }
 
-        $io->writeBlock([$this->success()], 'green', false);
+        $io->writeSuccessBlock($this->success());
 
         return self::SUCCESS;
     }

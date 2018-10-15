@@ -129,7 +129,7 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
                 'The site may be unusable until you create it (even empty).',
             ];
 
-            $io->writeBlock($lines, 'red', true);
+            $io->writeErrorBlock(...$lines);
         }
     }
 }

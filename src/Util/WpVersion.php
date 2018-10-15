@@ -22,6 +22,11 @@ class WpVersion
     private $io;
 
     /**
+     * @var string|null
+     */
+    private $fallbackVersion;
+
+    /**
      * @param string $version
      * @return string
      */
@@ -49,10 +54,12 @@ class WpVersion
 
     /**
      * @param IOInterface $io
+     * @param string $fallbackVersion
      */
-    public function __construct(IOInterface $io)
+    public function __construct(IOInterface $io, string $fallbackVersion = null)
     {
         $this->io = $io;
+        $this->fallbackVersion = $fallbackVersion;
     }
 
     /**
@@ -68,32 +75,84 @@ class WpVersion
         $vers = [];
         while (!empty($packages) && count($vers) < 2) {
             $package = array_pop($packages);
-            $package->getType() === self::WP_PACKAGE_TYPE and $vers[] = $package->getVersion();
+            if ($package->getType() === self::WP_PACKAGE_TYPE) {
+                $vers[] = [$package->getVersion(), $package->isDev()];
+            }
         }
 
         if (!$vers) {
-            return '';
+            return $this->bail('no-wp');
         }
 
         if (count($vers) > 1) {
-            $red = '<bg=red;fg=white;option=bold>  ';
-            $this->io->writeError(
-                [
-                    "{$red}  It seems that two or more WP core packages are required.   </>",
-                    "{$red}  WP Starter only supports a single WordPress core package.  </>",
-                    "{$red}  WP Starter will NOT work.                                  </>",
-                ]
-            );
-
-            return '';
+            return $this->bail('more-wp');
         }
 
-        $version = static::normalize((string)$vers[0]);
+        $isDevPackage = $vers[0][1];
+        $fallback = $this->fallbackVersion ? static::normalize($this->fallbackVersion) : null;
 
-        if (!$version || !version_compare($version, self::MIN_WP_VERSION, '>=')) {
-            return '';
+        if ($isDevPackage && !$fallback) {
+            return $this->bail('dev-wp');
+        }
+
+        $version = $isDevPackage ? $fallback : static::normalize((string)$vers[0][0]);
+
+        if (!$version) {
+            return $this->bail('invalid-wp');
+        }
+
+        if (!version_compare($version, self::MIN_WP_VERSION, '>=')) {
+            $min = self::MIN_WP_VERSION;
+            Io::writeFormattedError(
+                $this->io,
+                "Installed WP version {$version} is lower than minimim required {$min}.",
+                'WP Starter failed.'
+            );
         }
 
         return $version;
+    }
+
+    /**
+     * @param string $reason
+     * @return string
+     */
+    private function bail(string $reason): string
+    {
+        $lines = [];
+
+        switch ($reason) {
+            case 'no-wp':
+                $lines = [
+                    'No WordPress version found.',
+                    'To skip WP requirement check, set \'require-wp\' to false'
+                    . 'in WP Starter configuration in composer.json.',
+                ];
+                break;
+            case 'more-wp':
+                $lines = [
+                    'It seems that two or more WP core packages are required.',
+                    'WP Starter only supports a single WordPress core package.',
+                ];
+                break;
+            case 'dev-wp':
+                $lines = [
+                    'WordPress core package is required as dev package.',
+                    'WP Starter can\'t work with that unless a numeric version is configured in '
+                    . 'composer.json via \'wp-version\' setting.',
+                ];
+                break;
+            case 'invalid-wp':
+                $lines = [
+                    'No valid WP version was found.',
+                ];
+                break;
+        }
+
+        $lines[] = 'WP Starter failed.';
+
+        Io::writeFormattedError($this->io, ...$lines);
+
+        return '';
     }
 }

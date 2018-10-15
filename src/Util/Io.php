@@ -21,6 +21,75 @@ class Io
     private $io;
 
     /**
+     * Used for early errors when a full working instance of this class is not ready so can't use
+     * regular methods.
+     *
+     * @param IOInterface $io
+     * @param string[] $lines
+     */
+    public static function writeFormattedError(IOInterface $io, string ...$lines)
+    {
+        $open = '<bg=red;fg=white;option=bold>  ';
+
+        $io->writeError(self::createBlock($open, '  </>', ...$lines));
+    }
+
+    /**
+     * Return an array where each item is a slice of the given string with less than 51 characters.
+     *
+     * @param string ...$lines
+     * @return array
+     */
+    public static function ensureLength(string ...$lines): array
+    {
+        $text = implode("\n", $lines);
+
+        $parsed = [];
+        $lines = preg_split('~\n+~', $text);
+
+        foreach ($lines as $line) {
+            $words = preg_split('~\s+~', trim($line));
+            $buffer = '';
+            foreach ($words as $i => $word) {
+                $continue = strlen($buffer . $word) < 51;
+                $continue or $parsed[] = trim($buffer);
+                $buffer = $continue ? $buffer . "{$word} " : "{$word} ";
+            }
+
+            $parsed[] = trim($buffer);
+        }
+
+        return array_filter($parsed);
+    }
+
+    /**
+     * @param string $before
+     * @param string $after
+     * @param string[] $lines
+     * @return array
+     */
+    private static function createBlock(
+        string $before = '',
+        string $after = '',
+        string ...$lines
+    ): array {
+
+        $lines = static::ensureLength(...$lines);
+        $length = max(array_map('strlen', $lines));
+        $whiteLine = $before . str_repeat(' ', $length + 4) . $after;
+        $block = ['', $whiteLine];
+        foreach ($lines as $line) {
+            $len = strlen($line);
+            ($len < $length) and $line .= str_repeat(' ', $length - $len);
+            $block[] = "{$before}  {$line}  {$after}";
+        }
+        $block[] = $whiteLine;
+        $block[] = '';
+
+        return $block;
+    }
+
+    /**
      * @param \Composer\IO\IOInterface $io
      */
     public function __construct(IOInterface $io)
@@ -36,7 +105,7 @@ class Io
      */
     public function writeError(string $message): bool
     {
-        return $this->writeBlock($this->ensureLength($message), 'red', true);
+        return $this->writeBlock('red', true, ...static::ensureLength($message));
     }
 
     /**
@@ -45,7 +114,7 @@ class Io
      */
     public function writeSuccess(string $message): bool
     {
-        $lines = $this->ensureLength($message);
+        $lines = static::ensureLength($message);
         foreach ($lines as $i => $line) {
             $prefix = $i === 0 ? '  - <info>[OK]</info> ' : '         ';
             $this->io->write($prefix . $line);
@@ -60,7 +129,7 @@ class Io
      */
     public function writeComment(string $message): bool
     {
-        $lines = $this->ensureLength($message);
+        $lines = static::ensureLength($message);
         foreach ($lines as $line) {
             $this->io->write("  <comment>{$line}</comment>");
         }
@@ -95,26 +164,14 @@ class Io
     public function askConfirm(array $lines, bool $default = true): bool
     {
         array_unshift($lines, 'QUESTION:');
+        $lines = static::createBlock('<question>', '</question>', ...$lines);
 
-        $length = max(array_map('strlen', $lines));
+        $question = implode("\n", $lines);
+        $question .= "\n<question>  <option=bold>Y</option=bold> or <option=bold>N</option=bold>  ";
+        $question .= $default ? '[Y]' : '[N]';
+        $question .= '</question>';
 
-        array_walk(
-            $lines,
-            function (string &$line) use ($length) {
-                $len = strlen($line);
-                ($len < $length) and $line .= str_repeat(' ', $length - $len);
-                $line = "  {$line}  ";
-            }
-        );
-
-        $space = str_repeat(' ', $length + 4);
-        array_unshift($lines, "  <question>{$space}");
-        $lines[] = "{$space}</question>";
-        $question = "\n" . implode("</question>\n  <question>", $lines);
-        $prompt = "\n    <option=bold>Y</option=bold> or <option=bold>N</option=bold> ";
-        $prompt .= $default ? '[Y]' : '[N]';
-
-        return $this->io->askConfirmation("{$question}\n{$prompt}", $default);
+        return $this->io->askConfirmation($question, $default);
     }
 
     /**
@@ -139,30 +196,18 @@ class Io
         is_string($default) && array_key_exists($default, $answers) or $default = null;
 
         array_unshift($lines, 'QUESTION');
+        $lines = static::createBlock('<question>', '</question>', ...$lines);
 
-        $length = max(array_map('strlen', $lines));
-        $length < 56 and $length = 56;
-
-        $block = [];
-        foreach ($lines as $line) {
-            $len = strlen($line);
-            ($len < $length) and $line .= str_repeat(' ', $length - $len);
-            $block[] = "<question>  {$line}  </question>";
-        }
-
-        $whiteLine = '<question>' . str_repeat(' ', $length + 4) . '</question>';
-        $question = "{$whiteLine}\n";
-        $question .= implode("\n", $block);
-        $question .= "\n{$whiteLine}\n{$whiteLine}\n{$whiteLine}";
+        $question = implode("\n", $lines) . "\n\n";
 
         $prompt = '';
         foreach ($answers as $expected => $label) {
             $prompt and $prompt .= ' | ';
-            $prompt .= '<option=bold>' . $label . '</option=bold>';
+            $prompt .= '<question><option=bold>' . $label . '</option=bold>';
         }
 
         $default and $prompt .= " [{$answers[$default]}]";
-        $question .= "\n{$prompt}";
+        $question .= "{$prompt}</question>";
 
         try {
             $answer = $this->io->ask($question, $default);
@@ -189,66 +234,52 @@ class Io
     }
 
     /**
-     * Print to console a block of text using an array of lines.
-     *
-     * @param  array $lines
-     * @param  string $background
-     * @param  bool $isError
+     * @param string ...$lines
      * @return bool
      */
-    public function writeBlock(
-        array $lines,
-        string $background = 'green',
-        bool $isError = false
+    public function writeErrorBlock(string ...$lines): bool
+    {
+        return $this->writeBlock('red', true, ...$lines);
+    }
+
+    /**
+     * @param string ...$lines
+     * @return bool
+     */
+    public function writeSuccessBlock(string ...$lines): bool
+    {
+        return $this->writeBlock('green', false, ...$lines);
+    }
+
+    /**
+     * @param string ...$lines
+     * @return bool
+     */
+    public function writeYellowBlock(string ...$lines): bool
+    {
+        return $this->writeBlock('yellow', false, ...$lines);
+    }
+
+    /**
+     * Print to console a block of text using an array of lines.
+     *
+     * @param  string $background
+     * @param  bool $isError
+     * @param  string[] $lines
+     * @return bool
+     */
+    private function writeBlock(
+        string $background,
+        bool $isError,
+        string ...$lines
     ): bool {
 
-        $length = max(array_map('strlen', $lines));
-
         $frontground = $isError ? 'white;option=bold' : 'black';
-        $open = "  <bg={$background};fg={$frontground}>";
-        $close = "  </bg={$background};fg={$frontground}>";
-        $whiteLine = $open . str_repeat(' ', $length + 4) . $close;
 
-        $block = ['', $whiteLine];
-        foreach ($lines as $line) {
-            $len = strlen($line);
-            ($len < $length) and $line .= str_repeat(' ', $length - $len);
-            $block[] = "{$open}  {$line}  {$close}";
-        }
-        $block[] = $whiteLine;
-        $block[] = '';
+        $block = self::createBlock("<bg={$background};fg={$frontground}>  ", '  </>', ...$lines);
 
         $isError ? $this->io->writeError($block) : $this->io->write($block);
 
         return !$isError;
-    }
-
-    /**
-     * Return an array where each item is a slice of the given string with less than 51 characters.
-     *
-     * @param  string $text
-     * @return array
-     */
-    public function ensureLength(string $text): array
-    {
-        if (strlen($text) < 51) {
-            return [$text];
-        }
-
-        $words = explode(' ', $text);
-        $line = '';
-        foreach ($words as $i => $word) {
-            if (strlen($line . $word) < 51) {
-                $line .= "{$word} ";
-                continue;
-            }
-
-            $lines[] = trim($line);
-            $line = "{$word} ";
-        }
-
-        $lines[] = trim($line);
-
-        return array_filter($lines);
     }
 }
