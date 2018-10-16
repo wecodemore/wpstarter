@@ -8,14 +8,16 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
-use Composer\Config as ComposerConfig;
+use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\IOInterface as ComposerIo;
-use Composer\Util\RemoteFilesystem;
 use Composer\Util\Filesystem as ComposerFilesystem;
 use WeCodeMore\WpStarter\WpCli\PharInstaller;
 use WeCodeMore\WpStarter\Config\Config;
 
+/**
+ * Service locator for WP Starter objects that is passed to Steps so the can do what they need.
+ */
 final class Locator
 {
     /**
@@ -25,13 +27,13 @@ final class Locator
 
     /**
      * @param Requirements $requirements
-     * @param ComposerConfig $config
+     * @param Composer $composer
      * @param ComposerIo $io
      * @param ComposerFilesystem $filesystem
      */
     public function __construct(
         Requirements $requirements,
-        ComposerConfig $config,
+        Composer $composer,
         ComposerIo $io,
         ComposerFilesystem $filesystem
     ) {
@@ -41,8 +43,8 @@ final class Locator
                 Config::class => $requirements->config(),
                 Paths::class => $requirements->paths(),
                 Io::class => $requirements->io(),
-                ComposerConfig::class => $config,
                 ComposerIo::class => $io,
+                Composer::class => $composer,
                 ComposerFilesystem::class => $filesystem,
             ];
         }
@@ -73,54 +75,17 @@ final class Locator
     }
 
     /**
-     * @return ComposerConfig
-     */
-    public function composerConfig(): ComposerConfig
-    {
-        return $this->objects[ComposerConfig::class];
-    }
-
-    /**
-     * @return ComposerIo
-     */
-    public function composerIo(): ComposerIo
-    {
-        return $this->objects[ComposerIo::class];
-    }
-
-    /**
-     * @return ComposerFilesystem
-     */
-    public function composerFilesystem(): ComposerFilesystem
-    {
-        return $this->objects[ComposerFilesystem::class];
-    }
-
-    /**
      * @return Filesystem
      */
     public function filesystem(): Filesystem
     {
         if (empty($this->objects[Filesystem::class])) {
-            $this->objects[Filesystem::class] = new Filesystem($this->composerFilesystem());
-        }
-
-        return $this->objects[Filesystem::class];
-    }
-
-    /**
-     * @return RemoteFilesystem
-     */
-    public function remoteFilesystem(): RemoteFilesystem
-    {
-        if (empty($this->objects[RemoteFilesystem::class])) {
-            $this->objects[RemoteFilesystem::class] = Factory::createRemoteFilesystem(
-                $this->composerIo(),
-                $this->composerConfig()
+            $this->objects[Filesystem::class] = new Filesystem(
+                $this->objects[ComposerFilesystem::class]
             );
         }
 
-        return $this->objects[RemoteFilesystem::class];
+        return $this->objects[Filesystem::class];
     }
 
     /**
@@ -130,8 +95,11 @@ final class Locator
     {
         if (empty($this->objects[UrlDownloader::class])) {
             $this->objects[UrlDownloader::class] = new UrlDownloader(
-                $this->composerFilesystem(),
-                $this->remoteFilesystem()
+                $this->objects[ComposerFilesystem::class],
+                Factory::createRemoteFilesystem(
+                    $this->objects[ComposerIo::class],
+                    $this->objects[Composer::class]->getConfig()
+                )
             );
         }
 
@@ -160,7 +128,7 @@ final class Locator
                 $this->config(),
                 $this->io(),
                 $this->paths()->root(),
-                $this->composerFilesystem()
+                $this->objects[ComposerFilesystem::class]
             );
         }
 
@@ -203,6 +171,22 @@ final class Locator
             $this->objects[PharInstaller::class] = new PharInstaller(
                 $this->io(),
                 $this->urlDownloader()
+            );
+        }
+
+        return $this->objects[LanguageListFetcher::class];
+    }
+
+    /**
+     * @return MuPluginList
+     */
+    public function muPluginsList(): MuPluginList
+    {
+        if (empty($this->objects[MuPluginList::class])) {
+            $composer = $this->objects[Composer::class];
+            $this->objects[MuPluginList::class] = new MuPluginList(
+                $composer->getRepositoryManager()->getLocalRepository(),
+                $composer->getInstallationManager()
             );
         }
 

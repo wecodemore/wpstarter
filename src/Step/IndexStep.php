@@ -13,7 +13,10 @@ use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
 /**
- * Steps that generates index.php in root folder.
+ * Steps that generates index.php in webroot folder.
+ *
+ * Additional index.php is necessary to have WordPress in its own folder.
+ * @see https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
  */
 final class IndexStep implements FileCreationStepInterface, BlockingStep
 {

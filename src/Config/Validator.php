@@ -53,7 +53,7 @@ class Validator
      * - the word "ask", which means ask the user in case of existing file;
      * - a boolean(-like), which enables or not the overwrite protection.
      *
-     * @param string|bool $value
+     * @param string|bool|array $value
      * @return Result
      */
     public function validateOverwrite($value): Result
@@ -75,7 +75,7 @@ class Validator
      * It is expected an array of class names implementing step interface.
      * A single class name is accepted and transparently converted to an one item array.
      *
-     * @param array $value
+     * @param string|string[] $value
      * @return Result
      */
     public function validateSteps($value): Result
@@ -155,6 +155,41 @@ class Validator
 
         return Result::ok($allScripts);
     }
+
+    /**
+     * Validate an array of dropins to process.
+     *
+     * It is expected an array of path or URLs. Even mixed.
+     *
+     * @param string|string[] $value
+     * @return Result
+     */
+    public function validateDropins($value): Result
+    {
+        if (!$value) {
+            return Result::none();
+        }
+
+        is_string($value) and $value = [$value];
+        if (!is_array($value)) {
+            return Result::errored('Dropins config must be an array.');
+        }
+
+        $dropins = [];
+        foreach ($value as $name => $step) {
+            $check = $this->validateUrlOrPath($step);
+            if ($check->notEmpty()) {
+                $dropins[] = $check->unwrap();
+            }
+        }
+
+        if (!$dropins) {
+            return Result::errored('No valid dropins provided.');
+        }
+
+        return Result::ok($dropins);
+    }
+
 
     /**
      * Validate the operation to apply for "content dev".
@@ -648,79 +683,6 @@ class Validator
     }
 
     /**
-     * Validate given value to be an array of valid paths (existing files or directories).
-     *
-     * Basically applies validatePath on each item of given array.
-     *
-     * @param string[] $value
-     * @return Result
-     * @see Validator::validatePath()
-     */
-    public function validatePathArray($value): Result
-    {
-        if (!$value) {
-            return Result::none();
-        }
-
-        if (!is_array($value)) {
-            return Result::errored('Expected an array of paths, given value is not an array.');
-        }
-
-        $validated = [];
-        foreach ($value as $maybePath) {
-            $path = $this->validatePath($maybePath);
-            $path->notEmpty() and $validated[] = $path->unwrap();
-        }
-
-        if (!$validated) {
-            return Result::errored('None of the items of provided array is a valid path.');
-        }
-
-        return Result::ok($validated);
-    }
-
-    /**
-     * Validate given value to be an array of valid files or directory names.
-     *
-     * No check is done on the actual existence of paths. Basically it applies either
-     * validateFileName() or validateDirName() (decision made based on the presence of slashes) on
-     * each item of given array.
-     *
-     * @param string[] $value
-     * @return Result
-     * @see Validator::validateDirName()
-     * @see Validator::validateFileName()
-     */
-    public function validatePathNamesArray($value): Result
-    {
-        if (!$value) {
-            return Result::none();
-        }
-
-        if (!is_array($value)) {
-            return Result::errored('Expected an array of paths, given value is not an array.');
-        }
-
-        $validated = [];
-        foreach ($value as $maybePath) {
-            $normalized = $this->filesystem->normalizePath($maybePath);
-            $validatedPath = substr_count($normalized, '/')
-                ? $this->validateDirName($normalized)
-                : $this->validateFileName($normalized);
-
-            if ($validatedPath->notEmpty()) {
-                $validated[] = $validatedPath->unwrap();
-            }
-        }
-
-        if (!$validated) {
-            return Result::errored('None of the items of provided array represent a valid path.');
-        }
-
-        return Result::ok($validated);
-    }
-
-    /**
      * Validate given value to be an array of valid glob paths.
      *
      * Basically applies validateGlobPath() on each item of given array.
@@ -832,6 +794,6 @@ class Validator
 
         return is_array($value)
             ? Result::ok($value)
-            : Result::errored('Given value is not, not can be converted to, an array.');
+            : Result::errored('Given value is not, nor can be converted to, an array.');
     }
 }

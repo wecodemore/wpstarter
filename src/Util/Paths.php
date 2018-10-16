@@ -11,6 +11,12 @@ namespace WeCodeMore\WpStarter\Util;
 use Composer\Composer;
 use Composer\Util\Filesystem;
 
+/**
+ * Data storage for all relevant paths in a project.
+ *
+ * Many paths can be configured, this helpers provide a way to do the configuration parsing only
+ * once that use helper methods to obtain releative or absolute paths to specifc folders.
+ */
 final class Paths implements \ArrayAccess
 {
     const ROOT = 'root';

@@ -12,6 +12,10 @@ use Composer\Installer\InstallationManager;
 use Composer\Package\PackageInterface;
 use Composer\Repository\RepositoryInterface;
 
+/**
+ * Helper that uses Composer objects to get a list of installed packages and filter them to obtain
+ * the list of installed MU plugins and their intallation paths.
+ */
 class MuPluginList
 {
     /**

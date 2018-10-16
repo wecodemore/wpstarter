@@ -15,7 +15,9 @@ use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 /**
- * Step for a single dropin processing.
+ * `DropinsStep` class make use of this class to proces a single dropin.
+ *
+ * This step is not run directly from WP Starter, but instantiated and used by `DropinsStep` only.
  */
 final class DropinStep implements FileCreationStepInterface
 {

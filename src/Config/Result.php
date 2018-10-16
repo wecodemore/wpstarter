@@ -11,7 +11,7 @@ namespace WeCodeMore\WpStarter\Config;
 /**
  * Value object used as a result for all the validation operation.
  *
- * Using this object instead of plain values or just throw exception allow a better error handling,
+ * Using this object instead of plain values or just throw exception allows a better error handling,
  * easy and clean "fallback" in case of error and type uniformity in retun type.
  *
  * Unfortuntately, PHP has no generics at this time so it isn't possible to have type safety for the

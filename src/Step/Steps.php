@@ -16,6 +16,8 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * A step whose routine consists in running other steps routines.
+ *
+ * This is used as main "task runner" for WP Starter.
  */
 final class Steps implements PostProcessStep
 {

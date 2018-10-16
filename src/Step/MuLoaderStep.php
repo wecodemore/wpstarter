@@ -14,11 +14,23 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * Steps that generates wpstarter-mu-loader.php in mu-plugins folder.
+ *
+ * MU plugins are files are supported by Composer installers and so correctly placed in the
+ * wp-content/mu-plugins folder. However, Composer will place them in a subdirectory alongside any
+ * other file that makes the package (at very least a `composer.json`), but unfortunately WordPress
+ * is not able to load MU plugins from subfolders.
+ * This step creates a MU plugin, placed in the proper folder, that loads all the MU plugins that
+ * Composer placed in subfolder.
  */
 final class MuLoaderStep implements FileCreationStepInterface, BlockingStep
 {
     const NAME = 'build-mu-loader';
     const TARGET_FILE_NAME = 'wpstarter-mu-loader.php';
+
+    /**
+     * @var \WeCodeMore\WpStarter\Util\MuPluginList
+     */
+    private $list;
 
     /**
      * @var \WeCodeMore\WpStarter\Util\FileBuilder
@@ -31,10 +43,16 @@ final class MuLoaderStep implements FileCreationStepInterface, BlockingStep
     private $filesystem;
 
     /**
+     * @var array
+     */
+    private $muPlugins = [];
+
+    /**
      * @param Locator $locator
      */
     public function __construct(Locator $locator)
     {
+        $this->list = $locator->muPluginsList();
         $this->filesystem = $locator->filesystem();
         $this->builder = $locator->fileBuilder();
     }
@@ -54,7 +72,9 @@ final class MuLoaderStep implements FileCreationStepInterface, BlockingStep
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        return $config[Config::MU_PLUGIN_LIST]->notEmpty();
+        $this->muPlugins = $this->list->pluginsList();
+
+        return (bool)$this->muPlugins;
     }
 
     /**
@@ -73,15 +93,10 @@ final class MuLoaderStep implements FileCreationStepInterface, BlockingStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        $pluginsConfig = $config[Config::MU_PLUGIN_LIST]->unwrap();
-        $muPluginsPathList = is_array($pluginsConfig)
-            ? array_filter($pluginsConfig, 'is_string')
-            : [];
-
         $built = $this->builder->build(
             $paths,
             'wpstarter-mu-loader.php',
-            ['MU_PLUGINS_LIST' => implode(', ', $muPluginsPathList)]
+            ['MU_PLUGINS_LIST' => implode(', ', $this->muPlugins)]
         );
 
         if (!$this->filesystem->save($built, $this->targetPath($paths))) {

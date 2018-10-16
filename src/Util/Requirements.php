@@ -15,6 +15,9 @@ use WeCodeMore\WpStarter\ComposerPlugin;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Config\Validator;
 
+/**
+ * Sort of factory and service locator for objects that are required for WP Starter bootstrapping.
+ */
 final class Requirements
 {
     const CONFIG_FILE = 'wpstarter.json';
@@ -50,16 +53,12 @@ final class Requirements
         Filesystem $filesystem
     ) {
 
-        $packageRepo = $composer->getRepositoryManager()->getLocalRepository();
-        $installationManager = $composer->getInstallationManager();
         $this->filesystem = $filesystem;
-        $muPluginList = new MuPluginList($packageRepo, $installationManager);
 
         $this->paths = new Paths($composer, $filesystem);
         $root = $this->paths->root();
 
         $config = $this->extractConfig($root, $composer->getPackage()->getExtra());
-        $config[Config::MU_PLUGIN_LIST] = $muPluginList->pluginsList();
         $config[Config::COMPOSER_CONFIG] = $composer->getConfig()->all();
 
         $this->config = new Config($config, new Validator($this->paths, $filesystem));

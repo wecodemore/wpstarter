@@ -215,12 +215,4 @@ class Filesystem
 
         return true;
     }
-
-    /**
-     * @return ComposerFilesystem
-     */
-    public function composerFilesystem(): ComposerFilesystem
-    {
-        return $this->filesystem;
-    }
 }

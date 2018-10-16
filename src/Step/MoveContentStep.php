@@ -15,6 +15,13 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * Step that moves wp-content contents from WP package folder to project wp-content folder.
+ *
+ * WP Starter assumes that WordPress is installed via Composer, and that very likely includes
+ * default themes and plugins that are shipped with WordPress.
+ * Because WP Starter also use a different wp-content folder, placed outside WordPress folder,
+ * the default themes and plugins are not recognized by WordPress.
+ * This step that can be enabled via configuration copy the default plugins and themes from the
+ * WP wp-content folder to the project wp-content folder, so that WordPress can recognize them.
  */
 final class MoveContentStep implements OptionalStep
 {

@@ -14,7 +14,6 @@ use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Step\OptionalStep;
 use WeCodeMore\WpStarter\Step\WpConfigStep;
 use WeCodeMore\WpStarter\Tests\TestCase;
-use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\WpCli\FileData;
 
 class ValidatorTest extends TestCase
@@ -90,6 +89,44 @@ class ValidatorTest extends TestCase
 
         static::assertTrue($validator->validateScripts($cbsIn)->is($cbsOut));
         static::assertTrue($validator->validateScripts($join)->is($join));
+    }
+
+    /**
+     * @see Validator::validateDropins()
+     * @see TestCase::makeValidator()
+     */
+    public function testValidateDropins()
+    {
+        $validator = $this->makeValidator();
+
+        static::assertFalse($validator->validateDropins([])->notEmpty());
+        static::assertFalse($validator->validateDropins('foo')->notEmpty());
+        static::assertFalse($validator->validateDropins(2)->notEmpty());
+        static::assertFalse($validator->validateDropins('xx"x')->notEmpty());
+        static::assertFalse($validator->validateDropins(null)->notEmpty());
+
+        $dir = str_replace('\\', '/', __DIR__);
+        $file = str_replace('\\', '/', __FILE__);
+
+        $input = [
+            'foo',
+            $dir,
+            'f"oo',
+            '../foo/bar',
+            'https://foo/bar?x=y',
+            $file,
+            'meh',
+            'https://username:password@127.0.0.1',
+        ];
+
+        $expected = [
+            $dir,
+            'https://foo/bar?x=y',
+            $file,
+            'https://username:password@127.0.0.1',
+        ];
+
+        static::assertSame($expected, $validator->validateDropins($input)->unwrap());
     }
 
     /**
@@ -301,26 +338,6 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validatePathArray()
-     * @see TestCase::makeValidator()
-     */
-    public function testValidatePathArray()
-    {
-        $validator = $this->makeValidator();
-
-        static::assertFalse($validator->validatePathArray(null)->notEmpty());
-        static::assertFalse($validator->validatePathArray('/')->notEmpty());
-        static::assertFalse($validator->validatePathArray(true)->notEmpty());
-        static::assertFalse($validator->validatePathArray([])->notEmpty());
-        static::assertFalse($validator->validatePathArray(['foo'])->notEmpty());
-
-        $dir = str_replace('\\', '/', __DIR__);
-        $file = str_replace('\\', '/', __FILE__);
-        $paths = [$dir, $file, 'foo'];
-        static::assertTrue($validator->validatePathArray($paths)->is([$dir, $file]));
-    }
-
-    /**
      * @see Validator::validateGlobPathArray()
      * @see TestCase::makeValidator()
      */
@@ -341,25 +358,6 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validatePathNamesArray()
-     * @see TestCase::makeValidator()
-     */
-    public function testValidatePathNamesArray()
-    {
-        $validator = $this->makeValidator();
-
-        static::assertFalse($validator->validatePathNamesArray(null)->notEmpty());
-        static::assertFalse($validator->validatePathNamesArray('/')->notEmpty());
-        static::assertFalse($validator->validatePathNamesArray(true)->notEmpty());
-        static::assertFalse($validator->validatePathNamesArray(['f?oo'])->notEmpty());
-
-        $paths = ['.env', '../.env', 'fo"o', 'foo/bar/baz'];
-
-        static::assertTrue($validator->validatePathNamesArray($paths)
-            ->is(['.env', '../.env', 'foo/bar/baz']));
-    }
-
-    /**
      * @see Validator::validateInt()
      * @see TestCase::makeValidator()
      */
@@ -375,23 +373,5 @@ class ValidatorTest extends TestCase
         static::assertTrue($validator->validateInt('123')->is(123));
         static::assertTrue($validator->validateInt(123)->is(123));
         static::assertTrue($validator->validateInt(123.123)->is(123));
-    }
-
-    /**
-     * @see Validator::validateArray()
-     * @see TestCase::makeValidator()
-     */
-    public function testValidateArray()
-    {
-        $validator = $this->makeValidator();
-
-        static::assertFalse($validator->validateArray(null)->notEmpty());
-        static::assertFalse($validator->validateArray('/')->notEmpty());
-        static::assertFalse($validator->validateArray(true)->notEmpty());
-        static::assertFalse($validator->validateArray('?123')->notEmpty());
-
-        static::assertTrue($validator->validateArray([])->is([]));
-        static::assertTrue($validator->validateArray(['foo', 'bar'])->is(['foo', 'bar']));
-        static::assertTrue($validator->validateArray((object)['foo' => 1])->is(['foo' => 1]));
     }
 }

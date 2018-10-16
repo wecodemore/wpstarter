@@ -13,6 +13,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Adds 'wpstarter' command to Composer.
+ */
 final class WpStarterCommand extends BaseCommand
 {
     /**

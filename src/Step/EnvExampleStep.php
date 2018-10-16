@@ -16,6 +16,11 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 /**
  * Steps that stores .env.example in root folder.
+ *
+ * WP Starter reequires a .env file to make a WordPress installation usable.
+ * This step place a .env.example files in project root which serves as example to build the actual
+ * .env file and includes all the possible configuration values that WordPress uses plus a few
+ * that are specific to WP Starter.
  */
 final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
 {

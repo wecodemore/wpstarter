@@ -11,7 +11,7 @@ namespace WeCodeMore\WpStarter\Util;
 use Composer\IO\IOInterface;
 
 /**
- * Wrapper around Composer IO.
+ * Wrapper around Composer IO with helper for WP Starter specific input and output.
  */
 class Io
 {
@@ -38,7 +38,7 @@ class Io
     /**
      * Return an array where each item is a slice of the given string with less than 51 characters.
      *
-     * @param string ...$lines
+     * @param string[] $lines
      * @return array
      *
      * phpcs:disable Generic.Metrics.NestingLevel

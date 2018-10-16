@@ -8,9 +8,12 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
+/**
+ * Helper to build files content from a template name and a series of variables that get replaced
+ * in the template.
+ */
 class FileBuilder
 {
-
     /**
      * Build a file content starting form a template and a set of replacement variables.
      *

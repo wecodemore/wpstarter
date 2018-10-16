@@ -11,6 +11,12 @@ namespace WeCodeMore\WpStarter\Config;
 use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Step\OptionalStep;
 
+/**
+ * Data storage for configuration.
+ *
+ * A single place thatc an be used to access validated configuration read from JSON configuration,
+ * but also to pass arbitrary data across steps.
+ */
 final class Config implements \ArrayAccess
 {
     const COMPOSER_CONFIG = 'composer';
@@ -25,7 +31,6 @@ final class Config implements \ArrayAccess
     const ENV_FILE = 'env-file';
     const INSTALL_WP_CLI = 'install-wp-cli';
     const MOVE_CONTENT = 'move-content';
-    const MU_PLUGIN_LIST = 'mu-plugin-list';
     const PREVENT_OVERWRITE = 'prevent-overwrite';
     const REGISTER_THEME_FOLDER = 'register-theme-folder';
     const REQUIRE_WP = 'require-wp';
@@ -51,7 +56,6 @@ final class Config implements \ArrayAccess
         self::ENV_FILE => '.env',
         self::INSTALL_WP_CLI => true,
         self::MOVE_CONTENT => false,
-        self::MU_PLUGIN_LIST => null,
         self::PREVENT_OVERWRITE => null,
         self::REGISTER_THEME_FOLDER => true,
         self::REQUIRE_WP => true,
@@ -70,7 +74,7 @@ final class Config implements \ArrayAccess
         self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
         self::CONTENT_DEV_DIR => 'validatePath',
         self::CUSTOM_STEPS => 'validateSteps',
-        self::DROPINS => 'validatePathArray',
+        self::DROPINS => 'validateDropins',
         self::EARLY_HOOKS_FILE => 'validateFileName',
         self::ENV_BOOTSTRAP_DIR => 'validateDirName',
         self::ENV_DIR => 'validatePath',
@@ -78,7 +82,6 @@ final class Config implements \ArrayAccess
         self::ENV_FILE => 'validateFileName',
         self::INSTALL_WP_CLI => 'validateBool',
         self::MOVE_CONTENT => 'validateBoolOrAsk',
-        self::MU_PLUGIN_LIST => 'validatePathArray',
         self::PREVENT_OVERWRITE => 'validateOverwrite',
         self::REGISTER_THEME_FOLDER => 'validateBoolOrAsk',
         self::REQUIRE_WP => 'validateBool',

@@ -21,6 +21,10 @@ use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util;
 use WeCodeMore\WpStarter\Step;
 
+/**
+ * Composer plugin class to run all the WP Starter steps on Composer install or update and also adds
+ * 'wpstarter' command to allow doing same thing "on demand".
+ */
 final class ComposerPlugin implements
     PluginInterface,
     EventSubscriberInterface,
@@ -126,9 +130,8 @@ final class ComposerPlugin implements
         $wpVersion = null;
         if ($requireWp) {
             $wpVersionDiscover = new Util\WpVersion($this->composerIo, $fallbackVer);
-            $composer = $this->composer;
-            $packages = $composer->getRepositoryManager()->getLocalRepository()->getPackages();
-            $wpVersion = $wpVersionDiscover->discover(...$packages);
+            $repo = $this->composer->getRepositoryManager()->getLocalRepository();
+            $wpVersion = $wpVersionDiscover->discover(...$repo->getPackages());
         }
 
         if (!$wpVersion && $requireWp) {
@@ -144,7 +147,7 @@ final class ComposerPlugin implements
 
         $this->locator = new Util\Locator(
             $this->requirements,
-            $this->composer->getConfig(),
+            $this->composer,
             $this->composerIo,
             $this->requirements->filesystem()
         );
@@ -155,10 +158,10 @@ final class ComposerPlugin implements
             $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
             $skippedSteps = $this->locator->config()[Config::SKIP_STEPS]->unwrapOrFallback([]);
             $stepClasses = array_diff(array_merge(self::STEP_CLASSES, $customSteps), $skippedSteps);
-            $hasWpCli = false;
+            $hasWpCliStep = false;
 
-            $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCli);
-            $this->createExecutor($hasWpCli, $steps, $this->locator->config());
+            $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCliStep);
+            $this->createExecutor($hasWpCliStep, $steps, $this->locator->config());
             $this->logo();
             $steps->run($this->locator->config(), $this->locator->paths());
 
@@ -189,6 +192,7 @@ final class ComposerPlugin implements
     ) {
 
         $stepsAdded = [];
+        $wpCliSteps = [];
 
         foreach ($stepClasses as $stepName => $stepClass) {
             if (!$stepName
@@ -199,11 +203,24 @@ final class ComposerPlugin implements
             }
 
             $step = $this->factoryStep($stepClass);
-            if ($step->name() === $stepName) {
-                $hasWpCliStep = $hasWpCliStep || ($stepName === Step\WpCliCommandsStep::NAME);
-                $steps->addStep($step);
-                $stepsAdded[] = $stepName;
+            if ($step->name() !== $stepName) {
+                continue;
             }
+
+            if (is_a($stepClass, Step\WpCliCommandsStep::class, true)
+                || (strpos($stepName, Step\WpCliCommandsStep::NAME) === 0)
+            ) {
+                $wpCliSteps[] = $stepClass;
+                continue;
+            }
+
+            $steps->addStep($step);
+            $stepsAdded[] = $stepName;
+        }
+
+        if ($wpCliSteps) {
+            $hasWpCliStep = true;
+            array_walk($wpCliSteps, [$steps, 'addStep']);
         }
     }
 

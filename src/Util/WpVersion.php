@@ -11,6 +11,12 @@ namespace WeCodeMore\WpStarter\Util;
 use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
 
+/**
+ * Helper to get and normalize the version of WordPress installed via Composer.
+ *
+ * Installed packages are parsed to find the ones with wordpress-core package type.
+ * An erro is raised in case of more mackages found.
+ */
 class WpVersion
 {
     const WP_PACKAGE_TYPE = 'wordpress-core';
@@ -63,7 +69,7 @@ class WpVersion
     }
 
     /**
-     * Go through installed packages to find WordPress version.
+     * Go through installed packages to find version of installed WordPress core package.
      *
      * Retuned found version, if any, will be normalized to `x.x.x` format.
      *

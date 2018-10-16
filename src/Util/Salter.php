@@ -8,6 +8,9 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
+/**
+ * Helper to generate random strings to be used as salt keys in WordPress.
+ */
 class Salter
 {
     const CHARS_1 = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';

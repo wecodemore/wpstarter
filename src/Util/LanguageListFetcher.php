@@ -8,6 +8,9 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
+/**
+ * Utility that fetches a list of supported locales from wp.org API.
+ */
 class LanguageListFetcher
 {
     /**

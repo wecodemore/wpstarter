@@ -16,6 +16,18 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * Step to process dropins.
+ *
+ * WordPress support a set of files to be placed in WP content folder to customize behavior of
+ * different parts of the application.
+ * Because these files are not supported by Composer installers, normally the only way to place them
+ * in WP content folder (the only place WordPress would recognize them) is to put there _before_
+ * Composer is even ran, so basically make them part of the project, which makes hard to reuse
+ * them across projects.
+ * WP Starter, via this step, allows to take droping from a source and put in WP content folder.
+ * For example, would be easy to have a Composer package with frequently used dropins and let
+ * WP Starter place them in WP content folder.
+ * Besides local path (which includes files pulled as Composer packages) the step is also capable to
+ * use arbitrary URLs as source.
  */
 final class DropinsStep implements Step
 {

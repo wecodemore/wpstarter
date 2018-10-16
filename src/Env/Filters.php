@@ -9,6 +9,16 @@
 namespace WeCodeMore\WpStarter\Env;
 
 /**
+ * Filters to set assign proper types to env variables.
+ *
+ * Env variables are always strings. WP Starter uses env variables to store WordPress configuration
+ * constants, but those might need to be set with different types. E.g an env var "false" needs to
+ * be set as _boolean_ `false`, even because PHP evaluates "false" string as true.
+ *
+ * This class provides a way to filter variable and assign proper type. This class is not aware of
+ * the "conversion strategy" to use, that is passed beside the input value to class methods.
+ * The strategy to use is defined in the `WordPressEnvBridge` class constants.
+ *
  * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
  * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
  */
@@ -21,7 +31,9 @@ final class Filters
     const FILTER_OCTAL_MOD = 'mod';
 
     /**
-     * @param string $mode
+     * Return given value filtered based on "mode".
+     *
+     * @param string $mode One of the `FILTER_*` class constants.
      * @param mixed $value
      * @return int|bool|string|null
      */

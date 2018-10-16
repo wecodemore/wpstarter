@@ -13,7 +13,10 @@ use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
 /**
- * Step that generates and saves wp-config.php.
+ * Step that generates and saves wp-config.php in webroot.
+ *
+ * This could be seen as the "main" WP Starter step, because it allows WordPress to work by creating
+ * a wp-config.php file that includes all the necessary configuration.
  */
 final class WpConfigStep implements FileCreationStepInterface, BlockingStep
 {

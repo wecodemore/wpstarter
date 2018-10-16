@@ -14,7 +14,7 @@ use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
 /**
- * Steps that checks if all the paths WP Starter needs have been recognized properly ad exist.
+ * Checks if all the paths WP Starter needs have been recognized properly and exist.
  */
 final class CheckPathStep implements BlockingStep, PostProcessStep
 {

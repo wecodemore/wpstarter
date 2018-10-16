@@ -15,6 +15,26 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * Step that "publish" content dev folders in WP Content.
+ *
+ * WP Starter is used to setup "project", i.e. whole WordPress websites based on Composer.
+ * So, normally, WordPress "content" packages: (mu-)plugins and themes, are pulled from different
+ * packages.
+ * However ,it happens that project-specific (mu-)plugins or themes might be placed in the same
+ * repo of the project, because it does not worth a separate package for them or because being very
+ * project specific there's no place to reuse them so no reason to maintain them separately.
+ *
+ * One way to do this is to place those project-specific plugins or themes in the target
+ * WordPress content folder, which is the same folder where WordPress will place plugin and themes
+ * pulled via Composer. This introduces complexity in managing VCS, because very likely external
+ * packages will not be tracked with the project, while plugins and themes in the project folder
+ * will.
+ *
+ * WP Starter offers a different, totally optional, approach for this issue.
+ * Plugins and themes that lives in the project repo, can be placed in a separate folder and
+ * WP Starter will either symlink or copy them to target WP content folder.
+ * This step class is responsible to do exactly that.
+ * The operation to apply (symlink or copy), just like the source folder (where plugins and themes
+ * are placed), can be configured, but sensitive defaults are used.
  */
 final class ContentDevStep implements OptionalStep
 {
