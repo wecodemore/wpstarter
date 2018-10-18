@@ -262,6 +262,7 @@ final class Paths implements \ArrayAccess
         $wpContentDir = $this->extra['wordpress-content-dir'] ?? 'wp-content';
         $wpFullDir = $this->filesystem->normalizePath("{$cwd}/{$wpInstallDir}");
         $wpContentFullDir = $this->filesystem->normalizePath("{$cwd}/{$wpContentDir}");
+        $wpParentDir = $wpFullDir === $cwd ? $wpFullDir : dirname($wpFullDir);
 
         if (strpos($wpFullDir, $cwd) !== 0) {
             throw new \Exception(
@@ -277,12 +278,19 @@ final class Paths implements \ArrayAccess
             );
         }
 
+        if (strpos($wpContentFullDir, $wpParentDir) !== 0) {
+            throw new \Exception(
+                'WP content folder must share parent folder with WP folder, or be contained in it.'
+                . ' Use the "wordpress-content-dir" setting to properly set it'
+            );
+        }
+
         return [
             self::ROOT => $this->filesystem->normalizePath($cwd),
             self::VENDOR => $this->filesystem->normalizePath($this->config->get('vendor-dir')),
             self::BIN => $this->filesystem->normalizePath($this->config->get('bin-dir')),
             self::WP => $wpFullDir,
-            self::WP_PARENT => $wpFullDir === $cwd ? $wpFullDir : dirname($wpFullDir),
+            self::WP_PARENT => $wpParentDir,
             self::WP_CONTENT => $wpContentFullDir,
             self::WP_STARTER => $this->filesystem->normalizePath(dirname(__DIR__, 2)),
         ];

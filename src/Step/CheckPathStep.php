@@ -80,17 +80,11 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
     public function run(Config $config, Paths $paths): int
     {
         $envDir = $config[Config::ENV_DIR]->unwrapOrFallback() ?: $paths->root();
-        $this->envInWebRoot = $envDir === $paths->wpParent() ? $envDir : '';
+        if (strpos($envDir, $paths->wpParent()) === 0) {
+            $this->envInWebRoot = $envDir;
+        }
 
         $wpContent = $paths->wpContent();
-
-        if (strpos($wpContent, $paths->wpParent()) !== 0) {
-            $this->error =
-                'WP content folder must share parent folder with WP folder, or be contained in it.'
-                . ' Use the "wordpress-content-dir" setting to properly set it';
-
-            return self::ERROR;
-        }
 
         $this->filesystem->createDir($wpContent);
         // no love for this, but https://core.trac.wordpress.org/ticket/31620 makes it necessary.
