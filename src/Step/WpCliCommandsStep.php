@@ -54,6 +54,7 @@ final class WpCliCommandsStep implements Step
     public function __construct(Locator $locator)
     {
         $this->io = $locator->io();
+        $this->executor = $locator->wpCliExecutor();
     }
 
     /**
@@ -71,11 +72,12 @@ final class WpCliCommandsStep implements Step
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        $executor = $config[Config::WP_CLI_EXECUTOR]->unwrapOrFallback();
-        if ($executor instanceof WpCli\Executor) {
-            $this->executor = $executor;
-            $this->commands = $config[Config::WP_CLI_COMMANDS]->unwrapOrFallback([]);
-            $this->files = $config[Config::WP_CLI_FILES]->unwrapOrFallback([]);
+        $commands = $config[Config::WP_CLI_COMMANDS]->unwrapOrFallback([]);
+        $files = $config[Config::WP_CLI_FILES]->unwrapOrFallback([]);
+
+        if ($commands || $files) {
+            $this->commands = $commands;
+            $this->files = $files;
 
             return true;
         }
@@ -90,7 +92,7 @@ final class WpCliCommandsStep implements Step
      */
     public function run(Config $config, Paths $paths): int
     {
-        if ((!$this->commands && !$this->files) || !$this->executor) {
+        if ((!$this->commands && !$this->files)) {
             return self::NONE;
         }
 

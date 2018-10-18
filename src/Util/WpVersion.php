@@ -8,14 +8,11 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
-use Composer\IO\IOInterface;
-use Composer\Package\PackageInterface;
-
 /**
  * Helper to get and normalize the version of WordPress installed via Composer.
  *
  * Installed packages are parsed to find the ones with wordpress-core package type.
- * An erro is raised in case of more mackages found.
+ * An error is raised in case of more packages found.
  */
 class WpVersion
 {
@@ -23,7 +20,12 @@ class WpVersion
     const MIN_WP_VERSION = '4.8';
 
     /**
-     * @var IOInterface
+     * @var PackageFinder
+     */
+    private $packageFinder;
+
+    /**
+     * @var Io
      */
     private $io;
 
@@ -59,11 +61,17 @@ class WpVersion
     }
 
     /**
-     * @param IOInterface $io
+     * @param PackageFinder $packageFinder
+     * @param Io $io
      * @param string $fallbackVersion
      */
-    public function __construct(IOInterface $io, string $fallbackVersion = null)
-    {
+    public function __construct(
+        PackageFinder $packageFinder,
+        Io $io,
+        string $fallbackVersion = null
+    ) {
+
+        $this->packageFinder = $packageFinder;
         $this->io = $io;
         $this->fallbackVersion = $fallbackVersion;
     }
@@ -71,32 +79,32 @@ class WpVersion
     /**
      * Go through installed packages to find version of installed WordPress core package.
      *
-     * Retuned found version, if any, will be normalized to `x.x.x` format.
+     * Returned found version, if any, will be normalized to `x.x.x` format.
      *
-     * @param PackageInterface[] $packages
      * @return string
      */
-    public function discover(PackageInterface ...$packages): string
+    public function discover(): string
     {
-        $vers = [];
-        while (!empty($packages) && count($vers) < 2) {
-            $package = array_pop($packages);
-            if ($package->getType() === self::WP_PACKAGE_TYPE) {
-                $vers[] = [$package->getVersion(), $package->isDev()];
+        $versionsData = [];
+        $packages = $this->packageFinder->findByType(self::WP_PACKAGE_TYPE);
+        foreach ($packages as $package) {
+            $versionsData[] = [$package->getVersion(), $package->isDev()];
+            if (count($versionsData) > 1) {
+                break;
             }
         }
 
-        if (!$vers) {
+        if (!$versionsData) {
             return $this->bail('no-wp');
         }
 
-        if (count($vers) > 1) {
+        if (count($versionsData) > 1) {
             return $this->bail('more-wp');
         }
 
-        $isDevPackage = $vers[0][1];
+        $isDevPackage = $versionsData[0][1];
         $fallback = $this->fallbackVersion ? static::normalize($this->fallbackVersion) : null;
-        $version = static::normalize((string)$vers[0][0]) ?: $fallback;
+        $version = static::normalize((string)$versionsData[0][0]) ?: $fallback;
 
         if (!$version) {
             return $isDevPackage ? $this->bail('dev-wp') : $this->bail('invalid-wp');
@@ -105,9 +113,8 @@ class WpVersion
         if (!version_compare($version, self::MIN_WP_VERSION, '>=')) {
             $version = '';
             $min = self::MIN_WP_VERSION;
-            Io::writeFormattedError(
-                $this->io,
-                "Installed WP version {$version} is lower than minimim required {$min}.",
+            $this->io->writeErrorBlock(
+                "Installed WP version {$version} is lower than minimum required {$min}.",
                 'WP Starter failed.'
             );
         }
@@ -153,7 +160,7 @@ class WpVersion
 
         $lines[] = 'WP Starter failed.';
 
-        Io::writeFormattedError($this->io, ...$lines);
+        $this->io->writeErrorBlock(...$lines);
 
         return '';
     }

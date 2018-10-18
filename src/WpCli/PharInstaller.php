@@ -53,7 +53,7 @@ class PharInstaller
         }
 
         if (!$command->checkPhar($path, $this->io)) {
-            $this->io->writeError('Phar validation failed. Downloaed phar is probably corrupted.');
+            $this->io->writeError('Phar validation failed. Downloaded phar is probably corrupted.');
 
             return '';
         }

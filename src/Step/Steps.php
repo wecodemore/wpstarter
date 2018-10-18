@@ -47,6 +47,16 @@ final class Steps implements PostProcessStep
     private $errors = 0;
 
     /**
+     * @var bool
+     */
+    private $running = false;
+
+    /**
+     * @var bool
+     */
+    private $inPreScript = false;
+
+    /**
      * @param Locator $locator
      * @param Composer $composer
      */
@@ -68,11 +78,26 @@ final class Steps implements PostProcessStep
 
     /**
      * @param Step $step
+     * @param Step[] $steps
      * @return Steps
      */
-    public function addStep(Step $step): Steps
+    public function addStep(Step $step, Step ...$steps): Steps
     {
-        $this->steps->attach($step);
+        if (!$this->running) {
+            $this->steps->attach($step);
+            array_walk($steps, [$this->steps, 'attach']);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param Step $step
+     * @return Steps
+     */
+    public function removeStep(Step $step): Steps
+    {
+        $this->running or $this->steps->detach($step);
 
         return $this;
     }
@@ -96,11 +121,20 @@ final class Steps implements PostProcessStep
      */
     public function run(Config $config, Paths $paths): int
     {
+        if ($this->running || $this->inPreScript) {
+            return Step::NONE;
+        }
+
         $this->steps->rewind();
         $io = $this->locator->io();
 
         $scripts = $config[Config::SCRIPTS]->unwrapOrFallback([]);
+
+        $this->inPreScript = true;
         $this->runStepScripts($this, $io, $scripts, 'pre-', Step::NONE);
+        $this->inPreScript = false;
+
+        $this->running = true;
 
         while ($this->steps->valid()) {
 
@@ -117,6 +151,8 @@ final class Steps implements PostProcessStep
         $this->postProcess($io);
 
         $this->runStepScripts($this, $io, $scripts, 'post-', Step::SUCCESS);
+
+        $this->running = false;
 
         return $this->finalMessage($io);
     }
@@ -146,6 +182,10 @@ final class Steps implements PostProcessStep
      */
     public function postProcess(Io $io)
     {
+        if ($this->running || $this->inPreScript) {
+            return;
+        }
+
         $this->postProcessSteps->rewind();
         while ($this->postProcessSteps->valid()) {
             /** @var \WeCodeMore\WpStarter\Step\PostProcessStep $step */
@@ -159,8 +199,8 @@ final class Steps implements PostProcessStep
         if (!is_file($this->locator->paths()->root($env))) {
             $lines = [
                 'Remember that to make your site fully functional you either need to have an .env '
-                .'file with at least DB settings or set them in environment variables in some other '
-                .'way (e.g. via webserver).',
+                . 'file with at least DB settings or set them in environment variables in some other '
+                . 'way (e.g. via webserver).',
             ];
 
             $io->writeYellowBlock(...$lines);
@@ -219,7 +259,7 @@ final class Steps implements PostProcessStep
         if ($process && $step instanceof FileCreationStepInterface) {
             /** @var \WeCodeMore\WpStarter\Step\FileCreationStepInterface $step */
             $path = $step->targetPath($paths);
-            $process = $this->locator->overwriteHelper()->shouldOverwite($path);
+            $process = $this->locator->overwriteHelper()->shouldOverwrite($path);
             $comment = $process ? '' : '- ' . basename($path) . ' exists and will be preserved.';
         }
 
@@ -283,8 +323,8 @@ final class Steps implements PostProcessStep
             return;
         }
 
-        $runner = function (callable $script) use ($io, $result, $scriptsKey) {
-            $this->runStepScript($script, $scriptsKey, $result, $io);
+        $runner = function (callable $script) use ($scriptsKey, $step, $result, $io) {
+            $this->runStepScript($script, $scriptsKey, $step, $result, $io);
         };
 
         $io->writeIfVerbose("Running '{$scriptsKey}' scripts...");
@@ -294,13 +334,20 @@ final class Steps implements PostProcessStep
     /**
      * @param callable $script
      * @param string $scriptsKey
+     * @param Step $step
      * @param int $result
      * @param Io $io
      */
-    private function runStepScript(callable $script, string $scriptsKey, int $result, Io $io)
-    {
+    private function runStepScript(
+        callable $script,
+        string $scriptsKey,
+        Step $step,
+        int $result,
+        Io $io
+    ) {
+
         try {
-            $script($this->locator, $this->composer, $result);
+            $script($result, $step, $this->locator, $this->composer);
         } catch (\Throwable $error) {
             $io->writeErrorBlock(
                 "Error running a script of event '{$scriptsKey}':",

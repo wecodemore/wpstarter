@@ -2,5 +2,5 @@
 
 return [
     'wp cli version',
-    'cli info',
+    'wp cli info',
 ];

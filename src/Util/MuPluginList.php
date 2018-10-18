@@ -8,37 +8,25 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
-use Composer\Installer\InstallationManager;
 use Composer\Package\PackageInterface;
-use Composer\Repository\RepositoryInterface;
 
 /**
  * Helper that uses Composer objects to get a list of installed packages and filter them to obtain
- * the list of installed MU plugins and their intallation paths.
+ * the list of installed MU plugins and their installation paths.
  */
 class MuPluginList
 {
     /**
-     * @var RepositoryInterface
+     * @var PackageFinder
      */
-    private $packageRepo;
+    private $packageFinder;
 
     /**
-     * @var InstallationManager
+     * @param PackageFinder $packageFinder
      */
-    private $installationManager;
-
-    /**
-     * @param RepositoryInterface $packageRepo
-     * @param InstallationManager $installationManager
-     */
-    public function __construct(
-        RepositoryInterface $packageRepo,
-        InstallationManager $installationManager
-    ) {
-
-        $this->packageRepo = $packageRepo;
-        $this->installationManager = $installationManager;
+    public function __construct(PackageFinder $packageFinder)
+    {
+        $this->packageFinder = $packageFinder;
     }
 
     /**
@@ -48,29 +36,22 @@ class MuPluginList
     {
         $list = [];
 
-        /** @var \Composer\Package\PackageInterface[] $packages */
-        $packages = $this->packageRepo->getPackages();
+        $packages = $this->packageFinder->findByType('wordpress-muplugin');
         foreach ($packages as $package) {
-            if ($package->getType() === 'wordpress-muplugin') {
-                $path = $this->pathForPluginPackage($this->installationManager, $package);
-                $path and $list[$package->getName()] = $path;
-            }
+            $path = $this->pathForPluginPackage($package);
+            $path and $list[$package->getName()] = $path;
         }
 
         return $list;
     }
 
     /**
-     * @param InstallationManager $installationManager
      * @param PackageInterface $package
      * @return string
      */
-    private function pathForPluginPackage(
-        InstallationManager $installationManager,
-        PackageInterface $package
-    ): string {
-
-        $path = $installationManager->getInstallPath($package);
+    private function pathForPluginPackage(PackageInterface $package): string
+    {
+        $path = $this->packageFinder->findPathOf($package);
         if (!$path) {
             return '';
         }

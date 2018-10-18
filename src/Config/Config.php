@@ -9,17 +9,15 @@
 namespace WeCodeMore\WpStarter\Config;
 
 use WeCodeMore\WpStarter\Step\ContentDevStep;
-use WeCodeMore\WpStarter\Step\OptionalStep;
 
 /**
  * Data storage for configuration.
  *
- * A single place thatc an be used to access validated configuration read from JSON configuration,
+ * A single place that can be used to access validated configuration read from JSON configuration,
  * but also to pass arbitrary data across steps.
  */
 final class Config implements \ArrayAccess
 {
-    const COMPOSER_CONFIG = 'composer';
     const CONTENT_DEV_OPERATION = 'content-dev-op';
     const CONTENT_DEV_DIR = 'content-dev-dir';
     const CUSTOM_STEPS = 'custom-steps';
@@ -37,14 +35,12 @@ final class Config implements \ArrayAccess
     const SCRIPTS = 'scripts';
     const SKIP_STEPS = 'skip-steps';
     const TEMPLATES_DIR = 'templates-dir';
-    const UNKWOWN_DROPINS = 'unknown-dropins';
+    const UNKNOWN_DROPINS = 'unknown-dropins';
     const WP_CLI_COMMANDS = 'wp-cli-commands';
     const WP_CLI_FILES = 'wp-cli-files';
-    const WP_CLI_EXECUTOR = 'wp-cli-executor';
     const WP_VERSION = 'wp-version';
 
     const DEFAULTS = [
-        self::COMPOSER_CONFIG => null,
         self::CONTENT_DEV_OPERATION => ContentDevStep::OP_SYMLINK,
         self::CONTENT_DEV_DIR => 'content-dev',
         self::CUSTOM_STEPS => null,
@@ -62,15 +58,13 @@ final class Config implements \ArrayAccess
         self::SCRIPTS => null,
         self::SKIP_STEPS => null,
         self::TEMPLATES_DIR => null,
-        self::UNKWOWN_DROPINS => OptionalStep::ASK,
+        self::UNKNOWN_DROPINS => false,
         self::WP_CLI_COMMANDS => null,
         self::WP_CLI_FILES => null,
-        self::WP_CLI_EXECUTOR => null,
         self::WP_VERSION => null,
     ];
 
     const VALIDATION_MAP = [
-        self::COMPOSER_CONFIG => 'validateArray',
         self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
         self::CONTENT_DEV_DIR => 'validatePath',
         self::CUSTOM_STEPS => 'validateSteps',
@@ -88,10 +82,9 @@ final class Config implements \ArrayAccess
         self::TEMPLATES_DIR => 'validatePath',
         self::SCRIPTS => 'validateScripts',
         self::SKIP_STEPS => 'validateSteps',
-        self::UNKWOWN_DROPINS => 'validateBoolOrAsk',
+        self::UNKNOWN_DROPINS => 'validateBoolOrAsk',
         self::WP_CLI_COMMANDS => 'validateWpCliCommands',
         self::WP_CLI_FILES => 'validateWpCliCommandsFileList',
-        self::WP_CLI_EXECUTOR => 'validateCliExecutor',
         self::WP_VERSION => 'validateWpVersion',
     ];
 

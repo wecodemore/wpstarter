@@ -12,7 +12,8 @@ use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\IOInterface as ComposerIo;
 use Composer\Util\Filesystem as ComposerFilesystem;
-use WeCodeMore\WpStarter\WpCli\PharInstaller;
+use Symfony\Component\Process\PhpExecutableFinder;
+use WeCodeMore\WpStarter\WpCli;
 use WeCodeMore\WpStarter\Config\Config;
 
 /**
@@ -72,6 +73,14 @@ final class Locator
     public function io(): Io
     {
         return $this->objects[Io::class];
+    }
+
+    /**
+     * @return ComposerFilesystem
+     */
+    public function composerFilesystem(): ComposerFilesystem
+    {
+        return $this->objects[ComposerFilesystem::class];
     }
 
     /**
@@ -163,12 +172,12 @@ final class Locator
     }
 
     /**
-     * @return PharInstaller
+     * @return WpCli\PharInstaller
      */
-    public function pharInstaller(): PharInstaller
+    public function pharInstaller(): WpCli\PharInstaller
     {
-        if (empty($this->objects[PharInstaller::class])) {
-            $this->objects[PharInstaller::class] = new PharInstaller(
+        if (empty($this->objects[WpCli\PharInstaller::class])) {
+            $this->objects[WpCli\PharInstaller::class] = new WpCli\PharInstaller(
                 $this->io(),
                 $this->urlDownloader()
             );
@@ -178,18 +187,55 @@ final class Locator
     }
 
     /**
+     * @return PackageFinder
+     */
+    public function packageFinder(): PackageFinder
+    {
+        if (empty($this->objects[PackageFinder::class])) {
+            /** @var Composer $composer */
+            $composer = $this->objects[Composer::class];
+            $this->objects[PackageFinder::class] = new PackageFinder(
+                $composer->getRepositoryManager()->getLocalRepository(),
+                $composer->getInstallationManager(),
+                $this->composerFilesystem()
+            );
+        }
+
+        return $this->objects[PackageFinder::class];
+    }
+
+    /**
      * @return MuPluginList
      */
     public function muPluginsList(): MuPluginList
     {
         if (empty($this->objects[MuPluginList::class])) {
-            $composer = $this->objects[Composer::class];
-            $this->objects[MuPluginList::class] = new MuPluginList(
-                $composer->getRepositoryManager()->getLocalRepository(),
-                $composer->getInstallationManager()
-            );
+            $this->objects[MuPluginList::class] = new MuPluginList($this->packageFinder());
         }
 
         return $this->objects[LanguageListFetcher::class];
+    }
+
+    /**
+     * @return WpCli\Executor
+     */
+    public function wpCliExecutor(): WpCli\Executor
+    {
+        $php = (new PhpExecutableFinder())->find();
+        if (!$php) {
+            throw new \Exception('PHP executable not found.');
+        }
+
+        $executorFactory = new WpCli\ExecutorFactory(
+            $this->config(),
+            $this->paths(),
+            $this->io(),
+            new WpCli\PharInstaller($this->io(), $this->urlDownloader()),
+            $this->packageFinder()
+        );
+
+        $wpCliCommand = new WpCli\Command($this->config(), $this->urlDownloader());
+
+        return $executorFactory->create($wpCliCommand, $php);
     }
 }

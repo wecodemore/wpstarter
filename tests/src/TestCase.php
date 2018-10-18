@@ -118,9 +118,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * @param array|null $extra
      * @return Util\Paths
      */
-    protected function makePaths(): Util\Paths
+    protected function makePaths(array $extra = null): Util\Paths
     {
         $root = $this->fixturesPath() . '/paths-root';
 
@@ -130,17 +131,14 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $config = \Mockery::mock(Composer\Config::class);
         $config->shouldReceive('get')->with('vendor-dir')->andReturn("{$root}/vendor");
         $config->shouldReceive('get')->with('bin-dir')->andReturn("{$root}/vendor/bin");
-        $composer = \Mockery::mock(Composer\Composer::class);
-        $composer->shouldReceive('getConfig')->andReturn($config);
-        $composer->shouldReceive('getPackage->getExtra')->andReturn(
-            [
-                'wordpress-install-dir' => 'public/wp',
-                'wordpress-content-dir' => 'public/wp-content',
-            ]
-        );
 
-        $paths = new Util\Paths($composer, new Composer\Util\Filesystem());
-        $paths->offsetExists(Util\Paths::ROOT); // to trigger parse() before root si restored
+        is_array($extra) or $extra = [
+            'wordpress-install-dir' => 'public/wp',
+            'wordpress-content-dir' => 'public/wp-content',
+        ];
+
+        $paths = new Util\Paths($config, $extra, new Composer\Util\Filesystem());
+        $paths->offsetExists(Util\Paths::ROOT); // to trigger parse() before root is restored
 
         chdir($cwd);
 

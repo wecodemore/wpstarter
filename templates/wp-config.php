@@ -52,6 +52,12 @@ defined('NONCE_SALT') or define('NONCE_SALT', '{{{NONCE_SALT}}}');
 global $table_prefix;
 empty($table_prefix) or $table_prefix = 'wp_';
 
+/** Absolute path to the WordPress directory. */
+defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
+
+/** Load plugin.php early, so we can call `add_action` below. */
+require_once ABSPATH . 'wp-includes/plugin.php';
+
 /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
 $environment = getenv('WP_ENV') ?: getenv('WORDPRESS_ENV');
 if ($environment
@@ -87,7 +93,8 @@ switch ($environment) {
 unset($environment);
 
 /** Fix `is_ssl()` behind load balancers. */
-if (array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER)
+if (getenv('WP_FORCE_SSL_FORWARDED_PROTO')
+    && array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER)
     && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
 ) {
     $_SERVER['HTTPS'] = 'on';
@@ -111,14 +118,6 @@ defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath(__DIR__ . '{{{WP_
 defined('WP_SITEURL') or define('WP_SITEURL', rtrim(WP_HOME, '/') . '/{{{WP_SITEURL_RELATIVE}}}');
 defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/') . '/{{{WP_CONTENT_URL_RELATIVE}}}');
 
-/* That's all, stop editing! Happy blogging. */
-
-/** Absolute path to the WordPress directory. */
-defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
-
-/** Load plugin.php early, so we can call `add_action` below. */
-require_once ABSPATH . 'wp-includes/plugin.php';
-
 /** Register default themes inside WordPress package wp-content folder. */
 if (filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN)) {
     add_action(
@@ -134,8 +133,9 @@ if (filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN)) {
 add_filter(
     'get_user_option_admin_color',
     function ($color) {
-        return getenv('WORDPRESS_ADMIN_COLOR') ?: $color;
-    }
+        return getenv('WP_ADMIN_COLOR') ?: $color;
+    },
+    999
 );
 
 ###################################################################################################
@@ -143,6 +143,8 @@ add_filter(
 #                 I watched C-beams glitter in the dark near the Tannhauser gate.                 #
 #            All those moments will be lost in time, like tears in rain. Time to die.             #
 ###################################################################################################
+
+/* That's all, stop editing! Happy blogging. */
 
 /** Sets up WordPress vars and included files. */
 require_once ABSPATH . 'wp-settings.php';

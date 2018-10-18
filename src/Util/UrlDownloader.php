@@ -12,7 +12,7 @@ use Composer\Util\Filesystem;
 use Composer\Util\RemoteFilesystem;
 
 /**
- * Helper around Composer rempote filesystem to download files from arbitrary URL an either place
+ * Helper around Composer remote filesystem to download files from arbitrary URL an either place
  * them in a given path or simply get the content.
  */
 class UrlDownloader

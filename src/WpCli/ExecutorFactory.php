@@ -8,11 +8,10 @@
 
 namespace WeCodeMore\WpStarter\WpCli;
 
-use Composer\Installer\InstallationManager;
 use Composer\Repository\RepositoryInterface;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util\Io;
-use WeCodeMore\WpStarter\Util\Locator;
+use WeCodeMore\WpStarter\Util\PackageFinder;
 use WeCodeMore\WpStarter\Util\Paths;
 
 class ExecutorFactory
@@ -40,38 +39,36 @@ class ExecutorFactory
     /**
      * @var RepositoryInterface
      */
-    private $packageRepo;
+    private $packageFinder;
 
     /**
-     * @var InstallationManager
-     */
-    private $installationManager;
-
-    /**
-     * @param Locator $locator
-     * @param RepositoryInterface $packageRepo
-     * @param InstallationManager $installationManager
+     * @param Config $config
+     * @param Paths $paths
+     * @param Io $io
+     * @param PharInstaller $pharInstaller
+     * @param PackageFinder $packageFinder
      */
     public function __construct(
-        Locator $locator,
-        RepositoryInterface $packageRepo,
-        InstallationManager $installationManager
+        Config $config,
+        Paths $paths,
+        Io $io,
+        PharInstaller $pharInstaller,
+        PackageFinder $packageFinder
     ) {
 
-        $this->config = $locator->config();
-        $this->paths = $locator->paths();
-        $this->io = $locator->io();
-        $this->pharInstaller = $locator->pharInstaller();
-        $this->packageRepo = $packageRepo;
-        $this->installationManager = $installationManager;
+        $this->config = $config;
+        $this->paths = $paths;
+        $this->io = $io;
+        $this->pharInstaller = $pharInstaller;
+        $this->packageFinder = $packageFinder;
     }
 
     /**
      * @param Command $command
      * @param string $phpPath
-     * @return null|Executor
+     * @return Executor
      */
-    public function create(Command $command, string $phpPath)
+    public function create(Command $command, string $phpPath): Executor
     {
         $fsPath = $this->lookForPackage($command);
 
@@ -89,25 +86,22 @@ class ExecutorFactory
 
         // If not installed via Composer and phar download is disabled, return nothing
         if (!$pharUrl) {
-            $this->io->writeError(
+            throw new \RuntimeException(
                 sprintf(
                     'Failed installation for %s: '
                     . 'phar download URL is invalid or phar download is disabled',
                     $command->niceName()
                 )
             );
-
-            return null;
         }
 
         $installedPath = $this->pharInstaller->install($command, $targetPath);
 
-        // Phar installation was successfull, build executor and return
-        if ($installedPath) {
-            return new Executor($phpPath, $installedPath, $this->paths, $this->io, $command);
+        if (!$installedPath) {
+            throw new \RuntimeException("Failed phar download from {$pharUrl}.");
         }
 
-        return null;
+        return new Executor($phpPath, $installedPath, $this->paths, $this->io, $command);
     }
 
     /**
@@ -118,32 +112,27 @@ class ExecutorFactory
      */
     private function lookForPackage(Command $command): string
     {
-        $packages = $this->packageRepo->getPackages();
-
-        foreach ($packages as $package) {
-            if ($package->getName() !== $command->packageName()) {
-                continue;
-            }
-
-            $version = $package->getVersion();
-            $minVersion = $command->minVersion();
-
-            if ($minVersion && version_compare($version, $minVersion, '<')) {
-                $this->io->writeError(
-                    sprintf(
-                        'Installed %s version %s is lower than minimimun required %s.',
-                        $command->niceName(),
-                        $version,
-                        $minVersion
-                    )
-                );
-
-                return '';
-            }
-
-            return $command->executableFile($this->installationManager->getInstallPath($package));
+        $package = $this->packageFinder->findByName($command->packageName());
+        if (!$package) {
+            return '';
         }
 
-        return '';
+        $version = $package->getVersion();
+        $minVersion = $command->minVersion();
+
+        if ($minVersion && version_compare($version, $minVersion, '<')) {
+            $this->io->writeError(
+                sprintf(
+                    'Installed %s version %s is lower than minimum required %s.',
+                    $command->niceName(),
+                    $version,
+                    $minVersion
+                )
+            );
+
+            return '';
+        }
+
+        return $this->packageFinder->findPathOf($package);
     }
 }

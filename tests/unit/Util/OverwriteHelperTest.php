@@ -8,7 +8,6 @@
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
-use Composer\IO\IOInterface;
 use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Step\OptionalStep;

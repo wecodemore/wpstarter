@@ -22,7 +22,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  * This step creates a MU plugin, placed in the proper folder, that loads all the MU plugins that
  * Composer placed in subfolder.
  */
-final class MuLoaderStep implements FileCreationStepInterface, BlockingStep
+final class MuLoaderStep implements FileCreationStepInterface
 {
     const NAME = 'build-mu-loader';
     const TARGET_FILE_NAME = 'wpstarter-mu-loader.php';

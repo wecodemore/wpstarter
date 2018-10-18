@@ -9,7 +9,6 @@
 namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Util\LanguageListFetcher;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\Util\Paths;
@@ -17,25 +16,16 @@ use WeCodeMore\WpStarter\Util\Paths;
 /**
  * Step to process dropins.
  *
- * WordPress support a set of files to be placed in WP content folder to customize behavior of
- * different parts of the application.
- * Because these files are not supported by Composer installers, normally the only way to place them
- * in WP content folder (the only place WordPress would recognize them) is to put there _before_
- * Composer is even ran, so basically make them part of the project, which makes hard to reuse
- * them across projects.
- * WP Starter, via this step, allows to take droping from a source and put in WP content folder.
- * For example, would be easy to have a Composer package with frequently used dropins and let
- * WP Starter place them in WP content folder.
- * Besides local path (which includes files pulled as Composer packages) the step is also capable to
- * use arbitrary URLs as source.
+ * Even if dropins are supported by Composer installers, often the only way to place them *directly*
+ * in WP content folder (where WordPress recognize them), is to put them there before Composer is
+ * even ran, so basically make them part of the project, which makes hard to reuse them.
+ * WP Starter, via this step, allows to take dropins from an arbitrary source (local paths or URLs)
+ * and put in WP content folder. Moreover, if dropins are placed in subfolders of wp-content by
+ * Composer (thanks to Composer installers) then this step moves them up to content folder.
  */
 final class DropinsStep implements Step
 {
     const NAME = 'dropins';
-
-    const QUESTION_NO_DROPIN = 0;
-    const QUESTION_LOCALES_ERROR = 1;
-    const QUESTION_NO_LOCALE = 2;
 
     const DROPINS = [
         'advanced-cache.php',
@@ -51,24 +41,24 @@ final class DropinsStep implements Step
     ];
 
     /**
-     * @var array
-     */
-    private static $languages;
-
-    /**
      * @var \WeCodeMore\WpStarter\Util\Io
      */
     private $io;
 
     /**
-     * @var LanguageListFetcher
+     * @var \WeCodeMore\WpStarter\Util\PackageFinder
      */
-    private $languagesFetcher;
+    private $packageFinder;
 
     /**
      * @var \WeCodeMore\WpStarter\Util\UrlDownloader
      */
     private $urlDownloader;
+
+    /**
+     * @var \WeCodeMore\WpStarter\Util\Filesystem
+     */
+    private $filesystem;
 
     /**
      * @var OverwriteHelper
@@ -78,12 +68,7 @@ final class DropinsStep implements Step
     /**
      * @var string[]
      */
-    private $dropins;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Config\Config
-     */
-    private $config;
+    private $customDropins;
 
     /**
      * @var string
@@ -101,10 +86,10 @@ final class DropinsStep implements Step
     public function __construct(Locator $locator)
     {
         $this->io = $locator->io();
-        $this->languagesFetcher = $locator->languageListFetcher();
+        $this->packageFinder = $locator->packageFinder();
         $this->urlDownloader = $locator->urlDownloader();
+        $this->filesystem = $locator->filesystem();
         $this->overwriteHelper = $locator->overwriteHelper();
-        $this->config = $locator->config();
     }
 
     /**
@@ -132,27 +117,20 @@ final class DropinsStep implements Step
      */
     public function run(Config $config, Paths $paths): int
     {
-        $this->dropins = $this->config[Config::DROPINS]->unwrapOrFallback([]);
+        $fromPackages = $this->publishDropinsFromPackages($paths);
+        $custom = $this->publishCustomDropins($config, $paths);
 
-        if (!$this->dropins || !is_array($this->dropins)) {
-            return self::NONE;
+        $result = 0;
+
+        if ((($fromPackages | $custom) & Step::SUCCESS) === Step::SUCCESS) {
+            $result |= Step::SUCCESS;
         }
 
-        foreach ($this->dropins as $name => $url) {
-            $this->isKnownDropin(basename($name))
-                ? $this->runStep($name, $url, $paths)
-                : $this->error .= "{$name} is not a valid dropin name. Skipped.\n";
+        if ((($fromPackages | $custom) & Step::ERROR) === Step::ERROR) {
+            $result |= Step::ERROR;
         }
 
-        if (!$this->error) {
-            return self::SUCCESS;
-        }
-
-        if (!$this->success) {
-            return self::ERROR;
-        }
-
-        return self::SUCCESS | self::ERROR;
+        return $result ?: Step::NONE;
     }
 
     /**
@@ -172,25 +150,129 @@ final class DropinsStep implements Step
     }
 
     /**
-     * @param string $name
+     * @param Paths $paths
+     * @return int
+     */
+    private function publishDropinsFromPackages(Paths $paths): int
+    {
+        $installed = $this->packageFinder->findByType('wordpress-dropin');
+        if (!$installed) {
+            return Step::NONE;
+        }
+
+        $all = 0;
+        $done = 0;
+        foreach ($installed as $package) {
+            $dir = $this->packageFinder->findPathOf($package);
+            if (is_dir($dir)) {
+                $all++;
+                $this->publishDropinsFromInstalledPath($dir, $paths) and $done++;
+            }
+        }
+
+        if ($all === $done) {
+            return Step::SUCCESS;
+        }
+
+        if ($all && !$done) {
+            return Step::ERROR;
+        }
+
+        return Step::SUCCESS | Step::ERROR;
+    }
+
+    /**
+     * @param Config $config
+     * @param Paths $paths
+     * @return int
+     */
+    private function publishCustomDropins(Config $config, Paths $paths): int
+    {
+        $this->customDropins = $config[Config::DROPINS]->unwrapOrFallback([]);
+
+        if (!$this->customDropins || !is_array($this->customDropins)) {
+            return Step::NONE;
+        }
+
+        foreach ($this->customDropins as $basename => $url) {
+            if ($basename === $url) {
+                $basename = filter_var($url, FILTER_VALIDATE_URL)
+                    ? trim(parse_url($url, PHP_URL_PATH), '/') ?: $url
+                    : basename($url);
+            }
+
+            $this->isKnownDropin($basename, $config)
+                ? $this->runDropinStep($basename, $url, $config, $paths)
+                : $this->error .= "{$basename} is not a valid dropin name. Skipped.\n";
+        }
+
+        if (!$this->error) {
+            return Step::SUCCESS;
+        }
+
+        if (!$this->success) {
+            return Step::ERROR;
+        }
+
+        return Step::SUCCESS | Step::ERROR;
+    }
+
+    /**
+     * @param string $srcDir
+     * @param Paths $paths
+     * @return bool
+     */
+    private function publishDropinsFromInstalledPath(string $srcDir, Paths $paths): bool
+    {
+        $all = 0;
+        $done = 0;
+        $target = $paths->wpContent();
+        foreach (self::DROPINS as $file) {
+            if (!is_file("{$srcDir}/{$file}")) {
+                continue;
+            }
+
+            if (file_exists("{$target}/{$file}")
+                && !$this->overwriteHelper->shouldOverwrite("{$target}/{$file}")
+            ) {
+                continue;
+            }
+
+            $all++;
+            if (!$this->filesystem->copyFile("{$srcDir}/{$file}", "{$target}/{$file}")) {
+                $this->error .= "Error copying {$file} dropin to {$target}\n";
+                continue;
+            }
+
+            $done++;
+        }
+
+        $this->filesystem->removeRealDir($srcDir);
+
+        return $all === $done;
+    }
+
+    /**
+     * @param string $basename
      * @param string $url
+     * @param Config $config
      * @param Paths $paths
      */
-    private function runStep(string $name, string $url, Paths $paths)
+    private function runDropinStep(string $basename, string $url, Config $config, Paths $paths)
     {
         $step = new DropinStep(
-            $name,
+            $basename,
             $url,
             $this->io,
             $this->urlDownloader,
             $this->overwriteHelper
         );
 
-        if (!$step->allowed($this->config, $paths)) {
+        if (!$step->allowed($config, $paths)) {
             return;
         }
 
-        $result = $step->run($this->config, $paths);
+        $result = $step->run($config, $paths);
         switch ($result) {
             case Step::SUCCESS:
                 $this->success .= $step->success() . "\n";
@@ -209,76 +291,25 @@ final class DropinsStep implements Step
      * dropins.
      *
      * @param  string $filename
+     * @param Config $config
      * @return bool
      */
-    private function isKnownDropin(string $filename): bool
+    private function isKnownDropin(string $filename, Config $config): bool
     {
-        if ($this->config[Config::UNKWOWN_DROPINS]->is(true)
+        if ($config[Config::UNKNOWN_DROPINS]->is(true)
             || in_array($filename, self::DROPINS, true)
         ) {
             return true;
         }
 
-        $shouldAsk = $this->config[Config::UNKWOWN_DROPINS]->is(OptionalStep::ASK);
-        $ext = pathinfo($filename, PATHINFO_EXTENSION);
-        if (strtolower($ext) !== 'php') {
-            return $shouldAsk && $this->ask($filename, self::QUESTION_NO_DROPIN);
+        if (!$config[Config::UNKNOWN_DROPINS]->is(OptionalStep::ASK)) {
+            return false;
         }
 
-        if (!is_array(self::$languages)) {
-            $ver = $this->config[Config::WP_VERSION]->unwrapOrFallback();
-            $languages = $ver ? $this->languagesFetcher->fetch($ver) : [];
-            is_array($languages) and self::$languages = $languages;
-        }
-
-        $language = pathinfo($filename, PATHINFO_FILENAME);
-
-        if (!self::$languages || !is_array(self::$languages)) {
-            return $shouldAsk && $this->ask($filename, self::QUESTION_LOCALES_ERROR);
-        }
-
-        return
-            in_array($language, self::$languages, true)
-            || ($shouldAsk && $this->ask($filename, self::QUESTION_NO_LOCALE));
-    }
-
-    /**
-     * Asks to user what to do in case of unknown dropins.
-     * Question is different based on situations.
-     *
-     * @param string $filename
-     * @param int $question
-     * @return bool
-     */
-    private function ask(string $filename, int $question = 0): bool
-    {
-        $wpVer = $this->config[Config::WP_VERSION]->unwrapOrFallback();
-        $forWp = $wpVer ? " for WP '{$wpVer}'" : '';
-
-        $language = pathinfo($filename, PATHINFO_FILENAME);
-
-        switch ($question) {
-            case self::QUESTION_NO_LOCALE:
-                $lines = [
-                    "{$language} is not a core supported locale{$forWp}.",
-                    "Do you want to proceed with {$filename} anyway?",
-                ];
-                break;
-            case self::QUESTION_LOCALES_ERROR:
-                $lines = [
-                    'WP Starter failed to get languages from wordpress.org API,',
-                    "so it isn't possible to verify that {$language} is a supported locale.",
-                    "Do you want to proceed with {$filename} anyway?",
-                ];
-                break;
-            case self::QUESTION_NO_DROPIN:
-            default:
-                $lines = [
-                    "{$filename} seems not a valid dropin file.",
-                    'Do you want to proceed with it anyway?',
-                ];
-                break;
-        }
+        $lines = [
+            "{$filename} seems not a valid dropin file.",
+            'Do you want to proceed with it anyway?',
+        ];
 
         return $this->io->askConfirm($lines, false);
     }

@@ -55,11 +55,12 @@ final class Requirements
 
         $this->filesystem = $filesystem;
 
-        $this->paths = new Paths($composer, $filesystem);
+        $extra = $composer->getPackage()->getExtra();
+
+        $this->paths = new Paths($composer->getConfig(), $extra, $filesystem);
         $root = $this->paths->root();
 
-        $config = $this->extractConfig($root, $composer->getPackage()->getExtra());
-        $config[Config::COMPOSER_CONFIG] = $composer->getConfig()->all();
+        $config = $this->extractConfig($root, $extra);
 
         $this->config = new Config($config, new Validator($this->paths, $filesystem));
         $this->io = new Io($io);
@@ -111,19 +112,29 @@ final class Requirements
             ? []
             : $extra[ComposerPlugin::EXTRA_KEY];
 
-        $file = is_string($configs) ? trim(basename($configs), '/\\') : self::CONFIG_FILE;
+        $file = self::CONFIG_FILE;
+        $overrideFile = null;
+        if (is_string($configs)) {
+            $file = ltrim($configs, '/\\');
+            $overrideFile = "{$rootPath}/" . self::CONFIG_FILE;
+            $configs = [];
+        }
 
-        // Extract config from a separate JSON file
+        // Extract config from a separate JSON files
         $fileConfigs = null;
+        $overrideConfigs = null;
         if (is_file("{$rootPath}/{$file}") && is_readable("{$rootPath}/{$file}")) {
             $content = @file_get_contents("{$rootPath}/{$file}");
             $fileConfigs = $content ? @json_decode($content, true) : null;
-            is_object($fileConfigs) and $fileConfigs = get_object_vars($fileConfigs);
+        }
+        if ($overrideFile && is_file($overrideFile) && is_readable($overrideFile)) {
+            $overrideContent = @file_get_contents($overrideFile);
+            $overrideConfigs = $overrideContent ? @json_decode($overrideContent, true) : null;
         }
 
-        is_object($configs) and $configs = get_object_vars($configs);
         is_array($configs) or $configs = [];
-        $fileConfigs and $configs = array_merge($configs, $fileConfigs);
+        $fileConfigs and $configs = array_merge($configs, (array)$fileConfigs);
+        $overrideConfigs and $configs = array_merge($configs, (array)$overrideConfigs);
 
         return $configs;
     }

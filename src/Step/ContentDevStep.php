@@ -16,25 +16,23 @@ use WeCodeMore\WpStarter\Util\Paths;
 /**
  * Step that "publish" content dev folders in WP Content.
  *
- * WP Starter is used to setup "project", i.e. whole WordPress websites based on Composer.
- * So, normally, WordPress "content" packages: (mu-)plugins and themes, are pulled from different
- * packages.
- * However ,it happens that project-specific (mu-)plugins or themes might be placed in the same
- * repo of the project, because it does not worth a separate package for them or because being very
- * project specific there's no place to reuse them so no reason to maintain them separately.
+ * Often a WP Starter project is made of a `composer.json` and little less, because WordPress
+ * "content" packages: plugins, themes, and mu-plugins are pulled from *separate* Composer packages.
+ * However, it happens that project developer want to place project-specific "content" packages in
+ * the same repository of the project, because it does not worth to have a separate package for them
+ * or because being very project specific there's no place to reuse them and consequently no reason
+ * to maintain them separately.
  *
- * One way to do this is to place those project-specific plugins or themes in the target
- * WordPress content folder, which is the same folder where WordPress will place plugin and themes
- * pulled via Composer. This introduces complexity in managing VCS, because very likely external
- * packages will not be tracked with the project, while plugins and themes in the project folder
- * will.
+ * One way to do this is to just place those project-specific plugins or themes in the project
+ * wp-content folder, which is the folder that will make them recognizable by WordPress, but also is
+ * the same folder where Composer will place plugins and themes pulled via separate packages. This
+ * introduces complexity in managing VCS, because, very likely the developer doesn't want to keep
+ * Composer dependencies under version control, but surely wants to keep under version control
+ * plugins and themes belonging in the project.
  *
- * WP Starter offers a different, totally optional, approach for this issue.
- * Plugins and themes that lives in the project repo, can be placed in a separate folder and
- * WP Starter will either symlink or copy them to target WP content folder.
- * This step class is responsible to do exactly that.
- * The operation to apply (symlink or copy), just like the source folder (where plugins and themes
- * are placed), can be configured, but sensitive defaults are used.
+ * WP Starter offers a different, totally optional, approach for this issue. Plugins and themes that
+ * are developed in the project repository, can be placed in a dedicated folder and WP Starter will
+ * either symlink or copy them to project WP content folder so that WordPress can find them.
  */
 final class ContentDevStep implements OptionalStep
 {
@@ -80,7 +78,7 @@ final class ContentDevStep implements OptionalStep
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
     public function name(): string
     {
@@ -94,9 +92,7 @@ final class ContentDevStep implements OptionalStep
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        return
-            $config[Config::CONTENT_DEV_OPERATION]->notEmpty()
-            && $config[Config::CONTENT_DEV_DIR]->notEmpty();
+        return $config[Config::CONTENT_DEV_DIR]->notEmpty();
     }
 
     /**
@@ -106,16 +102,14 @@ final class ContentDevStep implements OptionalStep
      */
     public function askConfirm(Config $config, Io $io): bool
     {
-        $dir = $config[Config::CONTENT_DEV_DIR]->unwrapOrFallback();
-        if (!$dir || $config[Config::CONTENT_DEV_OPERATION]->not(self::ASK)) {
+        if ($config[Config::CONTENT_DEV_OPERATION]->not(self::ASK)) {
             return true;
         }
 
         $operation = $this->io->ask(
             [
-                'Which operation do you want to perform',
-                "for content development folders in /{$dir}",
-                'to make them available in WP content dir?',
+                'Which operation do you want to perform for content development folders to make '
+                .'them available in WP content dir?',
             ],
             ['s' => '[S]ymlink', 'c' => '[C]opy', 'n' => '[N]othing'],
             'n'
@@ -139,21 +133,33 @@ final class ContentDevStep implements OptionalStep
     public function run(Config $config, Paths $paths): int
     {
         $this->config = $config;
-        $operation = $this->operation ?: $config[Config::CONTENT_DEV_OPERATION]->unwrap();
+        $operation = $this->operation;
+        if (!$operation) {
+            $operation = $config[Config::CONTENT_DEV_OPERATION]->unwrapOrFallback(self::OP_SYMLINK);
+        }
 
         if ($operation === self::OP_NONE || $operation === self::ASK) {
             return Step::NONE;
         }
 
         $srcBase = $config[Config::CONTENT_DEV_DIR]->unwrap();
-        $sourceSubDirs = glob("{$srcBase}/*", GLOB_ONLYDIR | GLOB_NOSORT);
+        $scrDirs = ["{$srcBase}/plugins", "{$srcBase}/themes", "{$srcBase}/mu-plugins"];
         $targetBase = $paths->wpContent();
 
-        $operationDirs = $operation === self::OP_COPY
-            ? $this->copyDirs($srcBase, $sourceSubDirs, $targetBase)
-            : $this->symlinkDirs($srcBase, $sourceSubDirs, $targetBase);
+        $successDirs = $operation === self::OP_COPY
+            ? $this->copyDirs($scrDirs, $targetBase)
+            : $this->symlinkDirs($scrDirs, $targetBase);
 
-        $operationFiles = $this->copyOrSymlinkFiles($srcBase, $targetBase, $operation);
+        $scrFiles = array_map(
+            function (string $dropin) use ($srcBase): string {
+                return "{$srcBase}/{$dropin}";
+            },
+            DropinsStep::DROPINS
+        );
+
+        $successFiles = $operation === self::OP_COPY
+            ? $this->copyFiles($scrFiles, $targetBase)
+            : $this->symlinkFiles($scrFiles, $targetBase);
 
         $this->error = sprintf(
             "Some errors occurred while %sing content-dev dir '%s' to '%s'.",
@@ -162,7 +168,15 @@ final class ContentDevStep implements OptionalStep
             $targetBase
         );
 
-        return ($operationDirs && $operationFiles) ? Step::SUCCESS : Step::ERROR;
+        if ($successDirs && $successFiles) {
+            return Step::SUCCESS;
+        }
+
+        if (!$successDirs && !$successFiles) {
+            return Step::ERROR;
+        }
+
+        return Step::SUCCESS | Step::ERROR;
     }
 
     /**
@@ -188,50 +202,48 @@ final class ContentDevStep implements OptionalStep
      */
     public function skipped(): string
     {
-        return '  - Content-dev publishing skipped.';
+        return '  - Development content publishing skipped.';
     }
 
     /**
-     * @param string $srcBase
-     * @param array $srcSubDirs
-     * @param string $targetBase
+     * @param array $srcDirs
+     * @param string $targetDir
      * @return bool
      */
-    private function copyDirs(string $srcBase, array $srcSubDirs, string $targetBase): bool
+    private function copyDirs(array $srcDirs, string $targetDir): bool
     {
         $done = $all = 0;
 
-        foreach ($srcSubDirs as $sourceSubDir) {
-            if (!is_dir("{$srcBase}/{$sourceSubDir}")) {
+        foreach ($srcDirs as $srcSubDir) {
+            if (!is_dir($srcSubDir)) {
                 continue;
             }
 
             $all++;
-            $targetFullPath = "{$targetBase}/{$sourceSubDir}";
+            $targetFullPath = "{$targetDir}/" . basename($srcSubDir);
 
-            $this->filesystem->copyDir("{$srcBase}/{$sourceSubDir}", $targetFullPath) and $done++;
+            $this->filesystem->copyDir($srcSubDir, $targetFullPath) and $done++;
         }
 
         return $done === $all;
     }
 
     /**
-     * @param string $srcBase
-     * @param array $srcSubDirs
-     * @param string $targetBase
+     * @param array $srcDirs
+     * @param string $targetDir
      * @return bool
      */
-    private function symlinkDirs(string $srcBase, array $srcSubDirs, string $targetBase): bool
+    private function symlinkDirs(array $srcDirs, string $targetDir): bool
     {
         $done = $all = 0;
 
-        foreach ($srcSubDirs as $sourceSubDir) {
-            $srcInnerPaths = glob("{$srcBase}/{$sourceSubDir}/*", GLOB_NOSORT);
-            $this->filesystem->createDir("{$targetBase}/{$sourceSubDir}/");
-            foreach ($srcInnerPaths as $srcInnerPath) {
+        foreach ($srcDirs as $srcDir) {
+            $srcSubDirs = glob("{$srcDir}/*", GLOB_NOSORT);
+            $this->filesystem->createDir($srcDir);
+            foreach ($srcSubDirs as $srcSubDir) {
                 $all++;
-                $targetName = "{$targetBase}/{$sourceSubDir}/" . basename($srcInnerPath);
-                $this->filesystem->symlink($srcInnerPath, $targetName) and $done++;
+                $targetName = "{$targetDir}/" . basename($srcSubDir);
+                $this->filesystem->symlink($srcSubDir, $targetName) and $done++;
             }
         }
 
@@ -239,27 +251,42 @@ final class ContentDevStep implements OptionalStep
     }
 
     /**
-     * @param string $sourceBase
-     * @param string $targetBase
-     * @param string $operation
+     * @param array $srcFiles
+     * @param string $targetDir
      * @return bool
      */
-    private function copyOrSymlinkFiles(
-        string $sourceBase,
-        string $targetBase,
-        string $operation
-    ): bool {
-
+    private function copyFiles(array $srcFiles, string $targetDir): bool
+    {
         $done = $all = 0;
 
-        $files = glob("{$sourceBase}/*.*", GLOB_NOSORT);
-        foreach ($files as $file) {
-            $all++;
-            $success = $operation === self::OP_COPY
-                ? $this->filesystem->copyFile($file, "{$targetBase}/" . basename($file))
-                : $this->filesystem->symlink($file, "{$targetBase}/" . basename($file));
+        foreach ($srcFiles as $srcFile) {
+            if (!is_file($srcFile)) {
+                continue;
+            }
 
-            $success and $done++;
+            $all++;
+            $this->filesystem->copyFile($srcFile, "{$targetDir}/" . basename($srcFile)) and $done++;
+        }
+
+        return $done === $all;
+    }
+
+    /**
+     * @param array $srcFiles
+     * @param string $targetDir
+     * @return bool
+     */
+    private function symlinkFiles(array $srcFiles, string $targetDir): bool
+    {
+        $done = $all = 0;
+
+        foreach ($srcFiles as $srcFile) {
+            if (!is_file($srcFile)) {
+                continue;
+            }
+
+            $all++;
+            $this->filesystem->symlink($srcFile, "{$targetDir}/" . basename($srcFile)) and $done++;
         }
 
         return $done === $all;

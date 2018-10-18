@@ -52,7 +52,7 @@ class Filesystem
     }
 
     /**
-     * Move a single file from a sorce to a destination.
+     * Move a single file from a source to a destination.
      *
      * @param string $sourcePath
      * @param string $targetPath
@@ -71,7 +71,7 @@ class Filesystem
     }
 
     /**
-     * Copy a single file from a sorce to a destination.
+     * Copy a single file from a source to a destination.
      *
      * @param string $sourcePath
      * @param string $targetPath
@@ -211,6 +211,28 @@ class Filesystem
                 $dirname = $parentDir . '/' . implode('/', array_slice($nameParts, 0, $i));
                 @chmod($dirname, $permissions);
             }
+        }
+
+        return true;
+    }
+
+    /**
+     * Remove a directory.
+     *
+     * @param string $directory
+     * @return bool
+     */
+    public function removeRealDir(string $directory): bool
+    {
+        if ($this->filesystem->isSymlinkedDirectory($directory)
+            || $this->filesystem->isJunction($directory)
+            || is_link($directory)
+        ) {
+            return false;
+        }
+
+        if (is_dir($directory)) {
+            return $this->filesystem->removeDirectory($directory);
         }
 
         return true;

@@ -56,8 +56,10 @@ class Command
      */
     public function pharUrl(): string
     {
+        $ver = $this->minVersion();
+
         return $this->downloadEnabled
-            ? 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
+            ? "https://github.com/wp-cli/wp-cli/releases/download/v{$ver}/wp-cli-{$ver}.phar"
             : '';
     }
 
@@ -71,7 +73,7 @@ class Command
     }
 
     /**
-     * @param $packageVendorPath
+     * @param string $packageVendorPath
      * @return string
      */
     public function executableFile(string $packageVendorPath): string
@@ -84,7 +86,7 @@ class Command
      */
     public function minVersion(): string
     {
-        return '1.2.1';
+        return '2.0.1';
     }
 
     /**
@@ -94,19 +96,19 @@ class Command
      */
     public function checkPhar(string $pharPath, Io $io): bool
     {
-        list($algo, $hashUrl) = $this->hashAlgoUrl($io);
+        list($algorithm, $hashUrl) = $this->hashAlgorithmUrl($io);
 
         $hash = $this->urlDownloader->fetch($hashUrl);
 
         if (!$hash) {
-            $io->writeError("Failed to download {$algo} hash from {$hashUrl}.");
+            $io->writeError("Failed to download {$algorithm} hash from {$hashUrl}.");
             $io->writeError($this->urlDownloader->error());
 
             return false;
         }
 
-        if (hash($algo, file_get_contents($pharPath)) !== $hash) {
-            $io->writeError("{$algo} hash check failed for downloaded WP CLI phar.");
+        if (hash($algorithm, file_get_contents($pharPath)) !== $hash) {
+            $io->writeError("{$algorithm} hash check failed for downloaded WP CLI phar.");
 
             return false;
         }
@@ -132,7 +134,7 @@ class Command
      * @param Io $io
      * @return array
      */
-    private function hashAlgoUrl(Io $io): array
+    private function hashAlgorithmUrl(Io $io): array
     {
         if (in_array('sha512', hash_algos(), true)) {
             return ['sha512', $this->pharUrl() . '.sha512'];

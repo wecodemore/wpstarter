@@ -110,20 +110,20 @@ class ValidatorTest extends TestCase
 
         $input = [
             'foo',
-            $dir,
+            'dir' => $dir,
             'f"oo',
             '../foo/bar',
-            'https://foo/bar?x=y',
+            'url-1' => 'https://foo/bar?x=y',
             $file,
             'meh',
             'https://username:password@127.0.0.1',
         ];
 
         $expected = [
-            $dir,
-            'https://foo/bar?x=y',
-            $file,
-            'https://username:password@127.0.0.1',
+            'dir' => $dir,
+            'url-1' => 'https://foo/bar?x=y',
+            $file => $file,
+            'https://username:password@127.0.0.1' => 'https://username:password@127.0.0.1',
         ];
 
         static::assertSame($expected, $validator->validateDropins($input)->unwrap());
@@ -181,7 +181,7 @@ class ValidatorTest extends TestCase
         $actualFromJson = $validator->validateWpCliCommands($jsonList);
         static::assertTrue($actualFromJson->is(['cli version', 'cli info']));
 
-        $actual = ['cli version', 'wp cli info'];
+        $actual = ['wp cli version', 'wp cli info'];
         $expected = ['cli version', 'cli info'];
         static::assertTrue($validator->validateWpCliCommands($actual)->is($expected));
     }
@@ -197,9 +197,9 @@ class ValidatorTest extends TestCase
         static::assertFalse($validator->validateWpCliCommand(null)->notEmpty());
         static::assertFalse($validator->validateWpCliCommand([])->notEmpty());
         static::assertFalse($validator->validateWpCliCommand(true)->notEmpty());
+        static::assertFalse($validator->validateWpCliCommand('cli info')->notEmpty());
 
         static::assertTrue($validator->validateWpCliCommand('wp cli info')->is('cli info'));
-        static::assertTrue($validator->validateWpCliCommand('cli info')->is('cli info'));
 
         $cmd = 'wp cli info --path=./foo --format=list';
         static::assertTrue($validator->validateWpCliCommand($cmd)->is('cli info --format=list'));

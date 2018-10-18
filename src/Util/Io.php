@@ -21,21 +21,6 @@ class Io
     private $io;
 
     /**
-     * Used for early errors when a full working instance of this class is not ready so can't use
-     * regular methods.
-     *
-     * @param IOInterface $io
-     * @param string[] $lines
-     */
-    public static function writeFormattedError(IOInterface $io, string ...$lines)
-    {
-        if ($lines) {
-            $open = '<bg=red;fg=white;option=bold>  ';
-            $io->writeError(self::createBlock($open, '  </>', ...$lines));
-        }
-    }
-
-    /**
      * Return an array where each item is a slice of the given string with less than 51 characters.
      *
      * @param string[] $lines
@@ -261,7 +246,7 @@ class Io
     }
 
     /**
-     * @param string ...$lines
+     * @param string[] $lines
      * @return bool
      */
     public function writeErrorBlock(string ...$lines): bool
@@ -270,7 +255,7 @@ class Io
     }
 
     /**
-     * @param string ...$lines
+     * @param string[] $lines
      * @return bool
      */
     public function writeSuccessBlock(string ...$lines): bool
@@ -279,7 +264,7 @@ class Io
     }
 
     /**
-     * @param string ...$lines
+     * @param string[] $lines
      * @return bool
      */
     public function writeYellowBlock(string ...$lines): bool

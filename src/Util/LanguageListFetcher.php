@@ -50,7 +50,7 @@ class LanguageListFetcher
         }
 
         $url = $useSsl ? 'https://' : 'http://';
-        $url .= 'api.wordpress.org/translations/core/1.0/?version=';
+        $url .= "api.wordpress.org/translations/core/1.0/?version={$version}";
         $result = $this->urlDownloader->fetch($url);
 
         if (!$result && $useSsl) {

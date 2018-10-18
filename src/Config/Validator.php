@@ -46,10 +46,10 @@ class Validator
     }
 
     /**
-     * Validate the "prevent overwite" setting.
+     * Validate the "prevent overwrite" setting.
      *
-     * It is expected edither:
-     * - the word "hard", which means always prevent the overwite of anything;
+     * It is expected either:
+     * - the word "hard", which means always prevent the overwrite of anything;
      * - the word "ask", which means ask the user in case of existing file;
      * - a boolean(-like), which enables or not the overwrite protection.
      *
@@ -95,7 +95,8 @@ class Validator
                 continue;
             }
 
-            $step = trim($step);
+            $step = ltrim(trim($step), '\\');
+            is_string($name) or $name = basename(str_replace('\\', '/', $step));
             is_subclass_of($step, Step::class, true) and $steps[trim($name)] = $step;
         }
 
@@ -176,10 +177,11 @@ class Validator
         }
 
         $dropins = [];
-        foreach ($value as $name => $step) {
-            $check = $this->validateUrlOrPath($step);
+        foreach ($value as $name => $dropin) {
+            $check = $this->validateUrlOrPath($dropin);
             if ($check->notEmpty()) {
-                $dropins[] = $check->unwrap();
+                is_string($name) or $name = $dropin;
+                $dropins[$name] = $check->unwrap();
             }
         }
 
@@ -189,7 +191,6 @@ class Validator
 
         return Result::ok($dropins);
     }
-
 
     /**
      * Validate the operation to apply for "content dev".
@@ -307,7 +308,11 @@ class Validator
             return Result::errored('A WP CLI command must be a string.');
         }
 
-        strpos($value, 'wp ') === 0 and $value = substr($value, 3);
+        if (strpos($value, 'wp ') !== 0) {
+            return Result::errored('A WP CLI command must start with "wp ".');
+        }
+
+        $value = substr($value, 3);
 
         try {
             $hasPath = preg_match('~^(.+)(\-\-path=[^ ]+)(.+)?$~', $value, $matches);
@@ -402,29 +407,9 @@ class Validator
     }
 
     /**
-     * Validate given value is an instance of WpCli\Executor.
-     *
-     * The executor is added on runtime by WP Starter itself and not set via configuration, so we
-     * can check the type of the actual instance instead of the class.
-     *
-     * @param $value
-     * @return Result
-     */
-    public function validateCliExecutor($value): Result
-    {
-        if ($value === null) {
-            return Result::none();
-        }
-
-        return $value instanceof WpCli\Executor
-            ? Result::ok($value)
-            : Result::errored('WP CLI executor must be an instance of WpCli\Executor.');
-    }
-
-    /**
      * Validate WP version.
      *
-     * Checks that given value represnet a valid WP version. It does not check that the version
+     * Checks that given value represent a valid WP version. It does not check that the version
      * actually exists, just that the value _looks like_ valid version, e.g "4.9.8" or "1.0-alpha".
      * Something like "8.5.1.5" will be considered valid, even if that version does not exist (yet).
      * The returned result in case of success wraps a normalized value in the form "x.x.x".
@@ -549,7 +534,7 @@ class Validator
      * Validate given value is a valid file name.
      *
      * Unfortunately there's no real effective way to check if a string will make a valid file name
-     * in PHP. We know some characters ar einvalid, but some combinations of valid characters are
+     * in PHP. We know some characters are invalid, but some combinations of valid characters are
      * invalid names. E.g. spaces and dots are valid characters, but a string made entirely of dots
      * and spaces is not a valid file name. On top of that PHP has issues with UTF-8 names.
      *
@@ -743,7 +728,7 @@ class Validator
      * Validate given value to be a boolean-like value.
      *
      * Besides of actual booleans, strings "true" / "false", "yes" / "no", "on" / "off" and
-     * integres 0 / 1 are all valid input and returned result will return a values casted to bool.
+     * integers 0 / 1 are all valid input and returned result will return a values casted to bool.
      *
      * @param string|int|bool $value
      * @return Result

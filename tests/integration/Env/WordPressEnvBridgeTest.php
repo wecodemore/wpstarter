@@ -51,7 +51,7 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame('wp', $bridge['DB_NAME']);
         static::assertSame('my secret!', $bridge['DB_PASSWORD']);
         static::assertSame('xxx_', $bridge['DB_TABLE_PREFIX']);
-        static::assertSame('wp', $bridge['DB_USER']);
+        static::assertSame('wp_user', $bridge['DB_USER']);
     }
 
     /**

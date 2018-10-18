@@ -33,6 +33,11 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
     private $filesystem;
 
     /**
+     * @var \Composer\Util\Filesystem
+     */
+    private $composerFilesystem;
+
+    /**
      * @var string
      */
     private $error = '';
@@ -44,6 +49,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
     {
         $this->builder = $locator->fileBuilder();
         $this->filesystem = $locator->filesystem();
+        $this->composerFilesystem = $locator->composerFilesystem();
     }
 
     /**
@@ -83,7 +89,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
         $from = $paths->wpParent();
         $to = $paths->wp('index.php');
 
-        $indexPath = $this->filesystem->composerFilesystem()->findShortestPath($from, $to);
+        $indexPath = $this->composerFilesystem->findShortestPath($from, $to);
 
         $built = $this->builder->build($paths, 'index.php', ['BOOTSTRAP_PATH' => $indexPath]);
 

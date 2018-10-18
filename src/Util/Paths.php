@@ -8,14 +8,14 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
-use Composer\Composer;
+use Composer\Config;
 use Composer\Util\Filesystem;
 
 /**
  * Data storage for all relevant paths in a project.
  *
  * Many paths can be configured, this helpers provide a way to do the configuration parsing only
- * once that use helper methods to obtain releative or absolute paths to specifc folders.
+ * once that use helper methods to obtain relative or absolute paths to specific folders.
  */
 final class Paths implements \ArrayAccess
 {
@@ -28,9 +28,14 @@ final class Paths implements \ArrayAccess
     const WP_STARTER = 'wp-starter';
 
     /**
-     * @var \Composer\Composer
+     * @var Config
      */
-    private $composer;
+    private $config;
+
+    /**
+     * @var array
+     */
+    private $extra;
 
     /**
      * @var Filesystem
@@ -48,12 +53,14 @@ final class Paths implements \ArrayAccess
     private $paths;
 
     /**
-     * @param \Composer\Composer $composer
+     * @param Config $config
+     * @param array $extra
      * @param Filesystem $filesystem
      */
-    public function __construct(Composer $composer, Filesystem $filesystem)
+    public function __construct(Config $config, array $extra, Filesystem $filesystem)
     {
-        $this->composer = $composer;
+        $this->config = $config;
+        $this->extra = $extra;
         $this->filesystem = $filesystem;
     }
 
@@ -249,31 +256,34 @@ final class Paths implements \ArrayAccess
      */
     private function parse(): array
     {
-        $extra = $this->composer->getPackage()->getExtra();
-
         $cwd = $this->filesystem->normalizePath(getcwd());
 
-        $wpInstallDir = empty($extra['wordpress-install-dir'])
-            ? 'wordpress'
-            : $extra['wordpress-install-dir'];
+        $wpInstallDir = $this->extra['wordpress-install-dir'] ?? 'wordpress';
+        $wpContentDir = $this->extra['wordpress-content-dir'] ?? 'wp-content';
+        $wpFullDir = $this->filesystem->normalizePath("{$cwd}/{$wpInstallDir}");
+        $wpContentFullDir = $this->filesystem->normalizePath("{$cwd}/{$wpContentDir}");
 
-        $wpFullDir = "{$cwd}/{$wpInstallDir}";
-        $wpParent = dirname($wpFullDir);
+        if (strpos($wpFullDir, $cwd) !== 0) {
+            throw new \Exception(
+                'Config for WP install dir is pointing a dir outside root, '
+                .'WP Starter does not support that.'
+            );
+        }
 
-        $wpContent = empty($extra['wordpress-content-dir'])
-            ? $this->filesystem->normalizePath($cwd . '/wp-content')
-            : $this->filesystem->normalizePath($cwd . "/{$extra['wordpress-content-dir']}");
-
-        $vendorDir = $this->composer->getConfig()->get('vendor-dir');
-        $binDir = $this->composer->getConfig()->get('bin-dir');
+        if (strpos($wpContentFullDir, $cwd) !== 0 || $cwd === $wpContentFullDir) {
+            $to = $cwd === $wpContentFullDir ? 'root dir' : 'a dir outside root';
+            throw new \Exception(
+                "Config for WP config dir is pointing to {$to}, WP Starter does not support that."
+            );
+        }
 
         return [
             self::ROOT => $this->filesystem->normalizePath($cwd),
-            self::VENDOR => $this->filesystem->normalizePath($vendorDir),
-            self::BIN => $this->filesystem->normalizePath($binDir),
-            self::WP => $this->filesystem->normalizePath($wpFullDir),
-            self::WP_PARENT => $this->filesystem->normalizePath($wpParent),
-            self::WP_CONTENT => $this->filesystem->normalizePath($wpContent),
+            self::VENDOR => $this->filesystem->normalizePath($this->config->get('vendor-dir')),
+            self::BIN => $this->filesystem->normalizePath($this->config->get('bin-dir')),
+            self::WP => $wpFullDir,
+            self::WP_PARENT => $wpFullDir === $cwd ? $wpFullDir : dirname($wpFullDir),
+            self::WP_CONTENT => $wpContentFullDir,
             self::WP_STARTER => $this->filesystem->normalizePath(dirname(__DIR__, 2)),
         ];
     }

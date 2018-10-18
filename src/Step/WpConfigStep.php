@@ -20,7 +20,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class WpConfigStep implements FileCreationStepInterface, BlockingStep
 {
-    const NAME = 'build-wpconfig';
+    const NAME = 'build-wp-config';
 
     /**
      * @var \WeCodeMore\WpStarter\Util\Io
@@ -36,6 +36,11 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      * @var \WeCodeMore\WpStarter\Util\Filesystem
      */
     private $filesystem;
+
+    /**
+     * @var \Composer\Util\Filesystem
+     */
+    private $composerFilesystem;
 
     /**
      * @var \WeCodeMore\WpStarter\Util\UrlDownloader
@@ -65,6 +70,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         $this->io = $locator->io();
         $this->builder = $locator->fileBuilder();
         $this->filesystem = $locator->filesystem();
+        $this->composerFilesystem = $locator->composerFilesystem();
         $this->urlDownloader = $locator->urlDownloader();
         $this->salter = $locator->salter();
         $this->config = $locator->config();
@@ -104,14 +110,12 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        $register = $this->config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback(false);
+        $register = $config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback(false);
         ($register === OptionalStep::ASK) and $register = $this->askForRegister();
 
-        $filesystem = $this->filesystem->composerFilesystem();
+        $from = $this->composerFilesystem->normalizePath($paths->wpParent());
 
-        $from = $filesystem->normalizePath($paths->wpParent());
-
-        $envDir = $this->config[Config::ENV_DIR]->unwrapOrFallback() ?: $paths->root();
+        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback() ?: $paths->root();
 
         $earlyHook = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback('');
         $earlyHook and $earlyHook = $this->relPath("{$from}/index.php", $earlyHook, false);
@@ -127,7 +131,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         $vars = [
             'AUTOLOAD_PATH' => $this->relPath("{$from}/index.php", $paths->vendor('autoload.php'), false),
             'ENV_REL_PATH' => $this->relPath($from, $envDir),
-            'ENV_FILE_NAME' => $this->config[Config::ENV_FILE]->unwrapOrFallback('.env'),
+            'ENV_FILE_NAME' => $config[Config::ENV_FILE]->unwrapOrFallback('.env'),
             'ENV_BOOTSTRAP_DIR' => $envBootstrapDir ? "{$envBootstrapDir}/" : '',
             'WP_INSTALL_PATH' => $wpRelDir,
             'WP_CONTENT_PATH' => $contentRelDir,
@@ -189,8 +193,9 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      */
     private function relPath(string $from, string $to, bool $bothDirs = true): string
     {
-        $filesystem = $this->filesystem->composerFilesystem();
-        $path = $filesystem->normalizePath($filesystem->findShortestPath($from, $to, $bothDirs));
+        $path = $this->composerFilesystem->normalizePath(
+            $this->composerFilesystem->findShortestPath($from, $to, $bothDirs)
+        );
 
         return "/{$path}";
     }

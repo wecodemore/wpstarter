@@ -16,7 +16,6 @@ use Composer\Plugin\PluginInterface;
 use Composer\Plugin\Capability\CommandProvider;
 use Composer\Script\Event;
 use Composer\Util\Filesystem;
-use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util;
 use WeCodeMore\WpStarter\Step;
@@ -47,14 +46,9 @@ final class ComposerPlugin implements
     ];
 
     /**
-     * @var Util\Locator
-     */
-    private $locator;
-
-    /**
      * @var IOInterface
      */
-    private $composerIo;
+    private $io;
 
     /**
      * @var Composer
@@ -62,9 +56,9 @@ final class ComposerPlugin implements
     private $composer;
 
     /**
-     * @var Util\Requirements
+     * @var Util\Locator
      */
-    private $requirements;
+    private $locator;
 
     /**
      * phpcs:disable Inpsyde.CodeQuality.NoAccessors
@@ -106,8 +100,7 @@ final class ComposerPlugin implements
     public function activate(Composer $composer, IOInterface $io)
     {
         $this->composer = $composer;
-        $this->composerIo = $io;
-        $this->requirements = new Util\Requirements($composer, $io, new Filesystem());
+        $this->io = $io;
     }
 
     /**
@@ -121,38 +114,38 @@ final class ComposerPlugin implements
      */
     public function run(Event $event = null, array $selectedStepNames = [])
     {
-        $config = $this->requirements->config();
+        $filesystem = new Filesystem();
+        $requirements = new Util\Requirements($this->composer, $this->io, $filesystem);
+        $config = $requirements->config();
         $requireWp = $config[Config::REQUIRE_WP]->not(false);
         $fallbackVer = $config[Config::WP_VERSION]->notEmpty()
             ? $config[Config::WP_VERSION]->unwrap()
             : null;
 
-        $wpVersion = null;
-        if ($requireWp) {
-            $wpVersionDiscover = new Util\WpVersion($this->composerIo, $fallbackVer);
-            $repo = $this->composer->getRepositoryManager()->getLocalRepository();
-            $wpVersion = $wpVersionDiscover->discover(...$repo->getPackages());
-        }
-
-        if (!$wpVersion && $requireWp) {
-            $event or exit(1);
-
-            return;
-        }
-
-        // If WP version was found and no version is set in configs, let's set it with the finding.
-        if ($wpVersion && !$fallbackVer) {
-            $config->appendConfig(Config::WP_VERSION, $wpVersion);
-        }
-
-        $this->locator = new Util\Locator(
-            $this->requirements,
-            $this->composer,
-            $this->composerIo,
-            $this->requirements->filesystem()
-        );
+        $this->locator = new Util\Locator($requirements, $this->composer, $this->io, $filesystem);
 
         try {
+            $wpVersion = null;
+            if ($requireWp) {
+                $wpVersionDiscover = new Util\WpVersion(
+                    $this->locator->packageFinder(),
+                    $this->locator->io(),
+                    $fallbackVer
+                );
+                $wpVersion = $wpVersionDiscover->discover();
+            }
+
+            if (!$wpVersion && $requireWp) {
+                $event or exit(1);
+
+                return;
+            }
+
+            // If WP version found and no version is in configs, let's set it with the finding.
+            if ($wpVersion && !$fallbackVer) {
+                $config->appendConfig(Config::WP_VERSION, $wpVersion);
+            }
+
             $steps = new Step\Steps($this->locator, $this->composer);
             $selectedStepNames = array_filter($selectedStepNames, 'is_string');
             $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
@@ -161,14 +154,17 @@ final class ComposerPlugin implements
             $hasWpCliStep = false;
 
             $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCliStep);
-            $this->createExecutor($hasWpCliStep, $steps, $this->locator->config());
+            if (!$hasWpCliStep && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
+                $steps->addStep(new Step\WpCliCommandsStep($this->locator));
+            }
+
             $this->logo();
             $steps->run($this->locator->config(), $this->locator->paths());
 
             $event or exit(0);
         } catch (\Throwable $throwable) {
             $lines = [$throwable->getMessage()];
-            if ($this->composerIo->isVerbose()) {
+            if ($this->io->isVerbose()) {
                 $lines[] = (string)$throwable;
             }
 
@@ -207,6 +203,8 @@ final class ComposerPlugin implements
                 continue;
             }
 
+            $stepsAdded[] = $stepName;
+
             if (is_a($stepClass, Step\WpCliCommandsStep::class, true)
                 || (strpos($stepName, Step\WpCliCommandsStep::NAME) === 0)
             ) {
@@ -215,12 +213,11 @@ final class ComposerPlugin implements
             }
 
             $steps->addStep($step);
-            $stepsAdded[] = $stepName;
         }
 
         if ($wpCliSteps) {
             $hasWpCliStep = true;
-            array_walk($wpCliSteps, [$steps, 'addStep']);
+            $steps->addStep(...$wpCliSteps);
         }
     }
 
@@ -238,39 +235,6 @@ final class ComposerPlugin implements
     }
 
     /**
-     * @param bool $hasWpCliStep
-     * @param Step\Steps $steps
-     * @param Config $config
-     */
-    private function createExecutor(bool $hasWpCliStep, Step\Steps $steps, Config $config)
-    {
-        if (!$hasWpCliStep && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
-            $steps->addStep(new Step\WpCliCommandsStep($this->locator));
-            $hasWpCliStep = true;
-        }
-
-        if (!$hasWpCliStep) {
-            return;
-        }
-
-        $executorFactory = new WpCli\ExecutorFactory(
-            $this->locator,
-            $this->composer->getRepositoryManager()->getLocalRepository(),
-            $this->composer->getInstallationManager()
-        );
-
-        $php = (new PhpExecutableFinder())->find();
-        if (!$php) {
-            throw new \Exception('PHP executable not found.');
-        }
-
-        $config = $this->locator->config();
-        $wpCliCommand = new WpCli\Command($config, $this->locator->urlDownloader());
-        $wpCliExecutor = $executorFactory->create($wpCliCommand, $php);
-        $config->appendConfig(Config::WP_CLI_EXECUTOR, $wpCliExecutor);
-    }
-
-    /**
      * @return void
      */
     private function logo()
@@ -284,6 +248,6 @@ final class ComposerPlugin implements
 LOGO;
         // phpcs:enable
 
-        $this->composerIo->write("\n{$logo}\n");
+        $this->io->write("\n{$logo}\n");
     }
 }
