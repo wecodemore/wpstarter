@@ -31,7 +31,8 @@
     "composer-plugin-api": "^1.0",
     "composer/installers": "^1.6",
     "symfony/dotenv":      "^3.4",
-    "ext-json": "*"
+    "ext-json": "*",
+    "ext-mysqli": "*"
   },
   "require-dev":       {
     "roave/security-advisories":    "*",
