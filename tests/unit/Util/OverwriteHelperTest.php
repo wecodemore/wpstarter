@@ -42,21 +42,21 @@ class OverwriteHelperTest extends TestCase
     {
         $helper = $this->makeHelper([Config::PREVENT_OVERWRITE => true]);
 
-        static::assertTrue($helper->shouldOverwite(__DIR__ . '/foo.bar'));
+        static::assertTrue($helper->shouldOverwrite(__DIR__ . '/foo.bar'));
     }
 
     public function testShouldOverwriteReturnTrueIfConfigIsTrue()
     {
         $helper = $this->makeHelper([Config::PREVENT_OVERWRITE => true]);
 
-        static::assertFalse($helper->shouldOverwite(__FILE__));
+        static::assertFalse($helper->shouldOverwrite(__FILE__));
     }
 
     public function testShouldOverwriteReturnFalseIfConfigIsFalse()
     {
         $helper = $this->makeHelper([Config::PREVENT_OVERWRITE => false]);
 
-        static::assertTrue($helper->shouldOverwite(__FILE__));
+        static::assertTrue($helper->shouldOverwrite(__FILE__));
     }
 
     public function testShouldOverwriteReturnTrueIfConfirmationAskedReturnsTrue()
@@ -67,7 +67,7 @@ class OverwriteHelperTest extends TestCase
             __FILE__
         );
 
-        static::assertTrue($helper->shouldOverwite(__FILE__));
+        static::assertTrue($helper->shouldOverwrite(__FILE__));
     }
 
     public function testShouldOverwriteReturnFalseIfConfirmationAskedReturnsFalse()
@@ -78,7 +78,7 @@ class OverwriteHelperTest extends TestCase
             __FILE__
         );
 
-        static::assertFalse($helper->shouldOverwite(__FILE__));
+        static::assertFalse($helper->shouldOverwrite(__FILE__));
     }
 
     public function testShouldOverwriteWithPatternMatch()
@@ -92,15 +92,15 @@ class OverwriteHelperTest extends TestCase
         $helper5 = $this->makeHelper([Config::PREVENT_OVERWRITE => ['./Util/*.php']]);
         $helper6 = $this->makeHelper([Config::PREVENT_OVERWRITE => ['*/*.*']]);
 
-        static::assertFalse($helper1->shouldOverwite(__FILE__));
-        static::assertFalse($helper2->shouldOverwite(__FILE__));
-        static::assertTrue($helper3->shouldOverwite(__FILE__));
-        static::assertTrue($helper4->shouldOverwite(__FILE__));
-        static::assertFalse($helper5->shouldOverwite(__FILE__));
+        static::assertFalse($helper1->shouldOverwrite(__FILE__));
+        static::assertFalse($helper2->shouldOverwrite(__FILE__));
+        static::assertTrue($helper3->shouldOverwrite(__FILE__));
+        static::assertTrue($helper4->shouldOverwrite(__FILE__));
+        static::assertFalse($helper5->shouldOverwrite(__FILE__));
 
-        static::assertFalse($helper6->shouldOverwite($this->packagePath().'/composer.json'));
-        static::assertFalse($helper6->shouldOverwite(__DIR__));
-        static::assertTrue($helper6->shouldOverwite("{$fileName}.txt"));
-        static::assertFalse($helper6->shouldOverwite(__FILE__));
+        static::assertFalse($helper6->shouldOverwrite($this->packagePath().'/composer.json'));
+        static::assertFalse($helper6->shouldOverwrite(__DIR__));
+        static::assertTrue($helper6->shouldOverwrite("{$fileName}.txt"));
+        static::assertFalse($helper6->shouldOverwrite(__FILE__));
     }
 }
