@@ -78,7 +78,7 @@ class ExecutorFactory
         }
 
         $targetPath = $command->pharTarget($this->paths);
-        if (file_exists($targetPath)) {
+        if ($targetPath && file_exists($targetPath)) {
             return new Executor($phpPath, $targetPath, $this->paths, $this->io, $command);
         }
 
@@ -133,6 +133,8 @@ class ExecutorFactory
             return '';
         }
 
-        return $this->packageFinder->findPathOf($package);
+        $path = $this->packageFinder->findPathOf($package);
+
+        return $path ? $command->executableFile($path) : '';
     }
 }

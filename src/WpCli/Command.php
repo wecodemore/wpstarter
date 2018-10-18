@@ -69,7 +69,16 @@ class Command
      */
     public function pharTarget(Paths $paths): string
     {
-        return $paths->root('wp.phar');
+        $candidates = glob($paths->root('/wp-cli-*.phar')) ?: [];
+        array_unshift($candidates, $paths->root('/wp-cli.phar'));
+
+        foreach ($candidates as $candidate) {
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return '';
     }
 
     /**

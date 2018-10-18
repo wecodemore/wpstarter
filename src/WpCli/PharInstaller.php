@@ -38,12 +38,10 @@ class PharInstaller
      * @param string|null $path
      * @return string
      */
-    public function install(Command $command, string $path = null): string
+    public function install(Command $command, string $path): string
     {
         $url = $command->pharUrl();
         $name = $command->niceName();
-
-        $path or $path = getcwd() . '/' . basename($url);
 
         if (!$this->urlDownloader->save($url, $path) || !file_exists($path)) {
             $this->io->writeError(sprintf('Failed to download %s phar from %s.', $name, $url));
