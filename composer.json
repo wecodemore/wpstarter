@@ -30,7 +30,8 @@
     "php":                 ">=7.0",
     "composer-plugin-api": "^1.0",
     "composer/installers": "^1.6",
-    "symfony/dotenv":      "^3.4"
+    "symfony/dotenv":      "^3.4",
+    "ext-json": "*"
   },
   "require-dev":       {
     "roave/security-advisories":    "*",
