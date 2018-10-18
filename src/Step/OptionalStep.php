@@ -19,7 +19,7 @@ interface OptionalStep extends Step
     const ASK = 'ask';
 
     /**
-     * Ask a corfirmation  and return result.
+     * Ask a confirmation and return result.
      *
      * To actually display the question on screen, use `$io->confirm()`.
      *

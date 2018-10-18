@@ -29,7 +29,7 @@ final class WpStarterCommand extends BaseCommand
             ->addArgument(
                 'steps',
                 InputArgument::IS_ARRAY | InputArgument::OPTIONAL,
-                'Which setps to run. (Separate more steps names with a space). Defaults all.'
+                'Which steps to run. (Separate more steps names with a space). Defaults all.'
             );
     }
 

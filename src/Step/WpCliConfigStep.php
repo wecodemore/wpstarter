@@ -12,14 +12,14 @@ use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util;
 
 /**
- * Step that creates wp-cli-yml in project root.
+ * Step that creates wp-cli.yml in project root.
  *
  * The automatically generated wp-cli-yml file will point the correct WordPress path, allowing
- * to run WP CLI commands from project root without having to pass the `--path` argumrnt everytime.
+ * to run WP CLI commands from project root without having to pass the `--path` argument every time.
  */
 final class WpCliConfigStep implements FileCreationStepInterface
 {
-    const NAME = 'wp-cli-yml';
+    const NAME = 'build-wp-cli-yml';
 
     /**
      * @var Util\FileBuilder

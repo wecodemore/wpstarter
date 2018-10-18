@@ -146,7 +146,7 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
         if ($this->envInWebRoot) {
             $io->writeYellowBlock(
                 "The .env file is expected to be placed in '{$this->envInWebRoot}' which is the webroot.",
-                'It is strongly suggested to place .env file ouside of webroot for security reasons.'
+                'It is strongly suggested to place .env file outside of webroot for security reasons.'
             );
         }
 

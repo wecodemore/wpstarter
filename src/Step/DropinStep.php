@@ -15,7 +15,7 @@ use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 /**
- * `DropinsStep` class make use of this class to proces a single dropin.
+ * `DropinsStep` class make use of this class to process a single dropin.
  *
  * This step is not run directly from WP Starter, but instantiated and used by `DropinsStep` only.
  */
@@ -125,16 +125,16 @@ final class DropinStep implements FileCreationStepInterface
             return self::NONE;
         }
 
-        $dest = $this->targetPath($paths);
-        if (!$this->overwrite->shouldOverwite($dest)) {
+        $destination = $this->targetPath($paths);
+        if (!$this->overwrite->shouldOverwrite($destination)) {
             $this->io->writeComment("  - {$this->name} skipped because existing.");
 
             return self::NONE;
         }
 
         return $this->actionAndSource->action === self::ACTION_DOWNLOAD
-            ? $this->download($this->actionAndSource->source, $dest)
-            : $this->copy($this->actionAndSource->source, $dest);
+            ? $this->download($this->actionAndSource->source, $destination)
+            : $this->copy($this->actionAndSource->source, $destination);
     }
 
     /**
@@ -166,13 +166,13 @@ final class DropinStep implements FileCreationStepInterface
      * Download dropin file from given url and save it to in wp-content folder.
      *
      * @param string $url
-     * @param string $dest
+     * @param string $destination
      * @return int
      */
-    private function download(string $url, string $dest): int
+    private function download(string $url, string $destination): int
     {
-        $name = basename($dest);
-        if (!$this->urlDownloader->save($url, $dest)) {
+        $name = basename($destination);
+        if (!$this->urlDownloader->save($url, $destination)) {
             $error = $this->urlDownloader->error();
             $this->error .= "It was not possible to download and save {$name}: {$error}";
 
@@ -188,15 +188,15 @@ final class DropinStep implements FileCreationStepInterface
      * Copy dropin file from given source path and save it in wp-content folder.
      *
      * @param string $source
-     * @param string $dest
+     * @param string $destination
      * @return int
      */
-    private function copy(string $source, string $dest): int
+    private function copy(string $source, string $destination): int
     {
         $sourceBase = basename($source);
-        $name = basename($dest);
+        $name = basename($destination);
         try {
-            $copied = copy($source, $dest);
+            $copied = copy($source, $destination);
             $copied
                 ? $this->success .= "<comment>{$name}</comment> copied successfully."
                 : $this->error .= "Impossible to copy {$sourceBase} to {$name}.";

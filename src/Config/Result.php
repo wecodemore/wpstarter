@@ -12,9 +12,9 @@ namespace WeCodeMore\WpStarter\Config;
  * Value object used as a result for all the validation operation.
  *
  * Using this object instead of plain values or just throw exception allows a better error handling,
- * easy and clean "fallback" in case of error and type uniformity in retun type.
+ * easy and clean "fallback" in case of error and type uniformity in return type.
  *
- * Unfortuntately, PHP has no generics at this time so it isn't possible to have type safety for the
+ * Unfortunately, PHP has no generics at this time so it isn't possible to have type safety for the
  * wrapped value.
  */
 final class Result

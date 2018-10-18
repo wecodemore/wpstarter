@@ -20,7 +20,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  * default themes and plugins that are shipped with WordPress.
  * Because WP Starter also use a different wp-content folder, placed outside WordPress folder,
  * the default themes and plugins are not recognized by WordPress.
- * This step that can be enabled via configuration copy the default plugins and themes from the
+ * This step, that can be enabled via configuration, moves the default plugins and themes from the
  * WP wp-content folder to the project wp-content folder, so that WordPress can recognize them.
  */
 final class MoveContentStep implements OptionalStep

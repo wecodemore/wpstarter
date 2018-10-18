@@ -255,14 +255,14 @@ final class WordPressEnvBridge implements \ArrayAccess
     }
 
     /**
-     * Define WP contants from environment variables
+     * Define WP constants from environment variables
      *
      * @param string $name
      */
     private function defineWpConstant(string $name)
     {
         if ($name === 'DB_TABLE_PREFIX') {
-            $this->defineTablePrexix();
+            $this->defineTablePrefix();
 
             return;
         }
@@ -279,7 +279,7 @@ final class WordPressEnvBridge implements \ArrayAccess
      *
      * WP Starter makes up the `DB_TABLE_PREFIX` environment variable to set DB table prefix.
      */
-    private function defineTablePrexix()
+    private function defineTablePrefix()
     {
         $value = $this->offsetGet('DB_TABLE_PREFIX') ?: '';
 

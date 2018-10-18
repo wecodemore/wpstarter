@@ -17,7 +17,7 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
 /**
  * Steps that stores .env.example in root folder.
  *
- * WP Starter reequires a .env file to make a WordPress installation usable.
+ * WP Starter requires a .env file to make a WordPress installation usable.
  * This step place a .env.example files in project root which serves as example to build the actual
  * .env file and includes all the possible configuration values that WordPress uses plus a few
  * that are specific to WP Starter.
@@ -154,13 +154,13 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      * Download a remote .env.example in root folder.
      *
      * @param  string $url
-     * @param  string $dest
+     * @param  string $destination
      * @return int
      * @throws \RuntimeException
      */
-    private function download(string $url, string $dest): int
+    private function download(string $url, string $destination): int
     {
-        if (!$this->urlDownloader->save($url, $dest)) {
+        if (!$this->urlDownloader->save($url, $destination)) {
             $error = $this->urlDownloader->error();
             $this->error = "Error downloading and saving {$url}: {$error}";
 
@@ -174,18 +174,18 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      * Copy a .env.example in root folder.
      *
      * @param  Paths $paths
-     * @param  string $dest
+     * @param  string $destination
      * @param  string|null $source
      * @return int
      * @throws \InvalidArgumentException
      */
-    private function copy(Paths $paths, string $dest, string $source = null): int
+    private function copy(Paths $paths, string $destination, string $source = null): int
     {
         if ($source === null) {
             $source = $paths->template('.env.example');
         }
 
-        if ($this->filesystem->copyFile($source, $dest)) {
+        if ($this->filesystem->copyFile($source, $destination)) {
             return self::SUCCESS;
         }
 
