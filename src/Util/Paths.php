@@ -43,9 +43,9 @@ final class Paths implements \ArrayAccess
     private $filesystem;
 
     /**
-     * @var string|null
+     * @var string[]
      */
-    private $customTemplatesDir;
+    private $customTemplatesDir = [];
 
     /**
      * @var array
@@ -70,7 +70,7 @@ final class Paths implements \ArrayAccess
     public function useCustomTemplatesDir(string $templatesRootDir)
     {
         if (is_dir($templatesRootDir)) {
-            $this->customTemplatesDir = rtrim($templatesRootDir, '/');
+            $this->customTemplatesDir[] = rtrim($templatesRootDir, '/');
         }
     }
 
@@ -187,8 +187,10 @@ final class Paths implements \ArrayAccess
      */
     public function template(string $filename): string
     {
-        if ($this->customTemplatesDir && is_file("{$this->customTemplatesDir}/{$filename}")) {
-            return "{$this->customTemplatesDir}/{$filename}";
+        foreach ($this->customTemplatesDir as $dir) {
+            if (is_file("{$dir}/{$filename}")) {
+                return "{$dir}/{$filename}";
+            }
         }
 
         return $this->wpStarter("templates/{$filename}");
