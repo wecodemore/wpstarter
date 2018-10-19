@@ -15,7 +15,7 @@ use WeCodeMore\WpStarter\Step\OptionalStep;
 use WeCodeMore\WpStarter\Step\Step;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\WpVersion;
-use WeCodeMore\WpStarter\WpCli;
+use WeCodeMore\WpStarter\Cli;
 
 /**
  * The "$value" that get passed to all the methods comes from JSON, so there's no way to have type
@@ -349,8 +349,8 @@ class Validator
         $files = array_reduce(
             $value,
             function (array $files, $file): array {
-                $data = is_array($file) ? WpCli\FileData::fromArray($file) : null;
-                (!$data && is_string($file)) and $data = WpCli\FileData::fromPath($file);
+                $data = is_array($file) ? Cli\WpCliFileData::fromArray($file) : null;
+                (!$data && is_string($file)) and $data = Cli\WpCliFileData::fromPath($file);
                 $data->valid() and $files[] = $data;
 
                 return $files;

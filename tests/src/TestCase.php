@@ -11,7 +11,7 @@ namespace WeCodeMore\WpStarter\Tests;
 use Composer;
 use WeCodeMore\WpStarter\Config;
 use WeCodeMore\WpStarter\Util;
-use WeCodeMore\WpStarter\WpCli;
+use WeCodeMore\WpStarter\Cli;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
@@ -93,7 +93,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             Util\OverwriteHelper::class,
             Util\Salter::class,
             Util\LanguageListFetcher::class,
-            WpCli\PharInstaller::class,
+            Cli\PharInstaller::class,
         ];
 
         $closure = function (...$objects) use ($supportedObjects) {

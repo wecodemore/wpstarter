@@ -9,6 +9,8 @@
 namespace WeCodeMore\WpStarter\Env;
 
 use Symfony\Component\Dotenv\Dotenv;
+use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * Handle WordPress related environment variables using Symfony Env component.
@@ -124,9 +126,9 @@ final class WordPressEnvBridge implements \ArrayAccess
     ];
 
     /**
-     * @var WordPressEnvBridge
+     * @var WordPressEnvBridge[]
      */
-    private static $loaded;
+    private static $loaded = [];
 
     /**
      * @var Filters
@@ -137,6 +139,24 @@ final class WordPressEnvBridge implements \ArrayAccess
      * @var bool
      */
     private $fileLoadingSkipped = false;
+
+    /**
+     * @param Config $config
+     * @param Paths $paths
+     * @param Dotenv|null $dotEnv
+     * @return WordPressEnvBridge
+     */
+    public static function loadFromConfig(
+        Config $config,
+        Paths $paths,
+        Dotenv $dotEnv = null
+    ): WordPressEnvBridge {
+
+        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
+        $envFile = $config[Config::ENV_FILE]->unwrapOrFallback('.env');
+
+        return static::loadFile("{$envDir}/{$envFile}", $dotEnv);
+    }
 
     /**
      * @param  string $path Environment file path
@@ -150,19 +170,29 @@ final class WordPressEnvBridge implements \ArrayAccess
         Dotenv $dotEnv = null
     ): WordPressEnvBridge {
 
-        if (self::$loaded) {
-            return self::$loaded;
-        }
-
-        if (getenv('WPSTARTER_ENV_LOADED')) {
-            self::$loaded = new static();
-            self::$loaded->fileLoadingSkipped = true;
-
-            return self::$loaded;
-        }
-
         $path === null and $path = getcwd();
-        $path = realpath(rtrim($path, '\\/') . "/{$file}");
+
+        return static::loadFile(rtrim($path, '\\/') . "/{$file}", $dotEnv);
+    }
+
+    /**
+     * @param string $path
+     * @param Dotenv|null $dotEnv
+     * @return WordPressEnvBridge
+     */
+    private static function loadFile(string $path, Dotenv $dotEnv = null): WordPressEnvBridge
+    {
+        if (getenv('WPSTARTER_ENV_LOADED')) {
+            self::$loaded['$'] = new static();
+            self::$loaded['$']->fileLoadingSkipped = true;
+
+            return self::$loaded['$'];
+        }
+
+        $path = realpath($path);
+        if ($path && !empty(self::$loaded[$path])) {
+            return self::$loaded[$path];
+        }
 
         if (!$path || !is_file($path) || !is_readable($path)) {
             throw new \RuntimeException(
@@ -170,11 +200,11 @@ final class WordPressEnvBridge implements \ArrayAccess
             );
         }
 
-        self::$loaded = new static();
+        self::$loaded[$path] = new static();
         $dotEnv or $dotEnv = new Dotenv();
         $dotEnv->load($path);
 
-        return self::$loaded;
+        return self::$loaded[$path];
     }
 
     /**

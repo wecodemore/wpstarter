@@ -6,15 +6,14 @@
  * file that was distributed with this source code.
  */
 
-namespace WeCodeMore\WpStarter\WpCli;
+namespace WeCodeMore\WpStarter\Cli;
 
-use Composer\Repository\RepositoryInterface;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util\Io;
 use WeCodeMore\WpStarter\Util\PackageFinder;
 use WeCodeMore\WpStarter\Util\Paths;
 
-class ExecutorFactory
+class PhpToolProcessFactory
 {
     /**
      * @var Config
@@ -37,7 +36,7 @@ class ExecutorFactory
     private $pharInstaller;
 
     /**
-     * @var RepositoryInterface
+     * @var PackageFinder
      */
     private $packageFinder;
 
@@ -64,22 +63,22 @@ class ExecutorFactory
     }
 
     /**
-     * @param Command $command
+     * @param PhpTool $command
      * @param string $phpPath
-     * @return Executor
+     * @return PhpToolProcess
      */
-    public function create(Command $command, string $phpPath): Executor
+    public function create(PhpTool $command, string $phpPath): PhpToolProcess
     {
         $fsPath = $this->lookForPackage($command);
 
         // Installed via Composer, build executor and return
         if ($fsPath) {
-            return new Executor($phpPath, $fsPath, $this->paths, $this->io, $command);
+            return new PhpToolProcess($phpPath, $fsPath, $this->paths, $this->io);
         }
 
         $targetPath = $command->pharTarget($this->paths);
         if ($targetPath && file_exists($targetPath)) {
-            return new Executor($phpPath, $targetPath, $this->paths, $this->io, $command);
+            return new PhpToolProcess($phpPath, $targetPath, $this->paths, $this->io);
         }
 
         $pharUrl = $command->pharUrl();
@@ -101,16 +100,16 @@ class ExecutorFactory
             throw new \RuntimeException("Failed phar download from {$pharUrl}.");
         }
 
-        return new Executor($phpPath, $installedPath, $this->paths, $this->io, $command);
+        return new PhpToolProcess($phpPath, $installedPath, $this->paths, $this->io);
     }
 
     /**
      * Go through installed packages to find WP CLI.
      *
-     * @param Command $command
+     * @param PhpTool $command
      * @return string
      */
-    private function lookForPackage(Command $command): string
+    private function lookForPackage(PhpTool $command): string
     {
         $package = $this->packageFinder->findByName($command->packageName());
         if (!$package) {
@@ -135,6 +134,6 @@ class ExecutorFactory
 
         $path = $this->packageFinder->findPathOf($package);
 
-        return $path ? $command->executableFile($path) : '';
+        return $path ? $command->filesystemBootstrap($path) : '';
     }
 }

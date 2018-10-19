@@ -6,9 +6,9 @@
  * file that was distributed with this source code.
  */
 
-namespace WeCodeMore\WpStarter\WpCli;
+namespace WeCodeMore\WpStarter\Cli;
 
-final class FileData
+final class WpCliFileData
 {
     const FILE = 'file';
     const ARGS = 'args';
@@ -33,18 +33,18 @@ final class FileData
 
     /**
      * @param array $fileData
-     * @return FileData
+     * @return WpCliFileData
      */
-    public static function fromArray(array $fileData): FileData
+    public static function fromArray(array $fileData): WpCliFileData
     {
         return new static($fileData);
     }
 
     /**
      * @param string $path
-     * @return FileData
+     * @return WpCliFileData
      */
-    public static function fromPath(string $path): FileData
+    public static function fromPath(string $path): WpCliFileData
     {
         return new static([self::FILE => $path]);
     }

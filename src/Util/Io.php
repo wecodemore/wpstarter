@@ -160,6 +160,14 @@ class Io
     /**
      * @param string $line
      */
+    public function writeErrorLine(string $line)
+    {
+        $this->io->writeError("  {$line}");
+    }
+
+    /**
+     * @param string $line
+     */
     public function writeIfVerbose(string $line)
     {
         $this->io->write("  {$line}", true, IOInterface::VERBOSE);

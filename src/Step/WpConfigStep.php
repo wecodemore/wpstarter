@@ -115,7 +115,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
 
         $from = $this->composerFilesystem->normalizePath($paths->wpParent());
 
-        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback() ?: $paths->root();
+        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
 
         $earlyHook = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback('');
         $earlyHook and $earlyHook = $this->relPath("{$from}/index.php", $earlyHook, false);

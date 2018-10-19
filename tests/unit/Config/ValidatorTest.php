@@ -14,7 +14,7 @@ use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Step\OptionalStep;
 use WeCodeMore\WpStarter\Step\WpConfigStep;
 use WeCodeMore\WpStarter\Tests\TestCase;
-use WeCodeMore\WpStarter\WpCli\FileData;
+use WeCodeMore\WpStarter\Cli\WpCliFileData;
 
 class ValidatorTest extends TestCase
 {
@@ -221,7 +221,7 @@ class ValidatorTest extends TestCase
         static::assertFalse($validator->validateWpCliFiles($jsonFile)->notEmpty());
 
         $commandFile = $this->fixturesPath() . '/cli-command-file.php';
-        /** @var FileData $data */
+        /** @var WpCliFileData $data */
         $data = $validator->validateWpCliFiles($commandFile)->unwrap()[0];
 
         static::assertSame($data->file(), $commandFile);

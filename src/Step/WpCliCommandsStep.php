@@ -12,7 +12,7 @@ use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util\Io;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
-use WeCodeMore\WpStarter\WpCli;
+use WeCodeMore\WpStarter\Cli;
 
 /**
  * A step that runs WP CLI commands set in WP Starter configuration.
@@ -29,24 +29,29 @@ final class WpCliCommandsStep implements Step
     const NAME = 'wp-cli-commands';
 
     /**
-     * @var string[]
-     */
-    private $commands = [];
-
-    /**
-     * @var WpCli\FileData[]
-     */
-    private $files = [];
-
-    /**
      * @var Io
      */
     private $io;
 
     /**
-     * @var WpCli\Executor
+     * @var Cli\PhpToolProcess
      */
-    private $executor;
+    private $process;
+
+    /**
+     * @var \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    private $env;
+
+    /**
+     * @var string[]
+     */
+    private $commands = [];
+
+    /**
+     * @var Cli\WpCliFileData[]
+     */
+    private $files = [];
 
     /**
      * @param Locator $locator
@@ -54,7 +59,8 @@ final class WpCliCommandsStep implements Step
     public function __construct(Locator $locator)
     {
         $this->io = $locator->io();
-        $this->executor = $locator->wpCliExecutor();
+        $this->process = $locator->wpCliProcess();
+        $this->env = $locator->wordPressEnvBridge();
     }
 
     /**
@@ -97,7 +103,12 @@ final class WpCliCommandsStep implements Step
         }
 
         $this->io->writeComment('Running WP CLI commands...');
-        $this->executor->execute('cli version');
+        if (!$this->process->execute('cli version')) {
+            $this->io->writeError('Error running WP CLI commands.');
+
+            return self::ERROR;
+        }
+
         $fileCommands = [];
         if ($this->files) {
             $fileCommands = array_filter(array_map([$this, 'buildEvalFileCommand'], $this->files));
@@ -109,12 +120,16 @@ final class WpCliCommandsStep implements Step
         array_walk(
             $commands,
             function (string $command) {
-                $this->io->writeIfVerbose("  `$ wp {$command}`");
+                $this->io->writeIfVerbose("  $ wp {$command}");
             }
         );
 
         $this->io->write('starting now...');
-        array_walk($this->commands, [$this->executor, 'execute']);
+
+        $continue = true;
+        while ($continue && $commands) {
+            $continue = $this->process->execute(array_shift($commands));
+        }
 
         return self::SUCCESS;
     }
@@ -136,11 +151,11 @@ final class WpCliCommandsStep implements Step
     }
 
     /**
-     * @param WpCli\FileData $fileData
+     * @param Cli\WpCliFileData $fileData
      * @param Paths $paths
      * @return string
      */
-    private function buildEvalFileCommand(WpCli\FileData $fileData, Paths $paths): string
+    private function buildEvalFileCommand(Cli\WpCliFileData $fileData, Paths $paths): string
     {
         $fullpath = $paths->root($fileData->file());
         if (!file_exists($fullpath)) {

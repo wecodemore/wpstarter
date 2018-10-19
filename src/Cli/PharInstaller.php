@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace WeCodeMore\WpStarter\WpCli;
+namespace WeCodeMore\WpStarter\Cli;
 
 use WeCodeMore\WpStarter\Util\Io;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
@@ -34,14 +34,14 @@ class PharInstaller
     }
 
     /**
-     * @param Command $command
+     * @param PhpTool $info
      * @param string|null $path
      * @return string
      */
-    public function install(Command $command, string $path): string
+    public function install(PhpTool $info, string $path): string
     {
-        $url = $command->pharUrl();
-        $name = $command->niceName();
+        $url = $info->pharUrl();
+        $name = $info->niceName();
 
         if (!$this->urlDownloader->save($url, $path) || !file_exists($path)) {
             $this->io->writeError(sprintf('Failed to download %s phar from %s.', $name, $url));
@@ -50,7 +50,7 @@ class PharInstaller
             return '';
         }
 
-        if (!$command->checkPhar($path, $this->io)) {
+        if (!$info->checkPhar($path, $this->io)) {
             $this->io->writeError('Phar validation failed. Downloaded phar is probably corrupted.');
 
             return '';

@@ -13,7 +13,8 @@ use Composer\Factory;
 use Composer\IO\IOInterface as ComposerIo;
 use Composer\Util\Filesystem as ComposerFilesystem;
 use Symfony\Component\Process\PhpExecutableFinder;
-use WeCodeMore\WpStarter\WpCli;
+use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
+use WeCodeMore\WpStarter\Cli;
 use WeCodeMore\WpStarter\Config\Config;
 
 /**
@@ -25,6 +26,11 @@ final class Locator
      * @var array
      */
     private $objects;
+
+    /**
+     * @var string
+     */
+    private $php;
 
     /**
      * @param Requirements $requirements
@@ -40,6 +46,12 @@ final class Locator
     ) {
 
         if (!$this->objects) {
+            $php = (new PhpExecutableFinder())->find();
+            if (!$php) {
+                throw new \Exception('PHP executable not found.');
+            }
+
+            $this->php = $php;
             $this->objects = [
                 Config::class => $requirements->config(),
                 Paths::class => $requirements->paths(),
@@ -172,12 +184,12 @@ final class Locator
     }
 
     /**
-     * @return WpCli\PharInstaller
+     * @return Cli\PharInstaller
      */
-    public function pharInstaller(): WpCli\PharInstaller
+    public function pharInstaller(): Cli\PharInstaller
     {
-        if (empty($this->objects[WpCli\PharInstaller::class])) {
-            $this->objects[WpCli\PharInstaller::class] = new WpCli\PharInstaller(
+        if (empty($this->objects[Cli\PharInstaller::class])) {
+            $this->objects[Cli\PharInstaller::class] = new Cli\PharInstaller(
                 $this->io(),
                 $this->urlDownloader()
             );
@@ -217,25 +229,111 @@ final class Locator
     }
 
     /**
-     * @return WpCli\Executor
+     * @return WordPressEnvBridge
      */
-    public function wpCliExecutor(): WpCli\Executor
+    public function wordPressEnvBridge(): WordPressEnvBridge
     {
-        $php = (new PhpExecutableFinder())->find();
-        if (!$php) {
-            throw new \Exception('PHP executable not found.');
+        if (empty($this->objects[WordPressEnvBridge::class])) {
+            $this->objects[WordPressEnvBridge::class] = WordPressEnvBridge::loadFromConfig(
+                $this->config(),
+                $this->paths()
+            );
         }
 
-        $executorFactory = new WpCli\ExecutorFactory(
+        return $this->objects[WordPressEnvBridge::class];
+    }
+
+    /**
+     * @return Cli\SystemProcess
+     */
+    public function systemProcess(): Cli\SystemProcess
+    {
+        if (empty($this->objects[Cli\SystemProcess::class])) {
+            $this->objects[Cli\SystemProcess::class] = new Cli\SystemProcess(
+                $this->paths(),
+                $this->io()
+            );
+        }
+
+        return $this->objects[Cli\SystemProcess::class];
+    }
+
+    /**
+     * @return Cli\PhpProcess
+     */
+    public function phpProcess(): Cli\PhpProcess
+    {
+        if (empty($this->objects[Cli\PhpProcess::class])) {
+            $this->objects[Cli\PhpProcess::class] = new Cli\PhpProcess(
+                $this->php,
+                $this->paths(),
+                $this->io()
+            );
+        }
+
+        return $this->objects[Cli\PhpProcess::class];
+    }
+
+    /**
+     * @return Cli\PhpToolProcessFactory
+     */
+    public function phpToolProcessFactory(): Cli\PhpToolProcessFactory
+    {
+        if (!empty($this->objects[Cli\phpToolProcessFactory::class])) {
+            return $this->objects[Cli\phpToolProcessFactory::class];
+        }
+
+        return new Cli\PhpToolProcessFactory(
             $this->config(),
             $this->paths(),
             $this->io(),
-            new WpCli\PharInstaller($this->io(), $this->urlDownloader()),
+            new Cli\PharInstaller($this->io(), $this->urlDownloader()),
             $this->packageFinder()
         );
+    }
 
-        $wpCliCommand = new WpCli\Command($this->config(), $this->urlDownloader());
+    /**
+     * @return Cli\WpCliTool
+     */
+    public function wpCliTool(): Cli\WpCliTool
+    {
+        if (empty($this->objects[Cli\WpCliTool::class])) {
+            $this->objects[Cli\WpCliTool::class] = new Cli\WpCliTool(
+                $this->config(),
+                $this->urlDownloader()
+            );
+        }
 
-        return $executorFactory->create($wpCliCommand, $php);
+        return $this->objects[Cli\WpCliTool::class];
+    }
+
+    /**
+     * @return \ArrayObject
+     */
+    public function wpCliEnvironment(): \ArrayObject
+    {
+        if (empty($this->objects[__METHOD__])) {
+            $env = $this->wpCliTool()->processEnvVars($this->paths(), $this->wordPressEnvBridge());
+            $this->objects[__METHOD__] = new \ArrayObject($env);
+        }
+
+        return $this->objects[__METHOD__];
+    }
+
+    /**
+     * @return Cli\PhpToolProcess
+     */
+    public function wpCliProcess(): Cli\PhpToolProcess
+    {
+        if (!empty($this->objects[__METHOD__])) {
+            return $this->objects[__METHOD__];
+        }
+
+        $this->objects[__METHOD__] = $this
+            ->phpToolProcessFactory()
+            ->create($this->wpCliTool(), $this->php)
+            ->withEnvironment($this->wpCliEnvironment()->getArrayCopy());
+
+        return $this->objects[Cli\PhpToolProcess::class];
     }
 }

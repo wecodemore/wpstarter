@@ -6,15 +6,20 @@
  * file that was distributed with this source code.
  */
 
-namespace WeCodeMore\WpStarter\WpCli;
+namespace WeCodeMore\WpStarter\Cli;
 
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util\Io;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
 
-class Command
+class WpCliTool implements PhpTool
 {
+    const ENV = [
+        'WP_CLI_CACHE_DIR',
+        'WP_CLI_DISABLE_AUTO_CHECK_UPDATE',
+    ];
+
     /**
      * @var bool
      */
@@ -85,7 +90,7 @@ class Command
      * @param string $packageVendorPath
      * @return string
      */
-    public function executableFile(string $packageVendorPath): string
+    public function filesystemBootstrap(string $packageVendorPath): string
     {
         return rtrim($packageVendorPath, '\\/') . '/php/boot-fs.php';
     }
@@ -126,17 +131,21 @@ class Command
     }
 
     /**
-     * @param $command
-     * @param $paths
-     * @return string
+     * @param Paths $paths
+     * @param \ArrayAccess $env
+     * @return array
      */
-    public function prepareCommand(string $command, Paths $paths): string
+    public function processEnvVars(Paths $paths, \ArrayAccess $env): array
     {
-        if (strpos($command, 'wp ') === 0) {
-            $command = substr($command, 3);
-        }
+        $args = [
+            'WP_CLI_CONFIG_PATH' => $paths->root(),
+            'WP_CLI_DISABLE_AUTO_CHECK_UPDATE' => '1',
+            'WP_CLI_CACHE_DIR' => $env['WP_CLI_CACHE_DIR'],
+            'WP_CLI_PACKAGES_DIR' => $env['WP_CLI_CACHE_DIR'],
+            'WP_CLI_STRICT_ARGS_MODE' => $env['WP_CLI_CACHE_DIR'],
+        ];
 
-        return "{$command} --path=" . $paths->wp();
+        return array_filter($args);
     }
 
     /**
