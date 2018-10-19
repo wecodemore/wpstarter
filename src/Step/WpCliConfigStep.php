@@ -22,7 +22,7 @@ final class WpCliConfigStep implements FileCreationStepInterface
     const NAME = 'build-wp-cli-yml';
 
     /**
-     * @var Util\FileBuilder
+     * @var Util\FileContentBuilder
      */
     private $builder;
 
@@ -36,7 +36,7 @@ final class WpCliConfigStep implements FileCreationStepInterface
      */
     public function __construct(Util\Locator $locator)
     {
-        $this->builder = $locator->fileBuilder();
+        $this->builder = $locator->fileContentBuilder();
         $this->filesystem = $locator->filesystem();
     }
 

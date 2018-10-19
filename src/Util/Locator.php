@@ -128,15 +128,15 @@ final class Locator
     }
 
     /**
-     * @return FileBuilder
+     * @return FileContentBuilder
      */
-    public function fileBuilder(): FileBuilder
+    public function fileContentBuilder(): FileContentBuilder
     {
-        if (empty($this->objects[FileBuilder::class])) {
-            $this->objects[FileBuilder::class] = new FileBuilder();
+        if (empty($this->objects[FileContentBuilder::class])) {
+            $this->objects[FileContentBuilder::class] = new FileContentBuilder();
         }
 
-        return $this->objects[FileBuilder::class];
+        return $this->objects[FileContentBuilder::class];
     }
 
     /**

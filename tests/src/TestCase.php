@@ -89,7 +89,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             Util\Paths::class,
             Util\Io::class,
             Util\UrlDownloader::class,
-            Util\FileBuilder::class,
+            Util\FileContentBuilder::class,
             Util\OverwriteHelper::class,
             Util\Salter::class,
             Util\LanguageListFetcher::class,

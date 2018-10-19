@@ -28,7 +28,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
     private $io;
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\FileBuilder
+     * @var \WeCodeMore\WpStarter\Util\FileContentBuilder
      */
     private $builder;
 
@@ -68,7 +68,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
     public function __construct(Locator $locator)
     {
         $this->io = $locator->io();
-        $this->builder = $locator->fileBuilder();
+        $this->builder = $locator->fileContentBuilder();
         $this->filesystem = $locator->filesystem();
         $this->composerFilesystem = $locator->composerFilesystem();
         $this->urlDownloader = $locator->urlDownloader();

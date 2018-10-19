@@ -12,7 +12,7 @@ namespace WeCodeMore\WpStarter\Util;
  * Helper to build files content from a template name and a series of variables that get replaced
  * in the template.
  */
-class FileBuilder
+class FileContentBuilder
 {
     /**
      * Build a file content starting form a template and a set of replacement variables.
@@ -38,7 +38,7 @@ class FileBuilder
      * @param  array $vars
      * @return string
      */
-    private function render(string $content, array $vars): string
+    public function render(string $content, array $vars): string
     {
         foreach ($vars as $key => $value) {
             $content = str_replace('{{{' . $key . '}}}', $value, $content);

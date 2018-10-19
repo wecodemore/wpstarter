@@ -23,7 +23,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
     const NAME = 'build-index';
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\FileBuilder
+     * @var \WeCodeMore\WpStarter\Util\FileContentBuilder
      */
     private $builder;
 
@@ -47,7 +47,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
      */
     public function __construct(Locator $locator)
     {
-        $this->builder = $locator->fileBuilder();
+        $this->builder = $locator->fileContentBuilder();
         $this->filesystem = $locator->filesystem();
         $this->composerFilesystem = $locator->composerFilesystem();
     }
@@ -96,10 +96,10 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
         if (!$this->filesystem->save($built, $this->targetPath($paths))) {
             $this->error = 'Error creating index.php.';
 
-            return self::ERROR;
+            return Step::ERROR;
         }
 
-        return self::SUCCESS;
+        return Step::SUCCESS;
     }
 
     /**

@@ -33,7 +33,7 @@ final class MuLoaderStep implements FileCreationStepInterface
     private $list;
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\FileBuilder
+     * @var \WeCodeMore\WpStarter\Util\FileContentBuilder
      */
     private $builder;
 
@@ -54,7 +54,7 @@ final class MuLoaderStep implements FileCreationStepInterface
     {
         $this->list = $locator->muPluginsList();
         $this->filesystem = $locator->filesystem();
-        $this->builder = $locator->fileBuilder();
+        $this->builder = $locator->fileContentBuilder();
     }
 
     /**

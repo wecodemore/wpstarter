@@ -9,9 +9,9 @@
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
 use WeCodeMore\WpStarter\Tests\TestCase;
-use WeCodeMore\WpStarter\Util\FileBuilder;
+use WeCodeMore\WpStarter\Util\FileContentBuilder;
 
-class FileBuilderTest extends TestCase
+class FileContentBuilderTest extends TestCase
 {
     public function testBuild()
     {
@@ -19,7 +19,7 @@ class FileBuilderTest extends TestCase
         $paths = $this->makePaths();
         $paths->useCustomTemplatesDir($templates);
 
-        $builder = new FileBuilder();
+        $builder = new FileContentBuilder();
 
         $actual = $builder->build(
             $paths,
