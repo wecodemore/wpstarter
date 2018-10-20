@@ -20,6 +20,7 @@ final class Config implements \ArrayAccess
 {
     const CONTENT_DEV_OPERATION = 'content-dev-op';
     const CONTENT_DEV_DIR = 'content-dev-dir';
+    const COMMAND_STEPS = 'command-steps';
     const CUSTOM_STEPS = 'custom-steps';
     const DROPINS = 'dropins';
     const EARLY_HOOKS_FILE = 'early-hook-file';
@@ -44,6 +45,7 @@ final class Config implements \ArrayAccess
         self::CONTENT_DEV_OPERATION => ContentDevStep::OP_SYMLINK,
         self::CONTENT_DEV_DIR => 'content-dev',
         self::CUSTOM_STEPS => null,
+        self::COMMAND_STEPS => null,
         self::DROPINS => null,
         self::EARLY_HOOKS_FILE => '',
         self::ENV_BOOTSTRAP_DIR => null,
@@ -68,6 +70,7 @@ final class Config implements \ArrayAccess
         self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
         self::CONTENT_DEV_DIR => 'validatePath',
         self::CUSTOM_STEPS => 'validateSteps',
+        self::COMMAND_STEPS => 'validateSteps',
         self::DROPINS => 'validateDropins',
         self::EARLY_HOOKS_FILE => 'validateFileName',
         self::ENV_BOOTSTRAP_DIR => 'validateDirName',

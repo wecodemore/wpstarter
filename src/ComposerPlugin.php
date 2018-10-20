@@ -150,7 +150,13 @@ final class ComposerPlugin implements
             $selectedStepNames = array_filter($selectedStepNames, 'is_string');
             $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
             $skippedSteps = $this->locator->config()[Config::SKIP_STEPS]->unwrapOrFallback([]);
-            $stepClasses = array_diff(array_merge(self::STEP_CLASSES, $customSteps), $skippedSteps);
+            $allSteps = array_unique(array_merge(self::STEP_CLASSES, $customSteps));
+            if (!$event) {
+                $cmdSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback();
+                $cmdSteps and $allSteps = array_merge($allSteps, $cmdSteps);
+            }
+
+            $stepClasses = array_diff($allSteps, $skippedSteps);
             $hasWpCliStep = false;
 
             $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCliStep);
