@@ -1,8 +1,8 @@
 # Running WP CLI Commands
 
-WP starter takes care of the file structure of the website and its configuration at filesystem level, however it does nothing for the database.
+WP starter takes care of the file structure of the website and its configuration at filesystem level, however it does nothing, for example, for the database.
 
-If the aim is to automate the bootstrapping of the websites, it is clear that WP Starter is not enough. The way to go for the matter is surely [WP CLI](https://wp-cli.org/).
+If our aim is to automate the complete bootstrap of the website, it is clear that WP Starter is not enough. The way to go to complete what we need is surely [WP CLI](https://wp-cli.org/).
 
 The setup of the website via WP CLI is something that can be surely done independently from WP Starter. For example, assuming we have an deploy / CI tool that install Composer dependencies triggering WP Starter, the same deploy / CI tool can take care of running WP CLI commands.
 
@@ -14,26 +14,24 @@ However, by telling WP Starter to take care of WP CLI commands, WP starter will 
 
 ## Installation of WP CLI
 
-When WP Starter is configured to run WP CLI commands before running them, WP Starter make sure WP CLI is available:
+When WP Starter is configured to run WP CLI commands, before running them it makes sure WP CLI is available:
 
 1. first it parses all installed packages to see if WP CLI is installed via Composer
 2. if not, it checks a WP CLI phar is available on project root
 3. if not, download WP CLI phar and checks its integrity via SHA512 checksum provided by WP CLI
 
-Because WP Starter searched or installed WP CLI, it knows where to find it and in which form it comes (Composer package or phar) so it knows how and where to send commands.
+Which means that in any case WP CLI will be available and WP Starter will know where to find it and in which form it comes (Composer package or phar), so it will know how and where to send commands.
 
 In short, by letting WP Starter running WP CLI commands it is possible to:
 
 - don’t bother with W CLI installation
-- write command in a way that is agnostic of how and where WP CLI is available
+- write commands in a way that is agnostic of how and where WP CLI is available
 
 
 
 ## Commands configuration
 
 Now that benefit of using WP Starter for WP CLI commands are known, let’s see how to tell WP Starter what to execute.
-
-
 
 ### Evaluation of files
 
@@ -62,10 +60,10 @@ This can be done by passing an array of objects like this:
         {
             "file": "./scripts/my-cli-script-1.php",
             "skip-wordpress": true,
-            "args": [
-                "foo",
-                "bar"
-            ]
+            "args": {
+                "foo": "bar",
+                "bar": "baz"
+            }
         }
     ]
 }
@@ -73,9 +71,7 @@ This can be done by passing an array of objects like this:
 
 Where `skip-wordpress` is used set the `--skip-wordpress` flag of `eval-file` command, and `args` key will be the arguments passed to the file (that will be placed in the `$args` variable for the file).
 
-
-
-### Direct typing of commands
+### Commands array
 
 One simple way to setup WP CLI commands to run is to just set an array of commands in the `wp-cli-commands` setting. For example:
 
@@ -88,7 +84,7 @@ One simple way to setup WP CLI commands to run is to just set an array of comman
 }
 ```
 
-The same array of commands can be placed in a separate JSON file, whose path is then set in the config:
+The same array of commands can be placed in a separate JSON file, whose path is then used as same config value:
 
 ```json
 {
@@ -98,7 +94,7 @@ The same array of commands can be placed in a separate JSON file, whose path is 
 
 This method is quite simple to use, but not very powerful, for example does not allow to run commands conditionally.
 
-One possible solution in some cases might be use a PHP files that perform operation, loads stuff, check conditionals and finally returns an array fo commands. For example:
+One possible solution in some cases might be to use a PHP files that does whatever needs to do and finally returns an array fo commands. For example:
 
 ```json
 {
@@ -120,7 +116,7 @@ if (!$host) {
 
 // Try to connect to WP database
 $conn = @mysqli_connect($host, $env['DB_USER'], $env['DB_PASS'], $env['DB_NAME']);
-// If it fails, probably no DB is there, let's tell WP CLI to create database.
+// If it fails, probably no DB is there, let's tell WP CLI to create it.
 $commands = ($conn && !$conn->connect_error) ? [] : ['wp db create'];
 $conn and mysqli_close($conn);
 
@@ -133,14 +129,12 @@ if ($commands) {
 return $commands;
 ```
 
-So in few lines check if DB is there and if not tell WP CLI to create it, add an user taking the
+So in few lines the file checks if DB is there and if not tell WP CLI to create it and then add an user taking the
 username from env variable.
-
-We should still create an `.htaccess` for it, but this will be an exercise for _"Custom Steps Development"_ chapter.
 
 ### Precedence
 
-In case both `wp-cli-files` and `wp-cli-commands` settings are used, the former are executed first.
+In the case both `wp-cli-files` and `wp-cli-commands` settings are used, the former are executed first.
 
 
 
@@ -148,9 +142,11 @@ In case both `wp-cli-files` and `wp-cli-commands` settings are used, the former 
 
 Another way to run WP CLI commands is to use step scripts. As described in the chapter *"WP Starter Steps"* step scripts are callback that are executed either before or after each step.
 
-By targeting the script `post-build-wp-cli-yml` it is possible to run to run WP CLI commands at safe timing. The we can do that is via a "process" object that can be obtained from the `Locator` that is passed as argument to the script callback.
+For example, by targeting the script `post-build-wp-cli-yml` it is possible to add scripts that run WP CLI commands.
 
-For example, in `wpstarter.json`
+The way we can do that is via a "process" object that can be obtained from the `Locator` passed as argument to the script callback.
+
+For example, we can put in `wpstarter.json`:
 
 ```json
 {
@@ -160,7 +156,7 @@ For example, in `wpstarter.json`
 }
 ```
 
-amd then the class `Me\MyProject\Script` can contain:
+and then the class `Me\MyProject\Script` can contain:
 
 ```php
 <?php

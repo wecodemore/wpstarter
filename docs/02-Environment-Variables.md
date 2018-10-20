@@ -12,7 +12,7 @@ WordPress uses a single PHP file, `wp-config.php` that is used to declare PHP co
 
 This approach has surely some advantages, but also issues. The main problems are two:
 
-- `wp-config.php` will very likely contain "secrets" that should to be kept under version control. But being the file required by WordPress it is hard to conciliate the two things.
+- `wp-config.php` will very likely contain "secrets" that should **not** be kept under version control. But being the file required by WordPress it is hard to conciliate the two things.
 - `wp-config.php` does not support multiple environments. Meaning that if the same code will be deployed to, for example, a "staging" and a "production" server it will be necessary to have two versions of the file. This is possible using separate VCS "branches" (if the VCS of choice support them), but then we fall in the previous issue being forced to keep secrets versioned.
 
 This issue is surely not limited to WordPress.
@@ -31,13 +31,15 @@ As additional advantage, env vars can be set "on the fly" acting on the system, 
 
 Finally, not being code they don't need to be kept under version control, avoiding the issue to keep "secrets" under version control.
 
-It is undeniable that to set the values on the "bare environment" could be quite cumbersome. This is why mane applications and tools support "env files".
+It is undeniable that to set the values on the "bare environment" could be quite cumbersome. This is why many applications and tools support "env files".
+
+In the rest of the documentation we will refer to "actual environment" to mean variables set on the server itself, to distinguish from variables set by parsing env files.
 
 
 
 ## Introducing env files
 
-An env file is nothing else than a shell script file what does not contain any command, but only variables.
+An env file is nothing else than a shell script file that does not contain any command, but only variables.
 
 ```shell
 HELLO="Hello"
@@ -76,11 +78,11 @@ If WP Starter recognize that var is set before any env file is loaded, it does n
 
 ## Environment variables and WordPress
 
-Even if WP Starter loads env vars (no matter id from file or from actual environment) WordPress still needs PHP constants to be set with configuration to work properly.
+Even if WP Starter loads env vars (no matter if from file or from actual environment) WordPress still needs PHP constants to be set with configuration to work properly.
 
-WP Starter generates  `wp-config.php` that reads env variables and declare constants "on the fly" when a env var matching a WP configuration constant is found.
+WP Starter generates a  `wp-config.php` file that reads env variables and declare PHP constants "on the fly" when an env var matching a WP configuration constant is found.
 
-For example by having an env file like the following:
+For example, by having an env file like the following:
 
 ```shell
 DB_NAME=mydb
@@ -90,7 +92,7 @@ DB_PASSWORD=mysecret!
 
 WP starter will load it, will set related environment variables and will also **define `DB_NAME`, `DB_USER`, and `DB_PASSWORD` PHP constants** so that WordPress can work properly.
 
-If the env vars are set in the actual environment instead of in env file, nothing will change.
+If the same env vars would be set in the actual environment instead of in env file, nothing would change.
 
 Note that **only variables matching WordPress core constants names will be defined as constants**.
 
