@@ -38,8 +38,17 @@ class MuPluginList
 
         $packages = $this->packageFinder->findByType('wordpress-muplugin');
         foreach ($packages as $package) {
-            $path = $this->pathForPluginPackage($package);
-            $path and $list[$package->getName()] = $path;
+            $paths = $this->pathsForPluginPackage($package);
+            if (!$paths) {
+                continue;
+            }
+
+            $name = $package->getName();
+            $multi = count($paths) > 1;
+            foreach ($paths as $path) {
+                $key = $multi ? "{$name}_" . pathinfo($path, PATHINFO_FILENAME) : $name;
+                $list[$key] = $path;
+            }
         }
 
         return $list;
@@ -47,31 +56,32 @@ class MuPluginList
 
     /**
      * @param PackageInterface $package
-     * @return string
+     * @return string[]
      */
-    private function pathForPluginPackage(PackageInterface $package): string
+    private function pathsForPluginPackage(PackageInterface $package): array
     {
         $path = $this->packageFinder->findPathOf($package);
         if (!$path) {
-            return '';
+            return [];
         }
 
         $files = glob("{$path}/*.php");
         if (!$files) {
-            return '';
+            return [];
         }
 
         if (count($files) === 1) {
-            return reset($files);
+            return [reset($files)];
         }
 
+        $paths = [];
         foreach ($files as $file) {
             if ($this->isPluginFile($file)) {
-                return $file;
+                $paths[] = $file;
             }
         }
 
-        return '';
+        return $paths;
     }
 
     /**
