@@ -48,12 +48,18 @@ final class MuLoaderStep implements FileCreationStepInterface
     private $muPlugins = [];
 
     /**
+     * @var \Composer\Util\Filesystem
+     */
+    private $composerFilesystem;
+
+    /**
      * @param Locator $locator
      */
     public function __construct(Locator $locator)
     {
         $this->list = $locator->muPluginsList();
         $this->filesystem = $locator->filesystem();
+        $this->composerFilesystem = $locator->composerFilesystem();
         $this->builder = $locator->fileContentBuilder();
     }
 
@@ -93,10 +99,16 @@ final class MuLoaderStep implements FileCreationStepInterface
      */
     public function run(Config $config, Paths $paths): int
     {
+        $muPluginsPaths = [];
+        $base = $this->targetPath($paths);
+        foreach ($this->muPlugins as $path) {
+            $muPluginsPaths[] = $this->composerFilesystem->findShortestPath($base, $path);
+        }
+
         $built = $this->builder->build(
             $paths,
             'wpstarter-mu-loader.php',
-            ['MU_PLUGINS_LIST' => implode(', ', $this->muPlugins)]
+            ['MU_PLUGINS_LIST' => implode(', ', $muPluginsPaths)]
         );
 
         if (!$this->filesystem->save($built, $this->targetPath($paths))) {

@@ -86,7 +86,7 @@ class MuPluginList
         $paths = [];
         foreach ($files as $file) {
             if ($this->isPluginFile($file)) {
-                $paths[] = $this->paths->root($path);
+                $paths[] = $file;
             }
         }
 
