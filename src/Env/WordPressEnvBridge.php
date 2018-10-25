@@ -9,8 +9,6 @@
 namespace WeCodeMore\WpStarter\Env;
 
 use Symfony\Component\Dotenv\Dotenv;
-use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Util\Paths;
 
 /**
  * Handle WordPress related environment variables using Symfony Env component.
@@ -139,24 +137,6 @@ final class WordPressEnvBridge implements \ArrayAccess
      * @var bool
      */
     private $fileLoadingSkipped = false;
-
-    /**
-     * @param Config $config
-     * @param Paths $paths
-     * @param Dotenv|null $dotEnv
-     * @return WordPressEnvBridge
-     */
-    public static function loadFromConfig(
-        Config $config,
-        Paths $paths,
-        Dotenv $dotEnv = null
-    ): WordPressEnvBridge {
-
-        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
-        $envFile = $config[Config::ENV_FILE]->unwrapOrFallback('.env');
-
-        return static::loadFile("{$envDir}/{$envFile}", $dotEnv);
-    }
 
     /**
      * @param  string $path Environment file path

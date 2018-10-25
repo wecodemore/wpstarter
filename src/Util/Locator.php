@@ -237,10 +237,9 @@ final class Locator
     public function wordPressEnvBridge(): WordPressEnvBridge
     {
         if (empty($this->objects[WordPressEnvBridge::class])) {
-            $this->objects[WordPressEnvBridge::class] = WordPressEnvBridge::loadFromConfig(
-                $this->config(),
-                $this->paths()
-            );
+            $file = $this->config()[Config::ENV_FILE]->unwrapOrFallback('.env');
+            $dir = $this->config()[Config::ENV_DIR]->unwrapOrFallback($this->paths()->root());
+            $this->objects[WordPressEnvBridge::class] = WordPressEnvBridge::load($dir, $file);
         }
 
         return $this->objects[WordPressEnvBridge::class];

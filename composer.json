@@ -46,7 +46,8 @@
   "autoload":          {
     "classmap": [
       "src/WpStarterCommand.php",
-      "src/ComposerPlugin.php"
+      "src/ComposerPlugin.php",
+      "src/Env/"
     ]
   },
   "autoload-dev":          {
