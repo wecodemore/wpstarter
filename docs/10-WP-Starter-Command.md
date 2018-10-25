@@ -48,6 +48,7 @@ class NpmStep implements Step {
         $this->finder = $locator->packageFinder();
         $this->process = $locator->systemProcess();
         $this->io = $locator->io();
+        $this->paths = $locator->paths();
     }
     
     public function name() {
@@ -57,7 +58,7 @@ class NpmStep implements Step {
     public function run() {
         foreach ($this->finder->findByVendor('mycompany') as $package) {
             if (strpos($package->getType(), 'wordpress-') === 0) {
-                $cwd = $package->findPathOf($package);
+                $cwd = $this->paths->root($package->findPathOf($package));
                 $this->process->execute('npm install', $cwd);
             }
         }
