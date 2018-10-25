@@ -54,6 +54,11 @@ final class ContentDevStep implements OptionalStep
     private $filesystem;
 
     /**
+     * @var \Composer\Util\Filesystem
+     */
+    private $composerFilesystem;
+
+    /**
      * @var \WeCodeMore\WpStarter\Config\Config
      */
     private $config;
@@ -75,6 +80,8 @@ final class ContentDevStep implements OptionalStep
     {
         $this->io = $locator->io();
         $this->filesystem = $locator->filesystem();
+        $this->composerFilesystem = $locator->composerFilesystem();
+        $this->config = $locator->config();
     }
 
     /**
@@ -132,7 +139,6 @@ final class ContentDevStep implements OptionalStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        $this->config = $config;
         $operation = $this->operation;
         if (!$operation) {
             $operation = $config[Config::CONTENT_DEV_OPERATION]->unwrapOrFallback(self::OP_SYMLINK);
@@ -206,44 +212,54 @@ final class ContentDevStep implements OptionalStep
     }
 
     /**
-     * @param array $srcDirs
-     * @param string $targetDir
+     * @param array $devContentSubfolders
+     * @param string $contentDir
      * @return bool
      */
-    private function copyDirs(array $srcDirs, string $targetDir): bool
+    private function copyDirs(array $devContentSubfolders, string $contentDir): bool
     {
-        $done = $all = 0;
+        $done = 0;
+        $all = 0;
 
-        foreach ($srcDirs as $srcSubDir) {
-            if (!is_dir($srcSubDir)) {
+        foreach ($devContentSubfolders as $devContentSubfolder) {
+            if (!is_dir($devContentSubfolder)) {
                 continue;
             }
 
-            $all++;
-            $targetFullPath = "{$targetDir}/" . basename($srcSubDir);
-
-            $this->filesystem->copyDir($srcSubDir, $targetFullPath) and $done++;
+            $devContentSubfolderBase = basename($devContentSubfolder);
+            $target = "{$contentDir}/{$devContentSubfolderBase}";
+            $this->maybeUnlinkTarget($devContentSubfolder, $target);
+            $this->filesystem->copyDir($devContentSubfolder, $target);
         }
 
         return $done === $all;
     }
 
     /**
-     * @param array $srcDirs
-     * @param string $targetDir
+     * @param array $devContentSubfolders
+     * @param string $contentDir
      * @return bool
      */
-    private function symlinkDirs(array $srcDirs, string $targetDir): bool
+    private function symlinkDirs(array $devContentSubfolders, string $contentDir): bool
     {
-        $done = $all = 0;
+        $done = 0;
+        $all = 0;
 
-        foreach ($srcDirs as $srcDir) {
-            $srcSubDirs = glob("{$srcDir}/*", GLOB_NOSORT);
-            $this->filesystem->createDir($srcDir);
-            foreach ($srcSubDirs as $srcSubDir) {
+        foreach ($devContentSubfolders as $devContentSubfolder) {
+            $items = is_dir($devContentSubfolder)
+                ? glob("{$devContentSubfolder}/*", GLOB_NOSORT)
+                : null;
+            if (!$items) {
+                continue;
+            }
+
+            $devContentSubfolderBase = basename($devContentSubfolder);
+            foreach ($items as $item) {
                 $all++;
-                $targetName = "{$targetDir}/" . basename($srcSubDir);
-                $this->filesystem->symlink($srcSubDir, $targetName) and $done++;
+                $target = "{$contentDir}/{$devContentSubfolderBase}/" . basename($item);
+                $this->maybeUnlinkTarget($item, $target);
+                $this->filesystem->createDir(dirname($target));
+                $this->filesystem->symlink($item, $target) and $done++;
             }
         }
 
@@ -252,12 +268,13 @@ final class ContentDevStep implements OptionalStep
 
     /**
      * @param array $srcFiles
-     * @param string $targetDir
+     * @param string $contentDir
      * @return bool
      */
-    private function copyFiles(array $srcFiles, string $targetDir): bool
+    private function copyFiles(array $srcFiles, string $contentDir): bool
     {
-        $done = $all = 0;
+        $done = 0;
+        $all = 0;
 
         foreach ($srcFiles as $srcFile) {
             if (!is_file($srcFile)) {
@@ -265,7 +282,9 @@ final class ContentDevStep implements OptionalStep
             }
 
             $all++;
-            $this->filesystem->copyFile($srcFile, "{$targetDir}/" . basename($srcFile)) and $done++;
+            $target = "{$contentDir}/" . basename($srcFile);
+            $this->maybeUnlinkTarget($srcFile, $target);
+            $this->filesystem->copyFile($srcFile, $target) and $done++;
         }
 
         return $done === $all;
@@ -273,12 +292,13 @@ final class ContentDevStep implements OptionalStep
 
     /**
      * @param array $srcFiles
-     * @param string $targetDir
+     * @param string $contentDir
      * @return bool
      */
-    private function symlinkFiles(array $srcFiles, string $targetDir): bool
+    private function symlinkFiles(array $srcFiles, string $contentDir): bool
     {
-        $done = $all = 0;
+        $done = 0;
+        $all = 0;
 
         foreach ($srcFiles as $srcFile) {
             if (!is_file($srcFile)) {
@@ -286,9 +306,31 @@ final class ContentDevStep implements OptionalStep
             }
 
             $all++;
-            $this->filesystem->symlink($srcFile, "{$targetDir}/" . basename($srcFile)) and $done++;
+            $target = "{$contentDir}/" . basename($srcFile);
+            $this->maybeUnlinkTarget($srcFile, $target);
+            $this->filesystem->symlink($srcFile, $target) and $done++;
         }
 
         return $done === $all;
+    }
+
+    /**
+     * @param string $source
+     * @param string $target
+     */
+    private function maybeUnlinkTarget(string $source, string $target)
+    {
+        $isFile = is_file($source);
+        if ($isFile) {
+            is_link($target) and $this->composerFilesystem->unlink($target);
+
+            return;
+        }
+
+        if ($this->composerFilesystem->isSymlinkedDirectory($target)
+            || $this->composerFilesystem->isJunction($target)
+        ) {
+            $this->composerFilesystem->removeDirectory($target);
+        }
     }
 }
