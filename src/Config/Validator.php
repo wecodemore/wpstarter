@@ -180,8 +180,9 @@ class Validator
         foreach ($value as $name => $dropin) {
             $check = $this->validateUrlOrPath($dropin);
             if ($check->notEmpty()) {
+                $dropin = $check->unwrap();
                 is_string($name) or $name = $dropin;
-                $dropins[$name] = $check->unwrap();
+                $dropins[$name] = $dropin;
             }
         }
 
