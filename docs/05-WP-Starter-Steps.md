@@ -313,13 +313,13 @@ For this "special" couple of scripts, the step object passed as second param wil
 
 ## Making steps and scripts autoloadable
 
-When creating custom steps or extending steps via scripts it is necessary that step classes and scripts callback are autoloadable, or it is not possiblre to WP Starter to run them.
+When creating custom steps or extending steps via scripts it is necessary that step classes and scripts callback are autoloadable, or it is not possible to WP Starter to run them.
 
-The obvious way to do that it is to use entries in the via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json`. That obviously works, but considering that Composer is used to require WordPress, and so Composer autoload  is loaded at every WordPress request "polluting" it with things that are not meant to be run in production is not a good idea, even if autoritative classmaps can make that almost unrelevant.
+The obvious way to do that it is to use entries in the via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json`. That obviously works, but considering that Composer is used to require WordPress, and so Composer autoload  is loaded at every WordPress request "polluting" it with things that are not meant to be run in production is not a good idea, even if authoritative classmap can make that almost unrelevant.
 
 WP Starter itself registers a custom autoloader just in time before running, and only register in Composer the plugin class.
 
-WP Starter also offers to users the possibility to require an autoload file before starting runing steps. This file can then be used to manually require files, declare functions, or register autoloaders.
+WP Starter also offers to users the possibility to require an autoload file before starting running steps. This file can then be used to manually require files, declare functions, or register autoloaders.
 
 By default, WP Starter will look ofr a file  named `"wpstarter-autoload.php"` in project root, but the path can be configured using the **`autoload`** setting.
 

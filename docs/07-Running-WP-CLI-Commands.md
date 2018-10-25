@@ -175,3 +175,5 @@ class Script
 ```
 
 For this to work `Me\MyProject\Script` class must be autoloadable.
+
+The same thing can be done by creating a custom step, because the `Locator` (and its `wpCliProcess()` method) is also available for custom steps, however this make sense only if there's a complex logic behind the command generation otherwise adding commands `wp-cli-commands` or `wp-cli-files` is definitively easier.
