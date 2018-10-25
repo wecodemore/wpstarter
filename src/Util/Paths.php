@@ -87,7 +87,7 @@ final class Paths implements \ArrayAccess
             );
         }
 
-        return $this->paths[$pathName] . $this->to($to);
+        return $this->filesystem->normalizePath($this->paths[$pathName] . $this->to($to));
     }
 
     /**
@@ -306,7 +306,7 @@ final class Paths implements \ArrayAccess
     {
         if ($to) {
             $trail = strlen($to) > 1 && in_array(substr($to, -1, 1), ['\\', '/'], true);
-            $to = '/' . ltrim($this->filesystem->normalizePath($to), '/');
+            $to = '/' . trim($this->filesystem->normalizePath($to), '/');
             $trail and $to .= '/';
         }
 
