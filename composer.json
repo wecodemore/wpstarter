@@ -44,15 +44,17 @@
     "mockery/mockery":              "^1"
   },
   "autoload":          {
-    "psr-4": {
-      "WeCodeMore\\WpStarter\\": "src/"
-    }
+    "classmap": [
+      "src/WpStarterCommand.php",
+      "src/ComposerPlugin.php"
+    ]
   },
   "autoload-dev":          {
     "psr-4": {
-      "WeCodeMore\\WpStarter\\Tests\\": "tests/src",
-      "WeCodeMore\\WpStarter\\Tests\\Unit\\": "tests/unit",
-      "WeCodeMore\\WpStarter\\Tests\\Integration\\": "tests/integration"
+      "WeCodeMore\\WpStarter\\": "src/",
+      "WeCodeMore\\WpStarter\\Tests\\": "tests/src/",
+      "WeCodeMore\\WpStarter\\Tests\\Unit\\": "tests/unit/",
+      "WeCodeMore\\WpStarter\\Tests\\Integration\\": "tests/integration/"
     }
   },
   "config":            {

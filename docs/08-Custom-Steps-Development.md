@@ -311,7 +311,7 @@ HTACCESS;
 
 This time we are really done. We have built a flexible step that can be reused in many projects and will adapt the output according to settings.
 
-What's left to do is to make the class autoloadable, via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json` and to add the step to `custom-steps` configuration in `extra.wpstarter` or `wpstarter.json`:
+What's left to do is to add the step to `custom-steps` configuration in `extra.wpstarter` or `wpstarter.json`:
 
 ```json
 {
@@ -321,9 +321,11 @@ What's left to do is to make the class autoloadable, via the [`autoload`](https:
 }
 ```
 
-Note how the name in the configuration matches the string returned by step object `name()` method.
+and also to make the class autoloadable, via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json` or via the `autoload` WP Starter file (See *"WP Starter Steps"* chapter for more info about the latter). 
 
-For the records, this is the whole class code we have written:
+Note how the name in the `"custom-steps"` configuration matches the string returned by step object `name()` method.
+
+For the record, this is the whole class code we have written:
 
 ```php
 namespace WPStarter\Examples;

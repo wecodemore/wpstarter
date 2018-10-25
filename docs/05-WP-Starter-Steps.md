@@ -308,3 +308,43 @@ Where:
 Besides the scripts for the *actual* steps, there are an additional couple of pre/post script: `pre-wpstarter` and `post-wpstarter`, that run respectively before any step starts and after the steps completed.
 
 For this "special" couple of scripts, the step object passed as second param will be an instance of `WeCodeMore\WpStarter\Step\Steps` that is a sort of "steps runner" which implements `Step` interface as well. This is  especially interesting for the `pre-wpstarter` callbacks, because those can call on the passed `Steps` object its `addStep()` / `removeStep()` methods, adding or removing steps "on the fly".
+
+
+
+## Making steps and scripts autoloadable
+
+When creating custom steps or extending steps via scripts it is necessary that step classes and scripts callback are autoloadable, or it is not possiblre to WP Starter to run them.
+
+The obvious way to do that it is to use entries in the via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json`. That obviously works, but considering that Composer is used to require WordPress, and so Composer autoload  is loaded at every WordPress request "polluting" it with things that are not meant to be run in production is not a good idea, even if autoritative classmaps can make that almost unrelevant.
+
+WP Starter itself registers a custom autoloader just in time before running, and only register in Composer the plugin class.
+
+WP Starter also offers to users the possibility to require an autoload file before starting runing steps. This file can then be used to manually require files, declare functions, or register autoloaders.
+
+By default, WP Starter will look ofr a file  named `"wpstarter-autoload.php"` in project root, but the path can be configured using the **`autoload`** setting.
+
+For example in `wpstarter.json`:
+
+```json
+{
+    "autoload": "./utils/functions.php",
+    "scripts": {
+        "pre-wpstarter": "MyCompany\\MyProject\\sayHelloBeforeStarting"
+    }
+}
+```
+
+and in `utils/functions.php` inside project root:
+
+```php
+<?php
+namespace MyCompany\MyProject;
+
+use WeCodeMore\WpStarter\Step\Step;
+use WeCodeMore\WpStarter\Util\Locator;
+
+function sayHelloBeforeStarting(int $result, Step $step, Locator $locator) {
+    $locator->io()->writeColorBlock('magenta', "Hello there!\n");
+}
+```
+

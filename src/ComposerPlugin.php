@@ -33,18 +33,6 @@ final class ComposerPlugin implements
 
     const EXTRA_KEY = 'wpstarter';
 
-    const STEP_CLASSES = [
-        Step\CheckPathStep::NAME => Step\CheckPathStep::class,
-        Step\WpConfigStep::NAME => Step\WpConfigStep::class,
-        Step\IndexStep::NAME => Step\IndexStep::class,
-        Step\MuLoaderStep::NAME => Step\MuLoaderStep::class,
-        Step\EnvExampleStep::NAME => Step\EnvExampleStep::class,
-        Step\DropinsStep::NAME => Step\DropinsStep::class,
-        Step\MoveContentStep::NAME => Step\MoveContentStep::class,
-        Step\ContentDevStep::NAME => Step\ContentDevStep::class,
-        Step\WpCliConfigStep::NAME => Step\WpCliConfigStep::class,
-    ];
-
     /**
      * @var IOInterface
      */
@@ -114,56 +102,30 @@ final class ComposerPlugin implements
      */
     public function run(Event $event = null, array $selectedStepNames = [])
     {
+        $this->setupAutoload();
+
         $filesystem = new Filesystem();
         $requirements = new Util\Requirements($this->composer, $this->io, $filesystem);
         $config = $requirements->config();
-        $requireWp = $config[Config::REQUIRE_WP]->not(false);
-        $fallbackVer = $config[Config::WP_VERSION]->notEmpty()
-            ? $config[Config::WP_VERSION]->unwrap()
-            : null;
+
+        $autoload = $config[Config::AUTOLOAD]->unwrapOrFallback();
+        if ($autoload && is_file($autoload)) {
+            require_once $autoload;
+        }
 
         $this->locator = new Util\Locator($requirements, $this->composer, $this->io, $filesystem);
 
         try {
-            $wpVersion = null;
-            if ($requireWp) {
-                $wpVersionDiscover = new Util\WpVersion(
-                    $this->locator->packageFinder(),
-                    $this->locator->io(),
-                    $fallbackVer
-                );
-                $wpVersion = $wpVersionDiscover->discover();
-            }
-
+            $requireWp = $config[Config::REQUIRE_WP]->not(false);
+            $fallbackVer = $config[Config::WP_VERSION]->unwrapOrFallback('');
+            $wpVersion = $this->checkWp($requireWp, $fallbackVer, $config);
             if (!$wpVersion && $requireWp) {
                 $event or exit(1);
 
                 return;
             }
 
-            // If WP version found and no version is in configs, let's set it with the finding.
-            if ($wpVersion && !$fallbackVer) {
-                $config->appendConfig(Config::WP_VERSION, $wpVersion);
-            }
-
-            $steps = new Step\Steps($this->locator, $this->composer);
-            $selectedStepNames = array_filter($selectedStepNames, 'is_string');
-            $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
-            $skippedSteps = $this->locator->config()[Config::SKIP_STEPS]->unwrapOrFallback([]);
-            $allSteps = array_unique(array_merge(self::STEP_CLASSES, $customSteps));
-            if (!$event) {
-                $cmdSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback();
-                $cmdSteps and $allSteps = array_merge($allSteps, $cmdSteps);
-            }
-
-            $stepClasses = array_diff($allSteps, $skippedSteps);
-            $hasWpCliStep = false;
-
-            $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCliStep);
-            if (!$hasWpCliStep && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
-                $steps->addStep(new Step\WpCliCommandsStep($this->locator));
-            }
-
+            $steps = $this->initializeSteps($config, $event, ...$selectedStepNames);
             $this->logo();
             $steps->run($this->locator->config(), $this->locator->paths());
 
@@ -178,6 +140,81 @@ final class ComposerPlugin implements
 
             $event or exit(1);
         }
+    }
+
+    /**
+     * @param bool $requireWp
+     * @param string $fallbackVer
+     * @param Config $config
+     * @return string
+     */
+    private function checkWp(bool $requireWp, string $fallbackVer, Config $config): string
+    {
+        $wpVersion = '';
+        if ($requireWp) {
+            $wpVersionDiscover = new Util\WpVersion(
+                $this->locator->packageFinder(),
+                $this->locator->io(),
+                $fallbackVer
+            );
+            $wpVersion = $wpVersionDiscover->discover();
+        }
+
+        if (!$wpVersion && $requireWp) {
+            return '';
+        }
+
+        // If WP version found and no version is in configs, let's set it with the finding.
+        if ($wpVersion && !$fallbackVer) {
+            $config[Config::WP_VERSION] = $fallbackVer;
+        }
+
+        return $wpVersion;
+    }
+
+    /**
+     * @param Config $config
+     * @param Event $event
+     * @param string[] $selectedStepNames
+     * @return Step\Steps
+     */
+    private function initializeSteps(
+        Config $config,
+        Event $event = null,
+        string ...$selectedStepNames
+    ): Step\Steps {
+
+        $defaultSteps = [
+            Step\CheckPathStep::NAME => Step\CheckPathStep::class,
+            Step\WpConfigStep::NAME => Step\WpConfigStep::class,
+            Step\IndexStep::NAME => Step\IndexStep::class,
+            Step\MuLoaderStep::NAME => Step\MuLoaderStep::class,
+            Step\EnvExampleStep::NAME => Step\EnvExampleStep::class,
+            Step\DropinsStep::NAME => Step\DropinsStep::class,
+            Step\MoveContentStep::NAME => Step\MoveContentStep::class,
+            Step\ContentDevStep::NAME => Step\ContentDevStep::class,
+            Step\WpCliConfigStep::NAME => Step\WpCliConfigStep::class,
+        ];
+
+        $steps = new Step\Steps($this->locator, $this->composer);
+        $selectedStepNames = array_filter($selectedStepNames, 'is_string');
+        $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
+        $skippedSteps = $this->locator->config()[Config::SKIP_STEPS]->unwrapOrFallback([]);
+        $allSteps = array_unique(array_merge($defaultSteps, $customSteps));
+        if (!$event && $selectedStepNames) {
+            $cmdSteps = $this->locator->config()[Config::COMMAND_STEPS]->unwrapOrFallback();
+            $cmdSteps and $allSteps = array_unique(array_merge($allSteps, $cmdSteps));
+        }
+
+        $stepClasses = $skippedSteps ? array_diff($allSteps, $skippedSteps) : $allSteps;
+        $hasWpCliStep = false;
+
+        $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCliStep);
+        if (!$hasWpCliStep && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
+            $steps->addStep(new Step\WpCliCommandsStep($this->locator));
+        }
+
+        return $steps;
     }
 
     /**
@@ -255,5 +292,28 @@ LOGO;
         // phpcs:enable
 
         $this->io->write("\n{$logo}\n");
+    }
+
+    /**
+     * WP Starter is required from Composer, which means it is deployed with WordPress, and so
+     * any autoloading setting that WP Starter declares will "pollute" the Composer autoloader that
+     * is loaded at every WordPress request.
+     * For this reason we keep in the autoload section of composer.json only the needed bare-minimum
+     * (basically this class) then we register a simple PSR-4 loader for the rest.
+     *
+     * @return void
+     */
+    private function setupAutoload()
+    {
+        spl_autoload_register(
+            function (string $class) {
+                if (stripos($class, __NAMESPACE__) === 0) {
+                    $file = substr(str_replace('\\', '/', $class), strlen(__NAMESPACE__)) . '.php';
+                    require_once __DIR__ . $file;
+                }
+            },
+            true,
+            true
+        );
     }
 }

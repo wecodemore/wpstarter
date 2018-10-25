@@ -18,6 +18,7 @@ use WeCodeMore\WpStarter\Step\ContentDevStep;
  */
 final class Config implements \ArrayAccess
 {
+    const AUTOLOAD = 'autoload';
     const CONTENT_DEV_OPERATION = 'content-dev-op';
     const CONTENT_DEV_DIR = 'content-dev-dir';
     const COMMAND_STEPS = 'command-steps';
@@ -42,6 +43,7 @@ final class Config implements \ArrayAccess
     const WP_VERSION = 'wp-version';
 
     const DEFAULTS = [
+        self::AUTOLOAD => 'wpstarter-autoload.php',
         self::CONTENT_DEV_OPERATION => ContentDevStep::OP_SYMLINK,
         self::CONTENT_DEV_DIR => 'content-dev',
         self::CUSTOM_STEPS => null,
@@ -67,6 +69,7 @@ final class Config implements \ArrayAccess
     ];
 
     const VALIDATION_MAP = [
+        self::AUTOLOAD => 'validatePath',
         self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
         self::CONTENT_DEV_DIR => 'validatePath',
         self::CUSTOM_STEPS => 'validateSteps',
@@ -97,6 +100,11 @@ final class Config implements \ArrayAccess
     private $configs;
 
     /**
+     * @var array
+     */
+    private $raw;
+
+    /**
      * @var Validator
      */
     private $validator;
@@ -113,54 +121,7 @@ final class Config implements \ArrayAccess
 
         $this->configs = [];
         $this->validator = $validator;
-
-        $configs = array_merge(self::DEFAULTS, $configs);
-
-        foreach ($configs as $key => $value) {
-            $this->configs[$key] = $this->validateValue($key, $value)
-                ->unwrapOrFallback(self::DEFAULTS[$key] ?? null);
-        }
-
-        $this->configs[self::REGISTER_THEME_FOLDER] and $parsed[self::MOVE_CONTENT] = false;
-
-        if ($this->configs[self::CONTENT_DEV_OPERATION] === null) {
-            $this->configs[self::CONTENT_DEV_OPERATION] = $this->configs[self::CONTENT_DEV_DIR]
-                ? ContentDevStep::OP_SYMLINK
-                : ContentDevStep::OP_NONE;
-        }
-    }
-
-    /**
-     * Append-only setter.
-     *
-     * The reason for this to exist is that because steps have access to Config, adding additional
-     * arbitrary values to it means steps can "communicate".
-     *
-     * @param string $name
-     * @param mixed $value
-     * @return static
-     * @throws \BadMethodCallException
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-     */
-    public function appendConfig(string $name, $value): Config
-    {
-        // phpcs:enable
-
-        if ($this->offsetExists($name) && $this->offsetGet($name)->notEmpty()) {
-            throw new \BadMethodCallException(
-                sprintf(
-                    '%s is append-ony: %s config is already set',
-                    __CLASS__,
-                    $name
-                )
-            );
-        }
-
-        $this->configs[$name] = $this->validateValue($name, $value)
-            ->unwrapOrFallback(self::DEFAULTS[$name] ?? null);
-
-        return $this;
+        $this->raw = array_merge(self::DEFAULTS, $configs);
     }
 
     /**
@@ -169,7 +130,7 @@ final class Config implements \ArrayAccess
      */
     public function offsetExists($offset)
     {
-        return array_key_exists($offset, $this->configs);
+        return array_key_exists($offset, $this->raw) || array_key_exists($offset, $this->configs);
     }
 
     /**
@@ -178,20 +139,43 @@ final class Config implements \ArrayAccess
      */
     public function offsetGet($offset)
     {
-        return $this->offsetExists($offset)
-            ? Result::ok($this->configs[$offset])
-            : Result::none();
+        if (!$this->offsetExists($offset)) {
+            Result::none();
+        }
+
+        if (array_key_exists($offset, $this->configs)) {
+            return $this->configs[$offset];
+        }
+
+        $this->configs[$offset] = $this->validateValue($offset, $this->raw[$offset]);
+        unset($this->raw[$offset]);
+
+        return $this->configs[$offset];
     }
 
     /**
-     * Disabled. Class is append-only.
+     * Append-only setter.
      *
-     * @param string $offset
+     * The reason for this to exist is that because steps have access to Config, adding additional
+     * arbitrary values to it means steps can "communicate".
+     *
+     * @param mixed $offset
      * @param mixed $value
+     * @return void
      */
     public function offsetSet($offset, $value)
     {
-        throw new \LogicException('Configs can\'t be set on the fly.');
+        if ($this->offsetExists($offset) && $this->offsetGet($offset)->notEmpty()) {
+            throw new \BadMethodCallException(
+                sprintf(
+                    '%s is append-ony: %s config is already set',
+                    __CLASS__,
+                    $offset
+                )
+            );
+        }
+
+        $this->configs[$offset] = $this->validateValue($offset, $value);
     }
 
     /**

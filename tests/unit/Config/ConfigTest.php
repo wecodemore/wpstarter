@@ -29,15 +29,15 @@ class ConfigTest extends TestCase
     {
         $config = new Config([], $this->makeValidator());
 
-        $config->appendConfig('foo', 'bar');
+        $config['foo'] = 'bar';
 
         $dir = str_replace('\\', '/', __DIR__);
-        $config->appendConfig(Config::TEMPLATES_DIR, $dir);
+        $config[Config::TEMPLATES_DIR] = $dir;
 
         static::assertTrue($config['foo']->is('bar'));
         static::assertTrue($config[Config::TEMPLATES_DIR]->is($dir));
 
         $this->expectException(\BadMethodCallException::class);
-        $config->appendConfig(Config::TEMPLATES_DIR, $dir);
+        $config[Config::TEMPLATES_DIR] = $dir;
     }
 }
