@@ -133,7 +133,8 @@ final class ComposerPlugin implements
         } catch (\Throwable $throwable) {
             $lines = [$throwable->getMessage()];
             if ($this->io->isVerbose()) {
-                $lines[] = (string)$throwable;
+                $lines = array_map('trim', explode("\n", $throwable->getTraceAsString()));
+                array_unshift($lines, $throwable->getMessage());
             }
 
             $this->locator->io()->writeErrorBlock(...$lines);
