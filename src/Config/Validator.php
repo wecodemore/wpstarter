@@ -520,13 +520,17 @@ class Validator
         }
 
         if (is_file($path) || is_dir($path)) {
+            if (!$this->filesystem->isAbsolutePath($path)) {
+                $path = $this->paths->root($this->filesystem->normalizePath("/{$path}"));
+            }
+
             return Result::ok($path);
         }
 
         $fullpath = $this->paths->root("/{$path}");
 
         return is_file($fullpath) || is_dir($fullpath)
-            ? Result::ok($this->filesystem->normalizePath($fullpath))
+            ? Result::ok($fullpath)
             : Result::errored('Given value must be the path to an existing file or folder.');
     }
 
@@ -588,6 +592,10 @@ class Validator
     {
         if (!is_string($value)) {
             return Result::errored('Folder name must be in a string.');
+        }
+
+        if (in_array($value, ['.', './', '/'], true)) {
+            return Result::ok($value);
         }
 
         $normalized = $this->filesystem->normalizePath($value);
