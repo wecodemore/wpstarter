@@ -121,7 +121,7 @@ class HtaccessStep implements FileCreationStepInterface {
     
     public function allowed(Config $config, Paths $paths): bool
     {
-		return true;
+        return true;
     }
     
     public function run(Config $config, Paths $paths): int
@@ -281,7 +281,7 @@ Finally, in the  `fileContent()` method we can use the relative path passed as a
 
     private function fileContent(string $relative): string
     {
-		$start = <<<'HTACCESS'
+        $start = <<<'HTACCESS'
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
@@ -367,7 +367,7 @@ class HtaccessStep implements FileCreationStepInterface {
     
     public function allowed(Config $config, Paths $paths): bool
     {
-		return true;
+        return true;
     }
     
     public function run(Config $config, Paths $paths): int
@@ -389,7 +389,7 @@ class HtaccessStep implements FileCreationStepInterface {
     
     private function fileContent(string $relative): string
     {
-		$start = <<<'HTACCESS'
+        $start = <<<'HTACCESS'
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /

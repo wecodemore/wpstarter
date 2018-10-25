@@ -62,7 +62,7 @@ class NpmStep implements Step {
             }
         }
         $this->io->writeSuccess("NPM step done.");
-	}
+    }
 }
 ```
 
