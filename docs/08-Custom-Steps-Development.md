@@ -2,7 +2,7 @@
 
 Many times might be desirable to perform custom operations to automate the setup of the website.
 
-A "natural " solution would be to use shell scripts or simple PHP scripts for the scope, however when it is needed something a bit beyond the most trivial tasks those things start to become hard to write, to maintain and to reuse.
+A "natural" solution would be to use shell scripts or simple PHP scripts for the scope, however when it is needed something a bit beyond the most trivial tasks those things start to become hard to write, to maintain and to reuse.
 
 Moreover, if we write custom steps integrated in WP Starter (and so also in Composer) we are able to:
 
@@ -39,7 +39,7 @@ interface Step
 - `name()` has just to return a name for the step. This should be with all lowercase and without spaces or special characters. Doing so it would be possible to use the WP Starter command to programmatically run this step.
 - `success()` and `error()` has to return feedback message for the user in case the command execution was either successful or not.
 - `allowed() ` must return true if the step should be run. For example, a step that will copy a file will return false in this method if the source file is not found.
-- `run()` is where the actual execution of the step happen. This method is never called if `allowed() ` returns false, so if some checks are done in that method, there's no need to perform those again or to manually call `check()` in it. The method should return either the interface constants `Step::SUCCESS` or `Step::NONE` depending if the step was successful or not. `Step::NONE` should be returned if the step is aborted for any reason without an outcome that can't be either considered successful or erroneous.
+- `run()` is where the actual execution of the step happen. This method is never called if `allowed() ` returns false, so if some checks are done in that method, there's no need to perform those again or to manually call `check()` in it. The method should return either the interface constants `Step::SUCCESS` or `Step::ERROR` depending if the step was successful or not. `Step::NONE` should be returned if the step is aborted for any reason without an outcome that can't be either considered successful or erroneous.
 
 The first three methods are very simple and pretty much logicless.
 
@@ -68,13 +68,13 @@ The `Paths` object (fully qualified name `WeCodeMore\WpStarter\Util\Paths`) is a
 
 It has several methods, each for one path:
 
-- `root()` - the project root folder
-- `vendor()` - the project vendor folder, according to configuration in `composer.json` 
-- `bin()` - the project bin folder, according to configuration in `composer.json` 
-- `wp()` - the project WordPress folder, according to configuration in `composer.json` . This equals to `ABSPATH` when in WordPress context.
-- `wpParent()` - the path where `wp-config.php` is saved.
-- `wpContent()` - the project WordPress content folder (which contains plugin, themes...), according to configuration in `composer.json`.
-- `template()` - require a `$filename` argument, and return the full path of given file in the WP Starter templates folder that can be customised in `composer.json` or `wpstarter.json`.
+- `root()` - returns the project root folder
+- `vendor()` - returns the project Composer vendor folder, according to configuration in `composer.json` 
+- `bin()` - returns the project Composer in folder, according to configuration in `composer.json` 
+- `wp()` - returns the project WordPress folder, according to configuration in `composer.json` . This equals to `ABSPATH` when in WordPress context.
+- `wpParent()` - returns the path where `wp-config.php` is saved.
+- `wpContent()` - returns the project WordPress content folder (which contains plugin, themes...), according to configuration in `composer.json`.
+- `template()` - takes a `$filename` argument, and returns the full path of given file, searching in the WP Starter templates folder that can be customised in `composer.json` or `wpstarter.json`.
 
 **Each** of the methods accept a relative path to be appended. For example, if `$paths->wpContent()` returns `/html/my-project/wp-content/` , than  `$paths->wpContent('plugins/plugin.php')`  will return `/html/my-content/plugins/plugin.php` . And so on.
 
@@ -216,11 +216,11 @@ We are telling Apache that when an URL like `example.com/wp-admin/` is requested
 
 This is nice, however the `/wordpress` subfolder is hardcoded here, but that it is just the default folder, that could be configured in `composer.json` to something different.
 
-Maybe in the project we are targeting now it is not configured so the step code is fine as is, but if we aim to reuse this step it worth to make it customizable.
+Maybe in the project we are targeting now it we are using the default, so the step code is fine as is, but if we aim to reuse this step it worth to make it take into account settings.
 
 Basically we need to know the relative path from the path where the `.htaccess` will be placed to the WordPress path. And we need to account the case in which WordPress is placed in root (it is discouraged but can be done via configuration).
 
-To calculate relative paths, there is a  `Filesystem` object provided by Composer (which is not the same as WP Starter  `Filesystem` object) that has a method `findShortestPath` that calculates relative path between two absolute paths provided as argument.
+To calculate relative paths, there is a  `Filesystem` object provided by Composer (which is not the same as WP Starter `Filesystem` object) that has a method `findShortestPath` that calculates relative path between two absolute paths provided as argument.
 
 Such object can be also obtained via the locator:
 
@@ -323,7 +323,7 @@ What's left to do is to add the step to `custom-steps` configuration in `extra.w
 
 and also to make the class autoloadable, via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json` or via the `autoload` WP Starter file (See *"WP Starter Steps"* chapter for more info about the latter). 
 
-Note how the name in the `"custom-steps"` configuration matches the string returned by step object `name()` method.
+Note how the slug in the `"custom-steps"` configuration matches the string returned by step object `name()` method.
 
 For the record, this is the whole class code we have written:
 
@@ -416,7 +416,7 @@ HTACCESS;
 }
 ```
 
-With a pretty simple class we have written a flexible class that integrates with configuration and with WP Starter workflow (for example avoiding to overwrite, or asking for it, based on project settings).
+With a pretty simple class we have implemented a flexible behavior that integrates with configuration and with WP Starter workflow (for example avoiding to overwrite, or asking for it, based on project settings).
 
 For the ones who want to explore further, WP Starter also ships a `FileContentBuilder` object (obtained from the `Locater` via its `fileContentBuilder()` method) that can render the content of a file from a "template" file that contains placeholders and a set variables to fill them.
 

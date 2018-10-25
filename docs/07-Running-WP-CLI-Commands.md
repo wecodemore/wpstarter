@@ -8,7 +8,7 @@ The setup of the website via WP CLI is something that can be surely done indepen
 
 What WP Starter will do anyway is to write a `wp-cli.yml` to point the correct WP path so that commands don’t need to pass `--path` argument to WP CLI commands.
 
-However, by telling WP Starter to take care of WP CLI commands, WP starter will also take care of making sure WP CLI  is  available.
+However, by telling WP Starter to take care of WP CLI commands, WP starter will also take care of **making sure WP CLI is available**.
 
 
 
@@ -20,12 +20,16 @@ When WP Starter is configured to run WP CLI commands, before running them it mak
 2. if not, it checks a WP CLI phar is available on project root
 3. if not, download WP CLI phar and checks its integrity via SHA512 checksum provided by WP CLI
 
-Which means that in any case WP CLI will be available and WP Starter will know where to find it and in which form it comes (Composer package or phar), so it will know how and where to send commands.
+Which means that in any case WP CLI will be available and WP Starter will know where to find it and in which form it comes (Composer package or phar), so it will know *how and where* to send commands.
 
 In short, by letting WP Starter running WP CLI commands it is possible to:
 
-- don’t bother with W CLI installation
+- don’t bother with WP CLI installation
 - write commands in a way that is agnostic of how and where WP CLI is available
+
+It worth mentioning here that there'sa configuration value `install-wp-cli` that can be set to `false` preventing WP Starter to ever attempt to download WP CLI phar.
+
+In that's the case and if WP Starter does not find WP CLI, any attempt to run WP CLI commands via WP starter will fail.
 
 
 
@@ -94,7 +98,7 @@ The same array of commands can be placed in a separate JSON file, whose path is 
 
 This method is quite simple to use, but not very powerful, for example does not allow to run commands conditionally.
 
-One possible solution in some cases might be to use a PHP files that does whatever needs to do and finally returns an array fo commands. For example:
+One possible solution in some cases might be to use a PHP file that does whatever it needs to do and finally returns an array of commands. For example:
 
 ```json
 {
@@ -129,8 +133,7 @@ if ($commands) {
 return $commands;
 ```
 
-So in few lines the file checks if DB is there and if not tell WP CLI to create it and then add an user taking the
-username from env variable.
+So in just few lines the file checks if DB is there and if not tell WP CLI to create it and then add an user taking the username from an env variable.
 
 ### Precedence
 
@@ -140,9 +143,9 @@ In the case both `wp-cli-files` and `wp-cli-commands` settings are used, the for
 
 ## Running commands via step scripts
 
-Another way to run WP CLI commands is to use step scripts. As described in the chapter *"WP Starter Steps"* step scripts are callback that are executed either before or after each step.
+Another way to run WP CLI commands is to use step scripts. As described in the chapter *"WP Starter Steps"* step scripts are callbacks executed either before or after each step.
 
-For example, by targeting the script `post-build-wp-cli-yml` it is possible to add scripts that run WP CLI commands.
+For example, by targeting the script `post-wpstarter` it is possible to add scripts that run WP CLI commands.
 
 The way we can do that is via a "process" object that can be obtained from the `Locator` passed as argument to the script callback.
 

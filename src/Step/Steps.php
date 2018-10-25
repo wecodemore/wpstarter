@@ -163,8 +163,8 @@ final class Steps implements PostProcessStep
     public function error(): string
     {
         return $this->errors === 1
-            ? 'An error occurred during WP Starter install, site might be not configured properly.'
-            : 'Some errors occurred during WP Starter install, site is not configured properly.';
+            ? 'One WP Starter step failed, the project might be not configured properly.'
+            : 'Some WP Starter steps failed, the project might be not configured properly.';
     }
 
     /**
@@ -286,7 +286,7 @@ final class Steps implements PostProcessStep
      */
     private function continueOnResult(Step $step, Io $io, int $result): bool
     {
-        if (($result & Step::SUCCESS) === Step::SUCCESS) {
+        if ($result === Step::SUCCESS) {
             $this->printMessages($io, $step->success(), false);
         }
 
@@ -379,6 +379,8 @@ final class Steps implements PostProcessStep
      */
     private function finalMessage(Io $io): int
     {
+        usleep(250000);
+
         if ($this->errors > 0) {
             $io->writeError($this->error());
 

@@ -22,13 +22,13 @@ The additional scope of the project is to provide a mean to **configure WordPres
 
 The reason for this additional scope is that in professional development context it is more than common to have different environments for the same project, e.g. "development", "stage", and "production".
 
-The standard configuration via PHP constants placed into `wp-config.php`  makes it more complex than it needs to be. Other projects (not only PHP) have found environment variables to be the current solution for the issue, in fact, the usage of environment variables is one of the [Twelve-Factor App](https://12factor.net/) (collection of modern practices for web applications).
+The standard "WordPress way" to do configuration via PHP constants makes having environment-aware configuration more complex than it needs to be. Other projects (not only PHP) have found environment variables to be the current solution for the issue, in fact, the usage of environment variables is one of the [Twelve-Factor App](https://12factor.net/) (collection of modern practices for web applications).
 
 
 
 ## How it works
 
-WP Starter is a Composer plugin, which means that it can "listen" to Composer events and perform custom operation. Similarly to how WordPress plugin extends WordPress functionalities.
+WP Starter is a Composer plugin, which means that it can "listen" to Composer events and perform custom operations. Composer plugins extend Composer similarly to how WordPress plugins extend WordPress.
 
 WP Starter listen to "install" and "update" Composer events to do a series of task that prepare the project to be a fully working WordPress site.
 
@@ -40,11 +40,11 @@ WP Starter listen to "install" and "update" Composer events to do a series of ta
 
 Considering that WordPress has no official support for Composer, there's also no official way to integrate WordPress with Composer.
 
-The way these days many people agree to do it is to treat WordPress as a dependency, like the others. And because WordPress, at this day, does not provide a repository of WordPress with support for Composer (basically having a `composer.json`) the most used package for the scope is the non-official package maintained by [John P. Bloch](https://johnpbloch.com/), available on [packagist.org](https://packagist.org/packages/johnpbloch/wordpress) that has ~2.5 millions of downloads at the moment of writing.
+The way these days many people agree to do it is to treat WordPress as a dependency, like the others. And because WordPress, at this day, does not provide a repository of WordPress with support for Composer (basically having a `composer.json`) the most used package for the scope is the non-official package maintained by [John P. Bloch](https://johnpbloch.com/), that at the moment of writing has around 2.5 millions of downloads from [packagist.org](https://packagist.org/packages/johnpbloch/wordpress).
 
-That said, WP Starter does **not** declare that package has a dependency, allowing to use custom packages or to don't install WordPress via Composer at all. But that are more edge / special cases.
+That said, WP Starter does **not** declare that package has a dependency, allowing to use custom packages or event to don't install WordPress via Composer at all.
 
-The net effect is that in the large majority of cases it is possible to just have a folder containing only a `composer.json` as simple as:
+The net effect is that to have  a **complete Composer-based WordPress website installation** it is required to just have a `composer.json` as simple as:
 
 ```json
 {
@@ -56,7 +56,7 @@ The net effect is that in the large majority of cases it is possible to just hav
 }
 ```
 
-And by running `composer install` the folder will then contain a complete WordPress website installation based on Composer. The only additional requirement is to have a `.env` file with database settings.
+and run `composer install`. 
 
 
 

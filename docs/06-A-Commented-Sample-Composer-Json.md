@@ -105,7 +105,7 @@ The package is actually no more than a "wrapper" package to provide two differen
 
 WP core installer is an "installer plugin". It tells Composer where to place the packages of type `"wordpress-core"`, that are not supported by Composer installers. By default the plugin tells Composer to install WordPress in the `./wordpress` directory, but provides the **`extra.wordpress-install-dir`** to customize it.
 
-In our sample, we are telling to place WP in the folder `public/wp`, because having a "public" folder and WordPress folder in it, will enable us to use `./public/` as webroot and place the `.env` file in the *project* root, so outside of webroot, and that's good for security.
+In our sample, we are telling to place WP in the folder `public/wp`, because having a "public" folder and WordPress folder in it, will enable us to use `./public/` as webroot and **place the `.env` file inside the *project* root, so outside of webroot**, and that's very recommended for security reasons.
 
 #### WP content configuration
 
@@ -119,7 +119,7 @@ The way we inform WP Starter about the location of WP content folder is  **`extr
 
 We are requiring Composer Installers to allow WordPress plugins, themes, MU plugins, and dropins to be placed inside WP content folder instead of default vendor folder.
 
-By default Composer Installers tells Composer to place those WordPress-related packages in the `/wp-content` folder inside in the root folder.
+By default Composer Installers tells Composer to place those WordPress-related packages in the `/wp-content` folder inside the project root folder.
 
 However, that does not work for us: both because as described above we are customizing the content folder (placing it outside of WP core folder) and because we are also customizing WP core folder.
 
@@ -134,9 +134,9 @@ Basically, with the configuration in our sample file we are telling Composer Ins
 
 It worth noting that while this setup works for plugins and themes, which are recognized by WordPress in subfolders of  `wp-content/plugins` and `wp-content/themes` respectively, it does **not** work out of the box for MU plugins and dropins: MU plugins needs to be *directly* inside  `wp-content/mu-plugins` (no subfolders) and dropins needs to be  *directly* inside `wp-content`.
 
-WP Starter handles this issue for us. The `MuLoaderStep` takes care of creating a "loader" MU plugin responsible to load those MU plugins that Composer placed in subfolders of `wp-content/mu-plugins`, and the `DropinsStep` takes care of moving the dropin files Composer placed in subfolders of `wp-content` directly into `wp-content`.
+WP Starter handles this issue for us. The `MuLoaderStep` takes care of creating a "loader" MU plugin responsible to load MU plugins that Composer placed in subfolders of `wp-content/mu-plugins`, and the `DropinsStep` takes care of moving the dropin files Composer placed in subfolders of `wp-content` directly into `wp-content`.
 
-However, even that will not work for `"wpackagist-plugin/memcached"` because this is a *dropin*, even if its type says `"wordpress-plugin"` (due to the fact the WP official repository only supports plugins and themes and not MU plugins nor dropins). We will see how to fix this with a single line of configuration in our `wpstarter.json`.
+However, even that will not work for the package `"wpackagist-plugin/memcached"` because this is a *dropin*, even if its type says `"wordpress-plugin"` (due to the fact the WP official repository only supports plugins and themes and not MU plugins nor dropins). We will see how to fix this with a single line of configuration in our `wpstarter.json`.
 
 Moreover, it is _partially_ working for `"frc/batcache"`, in fact this package contains both a *MU plugin* and a *dropin*, and its package type says `"wordpress-muplugin"`, which means that for the provided MU plugin file we are setup, but for the dropin we need another line of configuration in our `wpstarter.json`.
 
@@ -152,7 +152,7 @@ Below there is the a step by step explanation of just the settings used in the s
 
 ### `register-theme-folder`
 
-In our `require` sample there are no themes. Even if we are using the WordPress package that ships with default (Twenty*) themes, our installation would not *see* those, because we are using a different WP content folder. WordPress has a function, [`register_theme_directory`](https://developer.wordpress.org/reference/functions/register_theme_directory/) that can be used to tell WordPress to look for themes in a custom folder (additionally to the default theme folder).
+In our `require` section of the sample `composer.json` there are no themes. Even if we are using the WordPress package that ships with default (Twenty*) themes, our WP installation would normally not *see* those, because we are using a different WP content folder. WordPress has a function, [`register_theme_directory`](https://developer.wordpress.org/reference/functions/register_theme_directory/) that can be used to tell WordPress to look for themes in a custom folder (additionally to the default theme folder).
 
 When the `register-theme-folder` setting is set to `true`, like in our sample, the `wp-config.php` generated by WP Starter will contain a call to that function that will register as theme directory the folder where default themes are located, so that WordPress can find it and we don't need to install any theme to make the site work.
 
@@ -168,11 +168,11 @@ Which means, for example, that any plugin files and folders inside `./plugins` w
 
 ### `dropins`
 
-It has been said above how the package  `"wpackagist-plugin/memcached"`  we are requiring, having the type `"wordpress-plugin"`, will be placed in the folder `./public/wp-content/plugins/memcached/`. However, what that package actually contains is a dropin that should be moved directly into ``./public/wp-content/`.
+It has been said above how the package  `"wpackagist-plugin/memcached"`  we are requiring, having the type `"wordpress-plugin"`, will be placed in the folder `./public/wp-content/plugins/memcached/`. However, what that package actually contains is a dropin that should be moved directly into `./public/wp-content/`.
 
 It has also been said above how the package `"frc/batcache"`, whose type is `"wordpress-muplugin"`, will be placed in `./public/wp-content/mu-plugins/batcache/` and that works for the MU plugin file it actually ships (thanks to the loader WP Starter automatically creates), but not for the dropin file the package also provides.
 
-The `dropins` settings is an array of dropin file paths that WP Starter has to place in the proper folder. By simply listing the source paths WP Starter will know what to do, and everything will be setup without any additional script or manual intervention.
+The `dropins` settings in our `wpstarter.json` sample is an array of dropin file paths that WP Starter has to place in the proper folder. By simply listing the source paths WP Starter will know what to do, and everything will be setup without any additional script or manual intervention.
 
 ### `wp-cli-commands`
 
@@ -184,83 +184,16 @@ So we are not going to explain the purpose of `wp-cli-commands` again here, we c
 
 ## A look at the folder structure
 
-By looking at the sample `composer.json` above, we can guess what could be a possible folder structure of the project _before_ Composer and WP Starter run.
+By looking at the sample `composer.json` above, we can guess what could be a possible folder structure of the project _before_ and *after* Composer and WP Starter runs:
 
-Something like this:
+![folder structure before and after](img/wpstarter-folders-before-afters.png)
 
-```
-\.
- |_ mu-plugins/
-     |_ my-project-mu-plugin.php
- |_ scripts/
-     |_ wp-cli-commands.php
- |_ composer.json
- |_ wpstarter.json
- |_ .env
- |_ .gitignore
-```
+*(most of files in WP root has been removed for readability sake)*
 
-_After_ we run `composer update` the structure will be something like this:
+In between, there's WP Starter running with this output:
 
-```
-\.
- |_ mu-plugins/
-     |_ my-project-mu-plugin.php
- |_ public/
-     |_ wp/
-         |_ wp-admin/
-             |_ index.php
-             |...
-         |_ wp-includes/
-             |_ wp-db.php
-             |...
-         |_ wp-content/
-             |_ themes/
-                 |_ twentyfifteen/
-                     |...
-                 |_ twentyseventeen/
-                     |...
-                 |_ twentysixteen/
-                     |...
-                 |_ index.php
-             |_ plugins/
-                 |_ akismet/
-                     |...
-                 |_ hello.php
-                 |_ index.php
-             |_ index.php
-         |_ composer.json
-         |_ index.php
-         |_ wp-config-sample.php
-         |_ wp-load.php
-         |_ wp-login.php
-         |_ wp-settings.php
-         |...
-     |_ wp-content/
-         |_ mu-plugins/
-             |_ batcache/
-                 |_ batcache.php
-                 |...
-             |->> my-project-mu-plugin.php   // symlink
-             |_ wpstarter-mu-loader.php
-         |_ plugins/
-             |_ wordfence/
-                 |_ wordfence.php
-                 |_ index.php
-                 |...
-         |_ themes/
-         |_ advanced-cache.php
-         |_ object-cache.php
-     |_ index.php
-     |_ wp-config.php
- |_ scripts/
-     |_ wp-cli-commands.php
- |_ vendor/
-     |...
- |_ composer.json
- |_ wpstarter.json
- |_ .env
- |_ .gitignore
-```
+![WP Starter output](img/wpstarter-output.png)
 
-If webroot is pointing correctly to `./public`, and the `.env` file contains the necessary DB configuration, then there's nothing else we need to do to make it work.
+*(Composer says "Nothing to install" because, for readability, this is the output when everything is installed)*
+
+When WP Starter finished, if webroot is correctly pointing to `./public`, and the `.env` file contains the necessary DB configuration, then there's nothing else we need to do to make it work.

@@ -52,7 +52,7 @@ To do this, in  `composer.json` it is necessary to use the `extra.wpstarter` con
 }
 ```
 
-This also enables to have the configuration file available in a custom Composer package to require via Composer and make it available to WP Starter by pointing the file in vendor folder:
+This also enables to have the configuration file available in a custom Composer package and make it available to WP Starter by pointing the file in vendor folder:
 
 ```json
 {
@@ -72,7 +72,7 @@ In case *both* `wpstarter` section in  `composer.json` (no matter if as object o
 
 ## Generic configuration
 
-There are two configuration values that affect WP Starter that are **not** placed inside the `extra.wpstarter` object, not can be set in `wpstarter.json`:
+There are two configuration values that affect WP Starter that are **not** placed inside the `extra.wpstarter` object, nor can be set in `wpstarter.json`:
 
 - `"wordpress-install-dir"`
 - `"wordpress-content-dir"`
