@@ -203,7 +203,7 @@ final class Steps implements PostProcessStep
                 . 'way (e.g. via webserver).',
             ];
 
-            $io->writeYellowBlock(...$lines);
+            $io->writeColorBlock('yellow', ...$lines);
         }
     }
 

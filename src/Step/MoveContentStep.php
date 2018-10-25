@@ -66,7 +66,9 @@ final class MoveContentStep implements OptionalStep
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        return $config[Config::MOVE_CONTENT]->not(false) && $paths->wpContent();
+        return $config[Config::REGISTER_THEME_FOLDER]->is(false)
+            && $config[Config::MOVE_CONTENT]->not(false)
+            && $paths->wpContent();
     }
 
     /**

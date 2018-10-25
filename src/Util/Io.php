@@ -259,7 +259,7 @@ class Io
      */
     public function writeErrorBlock(string ...$lines): bool
     {
-        return $this->writeBlock('red', true, ...$lines);
+        return $this->writeColorBlock('red', ...$lines);
     }
 
     /**
@@ -268,16 +268,17 @@ class Io
      */
     public function writeSuccessBlock(string ...$lines): bool
     {
-        return $this->writeBlock('green', false, ...$lines);
+        return $this->writeColorBlock('green', ...$lines);
     }
 
     /**
+     * @param string $color
      * @param string[] $lines
      * @return bool
      */
-    public function writeYellowBlock(string ...$lines): bool
+    public function writeColorBlock(string $color, string ...$lines): bool
     {
-        return $this->writeBlock('yellow', false, ...$lines);
+        return $this->writeBlock($color, strtolower($color) !== 'red', ...$lines);
     }
 
     /**
