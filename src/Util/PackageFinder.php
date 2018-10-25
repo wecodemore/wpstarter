@@ -112,7 +112,11 @@ class PackageFinder
         $packages = $this->all();
 
         foreach ($packages as $package) {
-            if ($package->getPrettyName() === $name || $package->getName() === $name) {
+            if ($package->getName() === $name
+                || $package->getPrettyName() === $name
+                || fnmatch($name, $package->getName(), FNM_PATHNAME|FNM_PERIOD|FNM_CASEFOLD)
+                || fnmatch($name, $package->getPrettyName(), FNM_PATHNAME|FNM_PERIOD|FNM_CASEFOLD)
+            ) {
                 return $package;
             }
         }

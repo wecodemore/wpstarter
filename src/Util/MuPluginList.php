@@ -22,11 +22,18 @@ class MuPluginList
     private $packageFinder;
 
     /**
-     * @param PackageFinder $packageFinder
+     * @var Paths
      */
-    public function __construct(PackageFinder $packageFinder)
+    private $paths;
+
+    /**
+     * @param PackageFinder $packageFinder
+     * @param Paths $paths
+     */
+    public function __construct(PackageFinder $packageFinder, Paths $paths)
     {
         $this->packageFinder = $packageFinder;
+        $this->paths = $paths;
     }
 
     /**
@@ -65,7 +72,9 @@ class MuPluginList
             return [];
         }
 
-        $files = glob("{$path}/*.php");
+        $fullpath = $this->paths->root($path);
+
+        $files = glob("{$fullpath}/*.php");
         if (!$files) {
             return [];
         }
@@ -77,7 +86,7 @@ class MuPluginList
         $paths = [];
         foreach ($files as $file) {
             if ($this->isPluginFile($file)) {
-                $paths[] = $file;
+                $paths[] = $this->paths->root($path);
             }
         }
 

@@ -222,7 +222,10 @@ final class Locator
     public function muPluginsList(): MuPluginList
     {
         if (empty($this->objects[MuPluginList::class])) {
-            $this->objects[MuPluginList::class] = new MuPluginList($this->packageFinder());
+            $this->objects[MuPluginList::class] = new MuPluginList(
+                $this->packageFinder(),
+                $this->paths()
+            );
         }
 
         return $this->objects[MuPluginList::class];
