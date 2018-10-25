@@ -195,7 +195,7 @@ final class Locator
             );
         }
 
-        return $this->objects[LanguageListFetcher::class];
+        return $this->objects[Cli\PharInstaller::class];
     }
 
     /**
@@ -225,7 +225,7 @@ final class Locator
             $this->objects[MuPluginList::class] = new MuPluginList($this->packageFinder());
         }
 
-        return $this->objects[LanguageListFetcher::class];
+        return $this->objects[MuPluginList::class];
     }
 
     /**
