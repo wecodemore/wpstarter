@@ -31,13 +31,20 @@ class WpCliTool implements PhpTool
     private $urlDownloader;
 
     /**
+     * @var Io
+     */
+    private $io;
+
+    /**
      * @param Config $config
      * @param UrlDownloader $urlDownloader
+     * @param Io $io
      */
-    public function __construct(Config $config, UrlDownloader $urlDownloader)
+    public function __construct(Config $config, UrlDownloader $urlDownloader, Io $io)
     {
         $this->downloadEnabled = (bool)$config[Config::INSTALL_WP_CLI]->unwrapOrFallback(true);
         $this->urlDownloader = $urlDownloader;
+        $this->io = $io;
     }
 
     /**
@@ -74,8 +81,9 @@ class WpCliTool implements PhpTool
      */
     public function pharTarget(Paths $paths): string
     {
+        $default = $paths->root('/wp-cli.phar');
         $candidates = glob($paths->root('/wp-cli-*.phar')) ?: [];
-        array_unshift($candidates, $paths->root('/wp-cli.phar'));
+        array_unshift($candidates, $default);
 
         foreach ($candidates as $candidate) {
             if (file_exists($candidate)) {
@@ -83,7 +91,7 @@ class WpCliTool implements PhpTool
             }
         }
 
-        return '';
+        return $default;
     }
 
     /**
@@ -111,17 +119,18 @@ class WpCliTool implements PhpTool
     public function checkPhar(string $pharPath, Io $io): bool
     {
         list($algorithm, $hashUrl) = $this->hashAlgorithmUrl($io);
-
-        $hash = $this->urlDownloader->fetch($hashUrl);
-
-        if (!$hash) {
-            $io->writeError("Failed to download {$algorithm} hash from {$hashUrl}.");
+        $this->io->write(sprintf('Checking %s via %s hash...', $this->niceName(), $algorithm));
+        $releaseHash = trim($this->urlDownloader->fetch($hashUrl));
+        if (!$releaseHash) {
+            $io->writeError("Failed to download {$algorithm} hash content from {$hashUrl}.");
             $io->writeError($this->urlDownloader->error());
 
             return false;
         }
 
-        if (hash($algorithm, file_get_contents($pharPath)) !== $hash) {
+        $pharHash = hash($algorithm, file_get_contents($pharPath));
+        if (!hash_equals($releaseHash, $pharHash)) {
+            @unlink($pharPath);
             $io->writeError("{$algorithm} hash check failed for downloaded WP CLI phar.");
 
             return false;
@@ -138,7 +147,6 @@ class WpCliTool implements PhpTool
     public function processEnvVars(Paths $paths, \ArrayAccess $env): array
     {
         $args = [
-            'WP_CLI_CONFIG_PATH' => $paths->root(),
             'WP_CLI_DISABLE_AUTO_CHECK_UPDATE' => '1',
             'WP_CLI_CACHE_DIR' => $env['WP_CLI_CACHE_DIR'],
             'WP_CLI_PACKAGES_DIR' => $env['WP_CLI_CACHE_DIR'],
@@ -158,10 +166,7 @@ class WpCliTool implements PhpTool
             return ['sha512', $this->pharUrl() . '.sha512'];
         }
 
-        $io->writeComment(
-            'NOTICE: SHA-512 algorithm is not available on the system,'
-            . ' WP Starter will use the less secure MD5 to check WP CLI phar integrity.'
-        );
+        $this->io->writeIfVerbose('SHA512 not available, going to use MD5...');
 
         return ['md5', $this->pharUrl() . '.md5'];
     }

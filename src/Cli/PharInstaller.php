@@ -43,6 +43,7 @@ class PharInstaller
         $url = $info->pharUrl();
         $name = $info->niceName();
 
+        $this->io->write(sprintf('Installing %s...', $name));
         if (!$this->urlDownloader->save($url, $path) || !file_exists($path)) {
             $this->io->writeError(sprintf('Failed to download %s phar from %s.', $name, $url));
             $this->io->writeError($this->urlDownloader->error());
@@ -51,6 +52,7 @@ class PharInstaller
         }
 
         if (!$info->checkPhar($path, $this->io)) {
+            @unlink($path);
             $this->io->writeError('Phar validation failed. Downloaded phar is probably corrupted.');
 
             return '';

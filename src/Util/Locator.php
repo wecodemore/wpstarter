@@ -302,7 +302,8 @@ final class Locator
         if (empty($this->objects[Cli\WpCliTool::class])) {
             $this->objects[Cli\WpCliTool::class] = new Cli\WpCliTool(
                 $this->config(),
-                $this->urlDownloader()
+                $this->urlDownloader(),
+                $this->io()
             );
         }
 
@@ -336,6 +337,6 @@ final class Locator
             ->create($this->wpCliTool(), $this->php)
             ->withEnvironment($this->wpCliEnvironment()->getArrayCopy());
 
-        return $this->objects[Cli\PhpToolProcess::class];
+        return $this->objects[__METHOD__];
     }
 }
