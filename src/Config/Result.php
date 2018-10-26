@@ -30,6 +30,11 @@ final class Result
     private $error;
 
     /**
+     * @var boolean
+     */
+    private $promise = false;
+
+    /**
      * @param mixed $value
      * @return Result
      *
@@ -73,6 +78,18 @@ final class Result
     }
 
     /**
+     * @param callable $provider
+     * @return Result
+     */
+    public static function promise(callable $provider): Result
+    {
+        $instance = new static($provider);
+        $instance->promise = true;
+
+        return $instance;
+    }
+
+    /**
      * @param null $value
      * @param \Error|null $error
      *
@@ -91,6 +108,8 @@ final class Result
      */
     public function notEmpty(): bool
     {
+        $this->maybeResolve();
+
         // phpcs:enable
 
         return $this->error ? false : $this->value !== null;
@@ -104,6 +123,8 @@ final class Result
      */
     public function is($compare): bool
     {
+        $this->maybeResolve();
+
         // phpcs:enable
 
         return $this->error ? false : $this->value === $compare;
@@ -117,6 +138,8 @@ final class Result
      */
     public function not($compare): bool
     {
+        $this->maybeResolve();
+
         // phpcs:enable
 
         return !$this->is($compare);
@@ -131,6 +154,8 @@ final class Result
      */
     public function either($thing, ...$things): bool
     {
+        $this->maybeResolve();
+
         // phpcs:enable
 
         array_unshift($things, $thing);
@@ -147,6 +172,8 @@ final class Result
      */
     public function unwrapOrFallback($fallback = null)
     {
+        $this->maybeResolve();
+
         // phpcs:enable
 
         return $this->notEmpty() ? $this->value : $fallback;
@@ -159,11 +186,54 @@ final class Result
      */
     public function unwrap()
     {
+        $this->maybeResolve();
+
         // phpcs:enable
         if ($this->error) {
             throw $this->error;
         }
 
         return $this->value;
+    }
+
+    /**
+     * @return void
+     */
+    private function maybeResolve()
+    {
+        if (!$this->promise) {
+            return;
+        }
+
+        $this->promise = false;
+
+        /** @var callable $resolver */
+        $resolver = $this->value;
+
+        try {
+            $value = $resolver();
+
+            while ($value instanceof Result) {
+                $this->error = $value->error;
+                $value = $value->value;
+            }
+
+            if ($this->error) {
+                $this->value = null;
+
+                return;
+            }
+
+            if ($value instanceof \Error) {
+                $this->value = null;
+                $this->error = $value;
+
+                return;
+            }
+            $this->value = $value;
+        } catch (\Throwable $throwable) {
+            $this->value = null;
+            $this->error = new \Error($throwable->getMessage(), $throwable->getCode(), $throwable);
+        }
     }
 }
