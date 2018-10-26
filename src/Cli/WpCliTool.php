@@ -140,23 +140,6 @@ class WpCliTool implements PhpTool
     }
 
     /**
-     * @param Paths $paths
-     * @param \ArrayAccess $env
-     * @return array
-     */
-    public function processEnvVars(Paths $paths, \ArrayAccess $env): array
-    {
-        $args = [
-            'WP_CLI_DISABLE_AUTO_CHECK_UPDATE' => '1',
-            'WP_CLI_CACHE_DIR' => $env['WP_CLI_CACHE_DIR'],
-            'WP_CLI_PACKAGES_DIR' => $env['WP_CLI_CACHE_DIR'],
-            'WP_CLI_STRICT_ARGS_MODE' => $env['WP_CLI_CACHE_DIR'],
-        ];
-
-        return array_filter($args);
-    }
-
-    /**
      * @param Io $io
      * @return array
      */

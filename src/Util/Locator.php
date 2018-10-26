@@ -295,47 +295,14 @@ final class Locator
     }
 
     /**
-     * @return Cli\WpCliTool
-     */
-    public function wpCliTool(): Cli\WpCliTool
-    {
-        if (empty($this->objects[Cli\WpCliTool::class])) {
-            $this->objects[Cli\WpCliTool::class] = new Cli\WpCliTool(
-                $this->config(),
-                $this->urlDownloader(),
-                $this->io()
-            );
-        }
-
-        return $this->objects[Cli\WpCliTool::class];
-    }
-
-    /**
-     * @return \ArrayObject
-     */
-    public function wpCliEnvironment(): \ArrayObject
-    {
-        if (empty($this->objects[__METHOD__])) {
-            $env = $this->wpCliTool()->processEnvVars($this->paths(), $this->wordPressEnvBridge());
-            $this->objects[__METHOD__] = new \ArrayObject($env);
-        }
-
-        return $this->objects[__METHOD__];
-    }
-
-    /**
      * @return Cli\PhpToolProcess
      */
     public function wpCliProcess(): Cli\PhpToolProcess
     {
-        if (!empty($this->objects[__METHOD__])) {
-            return $this->objects[__METHOD__];
+        if (empty($this->objects[__METHOD__])) {
+            $tool = new Cli\WpCliTool($this->config(), $this->urlDownloader(), $this->io());
+            $this->objects[__METHOD__] = $this->phpToolProcessFactory()->create($tool, $this->php);
         }
-
-        $this->objects[__METHOD__] = $this
-            ->phpToolProcessFactory()
-            ->create($this->wpCliTool(), $this->php)
-            ->withEnvironment($this->wpCliEnvironment()->getArrayCopy());
 
         return $this->objects[__METHOD__];
     }

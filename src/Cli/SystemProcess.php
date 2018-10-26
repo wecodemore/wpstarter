@@ -68,7 +68,7 @@ class SystemProcess
 
             $process = new Process($command, $cwd, $this->environment ?: null);
 
-            $this->printer or $this->printer = function ($type, $buffer) {
+            $this->printer or $this->printer = function (string $type, string $buffer) {
                 $lines = array_map('rtrim', explode("\n", $buffer));
                 Process::ERR === $type
                     ? array_walk($lines, [$this->io, 'writeErrorLine'])

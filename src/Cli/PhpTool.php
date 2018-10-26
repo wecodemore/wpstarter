@@ -52,11 +52,4 @@ interface PhpTool
      * @return bool
      */
     public function checkPhar(string $pharPath, Io $io): bool;
-
-    /**
-     * @param Paths $paths
-     * @param \ArrayAccess $env
-     * @return array
-     */
-    public function processEnvVars(Paths $paths, \ArrayAccess $env): array;
 }
