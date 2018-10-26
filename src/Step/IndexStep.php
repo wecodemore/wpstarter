@@ -91,7 +91,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
 
         $indexPath = $this->composerFilesystem->findShortestPath($from, $to);
 
-        $built = $this->builder->build($paths, 'index.php', ['BOOTSTRAP_PATH' => $indexPath]);
+        $built = $this->builder->build($paths, 'index.php', ['BOOTSTRAP_PATH' => "/{$indexPath}"]);
 
         if (!$this->filesystem->save($built, $this->targetPath($paths))) {
             $this->error = 'Error creating index.php.';
