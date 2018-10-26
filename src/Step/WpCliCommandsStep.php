@@ -26,7 +26,7 @@ use WeCodeMore\WpStarter\Cli;
 final class WpCliCommandsStep implements Step
 {
 
-    const NAME = 'wp-cli-commands';
+    const NAME = 'wp-cli';
 
     /**
      * @var Io

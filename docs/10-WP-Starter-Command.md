@@ -13,7 +13,7 @@ composer wpstarter
 Nice thing about the command is that is accepts an array of steps names to be run. For example:
 
 ```shell
-composer wpstarter publish-content-dev wp-cli-commands
+composer wpstarter publish-content-dev wp-cli
 ```
 
 In the example above only "publish-content-dev" and "wp-cli-commands" steps would be ran.

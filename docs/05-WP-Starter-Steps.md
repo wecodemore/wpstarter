@@ -21,7 +21,7 @@ The (current) list of default WP Starter steps is (in order of execution):
 | move-content        | `MoveContentStep`      | optional              |
 | publish-content-dev | `ContentDevStep`       | optional              |
 | build-wp-cli-yml    | `WpCliConfigStep`      | create file           |
-| wp-cli-commands     | `WpCliCommandsStep`    |                       |
+| wp-cli              | `WpCliCommandsStep`    |                       |
 
 <sup>1</sup> All class names are in the namespace `\WeCodeMore\WpStarter\Step`
 
