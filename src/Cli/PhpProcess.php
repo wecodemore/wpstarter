@@ -51,11 +51,9 @@ class PhpProcess
      * @param string[] $args
      * @return bool
      */
-    public function execute(array $command, string $cwd = null, string ...$args): bool
+    public function execute(string $command, string $cwd = null): bool
     {
-        array_unshift($command, $this->phpPath);
-
-        return $this->process->execute($command, $cwd, ...$args);
+        return $this->process->execute("{$this->phpPath} {$command}", $cwd);
     }
 
     /**

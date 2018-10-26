@@ -9,6 +9,7 @@
 namespace WeCodeMore\WpStarter\Cli;
 
 use Symfony\Component\Process\Process;
+use Symfony\Component\Process\ProcessBuilder;
 use WeCodeMore\WpStarter\Util\Io;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -58,27 +59,28 @@ class SystemProcess
     /**
      * @param array $command
      * @param string|null $cwd
-     * @param string[] $args
      * @return bool
      */
-    public function execute(array $command, string $cwd = null, string ...$args): bool
+    public function execute(string $command, string $cwd = null): bool
     {
         try {
             is_string($cwd) or $cwd = $this->paths->root();
-            $process = new Process($command, $cwd, $this->environment);
 
-            $this->printer or $this->printer = function (string $type, string $buffer) {
+            $process = new Process($command, $cwd, $this->environment ?: null);
+
+            $this->printer or $this->printer = function ($type, $buffer) {
+                $lines = array_map('rtrim', explode("\n", $buffer));
                 Process::ERR === $type
-                    ? $this->io->writeErrorLine($buffer)
-                    : $this->io->write($buffer);
+                    ? array_walk($lines, [$this->io, 'writeErrorLine'])
+                    : array_walk($lines, [$this->io, 'write']);
             };
 
-            array_unshift($args, $this->printer);
-            $process->mustRun(...$args);
+            $process->mustRun($this->printer);
 
             return $process->isSuccessful();
         } catch (\Throwable $exception) {
-            $this->io->write($exception->getMessage());
+            $lines = array_map('rtrim', explode("\n", $exception->getMessage()));
+            array_walk($lines, [$this->io, 'writeErrorLine']);
 
             return false;
         }

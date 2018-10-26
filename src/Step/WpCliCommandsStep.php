@@ -104,7 +104,6 @@ final class WpCliCommandsStep implements Step
 
         $this->io->writeComment('Running WP CLI commands...');
         if (!$this->process->execute('cli version')) {
-            $this->io->writeError('Error running WP CLI commands.');
 
             return self::ERROR;
         }
@@ -115,23 +114,22 @@ final class WpCliCommandsStep implements Step
         }
 
         $commands = array_merge($fileCommands, $this->commands);
-
-        $this->io->writeIfVerbose('Commands to run:');
-        array_walk(
-            $commands,
-            function (string $command) {
-                $this->io->writeIfVerbose("  $ wp {$command}");
-            }
-        );
-
-        $this->io->write('starting now...');
+        $this->initMessage(...$commands);
 
         $continue = true;
         while ($continue && $commands) {
-            $continue = $this->process->execute(array_shift($commands));
+            $command = array_shift($commands);
+            $this->io->write("<fg=magenta>\$ wp {$command}</>");
+            $continue = $this->process->execute($command);
+            if (!$continue) {
+                $this->io->writeErrorLine("<fg=red>`wp {$command}` FAILED! Quitting WP CLI.</>");
+            }
+            $this->io->write('<fg=magenta>' . str_repeat('-', 60) . '</>');
+            $this->io->write('');
+            usleep(200000);
         }
 
-        return self::SUCCESS;
+        return $continue ? self::SUCCESS : self::ERROR;
     }
 
     /**
@@ -169,5 +167,24 @@ final class WpCliCommandsStep implements Step
         $fileData->skipWordpress() and $command .= ' --skip-wordpress';
 
         return $command;
+    }
+
+    /**
+     * @param string[] $commands
+     */
+    private function initMessage(string ...$commands)
+    {
+        $count = count($commands);
+        $initMsg = sprintf('Will be run %s command%s:', $count, $count === 1 ? '' : 's');
+
+        $this->io->writeIfVerbose($initMsg);
+
+        array_walk(
+            $commands,
+            function (string $command, $i) {
+                $n = $i + 1;
+                $this->io->writeIfVerbose("  <comment>{$n}) `\$ wp {$command}`</comment>");
+            }
+        );
     }
 }

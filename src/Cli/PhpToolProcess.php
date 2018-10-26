@@ -24,6 +24,11 @@ class PhpToolProcess
     private $phpProcess;
 
     /**
+     * @var Paths
+     */
+    private $paths;
+
+    /**
      * @param string $phpPath
      * @param string $cliPath
      * @param Paths $paths
@@ -31,8 +36,9 @@ class PhpToolProcess
      */
     public function __construct(string $phpPath, string $cliPath, Paths $paths, Io $io)
     {
-        $this->toolPath = $cliPath;
+        $this->toolPath = realpath($cliPath);
         $this->phpProcess = new PhpProcess($phpPath, $paths, $io);
+        $this->paths = $paths;
     }
 
     /**
@@ -47,13 +53,15 @@ class PhpToolProcess
     }
 
     /**
-     * @param string $command
+     * @param array $command
      * @param string[] $args
      * @return bool
      */
-    public function execute(string $command, string ...$args): bool
+    public function execute(string $command): bool
     {
-        return $this->phpProcess->execute([$this->toolPath, $command], null, ...$args);
+        $commandLine = sprintf('%s %s --path=%s', $this->toolPath, $command, $this->paths->wp());
+
+        return $this->phpProcess->execute($commandLine);
     }
 
     /**
