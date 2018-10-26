@@ -269,7 +269,7 @@ final class Paths implements \ArrayAccess
         if (strpos($wpFullDir, $cwd) !== 0) {
             throw new \Exception(
                 'Config for WP install dir is pointing a dir outside root, '
-                .'WP Starter does not support that.'
+                . 'WP Starter does not support that.'
             );
         }
 

@@ -382,7 +382,7 @@ class Validator
         }
 
         $error = 'WP CLI commands must be either provided as path to a PHP file returning an array '
-            .'of commands or as path to a JSON file containing the array.';
+            . 'of commands or as path to a JSON file containing the array.';
 
         $validPath = $this->validatePath($value);
         if (!$validPath->notEmpty()) {

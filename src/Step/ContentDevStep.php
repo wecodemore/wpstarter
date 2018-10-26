@@ -116,7 +116,7 @@ final class ContentDevStep implements OptionalStep
         $operation = $this->io->ask(
             [
                 'Which operation do you want to perform for content development folders to make '
-                .'them available in WP content dir?',
+                . 'them available in WP content dir?',
             ],
             ['s' => '[S]ymlink', 'c' => '[C]opy', 'n' => '[N]othing'],
             'n'

@@ -97,7 +97,7 @@ final class Filters
             throw new \Exception('Invalid integer.');
         }
 
-        return (int) $value;
+        return (int)$value;
     }
 
     /**

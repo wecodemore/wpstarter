@@ -108,6 +108,6 @@ class MuPluginList
 
         $data = str_replace("\r", "\n", $data);
 
-        return preg_match('/^[ \t\/*#@]*Plugin Name:(.*)$/mi', $data, $match) && ! empty($match[1]);
+        return preg_match('/^[ \t\/*#@]*Plugin Name:(.*)$/mi', $data, $match) && !empty($match[1]);
     }
 }
