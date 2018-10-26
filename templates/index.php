@@ -1,2 +1,2 @@
 <?php
-require '{{{BOOTSTRAP_PATH}}}';
+require realpath(__DIR__ . '{{{BOOTSTRAP_PATH}}}');

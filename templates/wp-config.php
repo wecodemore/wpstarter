@@ -11,7 +11,7 @@
  */
 
 /** Composer autoload. */
-require_once __DIR__ . '{{{AUTOLOAD_PATH}}}';
+require_once realpath(__DIR__ . '{{{AUTOLOAD_PATH}}}');
 
 /** A reference to `.env` folder path. */
 define('WPSTARTER_PATH', realpath(__DIR__ . '{{{ENV_REL_PATH}}}'));

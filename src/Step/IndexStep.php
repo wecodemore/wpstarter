@@ -86,7 +86,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        $from = $paths->wpParent();
+        $from = $paths->wpParent('index.php');
         $to = $paths->wp('index.php');
 
         $indexPath = $this->composerFilesystem->findShortestPath($from, $to);
