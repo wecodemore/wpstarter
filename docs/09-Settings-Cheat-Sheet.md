@@ -21,6 +21,7 @@ Alphabetically ordered:
 | register-theme-folder | Whether to register default themes.<br />Can be set to`"ask"`, in which case<br />WP Starter will ask user what to do. |           false            |
 |      require-wp       | Whether to check for WP package being required.              |            true            |
 |        scripts        | Array of script to run before or after steps.<br />An object where key is in the format:<br /> `"pre-{$step}"` or `"post-{$step}"`<br />and value is either a callback.<br />Callbacks must be autoloadable. |             []             |
+|     skip-db-check     | When true no DB check is done<br />and no related env vars are set. |           false            |
 |      skip-steps       | Array of step *names* to skip.                               |             []             |
 |     templates-dir     | Folder where to look for custom templates.<br />Path relative to root. |            null            |
 |    unknown-dropins    | How to deal with non-standard dropins.<br />Can be:<br />- `true` just install them<br />- `false` just skip them<br />- `"ask"` will ask the user what to do |           false            |
