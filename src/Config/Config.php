@@ -35,6 +35,7 @@ final class Config implements \ArrayAccess
     const REGISTER_THEME_FOLDER = 'register-theme-folder';
     const REQUIRE_WP = 'require-wp';
     const SCRIPTS = 'scripts';
+    const SKIP_DB_CHECK = 'skip-db-check';
     const SKIP_STEPS = 'skip-steps';
     const TEMPLATES_DIR = 'templates-dir';
     const UNKNOWN_DROPINS = 'unknown-dropins';
@@ -60,6 +61,7 @@ final class Config implements \ArrayAccess
         self::REGISTER_THEME_FOLDER => true,
         self::REQUIRE_WP => true,
         self::SCRIPTS => null,
+        self::SKIP_DB_CHECK => false,
         self::SKIP_STEPS => null,
         self::TEMPLATES_DIR => null,
         self::UNKNOWN_DROPINS => false,
@@ -87,6 +89,7 @@ final class Config implements \ArrayAccess
         self::REQUIRE_WP => 'validateBool',
         self::TEMPLATES_DIR => 'validatePath',
         self::SCRIPTS => 'validateScripts',
+        self::SKIP_DB_CHECK => 'validateBool',
         self::SKIP_STEPS => 'validateSteps',
         self::UNKNOWN_DROPINS => 'validateBoolOrAsk',
         self::WP_CLI_COMMANDS => 'validateWpCliCommands',

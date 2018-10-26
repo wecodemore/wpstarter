@@ -110,30 +110,58 @@ where `wp-cli-commands.php` could look something like this:
 
 ```php
 <?php
-// load env vars from either real environment or .env file
-$env = WeCodeMore\WpStarter\Env\WordPressEnvBridge::load();
-$host = $env['DB_HOST'];
-if (!$host) {
-    // Probably no .env file is there yet
+namespace WeCodeMore\WpStarter;
+
+$env = Env\WordPressEnvBridge::load();
+
+// If env configuration is invalid nothing to do.
+if (!$env[Util\DbChecker::DB_ENV_VALID]) {
     return [];
 }
 
-// Try to connect to WP database
-$conn = @mysqli_connect($host, $env['DB_USER'], $env['DB_PASS'], $env['DB_NAME']);
-// If it fails, probably no DB is there, let's tell WP CLI to create it.
-$commands = ($conn && !$conn->connect_error) ? [] : ['wp db create'];
-$conn and mysqli_close($conn);
-
-if ($commands) {
-  $user = $env['MY_PROJECT_USERNAME'] ?: 'admin';
-  $role = 'administrator';
-  $commands[] = "wp user create {$user} {$user}@example.com --role={$role}"; 
+// If WP already installed, let's just tell WP CLI to check it.
+if ($env[Util\DbChecker::WP_INSTALLED]) {
+    return ['wp db check'];
 }
+
+$commands = [];
+
+// If DB does not exist, tell WP CLI to create it.
+if (!$env[Util\DbChecker::DB_EXISTS]) {
+    $commands[] = 'wp db create';
+}
+
+// Build install command.
+$user = $env['MY_PROJECT_USERNAME'] ?: 'admin';
+$home = $env['WP_HOME'];
+$siteUrl = $env['WP_SITEURL'] ?: $home;
+$email = $user . '@' . parse_url($home, PHP_URL_HOST);
+$install = "wp core install";
+$install .= " --title='WP Starter Example' --url={$home}";
+$install .= " --admin_user={$user} --admin_email={$email}";
+
+// Add install plus commands to update siteurl option and setup language.
+$commands[] = $install;
+$commands[] = "wp option update siteurl {$siteUrl}";
+$commands[] = 'wp language core install it_IT';
+$commands[] = 'wp language core activate it_IT';
 
 return $commands;
 ```
 
-So in just few lines the file checks if DB is there and if not tell WP CLI to create it and then add an user taking the username from an env variable.
+So the file checks status of DB and WordPress and tell WP CLI to act accordingly:
+do nothing if the status is unknown, check the DB if WordPress looks installed, or otherwise install it,
+by also creating the database if necessary.
+
+To check database status the file uses three "special" env vars, whose names are stored in
+`WeCodeMore\WpStarter\Util\DbChecker` class constants:
+
+- `DbChecker::DB_ENV_VALID`
+- `DbChecker::WP_INSTALLED`
+- `DbChecker::DB_EXISTS`
+
+To know more about these variables please refers to the _"Environment Variables"_ chapter.
+
 
 ### Precedence
 

@@ -60,7 +60,7 @@ final class WpCliCommandsStep implements Step
     {
         $this->io = $locator->io();
         $this->process = $locator->wpCliProcess();
-        $this->env = $locator->wordPressEnvBridge();
+        $this->env = $locator->env();
     }
 
     /**

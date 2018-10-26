@@ -113,4 +113,30 @@ there are many places in which such code can be placed, for example a MU plugin.
 
 As described above, all WordPress configuration constants are natively supported by WP Starter.
 
-Moreover there are a few env variables that have a special meaning for WP Starter. Those are used in the `wp-config.php` that WP Starter generates and are documented in the *"WordPress Integration"* documentation chapter.
+Moreover there are a few env variables that have a special meaning for WP Starter.
+
+### DB check env vars
+
+During its bootstrap process, before doing any operation on the system, WP Starter checks if the
+environment is already setup for database connection.
+If so, WP Starter attempt a connection and launches a very simple SQL command. Thanks to that
+it can determine if connection is possible, if the WP DB exists, and if WP is installed.
+
+These information are stored in three env vars whose names are stored in
+`WeCodeMore\WpStarter\Util\DbChecker` class constants:
+
+- `DbChecker::DB_ENV_VALID` - is non-empty if connection to DB is possible
+- `DbChecker::DB_EXISTS` - is non-empty if DB exists and is usable
+- `DbChecker::WP_INSTALLED` - is non-empty if WordPress is installed
+
+The three env vars are registered in the order they are listed above: if one is non-empty the
+previous must be non-empty as well.
+
+Sometime might be desirable don't let WP Starter perform this check, there's a way to accomplish that
+via the `skip-db-check` setting.
+Learn more about configuration in the _"WP-Starter-Configuration"_ chapter.
+
+### WordPress Configuration
+
+Those are a few env vars that are used the `wp-config.php` that WP Starter generates.
+They are documented in the *"WordPress Integration"* documentation chapter.

@@ -400,11 +400,19 @@ class Validator
             return Result::errored($error);
         }
 
-        $data = $isJson
-            ? @json_decode(file_get_contents($fullpath), true)
-            : @include $fullpath;
+        if ($isJson) {
+            $data = @json_decode(file_get_contents($fullpath), true);
 
-        return is_array($data) ? $this->validateWpCliCommands($data) : Result::errored($error);
+            return is_array($data) ? $this->validateWpCliCommands($data) : Result::errored($error);
+        }
+
+        $provider = function () use ($fullpath, $error) {
+            $data = @include $fullpath;
+
+            return is_array($data) ? $this->validateWpCliCommands($data) : Result::errored($error);
+        };
+
+        return Result::promise($provider);
     }
 
     /**

@@ -125,8 +125,10 @@ final class ComposerPlugin implements
                 return;
             }
 
-            $steps = $this->initializeSteps($config, $event, ...$selectedStepNames);
             $this->logo();
+
+            $config[Config::SKIP_DB_CHECK]->notEmpty() and $this->locator->dbChecker()->check();
+            $steps = $this->initializeSteps($config, $event, ...$selectedStepNames);
             $steps->run($this->locator->config(), $this->locator->paths());
 
             $event or exit(0);
@@ -211,6 +213,7 @@ final class ComposerPlugin implements
         $hasWpCliStep = false;
 
         $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCliStep);
+
         if (!$hasWpCliStep && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
             $steps->addStep(new Step\WpCliCommandsStep($this->locator));
         }

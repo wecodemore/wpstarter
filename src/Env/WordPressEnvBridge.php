@@ -121,6 +121,9 @@ final class WordPressEnvBridge implements \ArrayAccess
         'WP_POST_REVISIONS' => Filters::FILTER_INT_OR_BOOL,
         'FS_CHMOD_DIR' => Filters::FILTER_OCTAL_MOD,
         'FS_CHMOD_FILE' => Filters::FILTER_OCTAL_MOD,
+        'DB_ENV_VALID' => Filters::FILTER_BOOL,
+        'DB_EXISTS' => Filters::FILTER_BOOL,
+        'INSTALLED' => Filters::FILTER_BOOL,
     ];
 
     /**
@@ -251,7 +254,17 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     public function offsetSet($offset, $value)
     {
-        throw new \BadMethodCallException(__CLASS__ . ' is read only.');
+        if (strpos($offset, 'HTTP_') !== 0) {
+            throw new \BadMethodCallException("It is not possible to set {$offset} value.");
+        }
+
+        if ($this->offsetExists($offset)) {
+            throw new \BadMethodCallException(__CLASS__ . ' is append only.');
+        }
+
+        putenv("{$offset}={$value}");
+        $_ENV[$offset] = $value;
+        $_SERVER[$offset] = $value;
     }
 
     /**

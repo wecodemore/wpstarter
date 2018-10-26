@@ -234,7 +234,7 @@ final class Locator
     /**
      * @return WordPressEnvBridge
      */
-    public function wordPressEnvBridge(): WordPressEnvBridge
+    public function env(): WordPressEnvBridge
     {
         if (empty($this->objects[WordPressEnvBridge::class])) {
             $file = $this->config()[Config::ENV_FILE]->unwrapOrFallback('.env');
@@ -305,5 +305,17 @@ final class Locator
         }
 
         return $this->objects[__METHOD__];
+    }
+
+    /**
+     * @return DbChecker
+     */
+    public function dbChecker(): DbChecker
+    {
+        if (empty($this->objects[DbChecker::class])) {
+            $this->objects[DbChecker::class] = new DbChecker($this->env(), $this->io());
+        }
+
+        return $this->objects[DbChecker::class];
     }
 }
