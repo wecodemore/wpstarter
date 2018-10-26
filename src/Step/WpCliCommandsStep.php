@@ -104,7 +104,6 @@ final class WpCliCommandsStep implements Step
 
         $this->io->writeComment('Running WP CLI commands...');
         if (!$this->process->execute('cli version')) {
-
             return self::ERROR;
         }
 
@@ -175,15 +174,13 @@ final class WpCliCommandsStep implements Step
     private function initMessage(string ...$commands)
     {
         $count = count($commands);
-        $initMsg = sprintf('Will be run %s command%s:', $count, $count === 1 ? '' : 's');
-
-        $this->io->writeIfVerbose($initMsg);
+        $this->io->writeIfVerbose(sprintf('Will run %d command%s:', $count, $count > 1 ? 's' : ''));
 
         array_walk(
             $commands,
-            function (string $command, $i) {
-                $n = $i + 1;
-                $this->io->writeIfVerbose("  <comment>{$n}) `\$ wp {$command}`</comment>");
+            function (string $command, int $i) {
+                $num = $i + 1;
+                $this->io->writeIfVerbose("  <comment>{$num}) `\$ wp {$command}`</comment>");
             }
         );
     }
