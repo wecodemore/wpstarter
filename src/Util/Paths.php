@@ -87,7 +87,7 @@ final class Paths implements \ArrayAccess
             );
         }
 
-        return $this->filesystem->normalizePath($this->paths[$pathName] . $this->to($to));
+        return $this->to($this->paths[$pathName], $to);
     }
 
     /**
@@ -104,7 +104,7 @@ final class Paths implements \ArrayAccess
         }
 
         if ($pathName === self::ROOT) {
-            return $this->to($to) ?: './';
+            return $this->filesystem->normalizePath($to);
         }
 
         $subdir = $this->filesystem->findShortestPath(
@@ -112,7 +112,7 @@ final class Paths implements \ArrayAccess
             $this->paths[$pathName]
         );
 
-        $to = $this->to($to);
+        $to = $this->to('', $to);
         $to and $subdir = rtrim($subdir, '/\\') . $to;
 
         return $subdir;
@@ -299,17 +299,20 @@ final class Paths implements \ArrayAccess
     }
 
     /**
+     * @param string $base
      * @param string $to
      * @return string
      */
-    private function to(string $to): string
+    private function to(string $base, string $to): string
     {
+        $path = $base;
         if ($to) {
-            $trail = strlen($to) > 1 && in_array(substr($to, -1, 1), ['\\', '/'], true);
+            $trail = in_array(substr($to, -1, 1), ['\\', '/'], true);
             $to = '/' . trim($this->filesystem->normalizePath($to), '/');
-            $trail and $to .= '/';
+            $path = $this->filesystem->normalizePath($base . $to);
+            $trail and $path .= '/';
         }
 
-        return $to;
+        return $path;
     }
 }

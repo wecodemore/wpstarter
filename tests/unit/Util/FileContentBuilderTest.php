@@ -27,7 +27,7 @@ class FileContentBuilderTest extends TestCase
             ['BOOTSTRAP_PATH' => '/foo/bar/baz.php']
         );
 
-        $expected = "<?php\nrequire '/foo/bar/baz.php';";
+        $expected = "<?php\nrequire realpath(__DIR__ . '/foo/bar/baz.php');";
 
         static::assertSame(trim($expected), trim($actual));
     }
