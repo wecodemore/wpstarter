@@ -43,11 +43,6 @@ final class Result
     public static function ok($value): Result
     {
         // phpcs:enable
-
-        if ($value instanceof Result) {
-            return $value->error ? new static(null, $value->error) : new static($value->value);
-        }
-
         return new static($value);
     }
 
@@ -98,6 +93,12 @@ final class Result
     private function __construct($value = null, \Error $error = null)
     {
         // phpcs:enable
+        if ($value instanceof Result) {
+            $this->value = $value->value;
+            $this->error = $value->error;
+
+            return;
+        }
 
         $this->value = $value;
         $this->error = $error;
@@ -213,27 +214,17 @@ final class Result
         try {
             $value = $resolver();
 
-            while ($value instanceof Result) {
+            if ($value instanceof Result) {
                 $this->error = $value->error;
-                $value = $value->value;
-            }
-
-            if ($this->error) {
-                $this->value = null;
+                $this->value = $this->error ? null : $value->value;
 
                 return;
             }
 
-            if ($value instanceof \Error) {
-                $this->value = null;
-                $this->error = $value;
-
-                return;
-            }
             $this->value = $value;
         } catch (\Throwable $throwable) {
             $this->value = null;
-            $this->error = new \Error($throwable->getMessage(), $throwable->getCode(), $throwable);
+            $this->error = new \Error($throwable->getMessage(), 0, $throwable);
         }
     }
 }
