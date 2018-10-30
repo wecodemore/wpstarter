@@ -134,11 +134,6 @@ final class WordPressEnvBridge implements \ArrayAccess
     ];
 
     /**
-     * @var WordPressEnvBridge[]
-     */
-    private static $loaded = [];
-
-    /**
      * @var Filters
      */
     private $filters;
@@ -172,32 +167,22 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     private static function loadFile(string $path, Dotenv $dotEnv = null): WordPressEnvBridge
     {
-        if (getenv('WPSTARTER_ENV_LOADED')
-            || !empty($_ENV['WPSTARTER_ENV_LOADED'])
-            || !empty($_SERVER['WPSTARTER_ENV_LOADED'])
-        ) {
-            self::$loaded['$'] = new static();
-            self::$loaded['$']->fileLoadingSkipped = true;
-
-            return self::$loaded['$'];
+        $instance = new static();
+        if ($instance['WPSTARTER_ENV_LOADED']) {
+            return $instance;
         }
 
         $path = realpath($path);
-        if ($path && !empty(self::$loaded[$path])) {
-            return self::$loaded[$path];
-        }
-
         if (!$path || !is_file($path) || !is_readable($path)) {
             throw new \RuntimeException(
                 'Please provide a .env file or ensure WPSTARTER_ENV_LOADED variable is set.'
             );
         }
 
-        self::$loaded[$path] = new static();
         $dotEnv or $dotEnv = new Dotenv();
         $dotEnv->load($path);
 
-        return self::$loaded[$path];
+        return $instance;
     }
 
     /**
