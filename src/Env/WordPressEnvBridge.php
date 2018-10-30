@@ -15,7 +15,7 @@ use Symfony\Component\Dotenv\Dotenv;
  */
 final class WordPressEnvBridge implements \ArrayAccess
 {
-    const CONSTANTS = [
+    const WP_CONSTANTS = [
         'ALLOW_UNFILTERED_UPLOADS' => Filters::FILTER_BOOL,
         'ALTERNATE_WP_CRON' => Filters::FILTER_BOOL,
         'AUTOMATIC_UPDATER_DISABLED' => Filters::FILTER_BOOL,
@@ -121,6 +121,13 @@ final class WordPressEnvBridge implements \ArrayAccess
         'WP_POST_REVISIONS' => Filters::FILTER_INT_OR_BOOL,
         'FS_CHMOD_DIR' => Filters::FILTER_OCTAL_MOD,
         'FS_CHMOD_FILE' => Filters::FILTER_OCTAL_MOD,
+    ];
+
+    const WP_STARTER_VARS = [
+        'WP_ENV' => Filters::FILTER_STRING,
+        'WORDPRESS_ENV' => Filters::FILTER_STRING,
+        'WP_ADMIN_COLOR' => Filters::FILTER_STRING,
+        'WP_FORCE_SSL_FORWARDED_PROTO' => Filters::FILTER_BOOL,
         'DB_ENV_VALID' => Filters::FILTER_BOOL,
         'DB_EXISTS' => Filters::FILTER_BOOL,
         'WP_INSTALLED' => Filters::FILTER_BOOL,
@@ -165,7 +172,10 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     private static function loadFile(string $path, Dotenv $dotEnv = null): WordPressEnvBridge
     {
-        if (getenv('WPSTARTER_ENV_LOADED')) {
+        if (getenv('WPSTARTER_ENV_LOADED')
+            || !empty($_ENV['WPSTARTER_ENV_LOADED'])
+            || !empty($_SERVER['WPSTARTER_ENV_LOADED'])
+        ) {
             self::$loaded['$'] = new static();
             self::$loaded['$']->fileLoadingSkipped = true;
 
@@ -197,7 +207,7 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     public function setupWordPress()
     {
-        $names = array_keys(self::CONSTANTS);
+        $names = array_keys(self::WP_CONSTANTS);
         array_walk($names, [$this, 'defineWpConstant']);
     }
 
@@ -225,6 +235,11 @@ final class WordPressEnvBridge implements \ArrayAccess
         // Unfortunately we can't type-declare `string` having to stick with ArrayAccess signature.
         $this->assertString($offset, __METHOD__);
 
+        // There are security implications in this kind of vars, and we don't care about them.
+        if (strpos($offset, 'HTTP_') === 0) {
+            return null;
+        }
+
         $defined = defined($offset);
 
         if (!$this->offsetExists($offset) && !$defined) {
@@ -237,24 +252,26 @@ final class WordPressEnvBridge implements \ArrayAccess
 
         $value = $_ENV[$offset] ?? $_SERVER[$offset] ?? getenv($offset) ?: null;
 
-        if (!array_key_exists($offset, self::CONSTANTS)) {
-            return $value;
+        /** @var string|null $filter */
+        $filter = self::WP_CONSTANTS[$offset] ?? self::WP_STARTER_VARS[$offset] ?? null;
+        if ($filter) {
+            $this->filters or $this->filters = new Filters();
+
+            return $this->filters->filter($filter, $value);
         }
 
-        $this->filters or $this->filters = new Filters();
-
-        return $this->filters->filter(self::CONSTANTS[$offset], $value);
+        return $value;
     }
 
     /**
-     * Disabled. Class is read-only.
+     * Append-only implementation.
      *
      * @param string $offset
      * @param mixed $value
      */
     public function offsetSet($offset, $value)
     {
-        if (strpos($offset, 'HTTP_') !== 0) {
+        if (strpos($offset, 'HTTP_') === 0) {
             throw new \BadMethodCallException("It is not possible to set {$offset} value.");
         }
 
@@ -284,11 +301,6 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     private function defineWpConstant(string $name)
     {
-        // These three are WP Starter env vars, not WP vars.
-        if (in_array($name, ['DB_ENV_VALID', 'DB_EXISTS', 'WP_INSTALLED'], true)) {
-            return;
-        }
-
         if ($name === 'DB_TABLE_PREFIX') {
             $this->defineTablePrefix();
 
