@@ -128,8 +128,8 @@ final class WordPressEnvBridge implements \ArrayAccess
         'WORDPRESS_ENV' => Filters::FILTER_STRING,
         'WP_ADMIN_COLOR' => Filters::FILTER_STRING,
         'WP_FORCE_SSL_FORWARDED_PROTO' => Filters::FILTER_BOOL,
-        'DB_ENV_VALID' => Filters::FILTER_BOOL,
-        'DB_EXISTS' => Filters::FILTER_BOOL,
+        'WPDB_ENV_VALID' => Filters::FILTER_BOOL,
+        'WPDB_EXISTS' => Filters::FILTER_BOOL,
         'WP_INSTALLED' => Filters::FILTER_BOOL,
     ];
 

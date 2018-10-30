@@ -125,8 +125,8 @@ it can determine if connection is possible, if the WP DB exists, and if WP is in
 These information are stored in three env vars whose names are stored in
 `WeCodeMore\WpStarter\Util\DbChecker` class constants:
 
-- `DbChecker::DB_ENV_VALID` - is non-empty if connection to DB is possible
-- `DbChecker::DB_EXISTS` - is non-empty if DB exists and is usable
+- `DbChecker::WPDB_ENV_VALID` - is non-empty if connection to DB is possible
+- `DbChecker::WPDB_EXISTS` - is non-empty if DB exists and is usable
 - `DbChecker::WP_INSTALLED` - is non-empty if WordPress is installed
 
 The three env vars are registered in the order they are listed above: if one is non-empty the

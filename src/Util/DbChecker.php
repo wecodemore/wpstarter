@@ -15,9 +15,9 @@ use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
  */
 class DbChecker
 {
-    const WP_INSTALLED = __NAMESPACE__ . '\\WP_INSTALLED';
-    const DB_EXISTS = __NAMESPACE__ . '\\WPDB_EXISTS';
-    const DB_ENV_VALID = __NAMESPACE__ . '\\DB_ENV_VALID';
+    const WP_INSTALLED = 'WP_INSTALLED';
+    const WPDB_EXISTS = 'WPDB_EXISTS';
+    const WPDB_ENV_VALID = 'WPDB_ENV_VALID';
 
     /**
      * @var WordPressEnvBridge
@@ -46,7 +46,7 @@ class DbChecker
     {
         $this->check();
 
-        return (bool)$this->env[self::DB_EXISTS];
+        return (bool)$this->env[self::WPDB_EXISTS];
     }
 
     /**
@@ -66,7 +66,7 @@ class DbChecker
     {
         $this->check();
 
-        return (bool)$this->env[self::DB_ENV_VALID];
+        return (bool)$this->env[self::WPDB_ENV_VALID];
     }
 
     /**
@@ -74,8 +74,8 @@ class DbChecker
      */
     public function check()
     {
-        if ($this->env->offsetExists(self::DB_ENV_VALID)
-            || $this->env->offsetExists(self::DB_EXISTS)
+        if ($this->env->offsetExists(self::WPDB_ENV_VALID)
+            || $this->env->offsetExists(self::WPDB_EXISTS)
             || $this->env->offsetExists(self::WP_INSTALLED)
         ) {
             return;
@@ -133,8 +133,8 @@ class DbChecker
      */
     private function setupEnv(bool $valid, bool $exists, bool $installed)
     {
-        $this->env[self::DB_ENV_VALID] = ($valid ? '1' : '');
-        $this->env[self::DB_EXISTS] = ($exists ? '1' : '');
+        $this->env[self::WPDB_ENV_VALID] = ($valid ? '1' : '');
+        $this->env[self::WPDB_EXISTS] = ($exists ? '1' : '');
         $this->env[self::WP_INSTALLED] = ($installed ? '1' : '');
     }
 

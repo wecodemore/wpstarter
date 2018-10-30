@@ -115,7 +115,7 @@ namespace WeCodeMore\WpStarter;
 $env = Env\WordPressEnvBridge::load();
 
 // If env configuration is invalid nothing to do.
-if (!$env[Util\DbChecker::DB_ENV_VALID]) {
+if (!$env[Util\DbChecker::WPDB_ENV_VALID]) {
     return [];
 }
 
@@ -127,7 +127,7 @@ if ($env[Util\DbChecker::WP_INSTALLED]) {
 $commands = [];
 
 // If DB does not exist, let's tell WP CLI to create it.
-if (!$env[Util\DbChecker::DB_EXISTS]) {
+if (!$env[Util\DbChecker::WPDB_EXISTS]) {
     $commands[] = 'wp db create';
 }
 
@@ -154,9 +154,9 @@ So the file checks status of DB and WordPress and tell WP CLI to act accordingly
 To check database status the file uses three "special" env vars, whose names are stored in
 `WeCodeMore\WpStarter\Util\DbChecker` class constants:
 
-- `DbChecker::DB_ENV_VALID`
+- `DbChecker::WPDB_ENV_VALID`
 - `DbChecker::WP_INSTALLED`
-- `DbChecker::DB_EXISTS`
+- `DbChecker::WPDB_EXISTS`
 
 To know more about these variables please refers to the _"Environment Variables"_ chapter.
 
