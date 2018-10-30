@@ -88,7 +88,7 @@ DB_USER=mydb_user
 DB_PASSWORD=mysecret!
 ```
 
-WP starter will load it, will set related environment variables and will also **define `DB_NAME`, `DB_USER`, and `DB_PASSWORD` PHP constants** so that WordPress can work properly.
+WP Starter will load it, will set related environment variables and will also **define `DB_NAME`, `DB_USER`, and `DB_PASSWORD` PHP constants** so that WordPress can work properly.
 
 If the same env vars would be set in the actual environment instead of in env file, nothing would change.
 

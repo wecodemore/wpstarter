@@ -1,6 +1,6 @@
 # Running WP CLI Commands
 
-WP starter takes care of the file structure of the website and its configuration at filesystem level, however it does nothing, for example, for the database.
+WP Starter takes care of the file structure of the website and its configuration at filesystem level, however it does nothing, for example, for the database.
 
 If the aim is to automate the complete bootstrap of the website, it is clear that WP Starter is not enough. The way to go to complete what we need is surely [WP CLI](https://wp-cli.org/).
 
@@ -8,7 +8,7 @@ The setup of the website via WP CLI is something that can be surely done indepen
 
 What WP Starter will do anyway is to write a `wp-cli.yml` to point the correct WP path so that commands don’t need to pass `--path` argument to WP CLI commands.
 
-However, by telling WP Starter to take care of WP CLI commands, WP starter will also take care of **making sure WP CLI is available**.
+However, by telling WP Starter to take care of WP CLI commands, WP Starter will also take care of **making sure WP CLI is available**.
 
 
 
@@ -39,7 +39,7 @@ Now that benefit of using WP Starter for WP CLI commands are known, let’s see 
 
 ### Evaluation of files
 
-One of the way supported by WP starter to run WP CLI commands is to evaluate files via [WP CLI `eval-file` command](https://developer.wordpress.org/cli/commands/eval-file/).
+One of the way supported by WP Starter to run WP CLI commands is to evaluate files via [WP CLI `eval-file` command](https://developer.wordpress.org/cli/commands/eval-file/).
 
 This can be done by setting an array of files in the `wp-cli-files` setting:
 
