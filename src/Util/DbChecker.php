@@ -74,15 +74,15 @@ class DbChecker
      */
     public function check()
     {
-        if ($this->env[self::DB_ENV_VALID]
-            || $this->env[self::DB_EXISTS]
-            || $this->env[self::WP_INSTALLED]
+        if ($this->env->offsetExists(self::DB_ENV_VALID)
+            || $this->env->offsetExists(self::DB_EXISTS)
+            || $this->env->offsetExists(self::WP_INSTALLED)
         ) {
             return;
         }
 
         if (!$this->env['DB_HOST'] || !$this->env['DB_USER'] || !$this->env['DB_NAME']) {
-            $this->io->writeComment(' - Environment not ready, DB status can\'t be checked.');
+            $this->write('Environment not ready, DB status can\'t be checked.');
             $this->setupEnv(false, false, false);
 
             return;
@@ -114,13 +114,13 @@ class DbChecker
 
         switch (true) {
             case $wpInstalled:
-                $this->io->writeComment('- DB found and WP looks installed.');
+                $this->write('DB found and WP looks installed.');
                 break;
             case $dbExists:
-                $this->io->writeComment('- DB found, but WP looks not installed.');
+                $this->write('DB found, but WP looks not installed.');
                 break;
             default:
-                $this->io->writeComment('- DB not found.');
+                $this->write('DB not found.');
                 break;
         }
     }
@@ -133,8 +133,17 @@ class DbChecker
      */
     private function setupEnv(bool $valid, bool $exists, bool $installed)
     {
-        putenv(self::DB_ENV_VALID . '=' . ($valid ? '1' : ''));
-        putenv(self::DB_EXISTS . '=' . ($exists ? '1' : ''));
-        putenv(self::WP_INSTALLED . '=' . ($installed ? '1' : ''));
+        $this->env[self::DB_ENV_VALID] = ($valid ? '1' : '');
+        $this->env[self::DB_EXISTS] = ($exists ? '1' : '');
+        $this->env[self::WP_INSTALLED] = ($installed ? '1' : '');
+    }
+
+    /**
+     * @param string $line
+     * @return void
+     */
+    private function write(string $line)
+    {
+        $this->io->writeIfVerbose("- <comment>{$line}</comment>");
     }
 }
