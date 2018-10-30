@@ -32,19 +32,7 @@ WP Starter is a Composer plugin, which means that it can "listen" to Composer ev
 
 WP Starter listen to "install" and "update" Composer events to do a series of task that prepare the project to be a fully working WordPress site.
 
-**Having a standard `composer.json` that requires both WordPress core package and WP Starter, and running `composer install` is everything is needed to have the installation ready**, including support for environment variables.
-
-
-
-### A bit more on WP core package
-
-Considering that WordPress has no official support for Composer, there's also no official way to integrate WordPress with Composer.
-
-The way these days many people agree to do it is to treat WordPress as a dependency, like the others. And because WordPress, at this day, does not provide a repository of WordPress with support for Composer (basically having a `composer.json`) the most used package for the scope is the non-official package maintained by [John P. Bloch](https://johnpbloch.com/), that at the moment of writing has around 2.5 millions of downloads from [packagist.org](https://packagist.org/packages/johnpbloch/wordpress).
-
-That said, WP Starter does **not** declare that package has a dependency, allowing to use custom packages or event to don't install WordPress via Composer at all.
-
-The net effect is that to have  a **complete Composer-based WordPress website installation** it is required to just have a `composer.json` as simple as:
+Having a standard `composer.json` that requires both a WordPress core package and WP Starter, like the following:
 
 ```json
 {
@@ -56,7 +44,11 @@ The net effect is that to have  a **complete Composer-based WordPress website in
 }
 ```
 
-and run `composer install`. 
+and run `composer install` is **everything** needed to have a complete Composer-based WordPress website installation.
+
+The snippet above makes use of the non-official WordPress package maintained by [John P. Bloch](https://johnpbloch.com/), that at the moment of writing is the most popular WordPress core package on [packagist.org](https://packagist.org/packages/johnpbloch/wordpress) with its more than 2.5 millions of downloads.
+
+Of course this is the bare minimum, WP Starter is quite powerful and flexible and rest of documentation will describe how to configure and make the most out of it.
 
 
 

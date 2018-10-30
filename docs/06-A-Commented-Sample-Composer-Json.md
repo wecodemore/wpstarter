@@ -63,7 +63,7 @@ But the exact same configuration could have been placed in a **`extra.wpstarter`
 
 ## `composer.json` step by step
 
-`"name"`, `"type"`, and `"license"` root properties of `composer.json` are basic Composer settings so not to WP Starter at all. Please refer to [Composer documentation](https://getcomposer.org/doc/) if not familiar with it. 
+`"name"`, `"type"`, and `"license"` root properties of `composer.json` are basic Composer settings so not specific to WP Starter at all. Please refer to [Composer documentation](https://getcomposer.org/doc/) if not familiar with it. 
 
 ### Repositories
 
@@ -91,7 +91,7 @@ The package is actually no more than a "wrapper" package to provide two differen
 
 [**"wpackagist-plugin/memcached"**](https://wordpress.org/plugins/memcached/) is another plugin that we can add via *WordPress Packagist*. It has been added here as example of a special case. In fact, this plugin is not really a plugin, but a **dropin**. By reading [install instruction](https://wordpress.org/plugins/memcached/#installation) they say that after plugin installation we need to *"Copy object-cache.php to wp-content"*, but WP Starter can do that for us, we'll see soon how.
 
-[**`"frc/batcache"`**](https://packagist.org/packages/frc/batcache) is a plugin that is available on Packagist, so it is easily required. However, it represents another special case. Looking at its [source](https://github.com/frc/batcache) it contains both a **MU plugin** ([`batcache.php`](https://github.com/frc/batcache/blob/frc/batcache.php)) and a **dropin** ([`advanced-cache.php`](https://github.com/frc/batcache/blob/frc/advanced-cache.php)). We well see how with a very minimum configuration WP Starter will handle it perfectly, placing everything in the right place without any manual intervention nor custom scripts.
+[**`"frc/batcache"`**](https://packagist.org/packages/frc/batcache) is a plugin that is available on Packagist, so it is easily required. However, it represents another special case. Looking at its [source](https://github.com/frc/batcache) it contains both a **MU plugin** ([`batcache.php`](https://github.com/frc/batcache/blob/frc/batcache.php)) and a **dropin** ([`advanced-cache.php`](https://github.com/frc/batcache/blob/frc/advanced-cache.php)). We will see how with a very minimum configuration WP Starter will handle it perfectly, placing everything in the right place without any manual intervention nor custom scripts.
 
 ### Extra
 
@@ -105,7 +105,7 @@ The package is actually no more than a "wrapper" package to provide two differen
 
 WP core installer is an "installer plugin". It tells Composer where to place the packages of type `"wordpress-core"`, that are not supported by Composer installers. By default the plugin tells Composer to install WordPress in the `./wordpress` directory, but provides the **`extra.wordpress-install-dir`** to customize it.
 
-In our sample, we are telling to place WP in the folder `public/wp`, because having a "public" folder and WordPress folder in it, will enable us to use `./public/` as webroot and **place the `.env` file inside the *project* root, so outside of webroot**, and that's very recommended for security reasons.
+In our sample, we are telling to place WP in the folder `public/wp`, because having a "public" folder and WordPress folder in it, will enable us to use `./public/` as webroot and **place the `.env` file inside the *project* root, so outside of webroot, and that's very recommended for security reasons**.
 
 #### WP content configuration
 
@@ -132,7 +132,7 @@ Basically, with the configuration in our sample file we are telling Composer Ins
 - packages of type `"wordpress-theme"` in the folder `./public/wp-content/themes/{$name}/`
 - packages of type `"wordpress-dropin"` in the folder `./public/wp-content/{$name}/`
 
-It worth noting that while this setup works for plugins and themes, which are recognized by WordPress in subfolders of  `wp-content/plugins` and `wp-content/themes` respectively, it does **not** work out of the box for MU plugins and dropins: MU plugins needs to be *directly* inside  `wp-content/mu-plugins` (no subfolders) and dropins needs to be  *directly* inside `wp-content`.
+It worth noting that while this setup works for plugins and themes, which are recognized by WordPress in subfolders of  `wp-content/plugins` and `wp-content/themes` respectively, it does **not** work out of the box for MU plugins and dropins: MU plugins needs to be *directly* inside `wp-content/mu-plugins/` (no subfolders) and dropins needs to be  *directly* inside `wp-content/`.
 
 WP Starter handles this issue for us. The `MuLoaderStep` takes care of creating a "loader" MU plugin responsible to load MU plugins that Composer placed in subfolders of `wp-content/mu-plugins`, and the `DropinsStep` takes care of moving the dropin files Composer placed in subfolders of `wp-content` directly into `wp-content`.
 
@@ -146,7 +146,7 @@ Moreover, it is _partially_ working for `"frc/batcache"`, in fact this package c
 
  **`"extra.wpsrtarter"`** is the place for all the WP Starter configuration. However, WP Starter supports also a separate **`wpstarter.json`** file located at project root, and that is what we are using in our sample.
 
-The chapter *"Configuration"* has a more detailed explanation on how that work and there's also a *"Settings Cheat Sheet"* chapter that lists all the available settings.
+The chapter *"Configuration"* has a detailed explanation on how that works and there's also a *"Settings Cheat Sheet"* chapter that lists all the available settings.
 
 Below there is the a step by step explanation of just the settings used in the sample `wpstarter.json` we are using here.
 
@@ -168,7 +168,7 @@ Which means, for example, that any plugin files and folders inside `./plugins` w
 
 ### `dropins`
 
-It has been said above how the package  `"wpackagist-plugin/memcached"`  we are requiring, having the type `"wordpress-plugin"`, will be placed in the folder `./public/wp-content/plugins/memcached/`. However, what that package actually contains is a dropin that should be moved directly into `./public/wp-content/`.
+It has been said above how the package  `"wpackagist-plugin/memcached"` we are requiring, having the type `"wordpress-plugin"`, will be placed in the folder `./public/wp-content/plugins/memcached/`. However, what that package actually contains is a dropin that should be moved directly into `./public/wp-content/`.
 
 It has also been said above how the package `"frc/batcache"`, whose type is `"wordpress-muplugin"`, will be placed in `./public/wp-content/mu-plugins/batcache/` and that works for the MU plugin file it actually ships (thanks to the loader WP Starter automatically creates), but not for the dropin file the package also provides.
 

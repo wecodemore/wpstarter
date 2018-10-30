@@ -2,9 +2,9 @@
 
 WP starter takes care of the file structure of the website and its configuration at filesystem level, however it does nothing, for example, for the database.
 
-If our aim is to automate the complete bootstrap of the website, it is clear that WP Starter is not enough. The way to go to complete what we need is surely [WP CLI](https://wp-cli.org/).
+If the aim is to automate the complete bootstrap of the website, it is clear that WP Starter is not enough. The way to go to complete what we need is surely [WP CLI](https://wp-cli.org/).
 
-The setup of the website via WP CLI is something that can be surely done independently from WP Starter. For example, assuming we have an deploy / CI tool that install Composer dependencies triggering WP Starter, the same deploy / CI tool can take care of running WP CLI commands.
+The setup of the website via WP CLI is something that can be surely done independently from WP Starter. For example, assuming we have an deploy / CI tool that installs Composer dependencies triggering WP Starter, the same deploy / CI tool can take care of running WP CLI commands.
 
 What WP Starter will do anyway is to write a `wp-cli.yml` to point the correct WP path so that commands don’t need to pass `--path` argument to WP CLI commands.
 
@@ -27,9 +27,9 @@ In short, by letting WP Starter running WP CLI commands it is possible to:
 - don’t bother with WP CLI installation
 - write commands in a way that is agnostic of how and where WP CLI is available
 
-It worth mentioning here that there'sa configuration value `install-wp-cli` that can be set to `false` preventing WP Starter to ever attempt to download WP CLI phar.
+It worth mentioning here that there's a configuration value `install-wp-cli` that can be set to `false` preventing WP Starter to ever attempt to download WP CLI phar.
 
-In that's the case and if WP Starter does not find WP CLI, any attempt to run WP CLI commands via WP starter will fail.
+In that's the case and if WP Starter does not find WP CLI, any attempt to run WP CLI commands via WP Starter will fail.
 
 
 
@@ -88,7 +88,7 @@ One simple way to setup WP CLI commands to run is to just set an array of comman
 }
 ```
 
-The same array of commands can be placed in a separate JSON file, whose path is then used as same config value:
+The same array of commands can be placed in a separate JSON file, whose path is then used as same configuration value:
 
 ```json
 {
@@ -106,7 +106,7 @@ One possible solution in some cases might be to use a PHP file that does whateve
 }
 ```
 
-where `wp-cli-commands.php` could look something like this:
+where `wp-cli-commands.php` could, for example, look something like this:
 
 ```php
 <?php
@@ -126,7 +126,7 @@ if ($env[Util\DbChecker::WP_INSTALLED]) {
 
 $commands = [];
 
-// If DB does not exist, tell WP CLI to create it.
+// If DB does not exist, let's tell WP CLI to create it.
 if (!$env[Util\DbChecker::DB_EXISTS]) {
     $commands[] = 'wp db create';
 }
@@ -140,7 +140,7 @@ $install = "wp core install";
 $install .= " --title='WP Starter Example' --url={$home}";
 $install .= " --admin_user={$user} --admin_email={$email}";
 
-// Add install plus commands to update siteurl option and setup language.
+// Add install command plus commands to update siteurl option and setup language.
 $commands[] = $install;
 $commands[] = "wp option update siteurl {$siteUrl}";
 $commands[] = 'wp language core install it_IT';
@@ -149,9 +149,7 @@ $commands[] = 'wp language core activate it_IT';
 return $commands;
 ```
 
-So the file checks status of DB and WordPress and tell WP CLI to act accordingly:
-do nothing if the status is unknown, check the DB if WordPress looks installed, or otherwise install it,
-by also creating the database if necessary.
+So the file checks status of DB and WordPress and tell WP CLI to act accordingly: do nothing if the status is unknown, check the DB if WordPress looks installed, or otherwise install it, by also creating the database if necessary.
 
 To check database status the file uses three "special" env vars, whose names are stored in
 `WeCodeMore\WpStarter\Util\DbChecker` class constants:
@@ -207,4 +205,4 @@ class Script
 
 For this to work `Me\MyProject\Script` class must be autoloadable.
 
-The same thing can be done by creating a custom step, because the `Locator` (and its `wpCliProcess()` method) is also available for custom steps, however this make sense only if there's a complex logic behind the command generation otherwise adding commands `wp-cli-commands` or `wp-cli-files` is definitively easier.
+The same thing can be done by creating a custom step, because the `Locator` (and its `wpCliProcess()` method) is also available for custom steps. However using custom steps or scripts make sense only if there's a complex logic behind the command generation otherwise adding commands `wp-cli-commands` or `wp-cli-files` is definitively easier.

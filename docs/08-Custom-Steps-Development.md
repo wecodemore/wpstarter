@@ -39,7 +39,8 @@ interface Step
 - `name()` has just to return a name for the step. This should be with all lowercase and without spaces or special characters. Doing so it would be possible to use the WP Starter command to programmatically run this step.
 - `success()` and `error()` has to return feedback message for the user in case the command execution was either successful or not.
 - `allowed() ` must return true if the step should be run. For example, a step that will copy a file will return false in this method if the source file is not found.
-- `run()` is where the actual execution of the step happen. This method is never called if `allowed() ` returns false, so if some checks are done in that method, there's no need to perform those again or to manually call `check()` in it. The method should return either the interface constants `Step::SUCCESS` or `Step::ERROR` depending if the step was successful or not. `Step::NONE` should be returned if the step is aborted for any reason without an outcome that can't be either considered successful or erroneous.
+- `run()` is where the actual execution of the step happen. This method is never called if `allowed() ` returns false, so if some checks are done in that method, there's no need to perform those again or to manually call `allowed()` inside `run()`.
+  The method should return one the interface constants `Step::SUCCESS` or `Step::ERROR` depending if the step was successful or not. `Step::NONE` should be returned if the step is aborted for any reason without an outcome that can be either considered successful or erroneous.
 
 The first three methods are very simple and pretty much logicless.
 
@@ -93,11 +94,11 @@ Let's start by creating the class file and implement the interface.
 ```php
 namespace WPStarter\Examples;
 
-use WeCodeMore\WpStarter\Step\FileCreationStepInterface;
+use WeCodeMore\WpStarter\Step\FileCreationStep;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util\Paths;
 
-class HtaccessStep implements FileCreationStepInterface {
+class HtaccessStep implements FileCreationStep {
     
     public function name(): string
     {
@@ -131,11 +132,11 @@ class HtaccessStep implements FileCreationStepInterface {
 }
 ```
 
-First of all, let's notice how the interface implemented is not `Step`, but `FileCreationStepInterface`: another interface provided by WP Starter that has to be implemented by steps that create files, and that's our case.
+First of all, let's notice how the interface implemented is not `Step`, but `FileCreationStep`: another interface provided by WP Starter that has to be implemented by steps that create files, and that's our case.
 
-This interface extends `Step` by only adding the `targetPath` method that has to return the place where the created file will be saved.
+This interface extends `Step` by only adding the `targetPath` method that has to return the full path where the created file will be saved.
 
-Thanks to that method WP Starter will check if the file exists before even attempting to create it and will try to overwrite it only if the `prevent-overwrite` WP Starter setting permit so. For example, if `prevent-overwrite` is set to `"ask"` WP Starter will ask the user a confirmation before overwriting the existing file, or if  `prevent-overwrite` is explicitly set to don't overwrite `.htaccess` the entire step will be skipped at all.
+Thanks to that method WP Starter will check if the file exists before even attempting to create it and will try to overwrite it only if the `prevent-overwrite` WP Starter setting permit so. For example, if `prevent-overwrite` is set to `"ask"` WP Starter will ask the user a confirmation before overwriting the existing file, or if `prevent-overwrite` is explicitly set to don't overwrite `.htaccess` the entire step will be skipped at all.
 
 Considering that WP Starter will check for us that any overwrite will happen with respect to user settings, we don't really have reasons to don't run this step. Which means that `allowed()` method can just return `true`.
 
@@ -216,13 +217,13 @@ We are telling Apache that when an URL like `example.com/wp-admin/` is requested
 
 This is nice, however the `/wordpress` subfolder is hardcoded here, but that it is just the default folder, that could be configured in `composer.json` to something different.
 
-Maybe in the project we are targeting now it we are using the default, so the step code is fine as is, but if we aim to reuse this step it worth to make it take into account settings.
+Maybe in the project we are targeting now, we are just using the default, so the step code is fine as is, but if we aim to reuse this step it worth to adjust it to take into account user settings.
 
-Basically we need to know the relative path from the path where the `.htaccess` will be placed to the WordPress path. And we need to account the case in which WordPress is placed in root (it is discouraged but can be done via configuration).
+Basically we need to know the relative path from the path where the `.htaccess` will be placed to the WordPress path. And we need to take into account the case in which WordPress is placed in root (it is discouraged but can be done via configuration).
 
-To calculate relative paths, there is a  `Filesystem` object provided by Composer (which is not the same as WP Starter `Filesystem` object) that has a method `findShortestPath` that calculates relative path between two absolute paths provided as argument.
+To calculate relative paths, there is a  `Filesystem` object provided by Composer (which is not the same as WP Starter `Filesystem` object) that has a method `findShortestPath` that calculates the relative path between two absolute paths provided as argument.
 
-Such object can be also obtained via the locator:
+Such object can also  be obtained via the `Locator`:
 
 ```php
 namespace WPStarter\Examples;
