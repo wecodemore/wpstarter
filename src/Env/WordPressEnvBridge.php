@@ -123,7 +123,7 @@ final class WordPressEnvBridge implements \ArrayAccess
         'FS_CHMOD_FILE' => Filters::FILTER_OCTAL_MOD,
         'DB_ENV_VALID' => Filters::FILTER_BOOL,
         'DB_EXISTS' => Filters::FILTER_BOOL,
-        'INSTALLED' => Filters::FILTER_BOOL,
+        'WP_INSTALLED' => Filters::FILTER_BOOL,
     ];
 
     /**
@@ -284,6 +284,11 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     private function defineWpConstant(string $name)
     {
+        // These three are WP Starter env vars, not WP vars.
+        if (in_array($name, ['DB_ENV_VALID', 'DB_EXISTS', 'WP_INSTALLED'], true)) {
+            return;
+        }
+
         if ($name === 'DB_TABLE_PREFIX') {
             $this->defineTablePrefix();
 
