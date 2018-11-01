@@ -9,6 +9,7 @@
  * A sample .env file (.env.example) should be placed in the root of your project, rename it to .env
  * and edit it according to your needs.
  */
+use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 
 /** Composer autoload. */
 require_once realpath(__DIR__ . '{{{AUTOLOAD_PATH}}}');
@@ -24,8 +25,13 @@ define('WPSTARTER_PATH', realpath(__DIR__ . '{{{ENV_REL_PATH}}}'));
  * Environment variables that are set in the *real* environment (e.g. via webserver) will not be
  * overridden from file, even if `WPSTARTER_ENV_LOADED` is not set.
  */
-WeCodeMore\WpStarter\Env\WordPressEnvBridge::load(WPSTARTER_PATH, '{{{ENV_FILE_NAME}}}')
-    ->setupWordPress();
+$envBridge = new WordPressEnvBridge();
+$envBridge->load('{{{ENV_FILE_NAME}}}', WPSTARTER_PATH);
+$environment = $envBridge['WP_ENV'] ?: $envBridge['WORDPRESS_ENV'];
+if ($environment && $environment !== 'example') {
+    $envBridge->loadAppended("{{{ENV_FILE_NAME}}}.{$environment}", WPSTARTER_PATH);
+}
+$envBridge->setupWordPress();
 
 /** Set optional database settings if not already set. */
 defined('DB_HOST') or define('DB_HOST', 'localhost');
@@ -59,7 +65,6 @@ defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}
 require_once ABSPATH . 'wp-includes/plugin.php';
 
 /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
-$environment = getenv('WP_ENV') ?: getenv('WORDPRESS_ENV');
 if ($environment
     && file_exists("{{{ENV_BOOTSTRAP_DIR}}}{$environment}.php")
     && is_readable("{{{ENV_BOOTSTRAP_DIR}}}{$environment}.php")
@@ -90,10 +95,9 @@ switch ($environment) {
         defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', false);
         break;
 }
-unset($environment);
 
 /** Fix `is_ssl()` behind load balancers. */
-if (getenv('WP_FORCE_SSL_FORWARDED_PROTO')
+if ($envBridge['WP_FORCE_SSL_FORWARDED_PROTO']
     && array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER)
     && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
 ) {
@@ -129,14 +133,17 @@ if (filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN)) {
     );
 }
 
-/** Allow changing admin color scheme. Useful to distinguish different envs in dashbaoard. */
+/** Allow changing admin color scheme. Useful to distinguish environments in the dashboard. */
+$forceAdminColor = $envBridge['WP_ADMIN_COLOR'];
 add_filter(
     'get_user_option_admin_color',
-    function ($color) {
-        return getenv('WP_ADMIN_COLOR') ?: $color;
+    function ($color) use ($forceAdminColor) {
+        return $forceAdminColor ?: $color;
     },
     999
 );
+
+unset($environment, $envBridge, $forceAdminColor);
 
 ###################################################################################################
 #  I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion.  #

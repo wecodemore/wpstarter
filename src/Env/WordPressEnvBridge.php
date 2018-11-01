@@ -134,55 +134,112 @@ final class WordPressEnvBridge implements \ArrayAccess
     ];
 
     /**
+     * @var Dotenv
+     */
+    private static $defaultDotEnv;
+
+    /**
+     * @var array
+     */
+    private static $loadedVars;
+
+    /**
+     * @var null|Dotenv
+     */
+    private $dotenv;
+
+    /**
      * @var Filters
      */
     private $filters;
 
     /**
-     * @var bool
+     * Symfony stores a variable with the keys of variables it loads.
+     *
+     * @return array
      */
-    private $fileLoadingSkipped = false;
+    private static function loadedVars(): array
+    {
+        if (self::$loadedVars === null) {
+            self::$loadedVars = array_flip(explode(',', (getenv('SYMFONY_DOTENV_VARS') ?: '')));
+            unset(self::$loadedVars['']);
+        }
+
+        return self::$loadedVars;
+    }
 
     /**
-     * @param  string $path Environment file path
-     * @param  string $file Environment file path relative to `$path`
-     * @param Dotenv|null $dotEnv
-     * @return \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     * @param Dotenv|null $dotenv
      */
-    public static function load(
-        string $path = null,
-        string $file = '.env',
-        Dotenv $dotEnv = null
-    ): WordPressEnvBridge {
+    public function __construct(Dotenv $dotenv = null)
+    {
+        $this->dotenv = $dotenv;
+    }
 
-        $path === null and $path = getcwd();
-
-        return static::loadFile(rtrim($path, '\\/') . "/{$file}", $dotEnv);
+    /**
+     * @param string $file Environment file path relative to `$path`
+     * @param string $path Environment file path
+     * @return void
+     */
+    public function load(string $file = '.env', string $path = null)
+    {
+        $this->loadFile($this->fullpathFor($file, $path));
     }
 
     /**
      * @param string $path
-     * @param Dotenv|null $dotEnv
-     * @return WordPressEnvBridge
+     * @return void
      */
-    private static function loadFile(string $path, Dotenv $dotEnv = null): WordPressEnvBridge
+    public function loadFile(string $path)
     {
-        $instance = new static();
-        if ($instance['WPSTARTER_ENV_LOADED']) {
-            return $instance;
+        $loaded = $_ENV['WPSTARTER_ENV_LOADED'] ?? $_SERVER['WPSTARTER_ENV_LOADED'] ?? null;
+        if ($loaded !== null) {
+            self::$loadedVars = [];
+
+            return;
         }
 
-        $path = realpath($path);
-        if (!$path || !is_file($path) || !is_readable($path)) {
-            throw new \RuntimeException(
-                'Please provide a .env file or ensure WPSTARTER_ENV_LOADED variable is set.'
-            );
+        if (self::$loadedVars !== null) {
+            return;
         }
 
-        $dotEnv or $dotEnv = new Dotenv();
-        $dotEnv->load($path);
+        $path = $this->fullpathFor('', $path);
+        if ($path) {
+            $this->dotenv()->load($path);
+            self::loadedVars();
+        }
+    }
 
-        return $instance;
+    /**
+     * @param string $file
+     * @param string|null $path
+     */
+    public function loadAppended(string $file, string $path = null)
+    {
+        if (self::$loadedVars === null) {
+            $this->load($file, $path);
+
+            return;
+        }
+
+        $fullpath = $this->fullpathFor($file, $path);
+        if (!$fullpath) {
+            return;
+        }
+
+        $values = $this->dotenv()->parse(file_get_contents($fullpath), $fullpath);
+        foreach ($values as $name => $value) {
+            $this->isWritable($name) and $this->offsetSet($name, $value);
+        }
+    }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function isLoadedVar(string $name): bool
+    {
+        return array_key_exists($name, self::loadedVars());
     }
 
     /**
@@ -202,13 +259,7 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     public function offsetExists($offset)
     {
-        // Unfortunately we can't type-declare `string` having to stick with ArrayAccess signature.
-        $this->assertString($offset, __METHOD__);
-
-        return
-            array_key_exists($offset, $_ENV)
-            || array_key_exists($offset, $_SERVER)
-            || (getenv($offset) !== false);
+        return $this->offsetGet($offset) !== null;
     }
 
     /**
@@ -220,57 +271,73 @@ final class WordPressEnvBridge implements \ArrayAccess
         // Unfortunately we can't type-declare `string` having to stick with ArrayAccess signature.
         $this->assertString($offset, __METHOD__);
 
-        // There are security implications in this kind of vars, and we don't care about them.
-        if (strpos($offset, 'HTTP_') === 0) {
-            return null;
-        }
-
-        $defined = defined($offset);
-
-        if (!$this->offsetExists($offset) && !$defined) {
-            return null;
-        }
-
-        if ($defined) {
+        if (defined($offset)) {
             return constant($offset);
         }
 
-        $value = $_ENV[$offset] ?? $_SERVER[$offset] ?? getenv($offset) ?: null;
+        // We don't check $_SERVER for keys starting with 'HTTP_' because clients can write there.
+        $serverSafe = strpos($offset, 'HTTP_') !== 0;
+
+        // We consider anything not loaded by Symfony Dot Env as "actual" environment, and because
+        // of thread safety issues, we don't use getenv() for those "actual" environment variables.
+        $loadedVar = self::$loadedVars && $this->isLoadedVar($offset);
+
+        $value = null;
+        switch (true) {
+            case ($loadedVar && $serverSafe):
+                // Both $_SERVER and getenv() are ok.
+                $value = $_ENV[$offset] ?? $_SERVER[$offset] ?? getenv($offset) ?: null;
+                break;
+            case ($loadedVar && !$serverSafe):
+                // $_SERVER is not ok, getenv() is.
+                $value = $_ENV[$offset] ?? getenv($offset) ?: null;
+                break;
+            case (!$loadedVar && $serverSafe):
+                // $_SERVER is ok, getenv() is not.
+                $value = $_ENV[$offset] ?? $_SERVER[$offset] ?? null;
+                break;
+            case (!$loadedVar && !$serverSafe):
+                // Neither $_SERVER nor getenv() are ok.
+                $value = $_ENV[$offset] ?? null;
+                break;
+        }
+
+        if ($value === null) {
+            return null;
+        }
 
         /** @var string|null $filter */
         $filter = self::WP_CONSTANTS[$offset] ?? self::WP_STARTER_VARS[$offset] ?? null;
-        if ($filter) {
-            $this->filters or $this->filters = new Filters();
-
-            return $this->filters->filter($filter, $value);
+        if (!$filter) {
+            return $value;
         }
 
-        return $value;
+        $this->filters or $this->filters = new Filters();
+
+        return $this->filters->filter($filter, $value);
     }
 
     /**
-     * Append-only implementation.
-     *
      * @param string $offset
      * @param mixed $value
      */
     public function offsetSet($offset, $value)
     {
-        if (strpos($offset, 'HTTP_') === 0) {
-            throw new \BadMethodCallException("It is not possible to set {$offset} value.");
-        }
-
-        if ($this->offsetExists($offset)) {
-            throw new \BadMethodCallException(__CLASS__ . ' is append only.');
+        if (!$this->isWritable($offset)) {
+            throw new \BadMethodCallException("{$offset} is not a writable ENV var.");
         }
 
         putenv("{$offset}={$value}");
         $_ENV[$offset] = $value;
-        $_SERVER[$offset] = $value;
+        (strpos($offset, 'HTTP_') !== 0) and $_SERVER[$offset] = $value;
+
+        $loaded = self::loadedVars();
+        $loaded[$offset] = true;
+        self::$loadedVars = $loaded;
     }
 
     /**
-     * Disabled. Class is read-only.
+     * Disabled. No unset is available.
      *
      * @param string $offset
      */
@@ -312,6 +379,46 @@ final class WordPressEnvBridge implements \ArrayAccess
             $value or $value = 'wp_';
             $GLOBALS['table_prefix'] = preg_replace('#[\W]#', '', (string)$value);
         }
+    }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    private function isWritable(string $name): bool
+    {
+        return !$this->offsetExists($name) || $this->isLoadedVar($name);
+    }
+
+    /**
+     * @param string $filename
+     * @param string|null $basePath
+     * @return string
+     */
+    private function fullpathFor(string $filename, string $basePath = null): string
+    {
+        $basePath === null and $basePath = getcwd();
+
+        $fullpath = realpath(rtrim(rtrim($basePath, '\\/') . "/{$filename}", '\\/'));
+        if (!$fullpath || !is_file($fullpath) || !is_readable($fullpath)) {
+            return '';
+        }
+
+        return $fullpath;
+    }
+
+    /**
+     * @return Dotenv
+     */
+    private function dotEnv(): Dotenv
+    {
+        $dotEnv = $this->dotenv ?? self::$defaultDotEnv;
+        if (!$dotEnv) {
+            self::$defaultDotEnv or self::$defaultDotEnv = new Dotenv();
+            $dotEnv = self::$defaultDotEnv;
+        }
+
+        return $dotEnv;
     }
 
     /**

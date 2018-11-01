@@ -21,10 +21,11 @@ class WordPressEnvBridgeTest extends TestCase
      */
     public function testLoadSkippingFile()
     {
-        putenv("WPSTARTER_ENV_LOADED=1");
+        $_ENV['WPSTARTER_ENV_LOADED'] = 1;
         define('SITE_ID_CURRENT_SITE', 123);
 
-        $bridge = WordPressEnvBridge::load();
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
 
         static::assertSame(123, $bridge['SITE_ID_CURRENT_SITE']);
         static::assertNull($bridge['ALLOW_UNFILTERED_UPLOADS']);
@@ -33,19 +34,11 @@ class WordPressEnvBridgeTest extends TestCase
     /**
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadWithoutFileAndWithoutSkipFails()
-    {
-        $this->expectException(\RuntimeException::class);
-
-        WordPressEnvBridge::load();
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
-     */
     public function testLoadFile()
     {
-        $bridge = WordPressEnvBridge::load($this->fixturesPath(), 'example.env');
+        $bridge = new WordPressEnvBridge();
+
+        $bridge->load('example.env', $this->fixturesPath());
 
         static::assertSame('localhost', $bridge['DB_HOST']);
         static::assertSame('wp', $bridge['DB_NAME']);
@@ -57,9 +50,131 @@ class WordPressEnvBridgeTest extends TestCase
     /**
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
+    public function testLoadFileMoreTimesDoNothing()
+    {
+        $bridge = new WordPressEnvBridge();
+
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge->load('more.env', $this->fixturesPath());
+
+        static::assertSame('localhost', $bridge['DB_HOST']);
+        static::assertNull($bridge['FOO']);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testHttpServerVarsAreReturnedOnlyIfLoaded()
+    {
+        $_SERVER['HTTP_FOO'] = 'foo';
+        $_SERVER['_HTTP_FOO'] = 'foo';
+
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('more.env', $this->fixturesPath());
+
+        static::assertSame('Yes', $bridge['HTTP_MEH']);
+        static::assertNull($bridge['HTTP_FOO']);
+        static::assertSame('foo', $bridge['_HTTP_FOO']);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testGetEnvIsSkippedForNotLoadedVars()
+    {
+        putenv('PUT_THE_ENV=HERE');
+
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('more.env', $this->fixturesPath());
+
+        static::assertSame('HERE', getenv('PUT_THE_ENV'));
+        static::assertNull($bridge['PUT_THE_ENV']);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testLoadAppended()
+    {
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge->loadAppended('more.env', $this->fixturesPath());
+
+        static::assertSame('192.168.1.255', $bridge['DB_HOST']);
+        static::assertSame('BAR BAR', $bridge['BAZ']);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testLoadAppendedWrongFileDoNothing()
+    {
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge->loadAppended('not-more.env', $this->fixturesPath());
+
+        static::assertSame('localhost', $bridge['DB_HOST']);
+        static::assertNull($bridge['BAZ']);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testLoadAppendedAlwaysLoadsIfLoadWasCalledAndEnvLoaded()
+    {
+        $_ENV['WPSTARTER_ENV_LOADED'] = 1;
+
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+
+        static::assertNull($bridge['DB_HOST']);
+
+        $bridge->loadAppended('more.env', $this->fixturesPath());
+
+        static::assertSame('192.168.1.255', $bridge['DB_HOST']);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testLoadAppendedNotLoadsIfLoadWasNotCalledAndEnvLoaded()
+    {
+        $_ENV['WPSTARTER_ENV_LOADED'] = 1;
+
+        $bridge = new WordPressEnvBridge();
+
+        static::assertNull($bridge['DB_HOST']);
+
+        $bridge->loadAppended('more.env', $this->fixturesPath());
+
+        static::assertNull($bridge['DB_HOST']);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testLoadAppendedDoesNotOverrideActualEnv()
+    {
+        $_ENV['FOO'] = "I come first.";
+
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge->loadAppended('more.env', $this->fixturesPath());
+        $bridge['NEW'] = 'new!';
+
+        static::assertSame('wp', $bridge['DB_NAME']);            // example.env
+        static::assertSame('192.168.1.255', $bridge['DB_HOST']); // more.env
+        static::assertSame('I come first.', $bridge['FOO']);     // actual.env
+        static::assertSame('new!', $bridge['NEW']);               // offsetSet
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
     public function testConstantsOverrideEnv()
     {
-        $bridge = WordPressEnvBridge::load($this->fixturesPath(), 'example.env');
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
 
         define('DB_HOST', '168.192.168.12');
 
@@ -71,7 +186,8 @@ class WordPressEnvBridgeTest extends TestCase
      */
     public function testSetupWordPress()
     {
-        $bridge = WordPressEnvBridge::load($this->fixturesPath(), 'example.env');
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
         $bridge->setupWordPress();
 
         static::assertTrue(defined('DB_HOST'));
@@ -107,8 +223,9 @@ class WordPressEnvBridgeTest extends TestCase
      */
     public function testArbitraryValuesUnfiltered()
     {
-        $bridge = WordPressEnvBridge::load($this->fixturesPath(), 'example.env');
-        putenv('ANSWER=42');
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $_ENV['ANSWER'] = '42';
 
         static::assertSame('42', $bridge['ANSWER']);
     }
@@ -116,9 +233,49 @@ class WordPressEnvBridgeTest extends TestCase
     /**
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testValuesCantBeChanged()
+    public function testNewValuesCanBeAppended()
     {
-        $bridge = WordPressEnvBridge::load($this->fixturesPath(), 'example.env');
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge['ANSWER'] = '42!';
+
+        static::assertSame('42!', $bridge['ANSWER']);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testLoadedValuesCanBeUpdated()
+    {
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge['DB_HOST'] = '127.0.0.255';
+
+        static::assertSame('127.0.0.255', $bridge['DB_HOST']);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testValuesInActualEnvCanNotBeAppended()
+    {
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $_ENV['ANSWER'] = '42';
+
+        $this->expectException(\BadMethodCallException::class);
+        $bridge['ANSWER'] = '42!!!';
+
+        static::assertSame('42', $bridge['ANSWER']);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testValuesCanNotBeUnset()
+    {
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
 
         $this->expectException(\BadMethodCallException::class);
         unset($bridge['DB_HOST']);
@@ -127,21 +284,9 @@ class WordPressEnvBridgeTest extends TestCase
     /**
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testValuesCantBeUnset()
-    {
-        $bridge = WordPressEnvBridge::load($this->fixturesPath(), 'example.env');
-
-        $this->expectException(\BadMethodCallException::class);
-        $bridge['DB_HOST'] = '127.0.0.1';
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
-     */
     public function testTypeErrorIfWrongOffsetType()
     {
-        $bridge = WordPressEnvBridge::load($this->fixturesPath(), 'example.env');
-
+        $bridge = new WordPressEnvBridge();
         $this->expectException(\TypeError::class);
         $bridge[12];
     }

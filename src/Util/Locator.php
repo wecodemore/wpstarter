@@ -239,7 +239,13 @@ final class Locator
         if (empty($this->objects[WordPressEnvBridge::class])) {
             $file = $this->config()[Config::ENV_FILE]->unwrapOrFallback('.env');
             $dir = $this->config()[Config::ENV_DIR]->unwrapOrFallback($this->paths()->root());
-            $this->objects[WordPressEnvBridge::class] = WordPressEnvBridge::load($dir, $file);
+            $bridge = new WordPressEnvBridge();
+            $bridge->load($file, $dir);
+            $environment = $bridge['WP_ENV'] ?: $bridge['WORDPRESS_ENV'];
+            if ($environment && $environment !== 'example') {
+                $bridge->loadAppended("{$file}.{$environment}", $dir);
+            }
+            $this->objects[WordPressEnvBridge::class] = $bridge;
         }
 
         return $this->objects[WordPressEnvBridge::class];

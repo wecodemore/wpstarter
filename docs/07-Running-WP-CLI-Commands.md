@@ -112,10 +112,10 @@ where `wp-cli-commands.php` could, for example, look something like this:
 <?php
 namespace WeCodeMore\WpStarter;
 
-$env = Env\WordPressEnvBridge::load();
+$env = new Env\WordPressEnvBridge();
 
 // If env configuration is invalid nothing to do.
-if (!$env[Util\DbChecker::WPDB_ENV_VALID]) {
+if (!getenv(Util\DbChecker::WPDB_ENV_VALID)) {
     return [];
 }
 
