@@ -406,7 +406,7 @@ class Validator
             return is_array($data) ? $this->validateWpCliCommands($data) : Result::errored($error);
         }
 
-        $provider = function () use ($fullpath, $error) {
+        $provider = function () use ($fullpath, $error): Result {
             $data = @include $fullpath;
 
             return is_array($data) ? $this->validateWpCliCommands($data) : Result::errored($error);
