@@ -112,9 +112,9 @@ Besides the env vars named after WordPress configuration constants there are a f
 
 #### WP_ENV
 
-`WP_ENV` is the main WP Starter specific environment variables and it determines the current application environment ,for example "production", "staging", and so on.
+`WP_ENV` is the main WP Starter specific environment variable and it determines the current application environment, for example "production", "staging", and so on.
 
-WP Starter has extended support for three specific values of this variable: "development", "staging", and "production" (more on this below), but there's no limitations on what this variable can contain.
+WP Starter has extended support for three specific values of this variable: "development", "staging", and "production" (more on this below), but there's no limitations on what it can contain.
 
 For backward compatibility reasons, instead of `WP_ENV` it is possible to use `WORDPRESS_ENV` with same result.
 
@@ -124,14 +124,14 @@ After environment variables are loaded (via either _actual_ environment or via e
 
 They are:
 
-- an **env file** named  **`{$envFile}.{$environment}`**, where `{$envFile}` is the name of the "main" env file (by default `.env`, ) and `$environment` is the value of `WP_ENV` env var;
+- an **env file** named  **`{$envFile}.{$environment}`**, where `$envFile` is the name of the "main" env file (by default `.env`) and `$environment` is the value of `WP_ENV` env var;
 - a **PHP file** named like **`{$environment}.php`**, where `$environment` is the value of `WP_ENV` env var.
 
 ###### Environment-specific Env file
 
-If the environment-specific env file is found, it will be loaded, and all the env variables defined there will be merged with anything already loaded (via either _actual_ environment or via main env file).
+If the environment-specific env file is found, it will be loaded, and all the env variables defined there will be merged with anything already loaded (via either actual environment or via main env file).
 
-Note that environment-specific env file can overwrite variables in "generic" env file, but variables defined in actual environment will always win over variables defined in env files.
+Note that environment-specific env file can overwrite variables in main env file, but variables defined in actual environment will always win over variables defined in env files.
 
 ###### Environment-specific PHP file
 
