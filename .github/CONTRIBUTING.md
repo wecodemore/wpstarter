@@ -31,8 +31,7 @@ First, let us say: **thank you** to be here! :+1:
 
 ### Code Style
 
-- For v2.* we use [PSR-1](https://www.php-fig.org/psr/psr-1/) and [PSR-2](https://www.php-fig.org/psr/psr-2/) code style;
-- For v3+ we use [Inpsyde PHP coding standars](https://github.com/inpsyde/php-coding-standards).
+We use [Inpsyde PHP coding standars](https://github.com/inpsyde/php-coding-standards).
 
 By cloning the repository and running:
 
