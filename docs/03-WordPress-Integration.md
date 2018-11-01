@@ -112,11 +112,11 @@ Besides the env vars named after WordPress configuration constants there are a f
 
 #### WP_ENV
 
-`WP_ENV` is the main WP Starter specific environment variables and determine which environment the current environment is for, e.g. "production", "staging" and so on.
+`WP_ENV` is the main WP Starter specific environment variables and it determines the current application environment ,for example "production", "staging", and so on.
 
-WP Starter has extended support for three specific values of this variable: "development", "staging" and "production" (more on this below), but there's no limitations on what this variable can contain.
+WP Starter has extended support for three specific values of this variable: "development", "staging", and "production" (more on this below), but there's no limitations on what this variable can contain.
 
- For backward compatibility reason, instead of `WP_ENV` it is possible to use `WORDPRESS_ENV` with same result.
+For backward compatibility reasons, instead of `WP_ENV` it is possible to use `WORDPRESS_ENV` with same result.
 
 ##### Environment-specific files
 
