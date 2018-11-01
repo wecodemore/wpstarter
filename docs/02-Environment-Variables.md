@@ -64,13 +64,25 @@ WP Starter uses one of this libraries: the **[Symfony Dotenv Component](https://
 
 ## WP Starter and env vars
 
-WP Starter uses Symfony Dotenv Component to load an `.env` file found in the root folder of the project (the folder and the file name can be configured, if necessary).
+WP Starter uses Symfony Dotenv Component to load an `.env` file found in the project root folder of the project (the folder and the file name can be configured, if necessary).
 
 The env vars loaded from the file will never overwrite variables that are set in the actual environment.
 
 Moreover, if the actual environment contains all the variables WP Starter and WordPress need, there's actually no need to load and parse env files, and **this is actually the suggested way to go in production**, to maximize speed.
 
 To tell WP Starter to don't load any env file and just assume all the variables are set in the actual environment it is necessary to set a **`WPSTARTER_ENV_LOADED`** env variable to a non-null value: when WP Starter recognizes that var is set before any env file is loaded, it does not proceed any further loading env file.
+
+### Important security note about `.env` file
+
+WP Starter loads an `.env` file found in the project root folder, and it worth nothing that if no additional configuration is made, project root is also the folder assumed as webroot for the project.
+
+If this is a non-issue in local-only installations, it can be a quite serious issue on anything that goes online. In fact, an `.env` file inside webroot could expose secrets stored in it (at very minimum DB credentials).
+
+To avoid this issue there are at least three different ways:
+
+- Create a subfolder inside project root and use it as webroot, keeping `.env `file one level above, in the project root. This is the approach that will be shown in the *"A Commented Sample `composer.json`"* chapter
+- Configure WP Starter to load  `.env` file from a folder that is not publicly accessible, e.g. the parent folder of the project root (if project root is also webroot). This can be done via the `env-dir` setting. Learn more in the *"WP Starter Configuration"* chapter.
+- Don't use env file in production at all, but store env vars in the actual environment. See documentation on how to do it in [Apache](https://httpd.apache.org/docs/2.4/env.html), and [nginx](http://nginx.org/en/docs/ngx_core_module.html#env). Note that Docker supports and `.env` file as well (see [documentation](https://docs.docker.com/compose/environment-variables/)), by setting env vars that way those would not be publicly accessible.
 
 
 
