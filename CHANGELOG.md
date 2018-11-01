@@ -1,11 +1,21 @@
 # Change Log for WPStarter
 
+## [2.4.3] - 2018-05-07
+* Templates: Add EOF lines. See [#67].
+* Removed check for required env vars [#63]
+
+## [2.4.2] - 2017-06-29
+* Define `WP_CONTENT_URL` only on single site. See [#48], [#57].
+* Minor code standards fix.
+* Update docs to adapt to change on `johnpbloch/wordpress`.
+* Expicitly globalize `$table_prefix` in `wp-config.php`. See [#61].
+
 ## [2.4.1] - 2017-02-21
 * Removed strict types declaration for PHP 5 compat.
 
 ## [2.4.0] - 2017-02-21
 
-* Case whatever we get from `get_option(uninstall_plugins)` to an array, to avoid throwing a warning. See [#36].
+* Cast whatever we get from `get_option(uninstall_plugins)` to an array, to avoid throwing a warning. See [#36].
 * Fix variable syntax for `.env` file template. See [#38].
 * Fix RuntimeException because of `DB_NAME`, `DB_USER`, `DB_PASSWORD` not set. See [#49].
 * Improve `Helpers::addHook()` by using WordPress function when available and loading `plugin.php` earlier on WP 4.7+. See [#50].
@@ -139,6 +149,10 @@
 [Alain Schlesser]: https://github.com/schlessera
 [Gary Jones]: https://github.com/GaryJones
 
+[#67]: https://github.com/wecodemore/wpstarter/issues/67
+[#61]: https://github.com/wecodemore/wpstarter/issues/61
+[#57]: https://github.com/wecodemore/wpstarter/issues/57
+[#48]: https://github.com/wecodemore/wpstarter/issues/48
 [#38]: https://github.com/wecodemore/wpstarter/issues/38
 [#36]: https://github.com/wecodemore/wpstarter/issues/36
 [#35]: https://github.com/wecodemore/wpstarter/issues/35
@@ -148,7 +162,10 @@
 [#3]: https://github.com/wecodemore/wpstarter/issues/3
 [#2]: https://github.com/wecodemore/wpstarter/issues/2
 
-[Unreleased]: https://github.com/wecodemore/wpstarter/compare/2.3.2...HEAD
+[Unreleased]: https://github.com/wecodemore/wpstarter/compare/2.4.2...HEAD
+[2.4.2]: https://github.com/wecodemore/wpstarter/compare/2.4.1...2.4.2
+[2.4.1]: https://github.com/wecodemore/wpstarter/compare/2.4.0...2.4.1
+[2.4.0]: https://github.com/wecodemore/wpstarter/compare/2.3.2...2.4.0
 [2.3.2]: https://github.com/wecodemore/wpstarter/compare/2.3.1...2.3.2
 [2.3.1]: https://github.com/wecodemore/wpstarter/compare/2.3.0...2.3.1
 [2.3.0]: https://github.com/wecodemore/wpstarter/compare/2.2.5...2.3.0

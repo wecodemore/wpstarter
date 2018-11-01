@@ -78,6 +78,7 @@ The `config.vendor-dir` setting is optional. In the example above it is used to 
 *(some files in wp folder have been omitted for the sake of readability)*
 
 
+
 ## There's More
 
 The example in this page shows how simple it is to get started with WP Starter. However, by using both general Composer settings and WP Starter specific settings it is possible to do more with WP Starter and also to control and customize any aspect of the WP Starter flow.
@@ -89,3 +90,15 @@ The WP Starter flow is what happens when you go from a `composer.json` to a full
 All these operations are called *steps* and are individually described on the ***"How It Works"*** doc page.
 
 Moreover, the way every WP Starter step works can be configured with settings in the `composer.json` file. The ***"WP Starter Options"*** doc page describes all the available configurations.
+
+
+
+## Important: Security Issue with .env file
+
+In the example above, WP Starter will load the `.env` file from project root folder which happens to also be the folder assumed as webroot for the project.
+
+If this is a non-issue in local-only installations, it can be a quite serious issue on anything that goes online. In fact, an `.env`file inside webroot could expose secrets stored in it (at very minimum DB credentials).
+
+To avoid this issue one way is to create a subfolder inside project root and use it as webroot, keeping `.env `file one level above, in the project root. This is the approach shown in "Complete Usage Example"](https://github.com/wecodemore/wpstarter/blob/master/docs/complete-example.md) in these docs.
+
+Moreover, it is a good practice setup file permission on .env file to prevent access from the web, and also setup the webserver to avoid access to the .env file. But that's something well over the purpose of these docs.

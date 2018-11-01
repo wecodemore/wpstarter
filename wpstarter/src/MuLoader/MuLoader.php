@@ -106,9 +106,8 @@ class MuLoader
      */
     private function loadPlugin($key, $file, $refresh, $transient)
     {
-        if (
-            is_readable($file)
-            && strtolower( (string) pathinfo($file, PATHINFO_EXTENSION)) === 'php'
+        if (is_readable($file)
+            && strtolower((string) pathinfo($file, PATHINFO_EXTENSION)) === 'php'
         ) {
             wp_register_plugin_realpath($file);
             if (in_array($file, $this->regular, true)) {
@@ -232,8 +231,7 @@ class MuLoader
         static $show;
         if ($type === 'mustuse') {
             $show = $bool;                          // does user want to show mustuse plugins?
-        } elseif (
-            $type === 'dropins'                     // dropins are checked after mustuse
+        } elseif ($type === 'dropins'                     // dropins are checked after mustuse
             && $show                                // if user want show mustuse plugins
             && $screen->base === $check             // we are in right screen
             && current_user_can('activate_plugins') // and user has right capabilities

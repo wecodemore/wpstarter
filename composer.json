@@ -55,13 +55,6 @@
         "vlucas/phpdotenv": "~2.0",
         "johnpbloch/wordpress": ">=4.2"
     },
-    "suggest": {
-        "ext-exif": "Allow reading EXIF information form images.",
-        "ext-ftp": "Enable usege of FTP filesystem strategy.",
-        "ext-ssh2": "Enable usege of ssh2 functions.",
-        "gmagick": "Imaging processing extension.",
-        "imagick": "Imaging processing extension."
-    },
     "require-dev": {
         "squizlabs/php_codesniffer": "^3.0",
         "wimg/php-compatibility": "^8.0",
