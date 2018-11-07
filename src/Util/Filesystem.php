@@ -168,12 +168,19 @@ class Filesystem
 
         $done = $total = 0;
 
+        /**
+         * @var \RecursiveDirectoryIterator $iterator
+         * @var \SplFileInfo $item
+         */
         foreach ($iterator as $item) {
             $total++;
-            /** @var \RecursiveDirectoryIterator $iterator */
-            $done += $item->isDir()
-                ? (int)$this->createDir("{$targetPath}/" . $iterator->getSubPathName())
-                : (int)$this->copyFile($item, "{$targetPath}/" . $iterator->getSubPathName());
+            if ($item->isDir()) {
+                $done += (int)$this->createDir("{$targetPath}/" . $iterator->getSubPathName());
+                continue;
+            }
+
+            $target = "{$targetPath}/" . $iterator->getSubPathName();
+            $done += $this->copyFile($item->getRealPath(), "{$targetPath}/" . $target);
         }
 
         return $done === $total;
