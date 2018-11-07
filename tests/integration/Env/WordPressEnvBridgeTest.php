@@ -8,6 +8,7 @@
 
 namespace WeCodeMore\WpStarter\Tests\Integration\Env;
 
+use org\bovigo\vfs\vfsStream;
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 use WeCodeMore\WpStarter\Tests\TestCase;
 
@@ -96,8 +97,6 @@ class WordPressEnvBridgeTest extends TestCase
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
-
-        define('DIE', 1);
         $bridge->loadAppended('more.env', $this->fixturesPath());
 
         static::assertSame('192.168.1.255', $bridge->read('DB_HOST'));
@@ -203,7 +202,6 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame(0666, FS_CHMOD_DIR);
         static::assertSame(0666, $bridge->read('FS_CHMOD_DIR'));
 
-        static::assertSame('xxx_', $GLOBALS['table_prefix']);
         static::assertSame('xxx_', $bridge->read('DB_TABLE_PREFIX'));
     }
 
@@ -256,5 +254,68 @@ class WordPressEnvBridgeTest extends TestCase
         $bridge->write('ANSWER', '42!!!');
 
         static::assertSame('42', $bridge->read('ANSWER'));
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testDumpCacheAndLoadFromDump()
+    {
+        $dir = vfsStream::setup('directory');
+        $cacheFile = $dir->url() . '/cached.env.php';
+
+        $_ENV['WP_POST_REVISIONS'] = '5';
+        $_ENV['FS_CHMOD_DIR'] = '0644';
+
+        $bridge = new WordPressEnvBridge();
+        $bridge->write('FOO', 'Bar!');
+
+        static::assertSame(5, $bridge->read('WP_POST_REVISIONS'));
+        static::assertSame(0644, $bridge->read('FS_CHMOD_DIR'));
+        static::assertSame('Bar!', $bridge->read('FOO'));
+        static::assertSame('Bar!', getenv('FOO'));
+
+        $bridge->dumpCached($cacheFile);
+
+        unset($_ENV['WP_POST_REVISIONS']);
+        unset($_ENV['FS_CHMOD_DIR']);
+        unset($_ENV['FOO']);
+        unset($_SERVER['FOO']);
+        putenv('FOO');
+
+        // Because cache
+        static::assertSame(5, $bridge->read('WP_POST_REVISIONS'));
+        static::assertSame(0644, $bridge->read('FS_CHMOD_DIR'));
+        static::assertSame('Bar!', $bridge->read('FOO'));
+        static::assertFalse(getenv('FOO'));
+
+        \Closure::bind(
+            function () {
+                /** @noinspection PhpUndefinedFieldInspection */
+                static::$cache = static::$loadedVars = null;
+            },
+            $bridge,
+            WordPressEnvBridge::class
+        )();
+
+        // Cache is now remove
+        static::assertNull($bridge->read('WP_POST_REVISIONS'));
+        static::assertNull($bridge->read('FS_CHMOD_DIR'));
+        static::assertNull($bridge->read('FOO'));
+
+        $cachedBridge = WordPressEnvBridge::buildFromCacheDump($cacheFile);
+
+        $_ENV['XYZ'] = 'XYZ';
+
+        static::assertSame(5, $cachedBridge->read('WP_POST_REVISIONS'));
+        static::assertSame(0644, $cachedBridge->read('FS_CHMOD_DIR'));
+        static::assertTrue(defined('FS_CHMOD_DIR'));
+        static::assertTrue(defined('WP_POST_REVISIONS'));
+        static::assertSame(5, WP_POST_REVISIONS);
+        static::assertSame(0644, FS_CHMOD_DIR);
+        static::assertSame('Bar!', $bridge->read('FOO'));
+        static::assertSame('Bar!', getenv('FOO'));
+        static::assertFalse(defined('FOO'));
+        static::assertSame('XYZ', $bridge->read('XYZ'));
     }
 }

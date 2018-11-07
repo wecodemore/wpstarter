@@ -9,6 +9,7 @@
 namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -114,6 +115,12 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         ($register === OptionalStep::ASK) and $register = $this->askForRegister();
 
         $from = $this->composerFilesystem->normalizePath($paths->wpParent());
+
+        $cachedEnv = $from . WordPressEnvBridge::CACHE_DUMP_FILE;
+        if (file_exists($cachedEnv)) {
+            $this->io->writeIfVerbose("Deleting env cache file '{$cachedEnv}'.");
+            unlink($cachedEnv);
+        }
 
         $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
 

@@ -74,7 +74,6 @@ class WordPressEnvBridge
         'DB_HOST' => Filters::FILTER_STRING,
         'DB_NAME' => Filters::FILTER_STRING,
         'DB_PASSWORD' => Filters::FILTER_STRING,
-        'DB_TABLE_PREFIX' => Filters::FILTER_STRING,
         'DB_USER' => Filters::FILTER_STRING,
         'DOMAIN_CURRENT_SITE' => Filters::FILTER_STRING,
         'ERRORLOGFILE' => Filters::FILTER_STRING,
@@ -125,6 +124,7 @@ class WordPressEnvBridge
 
     const WP_STARTER_VARS = [
         'WP_ENV' => Filters::FILTER_STRING,
+        'DB_TABLE_PREFIX' => Filters::FILTER_TABLE_PREFIX,
         'WORDPRESS_ENV' => Filters::FILTER_STRING,
         'WP_ADMIN_COLOR' => Filters::FILTER_STRING,
         'WP_FORCE_SSL_FORWARDED_PROTO' => Filters::FILTER_BOOL,
@@ -132,6 +132,8 @@ class WordPressEnvBridge
         'WPDB_EXISTS' => Filters::FILTER_BOOL,
         'WP_INSTALLED' => Filters::FILTER_BOOL,
     ];
+
+    const CACHE_DUMP_FILE = '/.env.cached.php';
 
     /**
      * @var Dotenv
@@ -157,6 +159,33 @@ class WordPressEnvBridge
      * @var Filters
      */
     private $filters;
+
+    /**
+     * @var bool
+     */
+    private $fromCache = false;
+
+    /**
+     * @var bool
+     */
+    private $wordPressSetup = false;
+
+    /**
+     * @param string $file
+     * @return WordPressEnvBridge
+     */
+    public static function buildFromCacheDump(string $file): WordPressEnvBridge
+    {
+        if (file_exists($file)) {
+            $cached = include $file;
+            $cached and self::$cache = $cached;
+        }
+
+        $instance = new static();
+        $instance->fromCache = !empty($cached);
+
+        return $instance;
+    }
 
     /**
      * Symfony stores a variable with the keys of variables it loads.
@@ -243,18 +272,17 @@ class WordPressEnvBridge
      * @param string $name
      * @return bool
      */
-    public function isLoadedVar(string $name): bool
-    {
-        return array_key_exists($name, self::loadedVars());
-    }
-
-    /**
-     * @param string $name
-     * @return bool
-     */
     public function has(string $name): bool
     {
         return $this->read($name) !== null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCachedValues(): bool
+    {
+        return $this->fromCache;
     }
 
     /**
@@ -269,7 +297,11 @@ class WordPressEnvBridge
 
         $cached = self::$cache[$name] ?? null;
         if ($cached !== null) {
-            return $cached;
+            return $cached[1];
+        }
+
+        if ($this->fromCache && (self::$loadedVars === null)) {
+            self::loadedVars();
         }
 
         // We don't check $_SERVER for keys starting with 'HTTP_' because clients can write there.
@@ -303,19 +335,7 @@ class WordPressEnvBridge
             return null;
         }
 
-        /** @var string|null $filter */
-        $filter = self::WP_CONSTANTS[$name] ?? self::WP_STARTER_VARS[$name] ?? null;
-        if (!$filter) {
-            self::$cache[$name] = $value;
-
-            return $value;
-        }
-
-        $this->filters or $this->filters = new Filters();
-
-        self::$cache[$name] = $this->filters->filter($filter, $value);
-
-        return self::$cache[$name];
+        return $this->maybeFilter($name, (string)$value);
     }
 
     /**
@@ -334,14 +354,10 @@ class WordPressEnvBridge
 
     /**
      * @param string $name
-     * @param mixed $value
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
+     * @param string $value
      */
-    public function write(string $name, $value)
+    public function write(string $name, string $value)
     {
-        // phpcs:enable
-
         if (!$this->isWritable($name)) {
             throw new \BadMethodCallException("{$name} is not a writable ENV var.");
         }
@@ -352,8 +368,48 @@ class WordPressEnvBridge
 
         $loaded = self::loadedVars();
         $loaded[$name] = true;
-        self::$cache[$name] = $value;
         self::$loadedVars = $loaded;
+
+        $this->maybeFilter($name, $value);
+    }
+
+    /**
+     * @param string $file
+     * @return bool
+     */
+    public function dumpCached(string $file): bool
+    {
+        if (!static::$cache || $this->fromCache) {
+            return false;
+        }
+
+        $content = "<?php\n";
+        $cache = var_export(static::$cache, true) . ";\n"; // phpcs:ignore
+        foreach (self::$cache as $key => [$value, $filtered]) {
+            if (self::WP_CONSTANTS[$key] ?? null) {
+                $export = $value !== $filtered
+                    ? var_export($filtered, true) // phpcs:ignore
+                    : "'{$value}'";
+                $content .= "define('{$key}', {$export});\n";
+            }
+            if (!$this->isLoadedVar($key)) {
+                $content .= "\n";
+                continue;
+            }
+            $content .= "putenv('{$key}={$value}');\n";
+            $content .="\$_ENV['{$key}'] = '{$value}';\n";
+            (strpos($key, 'HTTP_') !== 0) and $content .= "\$_SERVER['{$key}'] = '{$value}';\n\n";
+        }
+
+        if (self::$loadedVars) {
+            $loadedVars = implode(',', array_keys(self::$loadedVars));
+            $content .= "putenv('SYMFONY_DOTENV_VARS={$loadedVars}');\n\n";
+        }
+
+        $content .= "return {$cache}";
+        $success = @file_put_contents($file, $content);
+
+        return (bool)$success;
     }
 
     /**
@@ -374,23 +430,64 @@ class WordPressEnvBridge
             $this->defineWpConstant($key) and $set[] = $key;
         }
 
+        $this->wordPressSetup = count(array_intersect($set, ['DB_NAME', 'DB_USER'])) === 2;
+
         return $set;
+    }
+
+    /**
+     * Return all environment variables that have been set
+     *
+     * @return array
+     */
+    public function isWpSetup(): bool
+    {
+        return $this->wordPressSetup;
+    }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    private function isLoadedVar(string $name): bool
+    {
+        return array_key_exists($name, self::loadedVars());
+    }
+
+    /**
+     * @param string $name
+     * @param string $value
+     * @return mixed
+     *
+     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
+     */
+    private function maybeFilter(string $name, string $value)
+    {
+        // phpcs:enable
+
+        /** @var string|null $filter */
+        $filter = self::WP_CONSTANTS[$name] ?? self::WP_STARTER_VARS[$name] ?? null;
+        if (!$filter) {
+            self::$cache[$name] = [$value, $value];
+
+            return  $value;
+        }
+
+        $this->filters or $this->filters = new Filters();
+        $filtered = $this->filters->filter($filter, $value);
+        self::$cache[$name] = [$value, $filtered];
+
+        return $filtered;
     }
 
     /**
      * Define WP constants from environment variables.
      *
      * @param string $name
-     * @return bool True if a constant has beend defined.
+     * @return bool True if a constant has been defined.
      */
     private function defineWpConstant(string $name): bool
     {
-        if ($name === 'DB_TABLE_PREFIX') {
-            $this->defineTablePrefix();
-
-            return false;
-        }
-
         $value = $this->read($name);
         if ($value === null) {
             return false;
@@ -399,22 +496,6 @@ class WordPressEnvBridge
         define($name, $value);
 
         return true;
-    }
-
-    /**
-     * DB table prefix is a global variable in WP, so it differs from other settings to be set
-     * from environment variables because those are constants in WP.
-     *
-     * WP Starter makes up the `DB_TABLE_PREFIX` environment variable to set DB table prefix.
-     */
-    private function defineTablePrefix()
-    {
-        $value = $this->read('DB_TABLE_PREFIX') ?: '';
-
-        if ($value || !isset($GLOBALS['table_prefix'])) {
-            $value or $value = 'wp_';
-            $GLOBALS['table_prefix'] = preg_replace('#[\W]#', '', (string)$value);
-        }
     }
 
     /**

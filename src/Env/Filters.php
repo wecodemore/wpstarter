@@ -29,6 +29,7 @@ final class Filters
     const FILTER_INT_OR_BOOL = 'int|bool';
     const FILTER_STRING = 'string';
     const FILTER_OCTAL_MOD = 'mod';
+    const FILTER_TABLE_PREFIX = 'table-prefix';
 
     /**
      * Return given value filtered based on "mode".
@@ -64,6 +65,8 @@ final class Filters
                 return $this->filterIntOrBool($value);
             case self::FILTER_OCTAL_MOD:
                 return $this->filterOctalMod($value);
+            case self::FILTER_TABLE_PREFIX:
+                return $this->filterTablePrefix($value);
         }
 
         return null;
@@ -137,5 +140,18 @@ final class Filters
         }
 
         return (int)octdec($value);
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    private function filterTablePrefix($value): string
+    {
+        if (!$value || !is_string($value)) {
+            return 'wp_';
+        }
+
+        return preg_replace('#[\W]#', '', $value);
     }
 }
