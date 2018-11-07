@@ -6,8 +6,6 @@
  * Default settings are provided in this file for most common settings, however database settings
  * are required, you can get them from your web host.
  *
- * A sample .env file (.env.example) should be placed in the root of your project, rename it to .env
- * and edit it according to your needs.
  */
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 
@@ -25,30 +23,31 @@ define('WPSTARTER_PATH', realpath(__DIR__ . '{{{ENV_REL_PATH}}}'));
  * Environment variables that are set in the *real* environment (e.g. via webserver) will not be
  * overridden from file, even if `WPSTARTER_ENV_LOADED` is not set.
  */
-$envBridge = new WordPressEnvBridge();
-$envBridge->load('{{{ENV_FILE_NAME}}}', WPSTARTER_PATH);
-$environment = $envBridge['WP_ENV'] ?: $envBridge['WORDPRESS_ENV'];
-if ($environment && $environment !== 'example') {
-    $envBridge->loadAppended("{{{ENV_FILE_NAME}}}.{$environment}", WPSTARTER_PATH);
+$envLoader = new WordPressEnvBridge();
+$envLoader->load('{{{ENV_FILE_NAME}}}', WPSTARTER_PATH);
+$env = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
+if ($env && $env !== 'example') {
+    $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$env}", WPSTARTER_PATH);
 }
-$envBridge->setupWordPress();
+$envKeys = $envLoader->setupWordPress();
 
 /** Set optional database settings if not already set. */
-defined('DB_HOST') or define('DB_HOST', 'localhost');
-defined('DB_CHARSET') or define('DB_CHARSET', 'utf8');
-defined('DB_COLLATE') or define('DB_COLLATE', '');
+$envKeys['DB_HOST'] ?? define('DB_HOST', 'localhost');
+$envKeys['DB_CHARSET'] ?? define('DB_CHARSET', 'utf8');
+$envKeys['DB_COLLATE'] ?? define('DB_COLLATE', '');
 
 /**#@+
  * Authentication Unique Keys and Salts.
  */
-defined('AUTH_KEY') or define('AUTH_KEY', '{{{AUTH_KEY}}}');
-defined('SECURE_AUTH_KEY') or define('SECURE_AUTH_KEY', '{{{SECURE_AUTH_KEY}}}');
-defined('LOGGED_IN_KEY') or define('LOGGED_IN_KEY', '{{{LOGGED_IN_KEY}}}');
-defined('NONCE_KEY') or define('NONCE_KEY', '{{{NONCE_KEY}}}');
-defined('AUTH_SALT') or define('AUTH_SALT', '{{{AUTH_SALT}}}');
-defined('SECURE_AUTH_SALT') or define('SECURE_AUTH_SALT', '{{{SECURE_AUTH_SALT}}}');
-defined('LOGGED_IN_SALT') or define('LOGGED_IN_SALT', '{{{LOGGED_IN_SALT}}}');
-defined('NONCE_SALT') or define('NONCE_SALT', '{{{NONCE_SALT}}}');
+$envKeys['AUTH_KEY'] ?? define('AUTH_KEY', '{{{AUTH_KEY}}}');
+$envKeys['SECURE_AUTH_KEY'] ?? define('SECURE_AUTH_KEY', '{{{SECURE_AUTH_KEY}}}');
+$envKeys['LOGGED_IN_KEY'] ?? define('LOGGED_IN_KEY', '{{{LOGGED_IN_KEY}}}');
+$envKeys['NONCE_KEY'] ?? define('NONCE_KEY', '{{{NONCE_KEY}}}');
+$envKeys['AUTH_SALT'] ?? define('AUTH_SALT', '{{{AUTH_SALT}}}');
+$envKeys['SECURE_AUTH_SALT'] ?? define('SECURE_AUTH_SALT', '{{{SECURE_AUTH_SALT}}}');
+$envKeys['LOGGED_IN_SALT'] ?? define('LOGGED_IN_SALT', '{{{LOGGED_IN_SALT}}}');
+$envKeys['NONCE_SALT'] ?? define('NONCE_SALT', '{{{NONCE_SALT}}}');
+unset($envKeys);
 
 /**#@-*/
 
@@ -59,19 +58,19 @@ global $table_prefix;
 empty($table_prefix) or $table_prefix = 'wp_';
 
 /** Absolute path to the WordPress directory. */
-defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
+define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
 
 /** Load plugin.php early, so we can call `add_action` below. */
 require_once ABSPATH . 'wp-includes/plugin.php';
 
 /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
-if ($environment
-    && file_exists("{{{ENV_BOOTSTRAP_DIR}}}{$environment}.php")
-    && is_readable("{{{ENV_BOOTSTRAP_DIR}}}{$environment}.php")
+if ($env
+    && file_exists("{{{ENV_BOOTSTRAP_DIR}}}{$env}.php")
+    && is_readable("{{{ENV_BOOTSTRAP_DIR}}}{$env}.php")
 ) {
-    require_once "{{{ENV_BOOTSTRAP_DIR}}}{$environment}.php";
+    require_once "{{{ENV_BOOTSTRAP_DIR}}}{$env}.php";
 }
-switch ($environment) {
+switch ($env) {
     case 'development':
         defined('WP_DEBUG') or define('WP_DEBUG', true);
         defined('WP_DEBUG_DISPLAY') or define('WP_DEBUG_DISPLAY', true);
@@ -97,7 +96,7 @@ switch ($environment) {
 }
 
 /** Fix `is_ssl()` behind load balancers. */
-if ($envBridge['WP_FORCE_SSL_FORWARDED_PROTO']
+if ($envLoader->read('WP_FORCE_SSL_FORWARDED_PROTO')
     && array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER)
     && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
 ) {
@@ -134,7 +133,7 @@ if (filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN)) {
 }
 
 /** Allow changing admin color scheme. Useful to distinguish environments in the dashboard. */
-$forceAdminColor = $envBridge['WP_ADMIN_COLOR'];
+$forceAdminColor = $envLoader->read('WP_ADMIN_COLOR');
 add_filter(
     'get_user_option_admin_color',
     function ($color) use ($forceAdminColor) {
@@ -143,7 +142,7 @@ add_filter(
     999
 );
 
-unset($environment, $envBridge, $forceAdminColor);
+unset($env, $envLoader, $forceAdminColor);
 
 ###################################################################################################
 #  I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion.  #

@@ -74,9 +74,9 @@ class DbChecker
      */
     public function check()
     {
-        if ($this->env->offsetExists(self::WPDB_ENV_VALID)
-            || $this->env->offsetExists(self::WPDB_EXISTS)
-            || $this->env->offsetExists(self::WP_INSTALLED)
+        if ($this->env->has(self::WPDB_ENV_VALID)
+            || $this->env->has(self::WPDB_EXISTS)
+            || $this->env->has(self::WP_INSTALLED)
         ) {
             return;
         }
@@ -133,9 +133,9 @@ class DbChecker
      */
     private function setupEnv(bool $valid, bool $exists, bool $installed)
     {
-        $this->env[self::WPDB_ENV_VALID] = ($valid ? '1' : '');
-        $this->env[self::WPDB_EXISTS] = ($exists ? '1' : '');
-        $this->env[self::WP_INSTALLED] = ($installed ? '1' : '');
+        $this->env->write(self::WPDB_ENV_VALID, ($valid ? '1' : ''));
+        $this->env->write(self::WPDB_EXISTS, ($exists ? '1' : ''));
+        $this->env->write(self::WP_INSTALLED, ($installed ? '1' : ''));
     }
 
     /**

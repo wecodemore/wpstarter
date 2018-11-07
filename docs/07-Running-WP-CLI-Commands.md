@@ -115,12 +115,12 @@ namespace WeCodeMore\WpStarter;
 $env = new Env\WordPressEnvBridge();
 
 // If env configuration is invalid nothing to do.
-if (!getenv(Util\DbChecker::WPDB_ENV_VALID)) {
+if (!$env->read(Util\DbChecker::WPDB_ENV_VALID)) {
     return [];
 }
 
 // If WP already installed, let's just tell WP CLI to check it.
-if ($env[Util\DbChecker::WP_INSTALLED]) {
+if ($env->read(Util\DbChecker::WP_INSTALLED)) {
     return ['wp db check'];
 }
 
@@ -132,10 +132,10 @@ if (!$env[Util\DbChecker::WPDB_EXISTS]) {
 }
 
 // Build install command.
-$user = $env['MY_PROJECT_USERNAME'] ?: 'admin';
-$home = $env['WP_HOME'];
-$siteUrl = $env['WP_SITEURL'] ?: $home;
-$email = $user . '@' . parse_url($home, PHP_URL_HOST);
+$user = $env->read('MY_PROJECT_USERNAME') ?: 'admin';
+$home = $env->read('WP_HOME');
+$siteUrl = $env->read('WP_SITEURL') ?: $home;
+$email = "{$user}@" . parse_url($home, PHP_URL_HOST);
 $install = "wp core install";
 $install .= " --title='WP Starter Example' --url={$home}";
 $install .= " --admin_user={$user} --admin_email={$email}";

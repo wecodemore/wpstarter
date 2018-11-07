@@ -22,13 +22,11 @@ class WordPressEnvBridgeTest extends TestCase
     public function testLoadSkippingFile()
     {
         $_ENV['WPSTARTER_ENV_LOADED'] = 1;
-        define('SITE_ID_CURRENT_SITE', 123);
 
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
 
-        static::assertSame(123, $bridge['SITE_ID_CURRENT_SITE']);
-        static::assertNull($bridge['ALLOW_UNFILTERED_UPLOADS']);
+        static::assertNull($bridge->read('ALLOW_UNFILTERED_UPLOADS'));
     }
 
     /**
@@ -40,11 +38,11 @@ class WordPressEnvBridgeTest extends TestCase
 
         $bridge->load('example.env', $this->fixturesPath());
 
-        static::assertSame('localhost', $bridge['DB_HOST']);
-        static::assertSame('wp', $bridge['DB_NAME']);
-        static::assertSame('my secret!', $bridge['DB_PASSWORD']);
-        static::assertSame('xxx_', $bridge['DB_TABLE_PREFIX']);
-        static::assertSame('wp_user', $bridge['DB_USER']);
+        static::assertSame('localhost', $bridge->read('DB_HOST'));
+        static::assertSame('wp', $bridge->read('DB_NAME'));
+        static::assertSame('my secret!', $bridge->read('DB_PASSWORD'));
+        static::assertSame('xxx_', $bridge->read('DB_TABLE_PREFIX'));
+        static::assertSame('wp_user', $bridge->read('DB_USER'));
     }
 
     /**
@@ -57,8 +55,8 @@ class WordPressEnvBridgeTest extends TestCase
         $bridge->load('example.env', $this->fixturesPath());
         $bridge->load('more.env', $this->fixturesPath());
 
-        static::assertSame('localhost', $bridge['DB_HOST']);
-        static::assertNull($bridge['FOO']);
+        static::assertSame('localhost', $bridge->read('DB_HOST'));
+        static::assertNull($bridge->read('FOO'));
     }
 
     /**
@@ -72,9 +70,9 @@ class WordPressEnvBridgeTest extends TestCase
         $bridge = new WordPressEnvBridge();
         $bridge->load('more.env', $this->fixturesPath());
 
-        static::assertSame('Yes', $bridge['HTTP_MEH']);
-        static::assertNull($bridge['HTTP_FOO']);
-        static::assertSame('foo', $bridge['_HTTP_FOO']);
+        static::assertSame('Yes', $bridge->read('HTTP_MEH'));
+        static::assertNull($bridge->read('HTTP_FOO'));
+        static::assertSame('foo', $bridge->read('_HTTP_FOO'));
     }
 
     /**
@@ -88,7 +86,7 @@ class WordPressEnvBridgeTest extends TestCase
         $bridge->load('more.env', $this->fixturesPath());
 
         static::assertSame('HERE', getenv('PUT_THE_ENV'));
-        static::assertNull($bridge['PUT_THE_ENV']);
+        static::assertNull($bridge->read('PUT_THE_ENV'));
     }
 
     /**
@@ -98,10 +96,12 @@ class WordPressEnvBridgeTest extends TestCase
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
+
+        define('DIE', 1);
         $bridge->loadAppended('more.env', $this->fixturesPath());
 
-        static::assertSame('192.168.1.255', $bridge['DB_HOST']);
-        static::assertSame('BAR BAR', $bridge['BAZ']);
+        static::assertSame('192.168.1.255', $bridge->read('DB_HOST'));
+        static::assertSame('BAR BAR', $bridge->read('BAZ'));
     }
 
     /**
@@ -113,8 +113,8 @@ class WordPressEnvBridgeTest extends TestCase
         $bridge->load('example.env', $this->fixturesPath());
         $bridge->loadAppended('not-more.env', $this->fixturesPath());
 
-        static::assertSame('localhost', $bridge['DB_HOST']);
-        static::assertNull($bridge['BAZ']);
+        static::assertSame('localhost', $bridge->read('DB_HOST'));
+        static::assertNull($bridge->read('BAZ'));
     }
 
     /**
@@ -127,11 +127,11 @@ class WordPressEnvBridgeTest extends TestCase
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
 
-        static::assertNull($bridge['DB_HOST']);
+        static::assertNull($bridge->read('DB_HOST'));
 
         $bridge->loadAppended('more.env', $this->fixturesPath());
 
-        static::assertSame('192.168.1.255', $bridge['DB_HOST']);
+        static::assertSame('192.168.1.255', $bridge->read('DB_HOST'));
     }
 
     /**
@@ -143,11 +143,11 @@ class WordPressEnvBridgeTest extends TestCase
 
         $bridge = new WordPressEnvBridge();
 
-        static::assertNull($bridge['DB_HOST']);
+        static::assertNull($bridge->read('DB_HOST'));
 
         $bridge->loadAppended('more.env', $this->fixturesPath());
 
-        static::assertNull($bridge['DB_HOST']);
+        static::assertNull($bridge->read('DB_HOST'));
     }
 
     /**
@@ -160,25 +160,12 @@ class WordPressEnvBridgeTest extends TestCase
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
         $bridge->loadAppended('more.env', $this->fixturesPath());
-        $bridge['NEW'] = 'new!';
+        $bridge->write('NEW', 'new!');
 
-        static::assertSame('wp', $bridge['DB_NAME']);            // example.env
-        static::assertSame('192.168.1.255', $bridge['DB_HOST']); // more.env
-        static::assertSame('I come first.', $bridge['FOO']);     // actual.env
-        static::assertSame('new!', $bridge['NEW']);               // offsetSet
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
-     */
-    public function testConstantsOverrideEnv()
-    {
-        $bridge = new WordPressEnvBridge();
-        $bridge->load('example.env', $this->fixturesPath());
-
-        define('DB_HOST', '168.192.168.12');
-
-        static::assertSame('168.192.168.12', $bridge['DB_HOST']);
+        static::assertSame('wp', $bridge->read('DB_NAME'));            // example.env
+        static::assertSame('192.168.1.255', $bridge->read('DB_HOST')); // more.env
+        static::assertSame('I come first.', $bridge->read('FOO'));     // actual.env
+        static::assertSame('new!', $bridge->read('NEW'));               // offsetSet
     }
 
     /**
@@ -192,30 +179,30 @@ class WordPressEnvBridgeTest extends TestCase
 
         static::assertTrue(defined('DB_HOST'));
         static::assertSame('localhost', DB_HOST);
-        static::assertSame('localhost', $bridge['DB_HOST']);
+        static::assertSame('localhost', $bridge->read('DB_HOST'));
 
         static::assertTrue(defined('ALLOW_UNFILTERED_UPLOADS'));
         static::assertSame(false, ALLOW_UNFILTERED_UPLOADS);
-        static::assertSame(false, $bridge['ALLOW_UNFILTERED_UPLOADS']);
+        static::assertSame(false, $bridge->read('ALLOW_UNFILTERED_UPLOADS'));
 
         static::assertTrue(defined('EMPTY_TRASH_DAYS'));
         static::assertSame(12, EMPTY_TRASH_DAYS);
-        static::assertSame(12, $bridge['EMPTY_TRASH_DAYS']);
+        static::assertSame(12, $bridge->read('EMPTY_TRASH_DAYS'));
 
         static::assertTrue(defined('ADMIN_COOKIE_PATH'));
         static::assertSame('/foo/bar', ADMIN_COOKIE_PATH);
-        static::assertSame('/foo/bar', $bridge['ADMIN_COOKIE_PATH']);
+        static::assertSame('/foo/bar', $bridge->read('ADMIN_COOKIE_PATH'));
 
         static::assertTrue(defined('WP_POST_REVISIONS'));
         static::assertSame(5, WP_POST_REVISIONS);
-        static::assertSame(5, $bridge['WP_POST_REVISIONS']);
+        static::assertSame(5, $bridge->read('WP_POST_REVISIONS'));
 
         static::assertTrue(defined('FS_CHMOD_DIR'));
         static::assertSame(0666, FS_CHMOD_DIR);
-        static::assertSame(0666, $bridge['FS_CHMOD_DIR']);
+        static::assertSame(0666, $bridge->read('FS_CHMOD_DIR'));
 
         static::assertSame('xxx_', $GLOBALS['table_prefix']);
-        static::assertSame('xxx_', $bridge['DB_TABLE_PREFIX']);
+        static::assertSame('xxx_', $bridge->read('DB_TABLE_PREFIX'));
     }
 
     /**
@@ -227,7 +214,7 @@ class WordPressEnvBridgeTest extends TestCase
         $bridge->load('example.env', $this->fixturesPath());
         $_ENV['ANSWER'] = '42';
 
-        static::assertSame('42', $bridge['ANSWER']);
+        static::assertSame('42', $bridge->read('ANSWER'));
     }
 
     /**
@@ -237,9 +224,9 @@ class WordPressEnvBridgeTest extends TestCase
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
-        $bridge['ANSWER'] = '42!';
+        $bridge->write('ANSWER', '42!');
 
-        static::assertSame('42!', $bridge['ANSWER']);
+        static::assertSame('42!', $bridge->read('ANSWER'));
     }
 
     /**
@@ -249,9 +236,9 @@ class WordPressEnvBridgeTest extends TestCase
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
-        $bridge['DB_HOST'] = '127.0.0.255';
+        $bridge->write('DB_HOST', '127.0.0.255');
 
-        static::assertSame('127.0.0.255', $bridge['DB_HOST']);
+        static::assertSame('127.0.0.255', $bridge->read('DB_HOST'));
     }
 
     /**
@@ -264,30 +251,8 @@ class WordPressEnvBridgeTest extends TestCase
         $_ENV['ANSWER'] = '42';
 
         $this->expectException(\BadMethodCallException::class);
-        $bridge['ANSWER'] = '42!!!';
+        $bridge->write('ANSWER', '42!!!');
 
-        static::assertSame('42', $bridge['ANSWER']);
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
-     */
-    public function testValuesCanNotBeUnset()
-    {
-        $bridge = new WordPressEnvBridge();
-        $bridge->load('example.env', $this->fixturesPath());
-
-        $this->expectException(\BadMethodCallException::class);
-        unset($bridge['DB_HOST']);
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
-     */
-    public function testTypeErrorIfWrongOffsetType()
-    {
-        $bridge = new WordPressEnvBridge();
-        $this->expectException(\TypeError::class);
-        $bridge[12];
+        static::assertSame('42', $bridge->read('ANSWER'));
     }
 }

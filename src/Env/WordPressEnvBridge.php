@@ -13,7 +13,7 @@ use Symfony\Component\Dotenv\Dotenv;
 /**
  * Handle WordPress related environment variables using Symfony Env component.
  */
-final class WordPressEnvBridge implements \ArrayAccess
+class WordPressEnvBridge
 {
     const WP_CONSTANTS = [
         'ALLOW_UNFILTERED_UPLOADS' => Filters::FILTER_BOOL,
@@ -144,6 +144,11 @@ final class WordPressEnvBridge implements \ArrayAccess
     private static $loadedVars;
 
     /**
+     * @var array
+     */
+    private static $cache = [];
+
+    /**
      * @var null|Dotenv
      */
     private $dotenv;
@@ -228,8 +233,9 @@ final class WordPressEnvBridge implements \ArrayAccess
         }
 
         $values = $this->dotenv()->parse(file_get_contents($fullpath), $fullpath);
+
         foreach ($values as $name => $value) {
-            $this->isWritable($name) and $this->offsetSet($name, $value);
+            $this->isWritable($name) and $this->write($name, $value);
         }
     }
 
@@ -243,62 +249,53 @@ final class WordPressEnvBridge implements \ArrayAccess
     }
 
     /**
-     * Return all environment variables that have been set
-     *
-     * @return void
-     */
-    public function setupWordPress()
-    {
-        $names = array_keys(self::WP_CONSTANTS);
-        array_walk($names, [$this, 'defineWpConstant']);
-    }
-
-    /**
-     * @param string $offset
+     * @param string $name
      * @return bool
      */
-    public function offsetExists($offset)
+    public function has(string $name): bool
     {
-        return $this->offsetGet($offset) !== null;
+        return $this->read($name) !== null;
     }
 
     /**
-     * @param mixed $offset
+     * @param string $name
      * @return mixed
+     *
+     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
-    public function offsetGet($offset)
+    public function read(string $name)
     {
-        // Unfortunately we can't type-declare `string` having to stick with ArrayAccess signature.
-        $this->assertString($offset, __METHOD__);
+        // phpcs:enable
 
-        if (defined($offset)) {
-            return constant($offset);
+        $cached = self::$cache[$name] ?? null;
+        if ($cached !== null) {
+            return $cached;
         }
 
         // We don't check $_SERVER for keys starting with 'HTTP_' because clients can write there.
-        $serverSafe = strpos($offset, 'HTTP_') !== 0;
+        $serverSafe = strpos($name, 'HTTP_') !== 0;
 
         // We consider anything not loaded by Symfony Dot Env as "actual" environment, and because
         // of thread safety issues, we don't use getenv() for those "actual" environment variables.
-        $loadedVar = self::$loadedVars && $this->isLoadedVar($offset);
+        $loadedVar = self::$loadedVars && $this->isLoadedVar($name);
 
         $value = null;
         switch (true) {
             case ($loadedVar && $serverSafe):
                 // Both $_SERVER and getenv() are ok.
-                $value = $_ENV[$offset] ?? $_SERVER[$offset] ?? getenv($offset) ?: null;
+                $value = $_ENV[$name] ?? $_SERVER[$name] ?? getenv($name) ?: null;
                 break;
             case ($loadedVar && !$serverSafe):
                 // $_SERVER is not ok, getenv() is.
-                $value = $_ENV[$offset] ?? getenv($offset) ?: null;
+                $value = $_ENV[$name] ?? getenv($name) ?: null;
                 break;
             case (!$loadedVar && $serverSafe):
                 // $_SERVER is ok, getenv() is not.
-                $value = $_ENV[$offset] ?? $_SERVER[$offset] ?? null;
+                $value = $_ENV[$name] ?? $_SERVER[$name] ?? null;
                 break;
             case (!$loadedVar && !$serverSafe):
                 // Neither $_SERVER nor getenv() are ok.
-                $value = $_ENV[$offset] ?? null;
+                $value = $_ENV[$name] ?? null;
                 break;
         }
 
@@ -307,62 +304,87 @@ final class WordPressEnvBridge implements \ArrayAccess
         }
 
         /** @var string|null $filter */
-        $filter = self::WP_CONSTANTS[$offset] ?? self::WP_STARTER_VARS[$offset] ?? null;
+        $filter = self::WP_CONSTANTS[$name] ?? self::WP_STARTER_VARS[$name] ?? null;
         if (!$filter) {
+            self::$cache[$name] = $value;
+
             return $value;
         }
 
         $this->filters or $this->filters = new Filters();
 
-        return $this->filters->filter($filter, $value);
+        self::$cache[$name] = $this->filters->filter($filter, $value);
+
+        return self::$cache[$name];
     }
 
     /**
-     * @param string $offset
+     * @param string $name
      * @param mixed $value
+     *
+     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
-    public function offsetSet($offset, $value)
+    public function write(string $name, $value)
     {
-        if (!$this->isWritable($offset)) {
-            throw new \BadMethodCallException("{$offset} is not a writable ENV var.");
+        // phpcs:enable
+
+        if (!$this->isWritable($name)) {
+            throw new \BadMethodCallException("{$name} is not a writable ENV var.");
         }
 
-        putenv("{$offset}={$value}");
-        $_ENV[$offset] = $value;
-        (strpos($offset, 'HTTP_') !== 0) and $_SERVER[$offset] = $value;
+        putenv("{$name}={$value}");
+        $_ENV[$name] = $value;
+        (strpos($name, 'HTTP_') !== 0) and $_SERVER[$name] = $value;
 
         $loaded = self::loadedVars();
-        $loaded[$offset] = true;
+        $loaded[$name] = true;
+        self::$cache[$name] = $value;
         self::$loadedVars = $loaded;
     }
 
     /**
-     * Disabled. No unset is available.
+     * Return all environment variables that have been set
      *
-     * @param string $offset
+     * @return array
      */
-    public function offsetUnset($offset)
+    public function setupWordPress(): array
     {
-        throw new \BadMethodCallException(__CLASS__ . ' is read only.');
+        static $done;
+        if ($done) {
+            return [];
+        }
+
+        $done = true;
+        $set = [];
+        foreach (self::WP_CONSTANTS as $key => $filter) {
+            $this->defineWpConstant($key) and $set[] = $key;
+        }
+
+        return $set;
     }
 
     /**
      * Define WP constants from environment variables
      *
      * @param string $name
+     * @return bool
      */
-    private function defineWpConstant(string $name)
+    private function defineWpConstant(string $name): bool
     {
         if ($name === 'DB_TABLE_PREFIX') {
             $this->defineTablePrefix();
 
-            return;
+            return false;
         }
 
-        if (!defined($name)) {
-            $value = $this->offsetGet($name);
-            $value === null or define($name, $value);
+        $value = $this->read($name);
+        if ($value === null) {
+            return false;
         }
+
+        define($name, $value);
+
+        return true;
     }
 
     /**
@@ -373,7 +395,7 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     private function defineTablePrefix()
     {
-        $value = $this->offsetGet('DB_TABLE_PREFIX') ?: '';
+        $value = $this->read('DB_TABLE_PREFIX') ?: '';
 
         if ($value || !isset($GLOBALS['table_prefix'])) {
             $value or $value = 'wp_';
@@ -387,7 +409,7 @@ final class WordPressEnvBridge implements \ArrayAccess
      */
     private function isWritable(string $name): bool
     {
-        return !$this->offsetExists($name) || $this->isLoadedVar($name);
+        return !$this->has($name) || $this->isLoadedVar($name);
     }
 
     /**
@@ -419,26 +441,5 @@ final class WordPressEnvBridge implements \ArrayAccess
         }
 
         return $dotEnv;
-    }
-
-    /**
-     * @param $value
-     * @param string $method
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-     */
-    private function assertString($value, string $method)
-    {
-        // phpcs:enable
-
-        if (!is_string($value)) {
-            throw new \TypeError(
-                sprintf(
-                    'Argument 1 passed to %s() must be of the type string, %s given.',
-                    $method,
-                    gettype($value)
-                )
-            );
-        }
     }
 }

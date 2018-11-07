@@ -241,7 +241,7 @@ final class Locator
             $dir = $this->config()[Config::ENV_DIR]->unwrapOrFallback($this->paths()->root());
             $bridge = new WordPressEnvBridge();
             $bridge->load($file, $dir);
-            $environment = $bridge['WP_ENV'] ?: $bridge['WORDPRESS_ENV'];
+            $environment = $bridge->read('WP_ENV') ?: $bridge->read('WORDPRESS_ENV');
             if ($environment && $environment !== 'example') {
                 $bridge->loadAppended("{$file}.{$environment}", $dir);
             }
