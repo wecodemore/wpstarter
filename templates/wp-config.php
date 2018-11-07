@@ -145,8 +145,10 @@ add_filter(
 );
 
 register_shutdown_function(
-    function () use ($envLoader) {
-        if ($envLoader->isWpSetup()) {
+    function () use ($envLoader, $env) {
+        if ($envLoader->isWpSetup()
+            && apply_filters('wpstarter.cache-environment', $env !== 'development')
+        ) {
             $envLoader->dumpCached(__DIR__ . WordPressEnvBridge::CACHE_DUMP_FILE);
         }
     }
