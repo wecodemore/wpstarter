@@ -107,7 +107,7 @@ class DbChecker
             $result = @mysqli_query($db, "SELECT 1 FROM {$prefix}users");
             $wpInstalled = $result && $result->field_count;
         }
-        \mysqli_close($db);
+        @\mysqli_close($db);
         $this->setupEnv(true, $dbExists, $wpInstalled);
 
         switch (true) {
@@ -131,9 +131,9 @@ class DbChecker
      */
     private function setupEnv(bool $valid, bool $exists, bool $installed)
     {
-        $this->env->write(self::WPDB_ENV_VALID, ($valid ? '1' : ''));
-        $this->env->write(self::WPDB_EXISTS, ($exists ? '1' : ''));
-        $this->env->write(self::WP_INSTALLED, ($installed ? '1' : ''));
+        $this->env->write(self::WPDB_ENV_VALID, $valid ? '1' : '');
+        $this->env->write(self::WPDB_EXISTS, $exists ? '1' : '');
+        $this->env->write(self::WP_INSTALLED, $installed ? '1' : '');
     }
 
     /**
