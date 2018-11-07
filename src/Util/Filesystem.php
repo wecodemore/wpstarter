@@ -174,13 +174,14 @@ class Filesystem
          */
         foreach ($iterator as $item) {
             $total++;
+            $target = "{$targetPath}/" . $iterator->getSubPathName();
+
             if ($item->isDir()) {
-                $done += (int)$this->createDir("{$targetPath}/" . $iterator->getSubPathName());
+                $done += (int)$this->createDir($target);
                 continue;
             }
 
-            $target = "{$targetPath}/" . $iterator->getSubPathName();
-            $done += $this->copyFile($item->getRealPath(), "{$targetPath}/" . $target);
+            $done += $this->copyFile($item->getRealPath(), $target);
         }
 
         return $done === $total;
