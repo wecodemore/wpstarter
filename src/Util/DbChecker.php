@@ -81,18 +81,16 @@ class DbChecker
             return;
         }
 
-        if (!$this->env['DB_HOST'] || !$this->env['DB_USER'] || !$this->env['DB_NAME']) {
+        $env = $this->env->readMany('DB_HOST', 'DB_USER', 'DB_NAME', 'DB_TABLE_PREFIX');
+
+        if (!$env['DB_HOST'] || !$env['DB_USER'] || !$env['DB_NAME']) {
             $this->write('Environment not ready, DB status can\'t be checked.');
             $this->setupEnv(false, false, false);
 
             return;
         }
 
-        $db = @\mysqli_connect(
-            $this->env['DB_HOST'],
-            $this->env['DB_USER'],
-            $this->env['DB_PASSWORD'] ?: ''
-        );
+        $db = @\mysqli_connect($env['DB_HOST'], $env['DB_USER'], $env['DB_PASSWORD'] ?: '');
 
         if (!$db || $db->connect_errno) {
             $this->setupEnv(false, false, false);
@@ -105,7 +103,7 @@ class DbChecker
 
         $wpInstalled = false;
         if ($dbExists) {
-            $prefix = $this->env['DB_TABLE_PREFIX'] ?: 'wp_';
+            $prefix = $env['DB_TABLE_PREFIX'] ?: 'wp_';
             $result = @mysqli_query($db, "SELECT 1 FROM {$prefix}users");
             $wpInstalled = $result && $result->field_count;
         }
