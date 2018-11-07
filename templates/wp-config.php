@@ -29,25 +29,25 @@ $env = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
 if ($env && $env !== 'example') {
     $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$env}", WPSTARTER_PATH);
 }
-$envKeys = $envLoader->setupWordPress();
+$defined = $envLoader->setupWordPress();
 
 /** Set optional database settings if not already set. */
-$envKeys['DB_HOST'] ?? define('DB_HOST', 'localhost');
-$envKeys['DB_CHARSET'] ?? define('DB_CHARSET', 'utf8');
-$envKeys['DB_COLLATE'] ?? define('DB_COLLATE', '');
+$defined['DB_HOST'] ?? define('DB_HOST', 'localhost');
+$defined['DB_CHARSET'] ?? define('DB_CHARSET', 'utf8');
+$defined['DB_COLLATE'] ?? define('DB_COLLATE', '');
 
 /**#@+
  * Authentication Unique Keys and Salts.
  */
-$envKeys['AUTH_KEY'] ?? define('AUTH_KEY', '{{{AUTH_KEY}}}');
-$envKeys['SECURE_AUTH_KEY'] ?? define('SECURE_AUTH_KEY', '{{{SECURE_AUTH_KEY}}}');
-$envKeys['LOGGED_IN_KEY'] ?? define('LOGGED_IN_KEY', '{{{LOGGED_IN_KEY}}}');
-$envKeys['NONCE_KEY'] ?? define('NONCE_KEY', '{{{NONCE_KEY}}}');
-$envKeys['AUTH_SALT'] ?? define('AUTH_SALT', '{{{AUTH_SALT}}}');
-$envKeys['SECURE_AUTH_SALT'] ?? define('SECURE_AUTH_SALT', '{{{SECURE_AUTH_SALT}}}');
-$envKeys['LOGGED_IN_SALT'] ?? define('LOGGED_IN_SALT', '{{{LOGGED_IN_SALT}}}');
-$envKeys['NONCE_SALT'] ?? define('NONCE_SALT', '{{{NONCE_SALT}}}');
-unset($envKeys);
+$defined['AUTH_KEY'] ?? define('AUTH_KEY', '{{{AUTH_KEY}}}');
+$defined['SECURE_AUTH_KEY'] ?? define('SECURE_AUTH_KEY', '{{{SECURE_AUTH_KEY}}}');
+$defined['LOGGED_IN_KEY'] ?? define('LOGGED_IN_KEY', '{{{LOGGED_IN_KEY}}}');
+$defined['NONCE_KEY'] ?? define('NONCE_KEY', '{{{NONCE_KEY}}}');
+$defined['AUTH_SALT'] ?? define('AUTH_SALT', '{{{AUTH_SALT}}}');
+$defined['SECURE_AUTH_SALT'] ?? define('SECURE_AUTH_SALT', '{{{SECURE_AUTH_SALT}}}');
+$defined['LOGGED_IN_SALT'] ?? define('LOGGED_IN_SALT', '{{{LOGGED_IN_SALT}}}');
+$defined['NONCE_SALT'] ?? define('NONCE_SALT', '{{{NONCE_SALT}}}');
+unset($defined);
 
 /**#@-*/
 
@@ -142,7 +142,7 @@ add_filter(
     999
 );
 
-unset($env, $envLoader, $forceAdminColor);
+unset($forceAdminColor, $env, $envLoader);
 
 ###################################################################################################
 #  I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion.  #

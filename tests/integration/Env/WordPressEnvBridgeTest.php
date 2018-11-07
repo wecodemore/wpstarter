@@ -162,10 +162,12 @@ class WordPressEnvBridgeTest extends TestCase
         $bridge->loadAppended('more.env', $this->fixturesPath());
         $bridge->write('NEW', 'new!');
 
-        static::assertSame('wp', $bridge->read('DB_NAME'));            // example.env
-        static::assertSame('192.168.1.255', $bridge->read('DB_HOST')); // more.env
-        static::assertSame('I come first.', $bridge->read('FOO'));     // actual.env
-        static::assertSame('new!', $bridge->read('NEW'));               // offsetSet
+        $env = $bridge->readMany('DB_NAME', 'DB_HOST', 'FOO', 'NEW');
+
+        static::assertSame('wp', $env['DB_NAME']);            // example.env
+        static::assertSame('192.168.1.255', $env['DB_HOST']); // more.env
+        static::assertSame('I come first.', $env['FOO']);     // actual.env
+        static::assertSame('new!', $env['NEW']);              // offsetSet
     }
 
     /**

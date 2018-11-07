@@ -319,6 +319,20 @@ class WordPressEnvBridge
     }
 
     /**
+     * @param string[] $names
+     * @return array
+     */
+    public function readMany(string ...$names): array
+    {
+        $values = [];
+        foreach ($names as $name) {
+            $values[$name] = $this->read($name);
+        }
+
+        return $values;
+    }
+
+    /**
      * @param string $name
      * @param mixed $value
      *
@@ -364,10 +378,10 @@ class WordPressEnvBridge
     }
 
     /**
-     * Define WP constants from environment variables
+     * Define WP constants from environment variables.
      *
      * @param string $name
-     * @return bool
+     * @return bool True if a constant has beend defined.
      */
     private function defineWpConstant(string $name): bool
     {
