@@ -149,7 +149,7 @@ class WpCliTool implements PhpTool
             return ['sha512', $this->pharUrl() . '.sha512'];
         }
 
-        $this->io->writeIfVerbose('SHA512 not available, going to use MD5...');
+        $io->writeIfVerbose('SHA512 not available, going to use MD5...');
 
         return ['md5', $this->pharUrl() . '.md5'];
     }

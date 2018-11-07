@@ -8,7 +8,6 @@
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
-use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
 use WeCodeMore\WpStarter\Tests\TestCase;
 use WeCodeMore\WpStarter\Util\Io;

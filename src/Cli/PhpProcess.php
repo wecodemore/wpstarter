@@ -46,9 +46,8 @@ class PhpProcess
     }
 
     /**
-     * @param array $command
+     * @param string $command
      * @param string|null $cwd
-     * @param string[] $args
      * @return bool
      */
     public function execute(string $command, string $cwd = null): bool

@@ -53,8 +53,7 @@ class PhpToolProcess
     }
 
     /**
-     * @param array $command
-     * @param string[] $args
+     * @param string $command
      * @return bool
      */
     public function execute(string $command): bool

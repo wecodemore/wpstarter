@@ -9,7 +9,6 @@
 namespace WeCodeMore\WpStarter\Cli;
 
 use Symfony\Component\Process\Process;
-use Symfony\Component\Process\ProcessBuilder;
 use WeCodeMore\WpStarter\Util\Io;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -57,7 +56,7 @@ class SystemProcess
     }
 
     /**
-     * @param array $command
+     * @param string $command
      * @param string|null $cwd
      * @return bool
      */
