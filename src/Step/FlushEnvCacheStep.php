@@ -34,7 +34,7 @@ final class FlushEnvCacheStep implements Step
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        return true;
+        return file_exists($paths->wpParent(WordPressEnvBridge::CACHE_DUMP_FILE));
     }
 
     /**
@@ -45,10 +45,6 @@ final class FlushEnvCacheStep implements Step
     public function run(Config $config, Paths $paths): int
     {
         $cachedEnv = $paths->wpParent(WordPressEnvBridge::CACHE_DUMP_FILE);
-
-        if (!file_exists($cachedEnv)) {
-            return self::NONE;
-        }
 
         if (!is_file($cachedEnv) || !is_readable($cachedEnv)) {
             return self::ERROR;
@@ -68,7 +64,7 @@ final class FlushEnvCacheStep implements Step
      */
     public function error(): string
     {
-        return 'Failed to clean environment cache';
+        return 'Failed to clean environment cache.';
     }
 
     /**
