@@ -117,10 +117,17 @@ if ('{{{EARLY_HOOKS_FILE}}}'
     require_once '{{{EARLY_HOOKS_FILE}}}';
 }
 
-/** Set WordPress content constants if not set via environment variables. */
-defined('WP_HOME') or define('WP_HOME', set_url_scheme(($_SERVER['SERVER_NAME'] ?? '') ?: 'localhost'));
-defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath(__DIR__ . '{{{WP_CONTENT_PATH}}}'));
+/** Setting WP_HOME is not strictly required, but highly recommended. */
+if (!defined('WP_HOME')) {
+    $home = filter_var($_SERVER['HTTPS'] ?? '', FILTER_VALIDATE_BOOLEAN) ? 'https://' : 'http://';
+    $home .= $_SERVER['SERVER_NAME'] ?? 'localhost';
+    define('WP_HOME', $home);
+    unset($home);
+}
+
+/** Set WordPress other URL / path constants not set via environment variables. */
 defined('WP_SITEURL') or define('WP_SITEURL', rtrim(WP_HOME, '/') . '/{{{WP_SITEURL_RELATIVE}}}');
+defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath(__DIR__ . '{{{WP_CONTENT_PATH}}}'));
 defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/') . '/{{{WP_CONTENT_URL_RELATIVE}}}');
 
 /** Register default themes inside WordPress package wp-content folder. */
@@ -144,11 +151,10 @@ add_filter(
     999
 );
 
-register_shutdown_function(
+/** On shutdown we dump environment so that on next request we can load it faster */
+$envLoader->isWpSetup() and register_shutdown_function(
     function () use ($envLoader, $env) {
-        if ($envLoader->isWpSetup()
-            && apply_filters('wpstarter.cache-environment', $env !== 'development')
-        ) {
+        if (apply_filters('wpstarter.cache-environment', true)) {
             $envLoader->dumpCached(__DIR__ . WordPressEnvBridge::CACHE_DUMP_FILE);
         }
     }

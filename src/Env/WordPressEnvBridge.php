@@ -177,7 +177,7 @@ class WordPressEnvBridge
     public static function buildFromCacheDump(string $file): WordPressEnvBridge
     {
         if (file_exists($file)) {
-            $cached = include $file;
+            $cached = @include $file;
             $cached and self::$cache = $cached;
         }
 

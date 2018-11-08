@@ -188,6 +188,16 @@ switch ($environment) {
 }
 ```
 
+#### WP_HOME
+
+This is not a WP Starter variable, but a standard WordPress configuration constants.
+
+However, differently from WordPress, WP Starter will always make sure it is set.
+
+If no environment variable with that name is found, WP Starter will calculate the home URL by looking at server variables, defaulting to `"localhost"` if even server variables are not found.
+
+This might be fine in many cases, but setting `WP_HOME` is recommended to avoid issues and avoid calculation of the home URL at every request.
+
 #### WP_ADMIN_COLOR
 
 `WP_ADMIN_COLOR` environment variable will make WP Starter add a filter in the generated `wp-config.php` that will force WordPress dashboard to a specific admin color scheme, overriding the user setting.
