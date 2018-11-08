@@ -62,7 +62,7 @@ global $table_prefix;
 $table_prefix = $envLoader->read('DB_TABLE_PREFIX') ?: 'wp_';
 
 /** Absolute path to the WordPress directory. */
-define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
+defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
 
 /** Load plugin.php early, so we can call `add_action` below. */
 require_once ABSPATH . 'wp-includes/plugin.php';
