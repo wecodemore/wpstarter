@@ -216,7 +216,7 @@ final class ComposerPlugin implements
 
         $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCliStep);
 
-        if (!$hasWpCliStep && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
+        if (!$hasWpCliStep && !$commandMode && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
             $steps->addStep(new Step\WpCliCommandsStep($this->locator));
         }
 
