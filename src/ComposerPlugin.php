@@ -124,8 +124,8 @@ final class ComposerPlugin implements
 
                 return;
             }
-
-            $this->logo();
+            
+            ($event === null && $selectedStepNames) or $this->logo();
 
             $config[Config::SKIP_DB_CHECK]->notEmpty() and $this->locator->dbChecker()->check();
             $steps = $this->initializeSteps($config, $event, ...$selectedStepNames);
@@ -200,7 +200,8 @@ final class ComposerPlugin implements
             Step\WpCliConfigStep::NAME => Step\WpCliConfigStep::class,
         ];
 
-        $steps = new Step\Steps($this->locator, $this->composer);
+        $commandMode = $event === null && $selectedStepNames;
+        $steps = new Step\Steps($this->locator, $this->composer, $commandMode);
         $selectedStepNames = array_filter($selectedStepNames, 'is_string');
         $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
         $skippedSteps = $this->locator->config()[Config::SKIP_STEPS]->unwrapOrFallback([]);

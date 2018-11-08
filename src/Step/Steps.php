@@ -52,20 +52,27 @@ final class Steps implements PostProcessStep
     private $running = false;
 
     /**
+     * @var string
+     */
+    private $runningScripts = '';
+
+    /**
      * @var bool
      */
-    private $inPreScript = false;
+    private $isCommandMode;
 
     /**
      * @param Locator $locator
      * @param Composer $composer
+     * @param bool $isCommandMode
      */
-    public function __construct(Locator $locator, Composer $composer)
+    public function __construct(Locator $locator, Composer $composer, bool $isCommandMode)
     {
         $this->locator = $locator;
         $this->composer = $composer;
         $this->steps = new \SplObjectStorage();
         $this->postProcessSteps = new \SplObjectStorage();
+        $this->isCommandMode = $isCommandMode;
     }
 
     /**
@@ -83,7 +90,7 @@ final class Steps implements PostProcessStep
      */
     public function addStep(Step $step, Step ...$steps): Steps
     {
-        if (!$this->running) {
+        if (!$this->running && !$this->isCommandMode) {
             $this->steps->attach($step);
             array_walk($steps, [$this->steps, 'attach']);
         }
@@ -93,11 +100,15 @@ final class Steps implements PostProcessStep
 
     /**
      * @param Step $step
+     * @param Step[] $steps
      * @return Steps
      */
-    public function removeStep(Step $step): Steps
+    public function removeStep(Step $step, Step ...$steps): Steps
     {
-        $this->running or $this->steps->detach($step);
+        if (!$this->running && !$this->isCommandMode) {
+            $this->steps->detach($step);
+            array_walk($steps, [$this->steps, 'detach']);
+        }
 
         return $this;
     }
@@ -121,7 +132,7 @@ final class Steps implements PostProcessStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        if ($this->running || $this->inPreScript) {
+        if ($this->running || $this->runningScripts) {
             return Step::NONE;
         }
 
@@ -130,9 +141,9 @@ final class Steps implements PostProcessStep
 
         $scripts = $config[Config::SCRIPTS]->unwrapOrFallback([]);
 
-        $this->inPreScript = true;
+        $this->runningScripts = 'pre';
         $this->runStepScripts($this, $io, $scripts, 'pre-', Step::NONE);
-        $this->inPreScript = false;
+        $this->runningScripts = '';
 
         $this->running = true;
 
@@ -150,7 +161,9 @@ final class Steps implements PostProcessStep
 
         $this->postProcess($io);
 
+        $this->runningScripts = 'post';
         $this->runStepScripts($this, $io, $scripts, 'post-', Step::SUCCESS);
+        $this->runningScripts = '';
 
         $this->running = false;
 
@@ -182,7 +195,7 @@ final class Steps implements PostProcessStep
      */
     public function postProcess(Io $io)
     {
-        if ($this->running || $this->inPreScript) {
+        if ($this->running || $this->runningScripts) {
             return;
         }
 
@@ -199,8 +212,8 @@ final class Steps implements PostProcessStep
         if (!is_file($this->locator->paths()->root($env))) {
             $lines = [
                 'Remember that to make your site fully functional you either need to have an .env '
-                . 'file with at least DB settings or set them in environment variables in some other '
-                . 'way (e.g. via webserver).',
+                . 'file with at least DB settings or set them in environment variables in some '
+                . 'other way (e.g. via webserver).',
             ];
 
             $io->writeColorBlock('yellow', ...$lines);
@@ -379,6 +392,10 @@ final class Steps implements PostProcessStep
      */
     private function finalMessage(Io $io): int
     {
+        if ($this->isCommandMode) {
+            return $this->errors > 0 ? self::ERROR : self::SUCCESS;
+        }
+
         usleep(250000);
 
         if ($this->errors > 0) {
