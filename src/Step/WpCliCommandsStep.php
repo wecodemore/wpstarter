@@ -121,12 +121,12 @@ final class WpCliCommandsStep implements Step
         $continue = true;
         while ($continue && $commands) {
             $command = array_shift($commands);
-            $dashesLen = 54 - strlen($command);
-            $dashes = $dashesLen > 0 ? ' ' . str_repeat('-', $dashesLen) : '';
-            $this->io->write("<fg=magenta>\$ wp {$command}{$dashes}</>");
+            $commandDesc = $this->commandDesc($command);
+            $dashes = str_repeat('-', 54 - strlen($commandDesc));
+            $this->io->write("<fg=magenta>\$ wp {$commandDesc} {$dashes}</>");
             $continue = $this->process->execute($command);
             if (!$continue) {
-                $this->io->writeErrorLine("<fg=red>`wp {$command}` FAILED! Quitting WP CLI.</>");
+                $this->io->writeErrorLine("<fg=red>'wp {$command}' FAILED! Quitting WP CLI.</>");
             }
             $this->io->write('<fg=magenta>' . str_repeat('-', 60) . '</>');
             $this->io->write('');
@@ -185,10 +185,24 @@ final class WpCliCommandsStep implements Step
             $commands,
             function (string $command, int $i) {
                 $num = $i + 1;
-                $this->io->writeIfVerbose("  <comment>{$num}) `\$ wp {$command}`</comment>");
+                $commandDesc = ltrim($this->commandDesc("  {$command}"));
+                $this->io->writeIfVerbose("  <comment>{$num}) \$ wp {$commandDesc}</comment>");
             }
         );
 
         $this->io->writeIfVerbose('');
+    }
+
+    /**
+     * @param string $command
+     * @return string
+     */
+    private function commandDesc(string $command): string
+    {
+        if (strlen($command) <= 51) {
+            return $command;
+        }
+
+        return substr($command, 0, 48) . '...';
     }
 }
