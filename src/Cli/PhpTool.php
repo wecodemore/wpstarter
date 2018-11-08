@@ -52,4 +52,12 @@ interface PhpTool
      * @return bool
      */
     public function checkPhar(string $pharPath, Io $io): bool;
+
+    /**
+     * @param string $command
+     * @param Paths $paths
+     * @param Io $io
+     * @return string
+     */
+    public function prepareCommand(string $command, Paths $paths, Io $io): string;
 }

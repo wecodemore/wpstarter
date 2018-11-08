@@ -15,11 +15,6 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class WpCliTool implements PhpTool
 {
-    const ENV = [
-        'WP_CLI_CACHE_DIR',
-        'WP_CLI_DISABLE_AUTO_CHECK_UPDATE',
-    ];
-
     /**
      * @var bool
      */
@@ -137,6 +132,17 @@ class WpCliTool implements PhpTool
         }
 
         return true;
+    }
+
+    /**
+     * @param string $command
+     * @param Paths $paths
+     * @param Io $io
+     * @return string
+     */
+    public function prepareCommand(string $command, Paths $paths, Io $io): string
+    {
+        return "{$command} --path=" . $paths->wp();
     }
 
     /**

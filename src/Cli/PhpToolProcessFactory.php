@@ -73,12 +73,12 @@ class PhpToolProcessFactory
 
         // Installed via Composer, build executor and return
         if ($fsPath) {
-            return new PhpToolProcess($phpPath, $fsPath, $this->paths, $this->io);
+            return new PhpToolProcess($phpPath, $command, $fsPath, $this->paths, $this->io);
         }
 
         $targetPath = $command->pharTarget($this->paths);
         if ($targetPath && file_exists($targetPath)) {
-            return new PhpToolProcess($phpPath, $targetPath, $this->paths, $this->io);
+            return new PhpToolProcess($phpPath, $command, $targetPath, $this->paths, $this->io);
         }
 
         $pharUrl = $command->pharUrl();
@@ -100,7 +100,7 @@ class PhpToolProcessFactory
             throw new \RuntimeException("Failed phar download from {$pharUrl}.");
         }
 
-        return new PhpToolProcess($phpPath, $installedPath, $this->paths, $this->io);
+        return new PhpToolProcess($phpPath, $command, $installedPath, $this->paths, $this->io);
     }
 
     /**

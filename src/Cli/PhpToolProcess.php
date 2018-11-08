@@ -14,6 +14,11 @@ use WeCodeMore\WpStarter\Util\Paths;
 class PhpToolProcess
 {
     /**
+     * @var PhpTool
+     */
+    private $tool;
+
+    /**
      * @var string
      */
     private $toolPath;
@@ -29,16 +34,30 @@ class PhpToolProcess
     private $paths;
 
     /**
+     * @var Io
+     */
+    private $io;
+
+    /**
      * @param string $phpPath
-     * @param string $cliPath
+     * @param PhpTool $tool
+     * @param string $toolPath
      * @param Paths $paths
      * @param Io $io
      */
-    public function __construct(string $phpPath, string $cliPath, Paths $paths, Io $io)
-    {
-        $this->toolPath = realpath($cliPath);
+    public function __construct(
+        string $phpPath,
+        PhpTool $tool,
+        string $toolPath,
+        Paths $paths,
+        Io $io
+    ) {
+
+        $this->tool = $tool;
         $this->phpProcess = new PhpProcess($phpPath, $paths, $io);
         $this->paths = $paths;
+        $this->io = $io;
+        $this->toolPath = $toolPath;
     }
 
     /**
@@ -58,16 +77,12 @@ class PhpToolProcess
      */
     public function execute(string $command): bool
     {
-        $commandLine = sprintf('%s %s --path=%s', $this->toolPath, $command, $this->paths->wp());
-
-        return $this->phpProcess->execute($commandLine);
-    }
-
-    /**
-     * @return string
-     */
-    public function toolPath(): string
-    {
-        return $this->toolPath;
+        return $this->phpProcess->execute(
+            $this->tool->prepareCommand(
+                "{$this->toolPath} {$command}",
+                $this->paths,
+                $this->io
+            )
+        );
     }
 }
