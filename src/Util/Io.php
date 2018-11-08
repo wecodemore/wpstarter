@@ -84,18 +84,19 @@ class Io
         $lines = static::ensureLength(...$lines);
         $topLength = max(array_map('strlen', array_map('trim', array_map('strip_tags', $lines))));
         $length = max($topLength, 56);
-        $leftSpace = (int)floor(($length - $topLength) / 2);
-        $leftSpace > 0 or $leftSpace = 1;
+        $leftSpaceLen = (int)floor(($length - $topLength) / 2);
+        $leftSpaceLen > 0 or $leftSpaceLen = 1;
+        $leftSpace = $leftSpaceLen > 0 ? str_repeat(' ', $leftSpaceLen) : '';
 
         $whiteLine = "{$before}  " . str_repeat(' ', $length) . "  {$after}";
         $block = ['', $whiteLine];
         foreach ($lines as $line) {
             $line = trim($line);
             $len = strlen(strip_tags($line));
-            $rightSpace = ($length - $leftSpace) - $len;
-            $rightSpace > 0 or $rightSpace = 1;
+            $rightSpaceLen = ($length - $leftSpaceLen) - $len;
+            $rightSpace = $rightSpaceLen > 0 ? str_repeat(' ', $rightSpaceLen) : '';
             if ($len < $length) {
-                $line = str_repeat(' ', $leftSpace) . trim($line) . str_repeat(' ', $rightSpace);
+                $line = $leftSpace . trim($line) . $rightSpace;
             }
             $block[] = "{$before}  {$line}  {$after}";
         }
