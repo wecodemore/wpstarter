@@ -62,4 +62,14 @@ class PhpProcess
     {
         return $this->phpPath;
     }
+
+    /**
+     * @param string $command
+     * @param string|null $cwd
+     * @return bool
+     */
+    public function executeSilently(string $command, string $cwd = null): bool
+    {
+        return $this->process->executeSilently("{$this->phpPath} {$command}", $cwd);
+    }
 }

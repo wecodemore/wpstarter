@@ -85,4 +85,21 @@ class PhpToolProcess
             )
         );
     }
+
+    /**
+     * @param string $command
+     * @param string|null $cwd
+     * @return bool
+     */
+    public function executeSilently(string $command, string $cwd = null): bool
+    {
+        return $this->phpProcess->executeSilently(
+            $this->tool->prepareCommand(
+                "{$this->toolPath} {$command}",
+                $this->paths,
+                $this->io
+            ),
+            $cwd
+        );
+    }
 }
