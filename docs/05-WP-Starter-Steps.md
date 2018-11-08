@@ -66,6 +66,7 @@ Just like any other step that builds a file, by overriding the template it is po
 
 The settings involved in this steps are:
 
+- `cache-env` - When false (default is true) will prevent the environment to be cached in a PHP file and always loaded on the fly. See the *"WordPress Integration"* chapter for more details.
 - `register-theme-folder` - When true the default themes (those shipped with WordPress package) folder will be registered via [`register_theme_directory`](https://developer.wordpress.org/reference/functions/register_theme_directory/) and so default themes will available in WordPress
 - `env-dir` and `env-file` - Via these two settings it is possible to load a different env file instead of the default `.env` located under project root.
 - `early-hook-file` - If a file path is provided via this setting WordPress will load the file very early, but after having "manually" loaded `plugin.php` so that it is possible to add callbacks to hooks fired very early. See the *"WordPress Integration"* chapter for more details.
