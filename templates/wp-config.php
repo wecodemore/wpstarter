@@ -36,6 +36,8 @@ if (!$envLoader->hasCachedValues()) {
     $defined = $envLoader->setupWordPress();
 }
 
+isset($env) or $env = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
+
 /** Set optional database settings if not already set. */
 defined('DB_HOST') or define('DB_HOST', 'localhost');
 defined('DB_CHARSET') or define('DB_CHARSET', 'utf8');
@@ -98,6 +100,7 @@ switch ($env) {
         defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', false);
         break;
 }
+unset($env);
 
 /** Fix `is_ssl()` behind load balancers. */
 if ($envLoader->read('WP_FORCE_SSL_FORWARDED_PROTO')
@@ -144,11 +147,10 @@ if (filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN)) {
 }
 
 /** Allow changing admin color scheme. Useful to distinguish environments in the dashboard. */
-$forceAdminColor = $envLoader->read('WP_ADMIN_COLOR');
 add_filter(
     'get_user_option_admin_color',
-    function ($color) use ($forceAdminColor) {
-        return $forceAdminColor ?: $color;
+    function ($color) use ($envLoader) {
+        return $envLoader->read('WP_ADMIN_COLOR') ?: $color;
     },
     999
 );
@@ -156,13 +158,11 @@ add_filter(
 /** On shutdown we dump environment so that on subsequent requests we can load it faster */
 if ('{{{CACHE_ENV}}}' && $envLoader->isWpSetup()) {
     register_shutdown_function(
-        function () use ($envLoader, $env) {
+        function () use ($envLoader) {
             $envLoader->dumpCached(__DIR__ . WordPressEnvBridge::CACHE_DUMP_FILE);
         }
     );
 }
-
-unset($forceAdminColor, $env, $envLoader);
 
 ###################################################################################################
 #  I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion.  #
