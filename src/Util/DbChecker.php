@@ -112,8 +112,7 @@ class DbChecker
 
         $wpInstalled = false;
         if ($dbExists) {
-            $prefix = $env['DB_TABLE_PREFIX'] ?: 'wp_';
-            $result = @mysqli_query($db, "SELECT 1 FROM {$prefix}users");
+            $result = @mysqli_query($db, "SELECT 1 FROM {$env['DB_TABLE_PREFIX']}users");
             $wpInstalled = $result && $result->field_count;
         }
         @\mysqli_close($db);
@@ -121,10 +120,10 @@ class DbChecker
 
         switch (true) {
             case $wpInstalled:
-                $this->write('DB found and WP looks installed.');
+                $this->write('DB found and WordPress looks installed.');
                 break;
             case $dbExists:
-                $this->write('DB found, but WP looks not installed.');
+                $this->write('DB found, but WordPress looks not installed.');
                 break;
             default:
                 $this->write('DB not found.');
@@ -151,6 +150,6 @@ class DbChecker
      */
     private function write(string $line)
     {
-        $this->io->writeIfVerbose("- <comment>{$line}</comment>");
+        $this->io->writeIfVerbose("-  <info>[WPDB Check]</info> <comment>{$line}</comment>");
     }
 }
