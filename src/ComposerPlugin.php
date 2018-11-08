@@ -191,6 +191,7 @@ final class ComposerPlugin implements
             Step\CheckPathStep::NAME => Step\CheckPathStep::class,
             Step\WpConfigStep::NAME => Step\WpConfigStep::class,
             Step\IndexStep::NAME => Step\IndexStep::class,
+            Step\FlushEnvCacheStep::NAME => Step\FlushEnvCacheStep::class,
             Step\MuLoaderStep::NAME => Step\MuLoaderStep::class,
             Step\EnvExampleStep::NAME => Step\EnvExampleStep::class,
             Step\DropinsStep::NAME => Step\DropinsStep::class,

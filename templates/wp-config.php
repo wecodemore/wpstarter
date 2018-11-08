@@ -23,7 +23,9 @@ define('WPSTARTER_PATH', realpath(__DIR__ . '{{{ENV_REL_PATH}}}'));
  * Environment variables that are set in the *real* environment (e.g. via webserver) will not be
  * overridden from file, even if `WPSTARTER_ENV_LOADED` is not set.
  */
-$envLoader = WordPressEnvBridge::buildFromCacheDump(__DIR__ . WordPressEnvBridge::CACHE_DUMP_FILE);
+$envLoader = '{{{CACHE_ENV}}}'
+    ? WordPressEnvBridge::buildFromCacheDump(__DIR__ . WordPressEnvBridge::CACHE_DUMP_FILE)
+    : new WordPressEnvBridge();
 
 if (!$envLoader->hasCachedValues()) {
     $envLoader->load('{{{ENV_FILE_NAME}}}', WPSTARTER_PATH);
@@ -151,14 +153,14 @@ add_filter(
     999
 );
 
-/** On shutdown we dump environment so that on next request we can load it faster */
-$envLoader->isWpSetup() and register_shutdown_function(
-    function () use ($envLoader, $env) {
-        if (apply_filters('wpstarter.cache-environment', true)) {
+/** On shutdown we dump environment so that on subsequent requests we can load it faster */
+if ('{{{CACHE_ENV}}}' && $envLoader->isWpSetup()) {
+    register_shutdown_function(
+        function () use ($envLoader, $env) {
             $envLoader->dumpCached(__DIR__ . WordPressEnvBridge::CACHE_DUMP_FILE);
         }
-    }
-);
+    );
+}
 
 unset($forceAdminColor, $env, $envLoader);
 

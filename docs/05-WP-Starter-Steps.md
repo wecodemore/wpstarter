@@ -15,6 +15,7 @@ The (current) list of default WP Starter steps is (in order of execution):
 | check-paths         | `CheckPathStep`        | blocking              |
 | build-wp-config     | `WpConfigStep`         | create file, blocking |
 | build-index         | `IndexStep`            | create file, blocking |
+| flush-env-cache     | `FlushEnvCacheStep`    |                       |
 | build-mu-loader     | `MuLoaderStep`         | create file           |
 | build-env-example   | `EnvExampleStep`       | create file, optional |
 | dropins             | `DropinsStep`          |                       |
@@ -89,6 +90,12 @@ As described there, we need to create an `index.php` file located at webroot. Th
 The only setting affecting this step is the `wordpress-install-dir` specific of [WordPress core installer](https://github.com/johnpbloch/wordpress-core-installer) which will tells Composer where to place WordPress files and folders.
 
 WP Starter will not proceed with other steps if this fails for any reason.
+
+### `FlushEnvCacheStep`
+
+This step will clear the environment cache file if found. See *"WordPress Integration"* chapter for more info about cached environment.
+
+There are no configuration affecting this step.
 
 ### `MuLoaderStep`
 

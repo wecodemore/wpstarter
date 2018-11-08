@@ -25,16 +25,28 @@ class ConfigTest extends TestCase
         static::assertTrue($config[Config::REGISTER_THEME_FOLDER]->is(true));
     }
 
-    public function testAppendConfig()
+    public function testSetNewOrDefaultConfig()
     {
         $config = new Config([], $this->makeValidator());
 
+        static::assertFalse($config['foo']->notEmpty());
+        static::assertTrue($config[Config::CACHE_ENV]->notEmpty());
+        static::assertTrue($config[Config::CACHE_ENV]->is(true));
+
         $config['foo'] = 'bar';
+        $config[Config::CACHE_ENV] = false;
+
+        static::assertTrue($config['foo']->is('bar'));
+        static::assertTrue($config[Config::CACHE_ENV]->is(false));
+    }
+
+    public function testSetNewEmptyConfig()
+    {
+        $config = new Config([], $this->makeValidator());
 
         $dir = str_replace('\\', '/', __DIR__);
         $config[Config::TEMPLATES_DIR] = $dir;
 
-        static::assertTrue($config['foo']->is('bar'));
         static::assertTrue($config[Config::TEMPLATES_DIR]->is($dir));
 
         $this->expectException(\BadMethodCallException::class);

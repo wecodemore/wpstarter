@@ -116,15 +116,21 @@ To parse env files and setup environment variables, and then setup WordPress con
 
 Half of the reason is the env file parsing itself (which can be avoided by setting environment variables in the actual environment), the other half is the fact that WP Starter has no way to know which environment variables matching WP constants are set in the environment before trying to access them. Which means that WP Starter needs to loop **all** the possible WordPress constants, and for each of them try to access an environment variable named in the same way and if that is found finally define a constant.
 
-To avoid this overhead at every request, the WP Starter `wp-config.php` registers a function to be run on "shutdown"  that *dumps* the environment variables that have been accessed with success during the first request into a PHP file so that on *next* the environment "bootstrap" will be much faster.
+To avoid this overhead at every request, the WP Starter `wp-config.php` registers a function to be run on "shutdown"  that *dumps* the environment variables that have been accessed with success during the first request into a PHP file so that on subsequent requests the environment "bootstrap" will be much faster.
 
 This cache file is saved in the same folder that contains the  `wp-config.php` and is named `.env.cached.php`.
 
-However, having a cached environment means that any change to it (no matter if in env files or in the actual environment) will require the cache file to be deleted (WP Starter does it when the "build-wp-config" step runs).
+However, having a **cached environment means that any change to it will require the cache file to be deleted**. WP Starter does it via one of its steps ("flush-env-cache") so after a Composer install / update or after running WP Starter command the environment cache is always clean.
 
-To facilitate development, be default WP Starter does not cache the environment when the `WP_ENV` variable (see below) is `"development" `.
+Of course it is possible to clean env cache on demand by explicitly running the command:
 
-This default behavior can be changed by using a WordPress filter: `"wpstarter.cache-environment"`.
+```shell
+composer wpstarter flush-env-cache
+```
+
+(Read more about running specific steps via `wpstarter` command in the *"WP Starter Command"* chapter)
+
+To prevent WP Starter to generate and use cached environment at all, it is possible to set the **`cache-env`** setting to false.
 
 #### WP_ENV
 

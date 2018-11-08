@@ -5,6 +5,7 @@ Alphabetically ordered:
 |          Key          | Description                                                  |       Default value        |
 | :-------------------: | :----------------------------------------------------------- | :------------------------: |
 |       autoload        | PHP file loaded before WP Starter its steps.<br />Path relative to root. | "./wpstarter-autoload.php" |
+|       cache-env       | Whether to cache env for WP requests.                        |            true            |
 |    content-dev-op     | Operation to perform for "development content"<br />i.e. plugins and themes shipped with the project.<br />Valid values are "symlink", "copy" and "none".<br />Can also be set to`"ask"`, in which case<br />WP Starter will ask user what to do. |         "symlink"          |
 |    content-dev-dir    | Source folder for "development content".<br />Relative to root. |      "./content-dev"       |
 |     command-steps     | Custom steps to be ran via WP Starter command.<br />Array of fully-qualified step class names.<br />Given classes must be autoloadable. |             []             |

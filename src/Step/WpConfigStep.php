@@ -111,18 +111,11 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        $register = $config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback(false);
-        ($register === OptionalStep::ASK) and $register = $this->askForRegister();
-
         $from = $this->composerFilesystem->normalizePath($paths->wpParent());
 
-        $cachedEnv = $from . WordPressEnvBridge::CACHE_DUMP_FILE;
-        if (file_exists($cachedEnv)) {
-            $this->io->writeIfVerbose("Deleting env cache file '{$cachedEnv}'.");
-            unlink($cachedEnv);
-        }
+        $autoload = $paths->vendor('autoload.php');
 
-        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
+        $cacheEnv = $config[Config::CACHE_ENV]->unwrapOrFallback(true);
 
         $earlyHook = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback('');
         $earlyHook and $earlyHook = $this->relPath("{$from}/index.php", $earlyHook, false);
@@ -132,20 +125,27 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
             $envBootstrapDir = $this->relPath($from, $paths->root($envBootstrapDir));
         }
 
-        $wpRelDir = $this->relPath($from, $paths->wp());
+        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
+
+        $register = $config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback(false);
+        ($register === OptionalStep::ASK) and $register = $this->askForRegister();
+
         $contentRelDir = $this->relPath($from, $paths->wpContent());
 
+        $wpRelDir = $this->relPath($from, $paths->wp());
+
         $vars = [
-            'AUTOLOAD_PATH' => $this->relPath("{$from}/index.php", $paths->vendor('autoload.php'), false),
-            'ENV_REL_PATH' => $this->relPath($from, $envDir),
-            'ENV_FILE_NAME' => $config[Config::ENV_FILE]->unwrapOrFallback('.env'),
-            'ENV_BOOTSTRAP_DIR' => $envBootstrapDir ? "{$envBootstrapDir}/" : '',
-            'WP_INSTALL_PATH' => $wpRelDir,
-            'WP_CONTENT_PATH' => $contentRelDir,
-            'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
-            'WP_SITEURL_RELATIVE' => $this->stripDot($wpRelDir),
-            'WP_CONTENT_URL_RELATIVE' => $this->stripDot($contentRelDir),
+            'AUTOLOAD_PATH' => $this->relPath("{$from}/index.php", $autoload, false),
+            'CACHE_ENV' => $cacheEnv ? '1' : '',
             'EARLY_HOOKS_FILE' => $earlyHook,
+            'ENV_BOOTSTRAP_DIR' => $envBootstrapDir ? "{$envBootstrapDir}/" : '',
+            'ENV_FILE_NAME' => $config[Config::ENV_FILE]->unwrapOrFallback('.env'),
+            'ENV_REL_PATH' => $this->relPath($from, $envDir),
+            'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
+            'WP_CONTENT_PATH' => $contentRelDir,
+            'WP_CONTENT_URL_RELATIVE' => $this->stripDot($contentRelDir),
+            'WP_INSTALL_PATH' => $wpRelDir,
+            'WP_SITEURL_RELATIVE' => $this->stripDot($wpRelDir),
         ];
 
         $built = $this->builder->build(

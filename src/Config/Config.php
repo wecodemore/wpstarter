@@ -20,6 +20,7 @@ final class Config implements \ArrayAccess
 {
     const AUTOLOAD = 'autoload';
     const CONTENT_DEV_OPERATION = 'content-dev-op';
+    const CACHE_ENV = 'cache-env';
     const CONTENT_DEV_DIR = 'content-dev-dir';
     const COMMAND_STEPS = 'command-steps';
     const CUSTOM_STEPS = 'custom-steps';
@@ -45,6 +46,7 @@ final class Config implements \ArrayAccess
 
     const DEFAULTS = [
         self::AUTOLOAD => 'wpstarter-autoload.php',
+        self::CACHE_ENV => true,
         self::CONTENT_DEV_OPERATION => ContentDevStep::OP_SYMLINK,
         self::CONTENT_DEV_DIR => 'content-dev',
         self::CUSTOM_STEPS => null,
@@ -72,6 +74,7 @@ final class Config implements \ArrayAccess
 
     const VALIDATION_MAP = [
         self::AUTOLOAD => 'validatePath',
+        self::CACHE_ENV => 'validateBool',
         self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
         self::CONTENT_DEV_DIR => 'validatePath',
         self::CUSTOM_STEPS => 'validateSteps',
@@ -143,7 +146,7 @@ final class Config implements \ArrayAccess
     public function offsetGet($offset)
     {
         if (!$this->offsetExists($offset)) {
-            Result::none();
+            return Result::none();
         }
 
         if (array_key_exists($offset, $this->configs)) {
@@ -157,8 +160,6 @@ final class Config implements \ArrayAccess
     }
 
     /**
-     * Append-only setter.
-     *
      * The reason for this to exist is that because steps have access to Config, adding additional
      * arbitrary values to it means steps can "communicate".
      *
@@ -168,11 +169,17 @@ final class Config implements \ArrayAccess
      */
     public function offsetSet($offset, $value)
     {
-        if ($this->offsetExists($offset) && $this->offsetGet($offset)->notEmpty()) {
+        $isNew = !$this->offsetExists($offset);
+        $currentValue = $isNew ? null : $this->offsetGet($offset)->unwrapOrFallback();
+        $isEmpty = $currentValue === null;
+        $isWritable = !$isEmpty
+            && array_key_exists($offset, self::DEFAULTS)
+            && self::DEFAULTS[$offset] === $currentValue;
+
+        if (!$isNew && !$isEmpty && !$isWritable) {
             throw new \BadMethodCallException(
                 sprintf(
-                    '%s is append-ony: %s config is already set',
-                    __CLASS__,
+                    '%s setting cannot be set, it already set with a non-default value.',
                     $offset
                 )
             );

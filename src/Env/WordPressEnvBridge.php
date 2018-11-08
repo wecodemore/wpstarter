@@ -282,7 +282,7 @@ class WordPressEnvBridge
      */
     public function hasCachedValues(): bool
     {
-        return $this->fromCache;
+        return $this->fromCache && self::$cache;
     }
 
     /**
