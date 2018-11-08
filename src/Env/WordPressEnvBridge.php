@@ -264,7 +264,10 @@ class WordPressEnvBridge
         $values = $this->dotenv()->parse(file_get_contents($fullpath), $fullpath);
 
         foreach ($values as $name => $value) {
-            $this->isWritable($name) and $this->write($name, $value);
+            if ($this->isWritable($name)) {
+                $this->write($name, $value);
+                self::$loadedVars[$name] = true;
+            }
         }
     }
 
@@ -335,7 +338,7 @@ class WordPressEnvBridge
             return null;
         }
 
-        return $this->maybeFilter($name, (string)$value);
+        return $this->maybeFilterThenCache($name, (string)$value);
     }
 
     /**
@@ -366,11 +369,7 @@ class WordPressEnvBridge
         $_ENV[$name] = $value;
         (strpos($name, 'HTTP_') !== 0) and $_SERVER[$name] = $value;
 
-        $loaded = self::loadedVars();
-        $loaded[$name] = true;
-        self::$loadedVars = $loaded;
-
-        $this->maybeFilter($name, $value);
+        $this->maybeFilterThenCache($name, $value);
     }
 
     /**
@@ -379,34 +378,52 @@ class WordPressEnvBridge
      */
     public function dumpCached(string $file): bool
     {
-        if (!static::$cache || $this->fromCache) {
+        if ($this->fromCache) {
+            return false;
+        }
+
+        // Make sure cached env contains all loaded vars.
+        $symfonyLoaded = '';
+        if (self::$loadedVars) {
+            foreach (self::$loadedVars as $key => $i) {
+                $symfonyLoaded .= $symfonyLoaded ? ",{$key}" : $key;
+                $this->read($key);
+            }
+        }
+
+        if (!static::$cache) {
             return false;
         }
 
         $content = "<?php\n";
-        $cache = var_export(static::$cache, true) . ";\n"; // phpcs:ignore
+
+        // Store the loaded vars keys in SYMFONY_DOTENV_VARS var so that self::loadedVars() on
+        // the cached instance will work.
+        $symfonyLoaded and $content .= "putenv('SYMFONY_DOTENV_VARS={$symfonyLoaded}');\n\n";
+
         foreach (self::$cache as $key => [$value, $filtered]) {
+            // For WP constants, dump the `define` with filtered value, if any.
             if (self::WP_CONSTANTS[$key] ?? null) {
-                $export = $value !== $filtered
+                $define = $value !== $filtered
                     ? var_export($filtered, true) // phpcs:ignore
                     : "'{$value}'";
-                $content .= "define('{$key}', {$export});\n";
+                $content .= "define('{$key}', {$define});\n";
             }
+
+            // For actual environment values, do noting.
             if (!$this->isLoadedVar($key)) {
                 $content .= "\n";
                 continue;
             }
+
+            // For env loaded from file, dump the variable definition.
             $content .= "putenv('{$key}={$value}');\n";
-            $content .="\$_ENV['{$key}'] = '{$value}';\n";
+            $content .= "\$_ENV['{$key}'] = '{$value}';\n";
             (strpos($key, 'HTTP_') !== 0) and $content .= "\$_SERVER['{$key}'] = '{$value}';\n\n";
         }
 
-        if (self::$loadedVars) {
-            $loadedVars = implode(',', array_keys(self::$loadedVars));
-            $content .= "putenv('SYMFONY_DOTENV_VARS={$loadedVars}');\n\n";
-        }
+        $content .= sprintf("return %s;\n", var_export(static::$cache, true)); // phpcs:ignore
 
-        $content .= "return {$cache}";
         $success = @file_put_contents($file, $content);
 
         return (bool)$success;
@@ -461,7 +478,7 @@ class WordPressEnvBridge
      *
      * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
-    private function maybeFilter(string $name, string $value)
+    private function maybeFilterThenCache(string $name, string $value)
     {
         // phpcs:enable
 
@@ -470,7 +487,7 @@ class WordPressEnvBridge
         if (!$filter) {
             self::$cache[$name] = [$value, $value];
 
-            return  $value;
+            return $value;
         }
 
         $this->filters or $this->filters = new Filters();
