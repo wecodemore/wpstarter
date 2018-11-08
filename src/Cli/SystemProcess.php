@@ -95,7 +95,7 @@ class SystemProcess
         try {
             is_string($cwd) or $cwd = $this->paths->root();
             $process = new Process($command, $cwd, $this->environment ?: null);
-            $process->mustRun();
+            $process->disableOutput()->mustRun();
 
             return $process->isSuccessful();
         } catch (\Throwable $exception) {
