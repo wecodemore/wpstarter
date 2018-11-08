@@ -59,11 +59,6 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
     private $config;
 
     /**
-     * @var string
-     */
-    private $error = '';
-
-    /**
      * @param Locator $locator
      */
     public function __construct(Locator $locator)
@@ -155,8 +150,6 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         );
 
         if (!$this->filesystem->save($built, $this->targetPath($paths))) {
-            $this->error = 'Error on create wp-config.php.';
-
             return self::ERROR;
         }
 
@@ -164,15 +157,15 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
     public function error(): string
     {
-        return $this->error;
+        return 'Creation of wp-config.php failed.';
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
     public function success(): string
     {

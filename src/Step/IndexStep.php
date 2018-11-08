@@ -38,11 +38,6 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
     private $composerFilesystem;
 
     /**
-     * @var string
-     */
-    private $error = '';
-
-    /**
      * @param Locator $locator
      */
     public function __construct(Locator $locator)
@@ -71,8 +66,8 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
     }
 
     /**
-     * @inheritdoc
-     * @throws \InvalidArgumentException
+     * @param Paths $paths
+     * @return string
      */
     public function targetPath(Paths $paths): string
     {
@@ -94,8 +89,6 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
         $built = $this->builder->build($paths, 'index.php', ['BOOTSTRAP_PATH' => "/{$indexPath}"]);
 
         if (!$this->filesystem->save($built, $this->targetPath($paths))) {
-            $this->error = 'Error creating index.php.';
-
             return Step::ERROR;
         }
 
@@ -107,7 +100,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
      */
     public function error(): string
     {
-        return $this->error;
+        return 'Creation of index.php failed.';
     }
 
     /**

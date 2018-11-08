@@ -156,7 +156,6 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      * @param  string $url
      * @param  string $destination
      * @return int
-     * @throws \RuntimeException
      */
     private function download(string $url, string $destination): int
     {
@@ -177,7 +176,6 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      * @param  string $destination
      * @param  string|null $source
      * @return int
-     * @throws \InvalidArgumentException
      */
     private function copy(Paths $paths, string $destination, string $source = null): int
     {
@@ -195,7 +193,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
     public function error(): string
     {
@@ -203,7 +201,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
     public function skipped(): string
     {
@@ -211,7 +209,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
     public function success(): string
     {
