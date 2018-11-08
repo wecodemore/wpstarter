@@ -172,7 +172,7 @@ class Io
     /**
      * @param string $line
      */
-    public function writeVerboseErrorLine(string $line)
+    public function writeErrorLineIfVerbose(string $line)
     {
         $this->io->writeError("  {$line}", IOInterface::VERBOSE);
     }

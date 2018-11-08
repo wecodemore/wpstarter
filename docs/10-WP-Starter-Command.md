@@ -87,7 +87,7 @@ class YarnStep implements Step {
             }
             
             $error++;
-            $this->io->writeVerboseErrorLine('    <fg=red>Error</>');
+            $this->io->writeErrorLineIfVerbose('    <fg=red>Error</>');
         }
         
         if (!$error || !$found) {
