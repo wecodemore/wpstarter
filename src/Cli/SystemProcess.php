@@ -84,4 +84,22 @@ class SystemProcess
             return false;
         }
     }
+
+    /**
+     * @param string $command
+     * @param string|null $cwd
+     * @return bool
+     */
+    public function executeSilently(string $command, string $cwd = null): bool
+    {
+        try {
+            is_string($cwd) or $cwd = $this->paths->root();
+            $process = new Process($command, $cwd, $this->environment ?: null);
+            $process->mustRun();
+
+            return $process->isSuccessful();
+        } catch (\Throwable $exception) {
+            return false;
+        }
+    }
 }
