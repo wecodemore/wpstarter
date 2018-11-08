@@ -127,7 +127,7 @@ if ($env->read(Util\DbChecker::WP_INSTALLED)) {
 $commands = [];
 
 // If DB does not exist, let's tell WP CLI to create it.
-if (!$env[Util\DbChecker::WPDB_EXISTS]) {
+if (!$env->read(Util\DbChecker::WPDB_EXISTS)) {
     $commands[] = 'wp db create';
 }
 
@@ -138,13 +138,13 @@ $siteUrl = $env->read('WP_SITEURL') ?: $home;
 $email = "{$user}@" . parse_url($home, PHP_URL_HOST);
 $install = "wp core install";
 $install .= " --title='WP Starter Example' --url={$home}";
-$install .= " --admin_user={$user} --admin_email={$email}";
+$install .= " --admin_user='{$user}' --admin_email='{$email}'";
 
 // Add install command plus commands to update siteurl option and setup language.
 $commands[] = $install;
 $commands[] = "wp option update siteurl {$siteUrl}";
 $commands[] = 'wp language core install it_IT';
-$commands[] = 'wp language core activate it_IT';
+$commands[] = 'wp site switch-language it_IT';
 
 return $commands;
 ```
