@@ -134,7 +134,7 @@ class HtaccessStep implements FileCreationStep {
 
 First of all, let's notice how the interface implemented is not `Step`, but `FileCreationStep`: another interface provided by WP Starter that has to be implemented by steps that create files, and that's our case.
 
-This interface extends `Step` by only adding the `targetPath` method that has to return the full path where the created file will be saved.
+That interface extends `Step` by only adding the `targetPath` method that has to return the full path where the created file will be saved.
 
 Thanks to that method WP Starter will check if the file exists before even attempting to create it and will try to overwrite it only if the `prevent-overwrite` WP Starter setting permit so. For example, if `prevent-overwrite` is set to `"ask"` WP Starter will ask the user a confirmation before overwriting the existing file, or if `prevent-overwrite` is explicitly set to don't overwrite `.htaccess` the entire step will be skipped at all.
 

@@ -100,13 +100,13 @@ There are no configuration affecting this step.
 
 ### `MuLoaderStep`
 
-MU plugins (aka "Must-use plugins") are special single-file plugins that WordPress always execute, in fact, they can't be activated and deactivated like regular plugins.
+MU plugins (aka "Must-use plugins") are special single-file plugins that WordPress always executes, in fact, they can't be activated and deactivated like regular plugins.
 
-MU plugins are supported by [Composer Installers](http://composer.github.io/installers/) and so Composer packages containing a MU plugin will be correctly installed in the `/mu-plugins` subfolder inside WP content folder.
+MU plugins are supported by [Composer Installers](http://composer.github.io/installers/) and so Composer packages containing MU plugins will be correctly installed in the `/mu-plugins` subfolder inside WP content folder.
 
 However, Composer will place each of them in an **own subdirectory**, but unfortunately WordPress is not able to load MU plugins from subfolders: for WordPress a MU plugin is a single file placed *directly* inside `wp-content/mu-plugins`.
 
-This step creates a MU plugin, placed in `wp-content/mu-plugins` folder that loads all the MU plugins that Composer placed in own subfolder.
+This step creates a MU plugin, placed in `wp-content/mu-plugins` folder, that loads all the MU plugins that Composer placed in own subfolder.
 
 There's no configuration affecting this step. The MU plugins to load are identified by WP Starter looking at installed Composer packages with [type](https://getcomposer.org/doc/04-schema.md#type) `"wordpress-muplugin"`.
 
@@ -118,7 +118,7 @@ It is a quite standard practice for applications that support `.env` files to pr
 
 WP Starter ships with a template for such file that includes all the env var names that resemble WP configuration constants and what this step does is to copy that file in project root folder.
 
-The step outcome might actually change based on the `env-example` setting. By setting it to `false`, the step is entirely skipped. Moreover, the step is also skipped if an `.env` file is found, as it makes no sense providing an example for something that exists yet.
+The step outcome might actually change based on the `env-example` setting. By setting it to `false`, the step is entirely skipped. Moreover, the step is also skipped if an `.env` file is found, as it makes no sense providing an example for something that exists already.
 
 When `env-example` setting is `true` WP Starter will copy the template in project root, and when the setting is `"ask"` WP Starter will ask user before copying.
 
@@ -168,7 +168,7 @@ Because WP Starter normally uses a non-standard WP content folder located outsid
 
 The scope of this step is to move the default plugins and themes from the `/wp-content` folder to the project content folder, so that WordPress will recognize them.
 
-The main setting affecting this step is `move-content` that can be set to`true` to enable the step. When `false` (default) this step is skipped at all. The value of the setting can also be *"ask"* and if so WP Starter will aks user before moving the files.
+The main setting affecting this step is `move-content` that can be set to`true` to enable the step. When `false` (default) this step is skipped at all. The value of the setting can also be *"ask"* and if so WP Starter will ask user before moving the files.
 
 When the `register-theme-folder` setting is `true` WP Starter will also skip this step because default themes will be available anyway and otherwise a non-existing theme folder would be registered.
 

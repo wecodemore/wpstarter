@@ -144,11 +144,11 @@ Moreover, it is _partially_ working for `"frc/batcache"`, in fact this package c
 
 ## WP Starter specific configuration
 
- **`"extra.wpsrtarter"`** is the place for all the WP Starter configuration. However, WP Starter supports also a separate **`wpstarter.json`** file located at project root, and that is what we are using in our sample.
+ **`"extra.wpstarter"`** is the place for all the WP Starter configuration. However, WP Starter supports also a separate **`wpstarter.json`** file located at project root, and that is what we are using in our sample.
 
 The chapter *"Configuration"* has a detailed explanation on how that works and there's also a *"Settings Cheat Sheet"* chapter that lists all the available settings.
 
-Below there is the a step by step explanation of just the settings used in the sample `wpstarter.json` we are using here.
+Below there is the a step by step explanation of just the settings used in the sample `wpstarter.json` we are using in sample in this chapter.
 
 ### `register-theme-folder`
 
