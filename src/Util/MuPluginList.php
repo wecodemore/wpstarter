@@ -80,12 +80,14 @@ class MuPluginList
         }
 
         if (count($files) === 1) {
-            return [reset($files)];
+            $file = reset($files);
+
+            return is_readable($file) ? [$file] : [];
         }
 
         $paths = [];
         foreach ($files as $file) {
-            if ($this->isPluginFile($file)) {
+            if (is_readable($file) && $this->isPluginFile($file)) {
                 $paths[] = $file;
             }
         }

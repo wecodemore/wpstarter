@@ -5,14 +5,8 @@
  */
 
 foreach (explode(',', '{{{MU_PLUGINS_LIST}}}') as $muPlugin) {
-    $filePath = wp_normalize_path(__DIR__ . '/'. trim($muPlugin));
-    // Skip unexistent, unreadable and non-php files
-    if ($filePath
-        && is_file($filePath)
-        && is_readable($filePath)
-        && strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) === 'php'
-        && validate_file($filePath) === 0
-    ) {
-        require_once $filePath;
+    $filePath = wp_normalize_path(trim($muPlugin));
+    if ($filePath && file_exists(__DIR__ . "/{$filePath}")) {
+        require_once __DIR__ . "/{$filePath}";
     }
 }
