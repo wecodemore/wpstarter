@@ -214,14 +214,22 @@ final class Result
         try {
             $value = $resolver();
 
-            if ($value instanceof Result) {
-                $this->error = $value->error;
-                $this->value = $this->error ? null : $value->value;
+            $resolved = $value;
+            $error = null;
+            while ($resolved instanceof Result && !$error) {
+                $resolved->maybeResolve();
+                $error = $resolved->error;
+                $resolved = $resolved->value;
+            }
+
+            if ($error) {
+                $this->error = $error;
+                $this->value = null;
 
                 return;
             }
 
-            $this->value = $value;
+            $this->value = $resolved;
         } catch (\Throwable $throwable) {
             $this->value = null;
             $this->error = new \Error($throwable->getMessage(), 0, $throwable);
