@@ -214,11 +214,24 @@ final class ComposerPlugin implements
         $stepClasses = $skippedSteps ? array_diff($allSteps, $skippedSteps) : $allSteps;
         $hasWpCliStep = false;
 
-        $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCliStep);
+        $allStepOk = $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCliStep);
 
         if (!$hasWpCliStep && !$commandMode && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
             $steps->addStep(new Step\WpCliCommandsStep($this->locator));
         }
+
+        if ($allStepOk) {
+            return $steps;
+        }
+
+        if (!count($steps)) {
+            $wantedSteps = $commandMode ? $selectedStepNames : $stepClasses;
+            $invalidSteps = implode("', '", $wantedSteps);
+            throw new \Exception("Invalid steps: '{$invalidSteps}'");
+        }
+
+        $io = $this->locator->io();
+        $io->writeErrorLine('<fg=red>Some step provided are invalid and will be skipped.</>');
 
         return $steps;
     }
@@ -228,27 +241,34 @@ final class ComposerPlugin implements
      * @param array $stepClasses
      * @param array $selectedStepNames
      * @param bool $hasWpCliStep
+     * @return bool
      */
     private function factorySteps(
         Step\Steps $steps,
         array $stepClasses,
         array $selectedStepNames,
         bool &$hasWpCliStep
-    ) {
+    ): bool {
 
         $stepsAdded = [];
         $wpCliSteps = [];
+
+        $errors = 0;
 
         foreach ($stepClasses as $stepName => $stepClass) {
             if (!$stepName
                 || ($selectedStepNames && !in_array($stepName, $selectedStepNames, true))
                 || in_array($stepName, $stepsAdded, true)
             ) {
+                $errors++;
+
                 continue;
             }
 
             $step = $this->factoryStep($stepClass);
             if ($step->name() !== $stepName) {
+                $errors++;
+
                 continue;
             }
 
@@ -268,6 +288,8 @@ final class ComposerPlugin implements
             $hasWpCliStep = true;
             $steps->addStep(...$wpCliSteps);
         }
+
+        return $errors === 0;
     }
 
     /**

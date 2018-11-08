@@ -19,7 +19,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  *
  * This is used as main "task runner" for WP Starter.
  */
-final class Steps implements PostProcessStep
+final class Steps implements PostProcessStep, \Countable
 {
     /**
      * @var Locator
@@ -73,6 +73,14 @@ final class Steps implements PostProcessStep
         $this->steps = new \SplObjectStorage();
         $this->postProcessSteps = new \SplObjectStorage();
         $this->isCommandMode = $isCommandMode;
+    }
+
+    /**
+     * @return int
+     */
+    public function count()
+    {
+        return $this->steps->count();
     }
 
     /**
