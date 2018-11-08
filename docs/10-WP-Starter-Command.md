@@ -30,7 +30,7 @@ That can be done by adding steps to `command-steps` setting, which format is ide
 
 ### An example
 
-Imagine to desire a custom step that run `npm install` for each package of type "wordpress-plugin" or "wordpress-theme" of a given specific vendor.
+Imagine to desire a custom step that run `yarn` for each package of type "wordpress-plugin" or "wordpress-theme" of a given specific vendor.
 
 This script could be written without making a WP Starter step, but using WP Starter is more convenient because:
 
@@ -38,10 +38,10 @@ This script could be written without making a WP Starter step, but using WP Star
 - easy way to find target packages, thanks to WP Starter `PackageFinder` object (provided by `Locator::packageFinder()`)
 - easy (and OS-agnostic) way to run shell process via WP Starter `SystemProcess` object (provided by `Locator::systemProcess()`) build on top of [Symfony `Process` component](https://symfony.com/doc/current/components/process.html).
 
-The relevant part of such step could be just:
+The *relevant* part of such step could be:
 
 ```php
-class NpmStep implements Step {
+class YarnStep implements Step {
     
     public function __construct(Locator $locator)
     {
@@ -51,18 +51,53 @@ class NpmStep implements Step {
         $this->paths = $locator->paths();
     }
     
-    public function name() {
-        return 'npm';
+    public function name(): string
+    {
+        return 'yarn';
     }
     
-    public function run() {
-        foreach ($this->finder->findByVendor('mycompany') as $package) {
-            if (strpos($package->getType(), 'wordpress-') === 0) {
-                $cwd = $this->paths->root($package->findPathOf($package));
-                $this->process->execute('npm install', $cwd);
-            }
+    public function run(): int
+    {
+        // Find all packages named "mycompany/*"
+        $packages = $this->finder->findByVendor('mycompany');
+        if (!$packages) {
+            return Step::NONE;
         }
-        $this->io->writeSuccess("NPM step done.");
+        
+        $found = 0;
+        $error = 0;
+        
+        foreach ($packages as $package) {
+            // Skip if this is not a WordPress (mu-)plugin or theme
+            if (strpos($package->getType(), 'wordpress-') !== 0) {
+                continue;
+            }
+            
+            $found++;
+            
+            $name = '<comment>' . $package->getName() . '</comment>';
+            $this->io->writeIfVerbose("  - Running 'yarn' for {$name}...");
+            
+            // Find the absolute path to package folder...
+            $cwd = $this->paths->root($package->findPathOf($package));
+            // ...and run yarn using that folder as working dir.
+            if ($this->process->execute('yarn', $cwd)) {
+                $this->io->writeIfVerbose('    <fg=green>Done</>');
+                continue;
+            }
+            
+            $error++;
+            $this->io->writeVerboseErrorLine('    <fg=red>Error</>');
+        }
+        
+        if (!$error || !$found) {
+            // Either nothing was done, or everything ran successfully.
+            return $runned ? Step::SUCCESS : Step::NONE;
+        }
+        
+        return $error === $found
+            ? Step::ERROR                   // everything failed
+            : Step::ERROR | Step::SUCCESS;  // something failed
     }
 }
 ```
@@ -71,8 +106,8 @@ Adding this step to  `command-steps` setting:
 
 ```json
 {
-    "command-steps": "npm"
+    "command-steps": "yarn"
 }
 ```
 
-It would be possible to run `composer wpstarter npm` and make the step run for us, without having it run every time Composer install or update dependencies.
+It would be possible to run `composer wpstarter yarn` and make the step run for us on demand, and not every time Composer installs or updates dependencies.
