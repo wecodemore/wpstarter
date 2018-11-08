@@ -90,7 +90,7 @@ final class Steps implements PostProcessStep
      */
     public function addStep(Step $step, Step ...$steps): Steps
     {
-        if (!$this->running && !$this->isCommandMode) {
+        if (!$this->running && !($this->isCommandMode && $this->runningScripts)) {
             $this->steps->attach($step);
             array_walk($steps, [$this->steps, 'attach']);
         }
@@ -105,7 +105,7 @@ final class Steps implements PostProcessStep
      */
     public function removeStep(Step $step, Step ...$steps): Steps
     {
-        if (!$this->running && !$this->isCommandMode) {
+        if (!$this->running && !($this->isCommandMode && $this->runningScripts)) {
             $this->steps->detach($step);
             array_walk($steps, [$this->steps, 'detach']);
         }
