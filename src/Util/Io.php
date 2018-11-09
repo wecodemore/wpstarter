@@ -167,7 +167,7 @@ class Io
      */
     public function writeErrorLine(string $line)
     {
-        $this->io->writeError("  {$line}");
+        $this->io->writeError("  <fg=red>{$line}</>");
     }
 
     /**
@@ -175,7 +175,7 @@ class Io
      */
     public function writeErrorLineIfVerbose(string $line)
     {
-        $this->io->writeError("  {$line}", IOInterface::VERBOSE);
+        $this->io->writeError("  <fg=red>{$line}</>", IOInterface::VERBOSE);
     }
 
     /**
@@ -292,6 +292,14 @@ class Io
     public function writeColorBlock(string $color, string ...$lines): bool
     {
         return $this->writeBlock($color, strtolower($color) !== 'red', ...$lines);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isVerbose(): bool
+    {
+        return $this->io->isVerbose();
     }
 
     /**

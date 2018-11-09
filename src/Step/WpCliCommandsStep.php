@@ -104,9 +104,14 @@ final class WpCliCommandsStep implements Step
 
         $this->io->write('');
         $this->io->writeComment("Running WP CLI commands...");
+
+        $checkVer = $this->io->isVerbose()
+            ? $this->process->execute('cli version')
+            : $this->process->executeSilently('cli version');
+
         $this->io->write('');
 
-        if (!$this->process->executeSilently('cli version')) {
+        if (!$checkVer) {
             return self::ERROR;
         }
 
@@ -126,7 +131,7 @@ final class WpCliCommandsStep implements Step
             $this->io->write("<fg=magenta>\$ wp {$commandDesc} {$dashes}</>");
             $continue = $this->process->execute($command);
             if (!$continue) {
-                $this->io->writeErrorLine("<fg=red>'wp {$command}' FAILED! Quitting WP CLI.</>");
+                $this->io->writeErrorLine("'wp {$command}' FAILED! Quitting WP CLI.");
             }
             $this->io->write('<fg=magenta>' . str_repeat('-', 60) . '</>');
             $this->io->write('');
