@@ -250,9 +250,11 @@ There might be security implications in this, please see the "Make WordPress" ti
 
 The gist of it is that `HTTP_X_FORWARDED_PROTO` is a server variable filled from an a HTTP header (like any `$_SERVER` variable whose name starts with `HTTP_`) which means that it could be set by the client or by a [MITM](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) proxy. On the other hand, environment variable can only be set on the server, so checking the env variable makes the presence of HTTP header trustable.
 
+
+
 ------
 
-|                                                      |                                                            |
+| *Prev*                                               |                                                     *Next* |
 | ---------------------------------------------------- | ---------------------------------------------------------: |
 | [Environment Variables](02-Environment-Variables.md) | [WP Starter Configuration](04-WP-Starter-Configuration.md) |
 

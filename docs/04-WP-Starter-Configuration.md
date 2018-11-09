@@ -87,8 +87,12 @@ This configuration defaults to `"./wordpress"` meaning a `wordpress` folder insi
 
 This configuration defaults to `"./wp-content"` meaning a `wp-content` folder inside project root.
 
+
+
+
+
 ------
 
-|                                                      |                                            |
+| *Prev*                                               |                                     *Next* |
 | ---------------------------------------------------- | -----------------------------------------: |
 | [WordPress Integration](03-WordPress-Integration.md) | [WP Starter Steps](05-WP-Starter-Steps.md) |

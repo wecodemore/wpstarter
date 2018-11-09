@@ -31,6 +31,6 @@ Alphabetically ordered:
 
 ---
 
-|                                                            |                                             |
+| *Prev*                                                     |                                      *Next* |
 | ---------------------------------------------------------- | ------------------------------------------: |
 | [Custom Steps Development](08-Custom-Steps-Development.md) | [WP Starter Command](10-WP-Starter-Command) |

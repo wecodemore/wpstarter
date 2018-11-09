@@ -202,6 +202,6 @@ When WP Starter finished, if webroot is correctly pointing to `./public`, and th
 
 ------
 
-|                                            |                                                          |
+| *Prev*                                     |                                                   *Next* |
 | ------------------------------------------ | -------------------------------------------------------: |
 | [WP Starter Steps](05-WP-Starter-Steps.md) | [Running WP CLI Commands](07-Running-WP-CLI-Commands.md) |
