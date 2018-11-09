@@ -264,58 +264,238 @@ class WordPressEnvBridgeTest extends TestCase
         $dir = vfsStream::setup('directory');
         $cacheFile = $dir->url() . '/cached.env.php';
 
-        $_ENV['WP_POST_REVISIONS'] = '5';
+        $_ENV['WP_POST_REVISIONS'] = '7';
         $_ENV['FS_CHMOD_DIR'] = '0644';
 
         $bridge = new WordPressEnvBridge();
+        $bridge->loadFile($this->fixturesPath() . '/example.env');
         $bridge->write('FOO', 'Bar!');
 
-        static::assertSame(5, $bridge->read('WP_POST_REVISIONS'));
+        static::assertFalse($bridge->hasCachedValues());
+
+        // Bridge works with actual env...
+        static::assertSame(7, $bridge->read('WP_POST_REVISIONS'));
         static::assertSame(0644, $bridge->read('FS_CHMOD_DIR'));
+        // ...and works with loaded env...
+        static::assertSame('wp', $bridge->read('DB_NAME'));
+        static::assertSame('Awesome!', $bridge->read('MY_AWESOME_VAR'));
+        // and also works with "manual" added env.
         static::assertSame('Bar!', $bridge->read('FOO'));
         static::assertSame('Bar!', getenv('FOO'));
+        static::assertSame('Bar!', $_ENV['FOO'] ?? '');
+
+        $loadedVars = WordPressEnvBridge::loadedVars();
 
         $bridge->dumpCached($cacheFile);
 
-        unset($_ENV['WP_POST_REVISIONS']);
-        unset($_ENV['FS_CHMOD_DIR']);
-        unset($_ENV['FOO']);
-        unset($_SERVER['FOO']);
-        putenv('FOO');
+        static::assertTrue(file_exists($cacheFile));
 
-        // Because cache
-        static::assertSame(5, $bridge->read('WP_POST_REVISIONS'));
-        static::assertSame(0644, $bridge->read('FS_CHMOD_DIR'));
-        static::assertSame('Bar!', $bridge->read('FOO'));
-        static::assertFalse(getenv('FOO'));
+        $oldCache = null;
 
-        \Closure::bind(
-            function () {
+        $cleanLoaded = \Closure::bind(
+            function (bool $setCache) use (&$oldCache) {
                 /** @noinspection PhpUndefinedFieldInspection */
-                static::$cache = static::$loadedVars = null;
+                $setCache and $oldCache = static::$cache;
+                /** @noinspection PhpUndefinedFieldInspection */
+                static::$cache = [];
+                /** @noinspection PhpUndefinedFieldInspection */
+                static::$loadedVars = null;
+                putenv('SYMFONY_DOTENV_VARS');
             },
             $bridge,
             WordPressEnvBridge::class
-        )();
+        );
+        $cleanLoaded(true);
 
-        // Cache is now remove
-        static::assertNull($bridge->read('WP_POST_REVISIONS'));
-        static::assertNull($bridge->read('FS_CHMOD_DIR'));
-        static::assertNull($bridge->read('FOO'));
+        static::assertSame([], WordPressEnvBridge::loadedVars());
+        static::assertInternalType('array', $oldCache);
+
+        $cleanLoaded(false);
+
+        // Cleanup some loaded env...
+        putenv('MY_BAD_VAR');
+        unset($_ENV['MY_BAD_VAR']);
+        unset($_SERVER['MY_BAD_VAR']);
+        putenv('DB_HOST');
+        unset($_ENV['DB_HOST']);
+        unset($_SERVER['DB_HOST']);
+        putenv('DB_NAME');
+        unset($_ENV['DB_NAME']);
+        unset($_SERVER['DB_NAME']);
+        // ...and prove it is clean
+        static::assertSame(false, getenv('MY_BAD_VAR'));
+        static::assertNull($_ENV['MY_BAD_VAR'] ?? null);
+        static::assertNull($_ENV['MY_BAD_VAR'] ?? null);
+        static::assertSame(false, getenv('DB_HOST'));
+        static::assertNull($_ENV['DB_HOST'] ?? null);
+        static::assertNull($_ENV['DB_HOST'] ?? null);
+        static::assertSame(false, getenv('DB_NAME'));
+        static::assertNull($_ENV['DB_NAME'] ?? null);
+        static::assertNull($_ENV['DB_NAME'] ?? null);
 
         $cachedBridge = WordPressEnvBridge::buildFromCacheDump($cacheFile);
+        $cachedContent = file_get_contents($cacheFile);
+
+        static::assertFalse($cachedBridge->isWpSetup());
+        static::assertTrue($cachedBridge->hasCachedValues());
+
+        $newCache = \Closure::bind(
+            function (): array {
+                /** @noinspection PhpUndefinedFieldInspection */
+                return static::$cache;
+            },
+            $cachedBridge,
+            WordPressEnvBridge::class
+        )();
+
+        static::assertSame($loadedVars, WordPressEnvBridge::loadedVars());
+        static::assertSame($oldCache, $newCache);
+
+        // These variables were accessed via read() and should be part of the dump
+        static::assertContains("putenv('MY_AWESOME_VAR=Awesome!');", $cachedContent);
+        static::assertContains("putenv('DB_NAME=wp');", $cachedContent);
+        static::assertContains("define('DB_NAME', 'wp');", $cachedContent);
+        // ... and these variables were NOT accessed via read() but still should be part of the dump
+        static::assertContains("putenv('MY_BAD_VAR=Bad!');", $cachedContent);
+        static::assertContains("putenv('EMPTY_TRASH_DAYS=12');", $cachedContent);
+        static::assertContains("define('EMPTY_TRASH_DAYS', 12);", $cachedContent);
+
+        // WP constants are set for actual env, accessed loaded env, and not accessed loaded env
+        static::assertTrue(defined('WP_POST_REVISIONS'));
+        static::assertTrue(defined('DB_NAME'));
+        static::assertTrue(defined('DB_HOST'));
+        static::assertTrue(defined('EMPTY_TRASH_DAYS'));
+        // ...and non-WP constants are not defined.
+        static::assertFalse(defined('FOO'));
 
         $_ENV['XYZ'] = 'XYZ';
 
-        static::assertSame(5, $cachedBridge->read('WP_POST_REVISIONS'));
-        static::assertSame(0644, $cachedBridge->read('FS_CHMOD_DIR'));
-        static::assertTrue(defined('FS_CHMOD_DIR'));
-        static::assertTrue(defined('WP_POST_REVISIONS'));
-        static::assertSame(5, WP_POST_REVISIONS);
+        // Actual env is still there
+        static::assertSame('7', $_ENV['WP_POST_REVISIONS'] ?? null);
+        static::assertSame(7, WP_POST_REVISIONS);
+        static::assertSame('0644', $_ENV['FS_CHMOD_DIR'] ?? null);
         static::assertSame(0644, FS_CHMOD_DIR);
-        static::assertSame('Bar!', $bridge->read('FOO'));
         static::assertSame('Bar!', getenv('FOO'));
-        static::assertFalse(defined('FOO'));
-        static::assertSame('XYZ', $bridge->read('XYZ'));
+        static::assertSame('Bar!', $_ENV['FOO'] ?? null);
+        static::assertSame('Bar!', $_SERVER['FOO'] ?? null);
+
+        // Loaded env can be read, we proved they were not there before cache
+        static::assertSame('Bad!', getenv('MY_BAD_VAR'));
+        static::assertSame('Bad!', $_ENV['MY_BAD_VAR'] ?? null);
+        static::assertSame('Bad!', $_SERVER['MY_BAD_VAR'] ?? null);
+        static::assertSame('localhost', getenv('DB_HOST'));
+        static::assertSame('localhost', $_ENV['DB_HOST'] ?? null);
+        static::assertSame('localhost', $_SERVER['DB_HOST'] ?? null);
+
+        // read() on cached bridge should work with both actual env and loaded env...
+        static::assertSame(7, $cachedBridge->read('WP_POST_REVISIONS'));
+        static::assertSame(0644, $cachedBridge->read('FS_CHMOD_DIR'));
+        static::assertSame('Bar!', $cachedBridge->read('FOO'));
+        static::assertSame('Bad!', $cachedBridge->read('MY_BAD_VAR'));
+        static::assertSame('localhost', $cachedBridge->read('DB_HOST'));
+        // ...and it should still be able to read things from actual env set after cache was built
+        static::assertSame('XYZ', $cachedBridge->read('XYZ'));
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testsSetupWordPress()
+    {
+        $cacheFile = $this->fixturesPath() . '/cached.env.php';
+
+        if (file_exists($cacheFile)) {
+            static::markTestSkipped('Cache is already written.');
+        }
+
+        $_ENV['WP_POST_REVISIONS'] = '7';
+        $_ENV['FS_CHMOD_DIR'] = '0644';
+
+        $bridge = new WordPressEnvBridge();
+        $bridge->loadFile($this->fixturesPath() . '/example.env');
+        $bridge->write('FOO', 'Bar!');
+        $bridge->setupWordPress();
+
+        static::assertTrue(defined('DB_HOST'));
+        static::assertTrue(defined('DB_NAME'));
+        static::assertTrue(defined('DB_PASSWORD'));
+        static::assertTrue(defined('WP_POST_REVISIONS'));
+        static::assertTrue(defined('FS_CHMOD_DIR'));
+        static::assertSame(7, WP_POST_REVISIONS);
+        static::assertSame(0644, FS_CHMOD_DIR);
+
+        static::assertTrue($bridge->isWpSetup());
+        static::assertFalse($bridge->hasCachedValues());
+
+        $bridge->dumpCached($cacheFile);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     * @depends testsSetupWordPress
+     */
+    public function testLoadCacheFromScratch()
+    {
+        $cacheFile = $this->fixturesPath() . '/cached.env.php';
+        if (!file_exists($cacheFile)) {
+            static::markTestSkipped('Cache file was not written.');
+        }
+
+        static::assertTrue(file_exists($cacheFile));
+
+        $cachedBridge = WordPressEnvBridge::buildFromCacheDump($cacheFile);
+
+        $notDeleted = false;
+        @unlink($cacheFile);
+        if (file_exists($cacheFile)) {
+            // Try again
+            usleep(2500);
+            @unlink($cacheFile);
+            $notDeleted = file_exists($cacheFile);
+        }
+
+        static::assertFalse($cachedBridge->isWpSetup());
+        static::assertTrue($cachedBridge->hasCachedValues());
+
+        // WP constants are defined, no matter if from actual or loaded env.
+        static::assertTrue(defined('DB_HOST'));
+        static::assertTrue(defined('DB_NAME'));
+        static::assertTrue(defined('DB_PASSWORD'));
+        static::assertTrue(defined('WP_POST_REVISIONS'));
+        static::assertTrue(defined('FS_CHMOD_DIR'));
+        static::assertSame(7, WP_POST_REVISIONS);
+        static::assertSame(0644, FS_CHMOD_DIR);
+
+        // Variables from actual env are not set in env in the dump file...
+        static::assertFalse(getenv('WP_POST_REVISIONS'));
+        static::assertNull($_ENV['WP_POST_REVISIONS'] ?? null);
+        static::assertFalse(getenv('FS_CHMOD_DIR'));
+        static::assertNull($_ENV['FS_CHMOD_DIR'] ?? null);
+        static::assertFalse(getenv('FOO'));
+        static::assertNull($_ENV['FOO'] ?? null);
+        // but because there were accessed, cache still contains them.
+        static::assertSame(7, $cachedBridge->read('WP_POST_REVISIONS'));
+        static::assertSame(0644, $cachedBridge->read('FS_CHMOD_DIR'));
+        static::assertSame('Bar!', $cachedBridge->read('FOO'));
+
+        // These loaded env vars were accessed in previous test (via setupWordPress()).
+        static::assertSame('xxx_', getenv('DB_TABLE_PREFIX'));
+        static::assertSame('xxx_', $_ENV['DB_TABLE_PREFIX'] ?? null);
+        static::assertSame('xxx_', $_SERVER['DB_TABLE_PREFIX'] ?? null);
+        static::assertSame('xxx_', $cachedBridge->read('DB_TABLE_PREFIX'));
+        static::assertSame('wp', getenv('DB_NAME'));
+        static::assertSame('wp', $_ENV['DB_NAME'] ?? null);
+        static::assertSame('wp', $_SERVER['DB_NAME'] ?? null);
+        static::assertSame('wp', $cachedBridge->read('DB_NAME'));
+
+        // These loaded env vars were NOT accessed in previous test, but they can be accessed now.
+        static::assertSame('Bad!', getenv('MY_BAD_VAR'));
+        static::assertSame('Bad!', $_ENV['MY_BAD_VAR'] ?? null);
+        static::assertSame('Bad!', $_SERVER['MY_BAD_VAR'] ?? null);
+        static::assertSame('Bad!', $cachedBridge->read('MY_BAD_VAR'));
+
+        if ($notDeleted) {
+            static::markTestIncomplete('Warning: Cache file was not deleted.');
+        }
     }
 }

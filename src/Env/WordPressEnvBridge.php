@@ -192,7 +192,7 @@ class WordPressEnvBridge
      *
      * @return array
      */
-    private static function loadedVars(): array
+    public static function loadedVars(): array
     {
         if (self::$loadedVars === null) {
             self::$loadedVars = array_flip(explode(',', (getenv('SYMFONY_DOTENV_VARS') ?: '')));
@@ -411,7 +411,7 @@ class WordPressEnvBridge
             }
 
             // For actual environment values, do noting.
-            if (!$this->isLoadedVar($key)) {
+            if (!self::$loadedVars || !array_key_exists($key, self::$loadedVars)) {
                 $content .= "\n";
                 continue;
             }
