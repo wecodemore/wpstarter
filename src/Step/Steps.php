@@ -140,7 +140,7 @@ final class Steps implements PostProcessStep, \Countable
      */
     public function run(Config $config, Paths $paths): int
     {
-        if ($this->running || $this->runningScripts) {
+        if ($this->running || $this->runningScripts || !$this->steps->count()) {
             return Step::NONE;
         }
 

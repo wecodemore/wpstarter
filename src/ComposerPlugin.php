@@ -19,6 +19,7 @@ use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util;
 use WeCodeMore\WpStarter\Step;
+use WeCodeMore\WpStarter\Util\Io;
 
 /**
  * Composer plugin class to run all the WP Starter steps on Composer install or update and also adds
@@ -124,7 +125,7 @@ final class ComposerPlugin implements
 
                 return;
             }
-            
+
             ($event === null && $selectedStepNames) or $this->logo();
 
             $config[Config::SKIP_DB_CHECK]->notEmpty() and $this->locator->dbChecker()->check();
@@ -198,70 +199,86 @@ final class ComposerPlugin implements
             Step\MoveContentStep::NAME => Step\MoveContentStep::class,
             Step\ContentDevStep::NAME => Step\ContentDevStep::class,
             Step\WpCliConfigStep::NAME => Step\WpCliConfigStep::class,
+            Step\WpCliCommandsStep::NAME => Step\WpCliCommandsStep::class,
         ];
 
-        $commandMode = $event === null && $selectedStepNames;
-        $steps = new Step\Steps($this->locator, $this->composer, $commandMode);
+        $io = $this->locator->io();
+
         $selectedStepNames = array_filter($selectedStepNames, 'is_string');
-        $customSteps = $this->locator->config()[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
-        $skippedSteps = $this->locator->config()[Config::SKIP_STEPS]->unwrapOrFallback([]);
-        $allSteps = array_unique(array_merge($defaultSteps, $customSteps));
-        if (!$event && $selectedStepNames) {
-            $cmdSteps = $this->locator->config()[Config::COMMAND_STEPS]->unwrapOrFallback();
-            $cmdSteps and $allSteps = array_unique(array_merge($allSteps, $cmdSteps));
+        $commandMode = $event === null && $selectedStepNames;
+
+        $steps = new Step\Steps($this->locator, $this->composer, $commandMode);
+
+        $customStepClasses = $config[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
+        $skippedStepClasses = $config[Config::SKIP_STEPS]->unwrapOrFallback([]);
+        $allStepClasses = array_unique(array_merge($defaultSteps, $customStepClasses));
+
+        if ($commandMode) {
+            $cmdSteps = $config[Config::COMMAND_STEPS]->unwrapOrFallback();
+            $cmdSteps and $allStepClasses = array_unique(array_merge($allStepClasses, $cmdSteps));
         }
 
-        $stepClasses = $skippedSteps ? array_diff($allSteps, $skippedSteps) : $allSteps;
-        $hasWpCliStep = false;
+        $targetStepClasses = $skippedStepClasses
+            ? array_diff($allStepClasses, $skippedStepClasses)
+            : $allStepClasses;
 
-        $allStepOk = $this->factorySteps($steps, $stepClasses, $selectedStepNames, $hasWpCliStep);
+        if (!$targetStepClasses) {
+            $io->writeComment('Nothing to run.');
 
-        if (!$hasWpCliStep && !$commandMode && $config[Config::WP_CLI_COMMANDS]->notEmpty()) {
-            $steps->addStep(new Step\WpCliCommandsStep($this->locator));
+            return $steps;
         }
 
-        if ($allStepOk) {
+        $errors = $this->factorySteps($steps, $targetStepClasses, $selectedStepNames);
+        if ($commandMode) {
+            $errors += $this->checkSelectedSteps($targetStepClasses, $selectedStepNames);
+        }
+
+        if (!$errors) {
             return $steps;
         }
 
         if (!count($steps)) {
-            $wantedSteps = $commandMode ? $selectedStepNames : $stepClasses;
+            $wantedSteps = $commandMode ? $selectedStepNames : $targetStepClasses;
             $invalidSteps = implode("', '", $wantedSteps);
             throw new \Exception("Invalid steps: '{$invalidSteps}'");
         }
 
-        $io = $this->locator->io();
-        $io->writeErrorLine('<fg=red>Some step provided are invalid and will be skipped.</>');
+        $text = $errors > 1
+            ? "{$errors} of the steps provided are invalid and will be skipped."
+            : 'One step provided is invalid and will be skipped.';
+
+        $lines = Io::ensureLength($text);
+        array_unshift($lines, '');
+        array_walk($lines, [$io, 'writeErrorLine']);
 
         return $steps;
     }
 
     /**
      * @param Step\Steps $steps
-     * @param array $stepClasses
+     * @param array $targetStepClasses
      * @param array $selectedStepNames
-     * @param bool $hasWpCliStep
-     * @return bool
+     * @return int
      */
     private function factorySteps(
         Step\Steps $steps,
-        array $stepClasses,
-        array $selectedStepNames,
-        bool &$hasWpCliStep
-    ): bool {
+        array $targetStepClasses,
+        array $selectedStepNames
+    ): int {
 
         $stepsAdded = [];
         $wpCliSteps = [];
 
         $errors = 0;
 
-        foreach ($stepClasses as $stepName => $stepClass) {
-            if (!$stepName
-                || ($selectedStepNames && !in_array($stepName, $selectedStepNames, true))
-                || in_array($stepName, $stepsAdded, true)
-            ) {
-                $errors++;
+        foreach ($targetStepClasses as $stepName => $stepClass) {
+            if (!$stepName || in_array($stepName, $stepsAdded, true)) {
+                $stepName or $errors++;
 
+                continue;
+            }
+
+            if ($selectedStepNames && !in_array($stepName, $selectedStepNames, true)) {
                 continue;
             }
 
@@ -275,9 +292,9 @@ final class ComposerPlugin implements
             $stepsAdded[] = $stepName;
 
             if (is_a($stepClass, Step\WpCliCommandsStep::class, true)
-                || (strpos($stepName, Step\WpCliCommandsStep::NAME) === 0)
+                || ($stepName === Step\WpCliCommandsStep::NAME)
             ) {
-                $wpCliSteps[] = $stepClass;
+                $wpCliSteps[] = $step;
                 continue;
             }
 
@@ -285,11 +302,10 @@ final class ComposerPlugin implements
         }
 
         if ($wpCliSteps) {
-            $hasWpCliStep = true;
             $steps->addStep(...$wpCliSteps);
         }
 
-        return $errors === 0;
+        return $errors;
     }
 
     /**
@@ -303,6 +319,21 @@ final class ComposerPlugin implements
         }
 
         return new $stepClass($this->locator, $this->composer);
+    }
+
+    /**
+     * @param array $targetStepClasses
+     * @param array $selectedStepNames
+     * @return int
+     */
+    private function checkSelectedSteps(array $targetStepClasses, array $selectedStepNames): int
+    {
+        $errors = 0;
+        foreach ($selectedStepNames as $selectedStepName) {
+            array_key_exists($selectedStepName, $targetStepClasses) or $errors++;
+        }
+
+        return $errors;
     }
 
     /**
