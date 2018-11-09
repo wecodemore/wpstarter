@@ -84,7 +84,6 @@ class Validator
             return Result::none();
         }
 
-        is_string($value) and $value = [$value];
         if (!is_array($value)) {
             return Result::errored('Steps config must be an array.');
         }

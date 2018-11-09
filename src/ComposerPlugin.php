@@ -65,7 +65,7 @@ final class ComposerPlugin implements
     /**
      * @return array
      */
-    private static function defaultSteps(): array
+    public static function defaultSteps(): array
     {
         return [
             Step\CheckPathStep::NAME => Step\CheckPathStep::class,
@@ -119,9 +119,11 @@ final class ComposerPlugin implements
      *
      * @param Event|null $event
      * @param array $selectedStepNames
+     * @param bool $skipMode
      * @return void
+     * @throws \Exception
      */
-    public function run(Event $event = null, array $selectedStepNames = [])
+    public function run(Event $event = null, array $selectedStepNames = [], bool $skipMode = false)
     {
         $this->setupAutoload();
 
@@ -153,7 +155,7 @@ final class ComposerPlugin implements
                 $this->locator->dbChecker()->check();
             }
 
-            $steps = $this->initializeSteps($config, $event, ...$selectedStepNames);
+            $steps = $this->initializeSteps($config, $event, $skipMode, ...$selectedStepNames);
             $steps->run($this->locator->config(), $this->locator->paths());
 
             $event or exit(0);
@@ -204,37 +206,44 @@ final class ComposerPlugin implements
     /**
      * @param Config $config
      * @param Event $event
+     * @param bool $skipMode
      * @param string[] $selectedStepNames
      * @return Step\Steps
+     * @throws \Exception
      */
     private function initializeSteps(
         Config $config,
         Event $event = null,
+        bool $skipMode = false,
         string ...$selectedStepNames
     ): Step\Steps {
 
         $io = $this->locator->io();
-
         $commandMode = $event === null && $selectedStepNames;
+        $errorsIn = [];
 
         $steps = new Step\Steps($this->locator, $this->composer, $commandMode);
 
         $selectedStepNames = array_filter($selectedStepNames, 'is_string');
-        $defaultStepClasses = static::defaultSteps();
-        $customStepClasses = $config[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
-        $skippedStepClasses = $config[Config::SKIP_STEPS]->unwrapOrFallback([]);
-        $allStepClasses = array_unique(array_merge($defaultStepClasses, $customStepClasses));
+        $defaultSteps = static::defaultSteps();
+        $customSteps = $config[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
+        $allSteps = array_unique(array_merge($defaultSteps, $customSteps));
 
-        if ($commandMode) {
+        if ($commandMode && !$skipMode) {
             $commandStepClasses = $config[Config::COMMAND_STEPS]->unwrapOrFallback();
             if ($commandStepClasses) {
-                $allStepClasses = array_unique(array_merge($allStepClasses, $commandStepClasses));
+                $allSteps = array_unique(array_merge($allSteps, $commandStepClasses));
             }
         }
 
-        $targetStepClasses = $skippedStepClasses
-            ? array_diff($allStepClasses, $skippedStepClasses)
-            : $allStepClasses;
+        if ($commandMode) {
+            $invalidSelectedNames = $this->checkSelectedSteps($allSteps, $selectedStepNames);
+            $errorsIn['input'] = $invalidSelectedNames;
+        }
+
+        $skippedClasses = $this->classesToSkip($config, $allSteps, $selectedStepNames, $skipMode);
+        $targetStepClasses = $skippedClasses ? array_diff($allSteps, $skippedClasses) : $allSteps;
+        $skipMode and $selectedStepNames = [];
 
         if (!$targetStepClasses) {
             $io->writeColorBlock('yellow', 'Nothing to run.');
@@ -242,30 +251,53 @@ final class ComposerPlugin implements
             return $steps;
         }
 
-        $errors = $this->factorySteps($steps, $targetStepClasses, $selectedStepNames);
-        if ($commandMode) {
-            $errors += $this->checkSelectedSteps($targetStepClasses, $selectedStepNames);
-        }
+        $failedFactory = $this->factorySteps($steps, $targetStepClasses, $selectedStepNames);
+        $errorsIn['config'] = $failedFactory;
 
-        if (!$errors) {
+        if (!array_filter($errorsIn)) {
             return $steps;
         }
 
         if (!count($steps)) {
-            $wantedSteps = $commandMode ? $selectedStepNames : $targetStepClasses;
-            $invalidSteps = implode("', '", $wantedSteps);
-            throw new \Exception("Invalid steps: '{$invalidSteps}'");
+            throw new \Exception($this->errorsInMessage($errorsIn, true));
         }
 
-        $text = $errors > 1
-            ? "{$errors} of the steps provided are invalid and will be skipped."
-            : 'One step provided is invalid and will be skipped.';
-
+        $text = Io::ensureLength($this->errorsInMessage($errorsIn, false));
         $io->writeErrorLine('');
-        $lines = Io::ensureLength($text);
-        array_walk($lines, [$io, 'writeErrorLine']);
+        array_walk($text, [$io, 'writeErrorLine']);
+        $io->writeErrorLine('');
 
         return $steps;
+    }
+
+    /**
+     * @param Config $config
+     * @param array $allStepClasses
+     * @param array $selectedStepNames
+     * @param bool $skipMode
+     * @return array
+     */
+    private function classesToSkip(
+        Config $config,
+        array $allStepClasses,
+        array $selectedStepNames,
+        bool $skipMode
+    ): array {
+
+        $skippedStepClasses = $config[Config::SKIP_STEPS]->unwrapOrFallback([]);
+        if (!$skipMode || !$selectedStepNames) {
+            return $skippedStepClasses;
+        }
+
+        foreach ($allStepClasses as $name => $class) {
+            if (in_array($name, $selectedStepNames, true)
+                && !in_array($class, $skippedStepClasses, true)
+            ) {
+                $skippedStepClasses[] = $class;
+            }
+        }
+
+        return $skippedStepClasses;
     }
 
     /**
@@ -335,18 +367,18 @@ final class ComposerPlugin implements
     }
 
     /**
-     * @param array $targetStepClasses
+     * @param array $allSteps
      * @param array $selectedStepNames
      * @return int
      */
-    private function checkSelectedSteps(array $targetStepClasses, array $selectedStepNames): int
+    private function checkSelectedSteps(array $allSteps, array $selectedStepNames): int
     {
-        $errors = 0;
+        $invalid = 0;
         foreach ($selectedStepNames as $selectedStepName) {
-            array_key_exists($selectedStepName, $targetStepClasses) or $errors++;
+            array_key_exists($selectedStepName, $allSteps) or $invalid++;
         }
 
-        return $errors;
+        return $invalid;
     }
 
     /**
@@ -387,5 +419,53 @@ LOGO;
             true,
             true
         );
+    }
+
+    /**
+     * @param array $errorsIn
+     * @param bool $fatal
+     * @return string
+     */
+    private function errorsInMessage(array $errorsIn, bool $fatal): string
+    {
+        $inputErrors = $errorsIn['input'] ?? 0;
+        $configErrors = $errorsIn['config'] ?? 0;
+
+        if (!$inputErrors && !$configErrors) {
+            return '';
+        }
+
+        $message = $fatal ? 'No valid step to run found.' : '';
+
+        if ($inputErrors) {
+            $error = $inputErrors > 1
+                ? "Command input contains {$inputErrors} invalid steps names"
+                : 'Command input contains one invalid step name';
+            if (!$fatal) {
+                $error .= $inputErrors > 1
+                    ? ', they will be ignored.'
+                    : ' and it will be ignored.';
+            }
+
+            $message .= $fatal ? "\n{$error}." : $error;
+        }
+
+        if ($configErrors) {
+            $also = $inputErrors ? 'also ' : '';
+            $error = $configErrors > 1
+                ? "Custom steps config {$also}contains {$inputErrors} invalid steps classes"
+                : "Custom steps config {$also}contains one invalid step class";
+
+            if (!$fatal) {
+                $error .= $configErrors > 1
+                    ? ', they will be ignored'
+                    : ' and it will be ignored';
+                $error .= $inputErrors ? 'as well.' : '.';
+            }
+
+            $message .= $fatal ? "\n{$error}." : "\n{$error}";
+        }
+
+        return trim($message);
     }
 }

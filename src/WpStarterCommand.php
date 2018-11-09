@@ -11,6 +11,7 @@ namespace WeCodeMore\WpStarter;
 use Composer\Command\BaseCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -26,10 +27,16 @@ final class WpStarterCommand extends BaseCommand
         $this
             ->setName('wpstarter')
             ->setDescription('Run WP Starter installation workflow.')
+            ->addOption(
+                'skip',
+                null,
+                InputOption::VALUE_NONE,
+                'Enable skip mode, which means provided steps are those to skip, not to run.'
+            )
             ->addArgument(
                 'steps',
                 InputArgument::IS_ARRAY | InputArgument::OPTIONAL,
-                'Which steps to run. (Separate more steps names with a space). Defaults all.'
+                'Which steps to run (or to skip in skip mode). Separate more steps names with a space.'
             );
     }
 
@@ -47,7 +54,11 @@ final class WpStarterCommand extends BaseCommand
         try {
             $plugin = new ComposerPlugin();
             $plugin->activate($this->getComposer(false, false), $this->getIO());
-            $plugin->run(null, $input->getArgument('steps') ?: []);
+
+            $selected = $input->getArgument('steps') ?: [];
+            $skipMode = $input->hasOption('skip') && $input->getOption('skip');
+
+            $plugin->run(null, $selected, $selected && $skipMode);
 
             return 0;
         } catch (\Throwable $throwable) {
