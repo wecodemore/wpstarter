@@ -359,3 +359,9 @@ function sayHelloBeforeStarting(int $result, Step $step, Locator $locator) {
 }
 ```
 
+------
+
+|                                                            |                                                              |
+| ---------------------------------------------------------- | -----------------------------------------------------------: |
+| [WP Starter Configuration](04-WP-Starter-Configuration.md) | [A Commented Sample `composer.json`](06-A-Commented-Sample-Composer-Json.md) |
+

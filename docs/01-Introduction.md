@@ -56,3 +56,17 @@ Of course this is the bare minimum, WP Starter is quite powerful and flexible an
 
 - PHP 7.0+
 - Composer
+
+
+
+## Documentation
+
+- [Environment Variables](02-Environment-Variables.md)
+- [WordPress Integration](03-WordPress-Integration.md)
+- [WP Starter Configuration](04-WP-Starter-Configuration.md)
+- [WP Starter Steps](05-WP-Starter-Steps.md)
+- [A Commented Sample `composer.json`](06-A-Commented-Sample-Composer-Json.md)
+- [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
+- [Custom Steps Development](08-Custom-Steps-Development.md)
+- [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
+- [WP Starter Command](10-WP-Starter-Command)

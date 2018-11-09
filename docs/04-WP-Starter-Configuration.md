@@ -86,3 +86,9 @@ This configuration defaults to `"./wordpress"` meaning a `wordpress` folder insi
 `"wordpress-content-dir"` has been introduced by WP Starter and it is located differently from other WP Starter settings to be in symmetry with `"wordpress-install-dir"`.
 
 This configuration defaults to `"./wp-content"` meaning a `wp-content` folder inside project root.
+
+------
+
+|                                                      |                                            |
+| ---------------------------------------------------- | -----------------------------------------: |
+| [WordPress Integration](03-WordPress-Integration.md) | [WP Starter Steps](05-WP-Starter-Steps.md) |

@@ -152,3 +152,12 @@ Learn more about configuration in the _"WP-Starter-Configuration"_ chapter.
 
 Those are a few env vars that are used the `wp-config.php` that WP Starter generates.
 They are documented in the *"WordPress Integration"* documentation chapter.
+
+------
+
+|      |                                                      |
+| ---- | ---------------------------------------------------: |
+|      | [WordPress Integration](03-WordPress-Integration.md) |
+
+
+

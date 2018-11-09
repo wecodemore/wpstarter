@@ -422,3 +422,11 @@ With a pretty simple class we have implemented a flexible behavior that integrat
 For the ones who want to explore further, WP Starter also ships a `FileContentBuilder` object (obtained from the `Locater` via its `fileContentBuilder()` method) that can render the content of a file from a "template" file that contains placeholders and a set variables to fill them.
 
 By using that object in combination with custom template folders that WP Starters supports via its `templates-dir` setting (or by `Paths::useCustomTemplatesDir()` method), it would be possible to make the step even more flexible while also making the step class code more readable, more "elegant", and quite reduced in size not having to deal with `.htaccess` file content inside the class code.
+
+
+
+------
+
+|                                                          |                                                    |
+| -------------------------------------------------------- | -------------------------------------------------: |
+| [Running WP CLI Commands](07-Running-WP-CLI-Commands.md) | [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md) |

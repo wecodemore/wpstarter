@@ -197,3 +197,11 @@ In between, there's WP Starter running with this output:
 *(Composer says "Nothing to install" because, for readability, this is the output when everything is installed)*
 
 When WP Starter finished, if webroot is correctly pointing to `./public`, and the `.env` file contains the necessary DB configuration, then there's nothing else we need to do to make it work.
+
+
+
+------
+
+|                                            |                                                          |
+| ------------------------------------------ | -------------------------------------------------------: |
+| [WP Starter Steps](05-WP-Starter-Steps.md) | [Running WP CLI Commands](07-Running-WP-CLI-Commands.md) |

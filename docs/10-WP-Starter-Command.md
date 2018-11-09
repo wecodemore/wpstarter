@@ -186,3 +186,11 @@ composer wpstarter yarn wp-cli step-one
 ```
 
 will run the three steps with no issue.
+
+
+
+---
+
+|                                                    |      |
+| -------------------------------------------------- | ---: |
+| [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md) |      |

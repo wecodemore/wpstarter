@@ -26,3 +26,11 @@ Alphabetically ordered:
 |      skip-steps       | Array of step *names* to skip.                               |             []             |
 |     templates-dir     | Folder where to look for custom templates.<br />Path relative to root. |            null            |
 |    unknown-dropins    | How to deal with non-standard dropins.<br />Can be:<br />- `true` just install them<br />- `false` just skip them<br />- `"ask"` will ask the user what to do |           false            |
+
+
+
+---
+
+|                                                            |                                             |
+| ---------------------------------------------------------- | ------------------------------------------: |
+| [Custom Steps Development](08-Custom-Steps-Development.md) | [WP Starter Command](10-WP-Starter-Command) |
