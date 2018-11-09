@@ -428,5 +428,5 @@ By using that object in combination with custom template folders that WP Starter
 ------
 
 | *Prev*                                                   |                                             *Next* |
-| -------------------------------------------------------- | -------------------------------------------------: |
+| :------------------------------------------------------- | -------------------------------------------------: |
 | [Running WP CLI Commands](07-Running-WP-CLI-Commands.md) | [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md) |

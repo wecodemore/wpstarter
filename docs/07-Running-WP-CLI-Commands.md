@@ -212,5 +212,5 @@ The same thing can be done by creating a custom step, because the `Locator` (and
 ------
 
 | *Prev*                                                       |                                                     *Next* |
-| ------------------------------------------------------------ | ---------------------------------------------------------: |
+| :----------------------------------------------------------- | ---------------------------------------------------------: |
 | [A Commented Sample `composer.json`](06-A-Commented-Sample-Composer-Json.md) | [Custom Steps Development](08-Custom-Steps-Development.md) |

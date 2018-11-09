@@ -94,5 +94,5 @@ This configuration defaults to `"./wp-content"` meaning a `wp-content` folder in
 ------
 
 | *Prev*                                               |                                     *Next* |
-| ---------------------------------------------------- | -----------------------------------------: |
+| :--------------------------------------------------- | -----------------------------------------: |
 | [WordPress Integration](03-WordPress-Integration.md) | [WP Starter Steps](05-WP-Starter-Steps.md) |

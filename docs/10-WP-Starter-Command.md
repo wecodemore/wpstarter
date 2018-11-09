@@ -191,6 +191,6 @@ will run the three steps with no issue.
 
 ---
 
-| *Prev*                                             |      |
-| -------------------------------------------------- | ---: |
-| [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md) |      |
+| *Prev*                                             |                                            |
+| :------------------------------------------------- | -----------------------------------------: |
+| [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md) | [Back to Introduction](01-Introduction.md) |

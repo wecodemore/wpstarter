@@ -255,6 +255,6 @@ The gist of it is that `HTTP_X_FORWARDED_PROTO` is a server variable filled from
 ------
 
 | *Prev*                                               |                                                     *Next* |
-| ---------------------------------------------------- | ---------------------------------------------------------: |
+| :--------------------------------------------------- | ---------------------------------------------------------: |
 | [Environment Variables](02-Environment-Variables.md) | [WP Starter Configuration](04-WP-Starter-Configuration.md) |
 

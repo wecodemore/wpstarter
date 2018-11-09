@@ -157,9 +157,9 @@ They are documented in the *"WordPress Integration"* documentation chapter.
 
 ------
 
-|      |                                               *Next* |
-| ---- | ---------------------------------------------------: |
-|      | [WordPress Integration](03-WordPress-Integration.md) |
+| *Prev*                             |                                               *Next* |
+| :--------------------------------- | ---------------------------------------------------: |
+| [Introduction](01-Introduction.md) | [WordPress Integration](03-WordPress-Integration.md) |
 
 
 
