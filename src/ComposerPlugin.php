@@ -63,6 +63,26 @@ final class ComposerPlugin implements
     }
 
     /**
+     * @return array
+     */
+    private static function defaultSteps(): array
+    {
+        return [
+            Step\CheckPathStep::NAME => Step\CheckPathStep::class,
+            Step\WpConfigStep::NAME => Step\WpConfigStep::class,
+            Step\IndexStep::NAME => Step\IndexStep::class,
+            Step\FlushEnvCacheStep::NAME => Step\FlushEnvCacheStep::class,
+            Step\MuLoaderStep::NAME => Step\MuLoaderStep::class,
+            Step\EnvExampleStep::NAME => Step\EnvExampleStep::class,
+            Step\DropinsStep::NAME => Step\DropinsStep::class,
+            Step\MoveContentStep::NAME => Step\MoveContentStep::class,
+            Step\ContentDevStep::NAME => Step\ContentDevStep::class,
+            Step\WpCliConfigStep::NAME => Step\WpCliConfigStep::class,
+            Step\WpCliCommandsStep::NAME => Step\WpCliCommandsStep::class,
+        ];
+    }
+
+    /**
      * phpcs:disable Inpsyde.CodeQuality.NoAccessors
      */
     public function getCapabilities(): array
@@ -128,7 +148,11 @@ final class ComposerPlugin implements
 
             ($event === null && $selectedStepNames) or $this->logo();
 
-            $config[Config::SKIP_DB_CHECK]->notEmpty() and $this->locator->dbChecker()->check();
+            $skipDbCheck = $config[Config::SKIP_DB_CHECK];
+            if ($skipDbCheck->notEmpty() && $skipDbCheck->not(true)) {
+                $this->locator->dbChecker()->check();
+            }
+
             $steps = $this->initializeSteps($config, $event, ...$selectedStepNames);
             $steps->run($this->locator->config(), $this->locator->paths());
 
@@ -136,7 +160,8 @@ final class ComposerPlugin implements
         } catch (\Throwable $throwable) {
             $lines = [$throwable->getMessage()];
             if ($this->io->isVerbose()) {
-                $lines = array_map('trim', explode("\n", $throwable->getTraceAsString()));
+                $lines = explode("\n", $throwable->getTraceAsString());
+                array_unshift($lines, '');
                 array_unshift($lines, $throwable->getMessage());
             }
 
@@ -188,34 +213,23 @@ final class ComposerPlugin implements
         string ...$selectedStepNames
     ): Step\Steps {
 
-        $defaultSteps = [
-            Step\CheckPathStep::NAME => Step\CheckPathStep::class,
-            Step\WpConfigStep::NAME => Step\WpConfigStep::class,
-            Step\IndexStep::NAME => Step\IndexStep::class,
-            Step\FlushEnvCacheStep::NAME => Step\FlushEnvCacheStep::class,
-            Step\MuLoaderStep::NAME => Step\MuLoaderStep::class,
-            Step\EnvExampleStep::NAME => Step\EnvExampleStep::class,
-            Step\DropinsStep::NAME => Step\DropinsStep::class,
-            Step\MoveContentStep::NAME => Step\MoveContentStep::class,
-            Step\ContentDevStep::NAME => Step\ContentDevStep::class,
-            Step\WpCliConfigStep::NAME => Step\WpCliConfigStep::class,
-            Step\WpCliCommandsStep::NAME => Step\WpCliCommandsStep::class,
-        ];
-
         $io = $this->locator->io();
 
-        $selectedStepNames = array_filter($selectedStepNames, 'is_string');
         $commandMode = $event === null && $selectedStepNames;
 
         $steps = new Step\Steps($this->locator, $this->composer, $commandMode);
 
+        $selectedStepNames = array_filter($selectedStepNames, 'is_string');
+        $defaultStepClasses = static::defaultSteps();
         $customStepClasses = $config[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
         $skippedStepClasses = $config[Config::SKIP_STEPS]->unwrapOrFallback([]);
-        $allStepClasses = array_unique(array_merge($defaultSteps, $customStepClasses));
+        $allStepClasses = array_unique(array_merge($defaultStepClasses, $customStepClasses));
 
         if ($commandMode) {
-            $cmdSteps = $config[Config::COMMAND_STEPS]->unwrapOrFallback();
-            $cmdSteps and $allStepClasses = array_unique(array_merge($allStepClasses, $cmdSteps));
+            $commandStepClasses = $config[Config::COMMAND_STEPS]->unwrapOrFallback();
+            if ($commandStepClasses) {
+                $allStepClasses = array_unique(array_merge($allStepClasses, $commandStepClasses));
+            }
         }
 
         $targetStepClasses = $skippedStepClasses
@@ -223,7 +237,7 @@ final class ComposerPlugin implements
             : $allStepClasses;
 
         if (!$targetStepClasses) {
-            $io->writeComment('Nothing to run.');
+            $io->writeColorBlock('yellow', 'Nothing to run.');
 
             return $steps;
         }
@@ -247,8 +261,8 @@ final class ComposerPlugin implements
             ? "{$errors} of the steps provided are invalid and will be skipped."
             : 'One step provided is invalid and will be skipped.';
 
+        $io->writeErrorLine('');
         $lines = Io::ensureLength($text);
-        array_unshift($lines, '');
         array_walk($lines, [$io, 'writeErrorLine']);
 
         return $steps;
@@ -272,13 +286,12 @@ final class ComposerPlugin implements
         $errors = 0;
 
         foreach ($targetStepClasses as $stepName => $stepClass) {
-            if (!$stepName || in_array($stepName, $stepsAdded, true)) {
+            if (!$stepName
+                || in_array($stepName, $stepsAdded, true)
+                || ($selectedStepNames && !in_array($stepName, $selectedStepNames, true))
+            ) {
                 $stepName or $errors++;
 
-                continue;
-            }
-
-            if ($selectedStepNames && !in_array($stepName, $selectedStepNames, true)) {
                 continue;
             }
 
