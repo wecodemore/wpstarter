@@ -291,7 +291,7 @@ class Io
      */
     public function writeColorBlock(string $color, string ...$lines): bool
     {
-        return $this->writeBlock($color, strtolower($color) !== 'red', ...$lines);
+        return $this->writeBlock($color, strtolower($color) === 'red', ...$lines);
     }
 
     /**
@@ -316,7 +316,7 @@ class Io
         string ...$lines
     ): bool {
 
-        $frontground = $isError ? 'white;option=bold' : 'black';
+        $frontground = $isError ? 'white;options=bold' : 'black';
 
         $block = self::createBlock("<bg={$background};fg={$frontground}>  ", '  </>', ...$lines);
 
