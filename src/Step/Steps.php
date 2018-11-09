@@ -344,6 +344,22 @@ final class Steps implements PostProcessStep, \Countable
             return;
         }
 
+        $callbacks = array_filter($toRun, 'is_callable');
+        $countValid = count($callbacks);
+        $countAll = count($toRun);
+
+        if ($countValid !== $countAll) {
+            $countErrors = $countAll - $countValid;
+            $message = $countErrors > 1
+                ? "Found {$countErrors} invalid script callbacks for {$scriptsKey}"
+                : 'Found one invalid script callback';
+            $io->writeErrorLineIfVerbose("{$message}, will be ignored.");
+        }
+
+        if (!$callbacks) {
+            return;
+        }
+
         $runner = function (callable $script) use ($scriptsKey, $step, $result, $io) {
             $this->runStepScript($script, $scriptsKey, $step, $result, $io);
         };

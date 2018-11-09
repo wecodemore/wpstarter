@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use WeCodeMore\WpStarter\Util\SelectedStepsFactory;
 
 /**
  * Adds 'wpstarter' command to Composer.
@@ -26,17 +27,29 @@ final class WpStarterCommand extends BaseCommand
     {
         $this
             ->setName('wpstarter')
-            ->setDescription('Run WP Starter installation workflow.')
+            ->setDescription('Run WP Starter workflow.')
             ->addOption(
                 'skip',
                 null,
                 InputOption::VALUE_NONE,
-                'Enable skip mode, which means provided steps are those to skip, not to run.'
+                'Enable opt-out mode: provided step names are those to skip, not those to run.'
+            )
+            ->addOption(
+                'skip-custom',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip any step defined in "custom-steps" setting.'
+            )
+            ->addOption(
+                'ignore-skip-config',
+                null,
+                InputOption::VALUE_NONE,
+                'Ignore "skip-steps" config.'
             )
             ->addArgument(
                 'steps',
                 InputArgument::IS_ARRAY | InputArgument::OPTIONAL,
-                'Which steps to run (or to skip in skip mode). Separate more steps names with a space.'
+                'Which steps to run (or to skip). Separate step names with a space.'
             );
     }
 
@@ -52,13 +65,26 @@ final class WpStarterCommand extends BaseCommand
         // phpcs:enable
 
         try {
+            ComposerPlugin::setupAutoload();
+
             $plugin = new ComposerPlugin();
             $plugin->activate($this->getComposer(false, false), $this->getIO());
 
-            $selected = $input->getArgument('steps') ?: [];
-            $skipMode = $input->hasOption('skip') && $input->getOption('skip');
+            $skip = $input->hasOption('skip')
+                && $input->getOption('skip');
+            $skipCustom = $input->hasOption('skip-custom')
+                && $input->getOption('skip-custom');
+            $ignoreSkipConfig = $input->hasOption('ignore-skip-config')
+                && $input->getOption('ignore-skip-config');
 
-            $plugin->run(null, $selected, $selected && $skipMode);
+            $flags = SelectedStepsFactory::MODE_COMMAND;
+            $skip and $flags |= SelectedStepsFactory::SKIP;
+            $skipCustom and $flags |= SelectedStepsFactory::SKIP_CUSTOM;
+            $ignoreSkipConfig and $flags |= SelectedStepsFactory::IGNORE_SKIP_CONFIG;
+
+            $selected = $input->getArgument('steps') ?: [];
+
+            $plugin->run(new SelectedStepsFactory($flags, ...$selected));
 
             return 0;
         } catch (\Throwable $throwable) {

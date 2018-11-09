@@ -14,7 +14,7 @@ use WeCodeMore\WpStarter\Util\Paths;
 /**
  * Implements the interface doing nothing.
  */
-final class NullStep implements Step
+class NullStep implements Step
 {
 
     /**

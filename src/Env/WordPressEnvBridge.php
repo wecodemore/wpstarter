@@ -455,7 +455,7 @@ class WordPressEnvBridge
     /**
      * Return all environment variables that have been set
      *
-     * @return array
+     * @return bool
      */
     public function isWpSetup(): bool
     {

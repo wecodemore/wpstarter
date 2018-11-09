@@ -1,6 +1,6 @@
 # WP Starter Command
 
-By default WP Starter runs every time `composer update` or `composer install` is ran, including the very first time a project dependencies are installed.
+By default **WP Starter runs every time `composer update` or `composer install` is ran**, including the very first time a project dependencies are installed.
 
 Sometimes might be desirable to *only* perform WP Starter steps (according to configuration) without also updating Composer dependencies.
 
@@ -12,43 +12,140 @@ composer wpstarter
 
 
 
-## Customizing steps to run
+## Command Options and Arguments
 
-Nice thing about the `wpstarter` command is that it accepts an array of steps names to be run. For example:
+What shown above is just the simplest form of the command that tells WP Starter to run all the steps, including those in `custom-scripts` setting, but skipping those in `skip-steps` setting.
+
+By running `composer help wpstarter` it is possible to obtain more info about the command option and arguments. The output (stripped from "generic" Composer options) is something like:
+
+```shell
+Usage:
+  wpstarter [options] [--] [<steps>]...
+
+Arguments:
+  steps                          Which steps to run (or to skip).
+                                 Separate step names with a space.
+
+Options:
+      --skip                     Enable opt-out mode: provided steps names
+                                 are those to skip, not those to run.
+      --skip-custom              Skip any step defined in "custom-steps" setting.
+      --ignore-skip-config       Ignore "skip-steps" config.
+```
+
+
+
+### Customizing steps to run ("opt-in" mode)
+
+The first thing to notice is that is is possible to pass an array of step to run, by listing them after the command, for example:
 
 ```shell
 composer wpstarter publish-content-dev wp-cli
 ```
 
-In the example above only "publish-content-dev" and "wp-cli" steps would be ran.
+In the example above only *"publish-content-dev"* and *"wp-cli"* steps would be ran.
 
-When the steps to skip are just one or a few, it is convenient to list the steps to skip instead of those to be ran. This can be done by passing the `--skip` flag. For example:
+### Skip ("opt-out" mode)
+
+By using the `--skip` option it is possible to run the command in "opt-out" mode: the list of step names provided to command, are those to be skipped, and not those to be run.
+
+This is useful when the steps to skip are less than the skip to run. 
+
+Note that when using this option, one or more step names are required. By running the command with only `--skip` but no step name will make the command fail.
 
 ```shell
-composer wpstarter --skip wp-cli
+composer wpstarter --skip publish-content-dev wp-cli
 ```
 
-In the example above all the default steps plus those defined in the `custom-steps` setting will be run, skipping only the "wp-cli" step.
+In the example above , WP starter would run all the default steps, plus all custom steps, but skipping both *"publish-content-dev"*, *"wp-cli"* and also skipping any step listed in the `skip-steps` config.
+
+### Skip custom
+
+Sometimes might be desirable to only run the default steps, skipping those that are listed in `custom-steps` setting. 
+
+This could surely be obtained by using the option `--skip` and then listing all the step names present in the config, but can be done in a simpler way via the `--skip-custom` flag.
+
+For example:
+
+```shell
+composer wpstarter --skip-custom
+```
+
+The command above would have the same effect of:
+
+```shell
+composer wpstarter --skip step-one step-two
+```
+
+assuming that "step-one" and "step-two" are all the steps listed in the `custom-steps` setting. 
+
+Note that tis flag is ignored when running in the "opt-in" mode (i.e. listing one or more steps without using the `--skip` flag). Reason is opt-in mode takes precedence over opt-out mode, so if the command is run like:
+
+```shell
+composer wpstarter step-one --skip-custom
+```
+
+"step-one" will be run, even if it is a custom step listed in the  `custom-steps` setting. 
+
+### Ignore skip config
+
+The flag `--ignore-skip-config` tells WP Starter to don't take into account the `skip-steps` configuration.
+
+It can be used alone:
+
+```shell
+composer wpstarter --ignore-skip-config
+```
+
+Which means run all the default steps, plus the custom steps, no matter what is in the `skip-steps` configuration.
+
+Or can be used in combination with `--skip` and `--skip-custom`. For example:
+
+```shell
+composer wpstarter --ignore-skip-config --skip wp-cli
+```
+
+means run all the run all the default steps, plus the custom steps, but don't run *"wp-cli"* step. Or even:
+
+```shell
+composer wpstarter --ignore-skip-config --skip-custom --skip wp-cli
+```
+
+which basically means run only all the default steps except just *"wp-cli"*.
+
+Note that this option does nothing when in *"opt-in"* mode: when a series of step to run are provided those are always run, so the  `skip-steps` config is already ignored.
+
+### Note on simplest command form
+
+The simples form of the command:
+
+```shell
+composer wpstarter
+```
+
+has to be considered as "opt-out" form where no step are selected to be skipped, rather than "opt-in" form where no step has been selected to run. This is why ` --ignore-skip-config` and `--skip-custom` can be used as the only option even if has been said those are ignored in "opt-in" mode.
 
 
 
 ## Command-only steps
 
-The step names passed as argument to `wpstarter` command must be recognized as valid steps to be run. Which means that they are either names of default steps or names of steps added to `custom-steps` configuration.
+The step names passed as argument to `wpstarter` command in "opt-in" mode must be recognized as valid steps to be run.
 
-In both cases those steps would also be run every time Composer installs or updated dependencies. Sometimes, however, might be desirable to make some steps available to  be ran via `wpstarter` command without run them automatically on Composer install or update.
+Which means that they are either default steps or steps added to `custom-steps` configuration.
+
+In both cases those steps would also be run every time Composer installs or updated dependencies or when the `wpstarter` command is run on its simplest form.
+
+Sometimes, however, might be desirable run some steps on demand ("opt-in" mode) but **not** running them after every Composer install or update.
 
 That can be obtained by adding steps to `command-steps` setting, which format is identical to `custom-steps`.
 
-### An example
+That setting has the exact same format of `custom-steps` setting, but steps added to `command-steps` **are only took into account when running the command in "opt-in" mode**, allowing for "picking" them explicitly.
 
-Imagine to desire a custom step that run `yarn` for each package of type "wordpress-plugin" or "wordpress-theme" of a given specific vendor.
-
-This script could be written without making a WP Starter step, but using WP Starter is convenient because:
+For example, imagine to have a custom step that run `yarn` for each package of type "wordpress-plugin" or "wordpress-theme" of a given specific vendor. Such script could be written without making a WP Starter step, but using WP Starter is convenient because:
 
 - easy way access to relevant paths
-- easy way to find target packages, thanks to WP Starter `PackageFinder` object (provided by `Locator::packageFinder()`)
-- easy (and OS-agnostic) way to run shell process via WP Starter `SystemProcess` object (provided by `Locator::systemProcess()`) build on top of [Symfony `Process` component](https://symfony.com/doc/current/components/process.html).
+- easy way to find target packages, thanks to WP Starter `PackageFinder` object
+- easy (and OS-agnostic) way to run shell process via WP Starter `SystemProcess` object build on top of [Symfony `Process` component](https://symfony.com/doc/current/components/process.html).
 
 What's relevant here about such step class would be:
 
@@ -56,17 +153,15 @@ What's relevant here about such step class would be:
 namespace MyCompany\MyProject;
 
 class YarnStep implements \WeCodeMore\WpStarter\Step\Step {
-    
-    public function name(): string
-    {
+    // ...
+    public function name(): string {
         return 'yarn';
     }
-    
     // ...
 }
 ```
 
-Adding this step to  `command-steps` setting like this:
+Adding this step to `command-steps` setting like this:
 
 ```json
 {
@@ -76,6 +171,18 @@ Adding this step to  `command-steps` setting like this:
 }
 ```
 
-It would be possible to run `composer wpstarter yarn` and run the step only on demand, and not every time Composer installs or updates dependencies.
+It would be possible to run:
 
-Note that in "skip mode" command-only steps are ignored.
+```shell
+composer wpstarter yarn
+```
+
+and run the step on demand, ignoring the step when WP Starter runs after Composer install/update or even when the command is run in "opt-out" mode.
+
+Note that steps in  `command-steps` can be combined in "opt-in" mode with other steps, either default or custom. E.g.:
+
+```shell
+composer wpstarter yarn wp-cli step-one
+```
+
+will run the three steps with no issue.

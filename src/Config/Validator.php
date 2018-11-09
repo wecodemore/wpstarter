@@ -12,7 +12,6 @@ use Composer\Util\Filesystem;
 use Symfony\Component\Console\Input\StringInput;
 use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Step\OptionalStep;
-use WeCodeMore\WpStarter\Step\Step;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\WpVersion;
 use WeCodeMore\WpStarter\Cli;
@@ -90,13 +89,13 @@ class Validator
 
         $steps = [];
         foreach ($value as $name => $step) {
-            if (!is_string($step)) {
+            if (!is_string($step) || !$this->isValidEntityName($step)) {
                 continue;
             }
 
             $step = ltrim(trim($step), '\\');
             is_string($name) or $name = basename(str_replace('\\', '/', $step));
-            is_subclass_of($step, Step::class, true) and $steps[trim($name)] = $step;
+            $steps[trim($name)] = $step;
         }
 
         if (!$steps) {
@@ -138,13 +137,14 @@ class Validator
                 continue;
             }
 
-            if (is_callable($scripts)) {
+            if ($this->isCallback($scripts)) {
                 $allScripts[$name] = [$scripts];
+
                 continue;
             }
 
             if (is_array($scripts)) {
-                $scripts = array_filter($scripts, 'is_callable');
+                $scripts = array_filter($scripts, [$this, 'isCallback']);
                 $scripts and $allScripts[$name] = $scripts;
             }
         }
@@ -796,5 +796,53 @@ class Validator
         return is_array($value)
             ? Result::ok($value)
             : Result::errored('Given value is not, nor can be converted to, an array.');
+    }
+
+    /**
+     * @param $script
+     * @return bool
+     */
+    private function isCallback($script): bool
+    {
+        if (!is_callable($script, true)) {
+            return false;
+        }
+
+        if (is_array($script)) {
+            return !empty($script[0])
+                && !empty($script[1])
+                && is_string($script[0])
+                && is_string($script[1])
+                && $this->isValidEntityName($script[0])
+                && $this->isValidEntityName($script[1], false);
+        }
+
+        if (!is_string($script)) {
+            return false;
+        }
+
+        if (preg_match('/^([^:]+)::([^:])+$/', $script, $matches)) {
+            return $this->isValidEntityName($matches[1])
+                && $this->isValidEntityName($matches[2], false);
+        }
+
+        return $this->isValidEntityName($script);
+    }
+
+    /**
+     * @param string $value
+     * @param bool $namespace
+     * @return bool
+     */
+    private function isValidEntityName(string $value, $namespace = true): bool
+    {
+        $parts = $namespace ? explode('\\', $value) : [$value];
+        foreach ($parts as $part) {
+            if (!preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $part)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

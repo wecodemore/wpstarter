@@ -35,6 +35,11 @@ final class ComposerPlugin implements
     const EXTRA_KEY = 'wpstarter';
 
     /**
+     * @var bool
+     */
+    private static $autoload = false;
+
+    /**
      * @var IOInterface
      */
     private $io;
@@ -50,6 +55,36 @@ final class ComposerPlugin implements
     private $locator;
 
     /**
+     * @var bool
+     */
+    private $autorun = false;
+
+    /**
+     * WP Starter is required from Composer, which means it is deployed with WordPress, and so
+     * any autoloading setting that WP Starter declares will "pollute" the Composer autoloader that
+     * is loaded at every WordPress request.
+     * For this reason we keep in the autoload section of composer.json only the needed bare-minimum
+     * (basically this class) then we register a simple PSR-4 loader for the rest.
+     *
+     * @return void
+     */
+    public static function setupAutoload()
+    {
+        static::$autoload or spl_autoload_register(
+            function (string $class) {
+                if (stripos($class, __NAMESPACE__) === 0) {
+                    $file = substr(str_replace('\\', '/', $class), strlen(__NAMESPACE__)) . '.php';
+                    require_once __DIR__ . $file;
+                }
+            },
+            true,
+            true
+        );
+
+        static::$autoload = true;
+    }
+
+    /**
      * phpcs:disable Inpsyde.CodeQuality.NoAccessors
      */
     public static function getSubscribedEvents(): array
@@ -57,8 +92,8 @@ final class ComposerPlugin implements
         // phpcs:enable
 
         return [
-            'post-install-cmd' => 'run',
-            'post-update-cmd' => 'run',
+            'post-install-cmd' => 'autorun',
+            'post-update-cmd' => 'autorun',
         ];
     }
 
@@ -113,20 +148,20 @@ final class ComposerPlugin implements
     }
 
     /**
-     * Run WP Starter installation adding all the steps to Builder and launching steps processing.
-     *
-     * It is possible to provide the names of steps to run.
-     *
-     * @param Event|null $event
-     * @param array $selectedStepNames
-     * @param bool $skipMode
-     * @return void
-     * @throws \Exception
+     * @param Event $event
      */
-    public function run(Event $event = null, array $selectedStepNames = [], bool $skipMode = false)
+    public function autorun(Event $event)
     {
-        $this->setupAutoload();
+        static::setupAutoload();
+        $this->autorun = true;
+        $this->run(Util\SelectedStepsFactory::autorun());
+    }
 
+    /**
+     * @param Util\SelectedStepsFactory $factory
+     */
+    public function run(Util\SelectedStepsFactory $factory)
+    {
         $filesystem = new Filesystem();
         $requirements = new Util\Requirements($this->composer, $this->io, $filesystem);
         $config = $requirements->config();
@@ -143,22 +178,35 @@ final class ComposerPlugin implements
             $fallbackVer = $config[Config::WP_VERSION]->unwrapOrFallback('');
             $wpVersion = $this->checkWp($requireWp, $fallbackVer, $config);
             if (!$wpVersion && $requireWp) {
-                $event or exit(1);
+                $this->autorun or exit(1);
 
                 return;
             }
 
-            ($event === null && $selectedStepNames) or $this->logo();
+            $commandMode = $factory->isSelectedCommandMode();
+            $commandMode or $this->logo();
 
             $skipDbCheck = $config[Config::SKIP_DB_CHECK];
             if ($skipDbCheck->notEmpty() && $skipDbCheck->not(true)) {
                 $this->locator->dbChecker()->check();
             }
 
-            $steps = $this->initializeSteps($config, $event, $skipMode, ...$selectedStepNames);
-            $steps->run($this->locator->config(), $this->locator->paths());
+            $steps = $factory->selectAndFactory($this->locator, $this->composer);
+            if (!$steps) {
+                $message = $factory->lastFatalError() ?: 'Nothing to run.';
+                throw new \Exception($message);
+            }
 
-            $event or exit(0);
+            $this->maybePrintFactoryError($factory, $this->locator->io());
+
+            $stepRunner = new Step\Steps($this->locator, $this->composer, $commandMode);
+            foreach ($steps as $step) {
+                $stepRunner->addStep($step);
+            }
+
+            $stepRunner->run($this->locator->config(), $this->locator->paths());
+
+            $commandMode and exit(0);
         } catch (\Throwable $throwable) {
             $lines = [$throwable->getMessage()];
             if ($this->io->isVerbose()) {
@@ -168,8 +216,7 @@ final class ComposerPlugin implements
             }
 
             $this->locator->io()->writeErrorBlock(...$lines);
-
-            $event or exit(1);
+            $this->autorun or exit(1);
         }
     }
 
@@ -204,184 +251,6 @@ final class ComposerPlugin implements
     }
 
     /**
-     * @param Config $config
-     * @param Event $event
-     * @param bool $skipMode
-     * @param string[] $selectedStepNames
-     * @return Step\Steps
-     * @throws \Exception
-     */
-    private function initializeSteps(
-        Config $config,
-        Event $event = null,
-        bool $skipMode = false,
-        string ...$selectedStepNames
-    ): Step\Steps {
-
-        $io = $this->locator->io();
-        $commandMode = $event === null && $selectedStepNames;
-        $errorsIn = [];
-
-        $steps = new Step\Steps($this->locator, $this->composer, $commandMode);
-
-        $selectedStepNames = array_filter($selectedStepNames, 'is_string');
-        $defaultSteps = static::defaultSteps();
-        $customSteps = $config[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
-        $allSteps = array_unique(array_merge($defaultSteps, $customSteps));
-
-        if ($commandMode && !$skipMode) {
-            $commandStepClasses = $config[Config::COMMAND_STEPS]->unwrapOrFallback();
-            if ($commandStepClasses) {
-                $allSteps = array_unique(array_merge($allSteps, $commandStepClasses));
-            }
-        }
-
-        if ($commandMode) {
-            $invalidSelectedNames = $this->checkSelectedSteps($allSteps, $selectedStepNames);
-            $errorsIn['input'] = $invalidSelectedNames;
-        }
-
-        $skippedClasses = $this->classesToSkip($config, $allSteps, $selectedStepNames, $skipMode);
-        $targetStepClasses = $skippedClasses ? array_diff($allSteps, $skippedClasses) : $allSteps;
-        $skipMode and $selectedStepNames = [];
-
-        if (!$targetStepClasses) {
-            $io->writeColorBlock('yellow', 'Nothing to run.');
-
-            return $steps;
-        }
-
-        $failedFactory = $this->factorySteps($steps, $targetStepClasses, $selectedStepNames);
-        $errorsIn['config'] = $failedFactory;
-
-        if (!array_filter($errorsIn)) {
-            return $steps;
-        }
-
-        if (!count($steps)) {
-            throw new \Exception($this->errorsInMessage($errorsIn, true));
-        }
-
-        $text = Io::ensureLength($this->errorsInMessage($errorsIn, false));
-        $io->writeErrorLine('');
-        array_walk($text, [$io, 'writeErrorLine']);
-        $io->writeErrorLine('');
-
-        return $steps;
-    }
-
-    /**
-     * @param Config $config
-     * @param array $allStepClasses
-     * @param array $selectedStepNames
-     * @param bool $skipMode
-     * @return array
-     */
-    private function classesToSkip(
-        Config $config,
-        array $allStepClasses,
-        array $selectedStepNames,
-        bool $skipMode
-    ): array {
-
-        $skippedStepClasses = $config[Config::SKIP_STEPS]->unwrapOrFallback([]);
-        if (!$skipMode || !$selectedStepNames) {
-            return $skippedStepClasses;
-        }
-
-        foreach ($allStepClasses as $name => $class) {
-            if (in_array($name, $selectedStepNames, true)
-                && !in_array($class, $skippedStepClasses, true)
-            ) {
-                $skippedStepClasses[] = $class;
-            }
-        }
-
-        return $skippedStepClasses;
-    }
-
-    /**
-     * @param Step\Steps $steps
-     * @param array $targetStepClasses
-     * @param array $selectedStepNames
-     * @return int
-     */
-    private function factorySteps(
-        Step\Steps $steps,
-        array $targetStepClasses,
-        array $selectedStepNames
-    ): int {
-
-        $stepsAdded = [];
-        $wpCliSteps = [];
-
-        $errors = 0;
-
-        foreach ($targetStepClasses as $stepName => $stepClass) {
-            if (!$stepName
-                || in_array($stepName, $stepsAdded, true)
-                || ($selectedStepNames && !in_array($stepName, $selectedStepNames, true))
-            ) {
-                $stepName or $errors++;
-
-                continue;
-            }
-
-            $step = $this->factoryStep($stepClass);
-            if ($step->name() !== $stepName) {
-                $errors++;
-
-                continue;
-            }
-
-            $stepsAdded[] = $stepName;
-
-            if (is_a($stepClass, Step\WpCliCommandsStep::class, true)
-                || ($stepName === Step\WpCliCommandsStep::NAME)
-            ) {
-                $wpCliSteps[] = $step;
-                continue;
-            }
-
-            $steps->addStep($step);
-        }
-
-        if ($wpCliSteps) {
-            $steps->addStep(...$wpCliSteps);
-        }
-
-        return $errors;
-    }
-
-    /**
-     * @param string $stepClass
-     * @return Step\Step
-     */
-    private function factoryStep(string $stepClass): Step\Step
-    {
-        if (!is_subclass_of($stepClass, Step\Step::class, true)) {
-            return new Step\NullStep();
-        }
-
-        return new $stepClass($this->locator, $this->composer);
-    }
-
-    /**
-     * @param array $allSteps
-     * @param array $selectedStepNames
-     * @return int
-     */
-    private function checkSelectedSteps(array $allSteps, array $selectedStepNames): int
-    {
-        $invalid = 0;
-        foreach ($selectedStepNames as $selectedStepName) {
-            array_key_exists($selectedStepName, $allSteps) or $invalid++;
-        }
-
-        return $invalid;
-    }
-
-    /**
      * @return void
      */
     private function logo()
@@ -399,73 +268,17 @@ LOGO;
     }
 
     /**
-     * WP Starter is required from Composer, which means it is deployed with WordPress, and so
-     * any autoloading setting that WP Starter declares will "pollute" the Composer autoloader that
-     * is loaded at every WordPress request.
-     * For this reason we keep in the autoload section of composer.json only the needed bare-minimum
-     * (basically this class) then we register a simple PSR-4 loader for the rest.
-     *
-     * @return void
+     * @param Util\SelectedStepsFactory $factory
+     * @param Io $io
      */
-    private function setupAutoload()
+    private function maybePrintFactoryError(Util\SelectedStepsFactory $factory, Io $io)
     {
-        spl_autoload_register(
-            function (string $class) {
-                if (stripos($class, __NAMESPACE__) === 0) {
-                    $file = substr(str_replace('\\', '/', $class), strlen(__NAMESPACE__)) . '.php';
-                    require_once __DIR__ . $file;
-                }
-            },
-            true,
-            true
-        );
-    }
-
-    /**
-     * @param array $errorsIn
-     * @param bool $fatal
-     * @return string
-     */
-    private function errorsInMessage(array $errorsIn, bool $fatal): string
-    {
-        $inputErrors = $errorsIn['input'] ?? 0;
-        $configErrors = $errorsIn['config'] ?? 0;
-
-        if (!$inputErrors && !$configErrors) {
-            return '';
+        $error = $factory->lastError();
+        if ($error) {
+            $text = Io::ensureLength($error);
+            $io->writeErrorLine('');
+            array_walk($text, [$io, 'writeErrorLine']);
+            $io->writeErrorLine('');
         }
-
-        $message = $fatal ? 'No valid step to run found.' : '';
-
-        if ($inputErrors) {
-            $error = $inputErrors > 1
-                ? "Command input contains {$inputErrors} invalid steps names"
-                : 'Command input contains one invalid step name';
-            if (!$fatal) {
-                $error .= $inputErrors > 1
-                    ? ', they will be ignored.'
-                    : ' and it will be ignored.';
-            }
-
-            $message .= $fatal ? "\n{$error}." : $error;
-        }
-
-        if ($configErrors) {
-            $also = $inputErrors ? 'also ' : '';
-            $error = $configErrors > 1
-                ? "Custom steps config {$also}contains {$inputErrors} invalid steps classes"
-                : "Custom steps config {$also}contains one invalid step class";
-
-            if (!$fatal) {
-                $error .= $configErrors > 1
-                    ? ', they will be ignored'
-                    : ' and it will be ignored';
-                $error .= $inputErrors ? 'as well.' : '.';
-            }
-
-            $message .= $fatal ? "\n{$error}." : "\n{$error}";
-        }
-
-        return trim($message);
     }
 }
