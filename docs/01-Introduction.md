@@ -69,4 +69,5 @@ Of course this is the bare minimum, WP Starter is quite powerful and flexible an
 - [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
 - [Custom Steps Development](08-Custom-Steps-Development.md)
 - [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
-- [WP Starter Command](10-WP-Starter-Command)
+- [WP Starter Command](10-WP-Starter-Command.md)
+
