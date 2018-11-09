@@ -254,7 +254,17 @@ The gist of it is that `HTTP_X_FORWARDED_PROTO` is a server variable filled from
 
 ------
 
-| *Prev*                                               |                                                     *Next* |
-| :--------------------------------------------------- | ---------------------------------------------------------: |
-| [Environment Variables](02-Environment-Variables.md) | [WP Starter Configuration](04-WP-Starter-Configuration.md) |
+**Next:** [WP Starter Configuration](04-WP-Starter-Configuration.md)
+
+---
+
+- [Environment Variables](02-Environment-Variables.md)
+- ***> WordPress Integration***
+- [WP Starter Configuration](04-WP-Starter-Configuration.md)
+- [WP Starter Steps](05-WP-Starter-Steps.md)
+- [A Commented Sample `composer.json`](06-A-Commented-Sample-Composer-Json.md)
+- [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
+- [Custom Steps Development](08-Custom-Steps-Development.md)
+- [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
+- [WP Starter Command](10-WP-Starter-Command.md)
 

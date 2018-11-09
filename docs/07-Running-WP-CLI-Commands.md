@@ -211,6 +211,16 @@ The same thing can be done by creating a custom step, because the `Locator` (and
 
 ------
 
-| *Prev*                                                       |                                                     *Next* |
-| :----------------------------------------------------------- | ---------------------------------------------------------: |
-| [A Commented Sample `composer.json`](06-A-Commented-Sample-Composer-Json.md) | [Custom Steps Development](08-Custom-Steps-Development.md) |
+**Next:** [Custom Steps Development](08-Custom-Steps-Development.md)
+
+---
+
+- [Environment Variables](02-Environment-Variables.md)
+- [WordPress Integration](03-WordPress-Integration.md)
+- [WP Starter Configuration](04-WP-Starter-Configuration.md)
+- [WP Starter Steps](05-WP-Starter-Steps.md)
+- [A Commented Sample `composer.json`](06-A-Commented-Sample-Composer-Json.md)
+- ***> Running WP CLI Commands***
+- [Custom Steps Development](08-Custom-Steps-Development.md)
+- [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
+- [WP Starter Command](10-WP-Starter-Command.md)
