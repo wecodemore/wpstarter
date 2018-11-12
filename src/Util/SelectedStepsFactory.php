@@ -115,8 +115,8 @@ class SelectedStepsFactory
         $config = $locator->config();
 
         $defaultSteps = ComposerPlugin::defaultSteps();
-        $customSteps = $config[Config::CUSTOM_STEPS]->unwrap();
-        $commandSteps = $config[Config::COMMAND_STEPS]->unwrap();
+        $customSteps = $config[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
+        $commandSteps = $config[Config::COMMAND_STEPS]->unwrapOrFallback([]);
 
         $selectedCommandMode = $this->isSelectedCommandMode();
 
