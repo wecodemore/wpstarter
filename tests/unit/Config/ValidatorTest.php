@@ -49,8 +49,6 @@ class ValidatorTest extends TestCase
         $validator = $this->makeValidator();
 
         static::assertFalse($validator->validateSteps([])->notEmpty());
-        static::assertFalse($validator->validateSteps(['xxx'])->notEmpty());
-        static::assertFalse($validator->validateSteps(['xxx' => true])->notEmpty());
         static::assertFalse($validator->validateSteps(2)->notEmpty());
         static::assertFalse($validator->validateSteps('ccc')->notEmpty());
         static::assertFalse($validator->validateSteps(null)->notEmpty());
@@ -77,15 +75,9 @@ class ValidatorTest extends TestCase
         static::assertFalse($validator->validateScripts('xxx')->notEmpty());
         static::assertFalse($validator->validateScripts(null)->notEmpty());
 
-        $cb1 = static function () {
-        };
-        $cb2 = static function () {
-        };
-        $cbsIn = ['pre-a' => $cb1, 'post-b' => $cb2, 'pre-' => $cb2];
-        $cbsOut = ['pre-a' => [$cb1], 'post-b' => [$cb2]];
-        $join = ['pre-x' => [$cb1, $cb2]];
-
-        static::assertFalse($validator->validateScripts([$cb1, $cb2])->notEmpty());
+        $cbsIn = ['pre-a' => ['a_function'], 'post-b' => ['b_function'], 'pre-' => ['a_function']];
+        $cbsOut = ['pre-a' => ['a_function'], 'post-b' => ['b_function']];
+        $join = ['pre-x' => ['a_function', 'b_function']];
 
         static::assertTrue($validator->validateScripts($cbsIn)->is($cbsOut));
         static::assertTrue($validator->validateScripts($join)->is($join));
