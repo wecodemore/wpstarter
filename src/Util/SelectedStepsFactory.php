@@ -118,6 +118,12 @@ class SelectedStepsFactory
         $customSteps = $config[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
         $commandSteps = $config[Config::COMMAND_STEPS]->unwrapOrFallback([]);
 
+        $hasCliConfig = $config[Config::WP_CLI_FILES]->notEmpty()
+            || $config[Config::WP_CLI_COMMANDS]->notEmpty();
+        if (!$hasCliConfig) {
+            unset($defaultSteps[WpCliCommandsStep::NAME]);
+        }
+
         $selectedCommandMode = $this->isSelectedCommandMode();
 
         $allSteps = $this->skipCustom ? $defaultSteps : array_merge($defaultSteps, $customSteps);
