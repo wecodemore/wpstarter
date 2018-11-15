@@ -134,8 +134,8 @@ class WpVersion
             case 'no-wp':
                 $lines = [
                     'No WordPress version found.',
-                    'To skip WP requirement check, set \'require-wp\' to false'
-                    . 'in WP Starter configuration in composer.json.',
+                    'To skip WP requirement check, set \'require-wp\' to false in WP Starter '
+                    . 'configuration in composer.json.',
                 ];
                 break;
             case 'more-wp':
