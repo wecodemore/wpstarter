@@ -116,6 +116,11 @@ final class Config implements \ArrayAccess
     private $validator;
 
     /**
+     * @var array
+     */
+    private $validationMap;
+
+    /**
      * @param array $configs
      * @param Validator $validator
      */
@@ -128,6 +133,7 @@ final class Config implements \ArrayAccess
         $this->configs = [];
         $this->validator = $validator;
         $this->raw = array_merge(self::DEFAULTS, $configs);
+        $this->validationMap = self::VALIDATION_MAP;
     }
 
     /**
@@ -137,6 +143,24 @@ final class Config implements \ArrayAccess
     public function offsetExists($offset)
     {
         return array_key_exists($offset, $this->raw) || array_key_exists($offset, $this->configs);
+    }
+
+    /**
+     * @param string $name
+     * @param callable $validator
+     * @return Config
+     */
+    public function appendValidator(string $name, callable $validator): Config
+    {
+        if (array_key_exists($name, self::VALIDATION_MAP)) {
+            throw new \InvalidArgumentException(
+                "It is not possible to overwrite default validation callback for {$name}."
+            );
+        }
+
+        $this->validationMap[$name] = $validator;
+
+        return $this;
     }
 
     /**
@@ -209,11 +233,16 @@ final class Config implements \ArrayAccess
     {
         // phpcs:enable
 
-        $method = self::VALIDATION_MAP[$name] ?? null;
+        /** @var string|callable $method */
+        $method = $this->validationMap[$name] ?? null;
         if (!$method) {
             return Result::ok($value);
         }
 
-        return ([$this->validator, $method])($value);
+        if (array_key_exists($name, self::VALIDATION_MAP)) {
+            return ([$this->validator, $method])($value);
+        }
+
+        return $this->validator->validateCustom($method, $value);
     }
 }

@@ -33,6 +33,7 @@ final class ComposerPlugin implements
 {
 
     const EXTRA_KEY = 'wpstarter';
+    const EXTENSIONS_TYPE = 'wpstarter-extension';
 
     /**
      * @var bool
@@ -60,6 +61,23 @@ final class ComposerPlugin implements
     private $autorun = false;
 
     /**
+     * A very simple PSR-4 compatible loader function.
+     *
+     * @param string $namespace
+     * @param string $dir
+     * @return callable
+     */
+    public static function psr4LoaderFor(string $namespace, string $dir): callable
+    {
+        return function (string $class) use ($namespace, $dir) {
+            if (stripos($class, $namespace) === 0) {
+                $file = substr(str_replace('\\', '/', $class), strlen($namespace)) . '.php';
+                require_once $dir . $file;
+            }
+        };
+    }
+
+    /**
      * WP Starter is required from Composer, which means it is deployed with WordPress, and so
      * any autoloading setting that WP Starter declares will "pollute" the Composer autoloader that
      * is loaded at every WordPress request.
@@ -71,12 +89,7 @@ final class ComposerPlugin implements
     public static function setupAutoload()
     {
         static::$autoload or spl_autoload_register(
-            function (string $class) {
-                if (stripos($class, __NAMESPACE__) === 0) {
-                    $file = substr(str_replace('\\', '/', $class), strlen(__NAMESPACE__)) . '.php';
-                    require_once __DIR__ . $file;
-                }
-            },
+            static::psr4LoaderFor(__NAMESPACE__, __DIR__),
             true,
             true
         );
@@ -153,6 +166,10 @@ final class ComposerPlugin implements
     public function autorun(Event $event)
     {
         static::setupAutoload();
+        if ($this->composer->getPackage()->getType() === self::EXTENSIONS_TYPE) {
+            return;
+        }
+
         $this->autorun = true;
         $this->run(Util\SelectedStepsFactory::autorun());
     }
@@ -172,6 +189,7 @@ final class ComposerPlugin implements
         }
 
         $this->locator = new Util\Locator($requirements, $this->composer, $this->io, $filesystem);
+        $this->loadExtensions();
 
         try {
             $requireWp = $config[Config::REQUIRE_WP]->not(false);
@@ -248,6 +266,31 @@ final class ComposerPlugin implements
         }
 
         return $wpVersion;
+    }
+
+    /**
+     * @return void
+     */
+    private function loadExtensions()
+    {
+        $finder = $this->locator->packageFinder();
+        $paths = $this->locator->paths();
+        $filesystem = $this->locator->composerFilesystem();
+
+        $packages = $finder->findByType(self::EXTENSIONS_TYPE);
+
+        foreach ($packages as $package) {
+            $autoload = $package->getExtra()['wpstarter-autoload'] ?? '';
+            if (!$autoload) {
+                continue;
+            }
+
+            $packagePath = $finder->findPathOf($package);
+            $autoloadPath = $filesystem->normalizePath("{$packagePath}/{$autoload}");
+            if (file_exists($autoloadPath)) {
+                require_once $autoloadPath;
+            }
+        }
     }
 
     /**

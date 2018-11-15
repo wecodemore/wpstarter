@@ -128,18 +128,12 @@ class Validator
         $allScripts = [];
 
         foreach ($value as $name => $scripts) {
-            if (!is_string($name)) {
+            if (!is_string($name) || !is_array($scripts)) {
                 continue;
             }
 
             $name = strtolower($name);
             if (!preg_match('~^(?:pre|post)\-.+$~', $name)) {
-                continue;
-            }
-
-            if ($this->isCallback($scripts)) {
-                $allScripts[$name] = [$scripts];
-
                 continue;
             }
 
@@ -796,6 +790,32 @@ class Validator
         return is_array($value)
             ? Result::ok($value)
             : Result::errored('Given value is not, nor can be converted to, an array.');
+    }
+
+    /**
+     * @param callable $method
+     * @param $value
+     * @return Result
+     */
+    public function validateCustom(callable $method, $value): Result
+    {
+        try {
+            set_error_handler( // phpcs:ignore
+                function (int $code, string $message) {
+                    throw new \Error($message, $code);
+                }
+            );
+
+            $validated = $method($value);
+            restore_error_handler();
+            ($validated instanceof Result) or $validated = Result::ok($validated);
+        } catch (\Error $error) {
+            $validated = Result::error($error);
+        } catch (\Throwable $throwable) {
+            $validated = Result::error(new \Error($throwable->getMessage(), 0, $throwable));
+        }
+
+        return $validated;
     }
 
     /**

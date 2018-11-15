@@ -12,6 +12,7 @@ use Composer\Command\BaseCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use WeCodeMore\WpStarter\Util\SelectedStepsFactory;
 
@@ -64,11 +65,22 @@ final class WpStarterCommand extends BaseCommand
     {
         // phpcs:enable
 
+        $composer = $this->getComposer(true, false);
+        if ($composer->getPackage()->getType() === ComposerPlugin::EXTENSIONS_TYPE) {
+            $this->writeError(
+                $output,
+                'WP Starter command does not work when root package is of type'
+                . ' "wpstarter-extension".'
+            );
+
+            return 1;
+        }
+
         try {
             ComposerPlugin::setupAutoload();
 
             $plugin = new ComposerPlugin();
-            $plugin->activate($this->getComposer(false, false), $this->getIO());
+            $plugin->activate($composer, $this->getIO());
 
             $skip = $input->hasOption('skip')
                 && $input->getOption('skip');
@@ -88,9 +100,49 @@ final class WpStarterCommand extends BaseCommand
 
             return 0;
         } catch (\Throwable $throwable) {
-            $output->writeln($throwable->getMessage());
+            $this->writeError($output, $throwable->getMessage());
 
             return 1;
         }
+    }
+
+    /**
+     * @param OutputInterface $output
+     * @param string $message
+     */
+    private function writeError(OutputInterface $output, string $message)
+    {
+        $words = explode(' ', $message);
+        $lines = [];
+        $line = '';
+        foreach ($words as $word) {
+            if (strlen($line . $word) < 60) {
+                $line .= $line ? " {$word}" : $word;
+                continue;
+            }
+
+            $lines[] = "  {$line}  ";
+            $line = $word;
+        }
+
+        $line and $lines[] = "  {$line}  ";
+
+        $lenMax = max(array_map('strlen', $lines));
+        $empty = '<error>' . str_repeat(' ', $lenMax) . '</error>';
+        $errors = ['', $empty];
+        foreach ($lines as $line) {
+            $lineLen = strlen($line);
+            ($lineLen < $lenMax) and $line .= str_repeat(' ', $lenMax - $lineLen);
+            $errors[] = "<error>{$line}</error>";
+        }
+
+        $errors[] = $empty;
+        $errors[] = '';
+
+        if ($output instanceof ConsoleOutputInterface) {
+            $output = $output->getErrorOutput();
+        }
+
+        $output->writeln($errors);
     }
 }

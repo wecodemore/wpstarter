@@ -267,7 +267,7 @@ It must be a map of unique step "slugs" to step classes, for example:
 
 For how to actually develop the step class please refer to *"Custom Steps Development"* chapter.
 
-To be able to be ran the step classes must be autoloadable, more on this below.
+To be able to be ran the step classes must be autoloadable, more on this in the  *"Custom Steps Development"* chapter.
 
 ### Replacing default steps
 
@@ -289,15 +289,20 @@ For example:
 
 Before and after each step WP Starter allow users to run "scripts", which are nothing else than PHP callbacks (because of limitation of JSON, only plain PHP functions or class static methods are supported).
 
-The scripts to be ran has to be added to the `scripts` WP Starter setting, which must be a map from scripts slugs to fully-qualified callback name.
+The scripts to be ran has to be added to the `scripts` WP Starter setting, which must be a map from scripts slugs to an array of fully-qualified callback names.
 
 Slug must be composed with a prefix that is `pre-` (which means "before") or `post-` (which means "after") followed by the target step slug (custom steps works as well).
 
 ```json
 {
     "scripts": {
-        "pre-build-wp-config": "MyCompany\\MyProject\\Scripts::beforeWpConfigStep",
-        "post-custom-step-one": "MyCompany\\MyProject\\runAfterCustomStepOne"
+        "pre-build-wp-config": [
+            "MyCompany\\MyProject\\Scripts::beforeWpConfigStep",
+            "AnotherCompany\\AnotherProject\\beforeWpConfigStep"
+        ],
+        "post-custom-step-one": [
+            "MyCompany\\MyProject\\runAfterCustomStepOne"
+        ]
     }
 }
 ```
@@ -319,46 +324,6 @@ Where:
 Besides the scripts for the *actual* steps, there are an additional couple of pre/post scripts: `pre-wpstarter` and `post-wpstarter`, that run respectively before any step starts and after all the steps completed.
 
 For this "special" couple of scripts, the step object passed as second parameter will be an instance of `WeCodeMore\WpStarter\Step\Steps` that is a sort of "steps runner" which implements `Step` interface as well. This is especially interesting for the `pre-wpstarter` script, because callbacks attached to that script can call on the passed `Steps` object its `addStep()` / `removeStep()` methods, adding or removing steps "on the fly".
-
-
-
-## Making steps and scripts autoloadable
-
-When creating custom steps or extending steps via scripts it is necessary that step classes and scripts callbacks are autoloadable, or it is not possible to WP Starter to run them.
-
-The obvious way to do that it is to use entries in the via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json`. That obviously works, but considering that Composer is used to require WordPress, and that Composer autoload  is loaded at every WordPress request, "polluting" Composer autoload with things that are not meant to be run in production is probably not a good idea.
-
-WP Starter itself registers a custom autoloader just in time before running its steps, and only register in `composer.json` autoload the minimum required, that is its plugin class and little more.
-
-WP Starter also offers to users the possibility to require a PHP file before starting running steps. This file can then be used to manually require files, declare functions, or register autoloaders.
-
-By default, WP Starter will look for a file  named `"wpstarter-autoload.php"` in project root, but the path can be configured using the **`autoload`** setting.
-
-For example in `wpstarter.json`:
-
-```json
-{
-    "autoload": "./utils/functions.php",
-    "scripts": {
-        "pre-wpstarter": "MyCompany\\MyProject\\sayHelloBeforeStarting"
-    }
-}
-```
-
-and in `utils/functions.php` inside project root:
-
-```php
-<?php
-namespace MyCompany\MyProject;
-
-use WeCodeMore\WpStarter\Step\Step;
-use WeCodeMore\WpStarter\Util\Locator;
-
-function sayHelloBeforeStarting(int $result, Step $step, Locator $locator) {
-    $locator->io()->writeColorBlock('magenta', "Hello there!\n");
-}
-```
-
 
 
 

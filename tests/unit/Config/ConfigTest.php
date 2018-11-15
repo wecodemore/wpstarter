@@ -9,6 +9,7 @@
 namespace WeCodeMore\WpStarter\Tests\Unit\Config;
 
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Config\Result;
 use WeCodeMore\WpStarter\Tests\TestCase;
 
 class ConfigTest extends TestCase
@@ -51,5 +52,107 @@ class ConfigTest extends TestCase
 
         $this->expectException(\BadMethodCallException::class);
         $config[Config::TEMPLATES_DIR] = $dir;
+    }
+
+    /**
+     * @see TestCase::makeValidator()
+     */
+    public function testValidateCustomWithResult()
+    {
+        $config = new Config(['a' => 'hello', 'b' => 'goodbye'], $this->makeValidator());
+
+        $config->appendValidator('a', function (string $value): Result {
+            return $value === 'hello' ? Result::ok($value) : Result::errored('Invalid');
+        });
+        $config->appendValidator('b', function (string $value): Result {
+            return $value === 'hello' ? Result::ok($value) : Result::errored('Invalid');
+        });
+
+        static::assertSame('hello', $config['a']->unwrap());
+        static::assertSame(-1, $config['b']->unwrapOrFallback(-1));
+    }
+
+    /**
+     * @see TestCase::makeValidator()
+     */
+    public function testValidateCustomIsWrappedInResult()
+    {
+        $config = new Config(['hi' => 'hello!'], $this->makeValidator());
+
+        $config->appendValidator('hi', function (string $value): string {
+            return strtoupper($value);
+        });
+
+        static::assertSame('HELLO!', $config['hi']->unwrap());
+    }
+
+    /**
+     * @see TestCase::makeValidator()
+     */
+    public function testValidateWithError()
+    {
+        $config = new Config(['hello' => 'Hello!'], $this->makeValidator());
+
+        $config->appendValidator('hello', function () {
+            throw new \Error('No hello!');
+        });
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('No hello!');
+
+        $config['hello']->unwrap();
+    }
+
+    /**
+     * @see TestCase::makeValidator()
+     */
+    public function testValidateWithThrowable()
+    {
+        $config = new Config(['hello' => 'Hello!'], $this->makeValidator());
+
+        $config->appendValidator('hello', function () {
+            throw new \RuntimeException('No hello!');
+        });
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('No hello!');
+
+        $config['hello']->unwrap();
+    }
+
+    /**
+     * @see TestCase::makeValidator()
+     */
+    public function testValidateCustomCantOverwriteDefault()
+    {
+        $config = new Config([], $this->makeValidator());
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageRegExp('/overwrite/');
+
+        $config->appendValidator(Config::AUTOLOAD, 'strtoupper');
+    }
+
+    /**
+     * @see TestCase::makeValidator()
+     */
+    public function testValidateCustomCantWarningMeansError()
+    {
+        $config = new Config(['hi' => 'hello', 'bye' => 'goodbye'], $this->makeValidator());
+
+        $config->appendValidator('hello', function (): Result {
+            $warning = 1/0;
+
+            return Result::ok($warning > 0 ? 1 : 2);
+        });
+
+        $config->appendValidator('bye', function (): Result {
+            $noWarning = 1/1;
+
+            return Result::ok($noWarning > 0 ? 1 : 2);
+        });
+
+        static::assertSame('Ha!', $config['hello']->unwrapOrFallback('Ha!'));
+        static::assertSame(1, $config['bye']->unwrapOrFallback('Ha!'));
     }
 }
