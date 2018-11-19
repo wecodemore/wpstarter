@@ -11,6 +11,7 @@ namespace WeCodeMore\WpStarter;
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\IO\IOInterface;
+use Composer\Package\PackageInterface;
 use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
 use Composer\Plugin\Capability\CommandProvider;
@@ -273,23 +274,53 @@ final class ComposerPlugin implements
      */
     private function loadExtensions()
     {
-        $finder = $this->locator->packageFinder();
-        $paths = $this->locator->paths();
-        $filesystem = $this->locator->composerFilesystem();
-
-        $packages = $finder->findByType(self::EXTENSIONS_TYPE);
+        $packages = $this->locator->packageFinder()->findByType(self::EXTENSIONS_TYPE);
 
         foreach ($packages as $package) {
-            $autoload = $package->getExtra()['wpstarter-autoload'] ?? '';
-            if (!$autoload) {
+            $this->loadExtensionAutoload($package);
+        }
+    }
+
+    /**
+     * @param PackageInterface $package
+     * @return void
+     */
+    private function loadExtensionAutoload(PackageInterface $package)
+    {
+        $autoload = $package->getExtra()['wpstarter-autoload'] ?? null;
+        if (!$autoload || !is_array($autoload)) {
+            return;
+        }
+
+        $files = $autoload['files'] ?? [];
+        $psr4 = $autoload['psr-4'] ?? [];
+        is_array($files) or $files = [];
+        is_array($psr4) or $psr4 = [];
+
+        if (!$files && !$psr4) {
+            return;
+        }
+
+        $packagePath = $this->locator->packageFinder()->findPathOf($package);
+        $filesystem = $this->locator->composerFilesystem();
+
+        foreach ($files as $file) {
+            if (is_string($file)) {
+                $fullpath = $filesystem->normalizePath("{$packagePath}/{$file}");
+                file_exists($fullpath) and require_once $fullpath;
+            }
+        }
+
+        foreach ($psr4 as $namespace => $dir) {
+            if (!is_string($namespace) || !is_string($dir)) {
                 continue;
             }
-
-            $packagePath = $finder->findPathOf($package);
-            $autoloadPath = $filesystem->normalizePath("{$packagePath}/{$autoload}");
-            if (file_exists($autoloadPath)) {
-                require_once $autoloadPath;
-            }
+            $fullpath = $filesystem->normalizePath("{$packagePath}/{$dir}");
+            is_dir($fullpath) and spl_autoload_register(
+                static::psr4LoaderFor(rtrim($namespace, '\\/'), $fullpath),
+                true,
+                true
+            );
         }
     }
 

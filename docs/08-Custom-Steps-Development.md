@@ -85,13 +85,13 @@ It has several methods, each for one path:
 
 When creating custom steps or even extending steps via scripts it is necessary that step classes and scripts callbacks are autoloadable, or it is not possible to WP Starter to run them.
 
-The obvious way to do that it is to use entries in the via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json`. That obviously works, but considering that Composer is used to require WordPress, and that Composer autoload  is loaded at every WordPress request, "polluting" Composer autoload with things that are not meant to be run in production is probably not a good idea.
+The obvious way to do that it is to use entries in the via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json`. That obviously works, but considering that Composer is used to require WordPress, and that Composer autoload  is loaded at every WordPress request, "polluting" Composer autoload with things that are not meant to be run in production is probably not a good idea considering that the autoloader can have quite a substantial impact on web request time.
 
 WP Starter itself registers a custom autoloader just in time before running its steps, and only register in `composer.json` autoload the minimum required, that is its plugin class and little more.
 
 WP Starter also offers to users the possibility to require a PHP file before starting running steps. This file can then be used to manually require files, declare functions, or register autoloaders.
 
-By default, WP Starter will look for a file  named `"wpstarter-autoload.php"` in project root, but the path can be configured using the **`autoload`** setting.
+WP Starter will also look for a file named, by default, `"wpstarter-autoload.php"` in project root, but the path can be configured using the **`autoload`** setting.
 
 For example in `wpstarter.json`:
 
@@ -118,29 +118,32 @@ function sayHelloBeforeStarting(int $result, Step $step, Locator $locator) {
 }
 ```
 
-A even more simplified way can be obtained via WP Starter extensions.
+An even more powerful yet simpler way to obtain autoload for custom steps is via WP Starter extensions.
 
 
 
 ## WP Starter extensions
 
-Many configurations of WP Starter allow pointing files which can be pulled via Composer. Which means that creating Composer packages to extends WP Starter possibilities is an effective way to, for example, add  shared configuration, WP CLI scripts and, of course custom scripts and steps.
+Many configurations of WP Starter allow pointing local files, which includes files in packages pulled via Composer. Which means that creating Composer packages to extends WP Starter possibilities is an effective way to, for example, add  shared configuration, WP CLI scripts, custom scripts, and custom steps.
 
-In such packages one want probably make use of WP Starter objects, which means that WP Starter should be used as a dependency there.
+In such packages, especially in custom scripts and steps, it is very likely necessary to make use of WP Starter objects, which means that WP Starter should probably be used as a dependency.
 
-However, if WP Starter is a dependency when installing those packages as the "root" WP Starter will try to run its steps on Composer install or update.
+However, when installing (or updating) Composer packages that declares WP Starter as a dependency, right after Composer ends installation (or update), WP Starter will set in, trying to run its steps.
 
-A special **package type**, **`wpstarter-extension`** , can be used in such packages to avoid that issue: when WP Starter will recognize that root package has that type, will do just nothing.
+A special **package type**, **`wpstarter-extension`** , can be used in such packages to avoid that issue: when WP Starter will recognize that root package has `wpstarter-extension` type, will do just nothing on Composer installation or update.
 
-Moreover, packages of type `wpstarter-extension` can use a setting inside extra: `"wpstarter-autoload"` to point a file to be loaded only when WP Starter runs its steps.
+Moreover, packages of type `wpstarter-extension` can use the setting `extra.wpstarter-autoload` to setup an autoload strategy that will only be used when WP Starter perform its tasks, without affecting regular application autoload.
 
-### PSR-4 in autoload file
+### WP Starter autoload
 
-When using `"wpstarter-autoload"` configuration in WP Starter extensions (but also from `"wpstarter-autoload.php"`) it is to directly declare functions or require files, but in more complex extensions it is probably desired to use a PSR-4 autoloader.
+The setting `wpstarter-autoload` inside the `extra` setting of packages of type `wpstarter-extension` is modeled on `autoload` setting of Composer, but it supports a subset of the Composer autoload types.
 
-Of course, `spl_autoload_register` can be called from autoload file, and to write a PSR-4 compatible autoload callback is not a big deal, but WP Starter make it even easier. The WP Starter `ComposerPlugin` class has a static method `psr4LoaderFor` that return a PSR-4 compatible autoload callback accepting two arguments: respectively a namespace and a base folder for it.
+In fact, it supports only:
 
-So a package that would have a `composer.json` like this:
+- `psr-4`
+- `files`
+
+For example, a package with a `composer.json` like this:
 
 ```json
 {
@@ -150,22 +153,19 @@ So a package that would have a `composer.json` like this:
         "wecodemore/wpstarter": "^3"
     },
     "extra": {
-        "wpstarter-autoload": "autoload.php"
+        "wpstarter-autoload": {
+            "files": [
+                "helpers.php"
+            ],
+            "psr-4": [
+                "MyCompany\\WpStarterExtension\\": "src/"
+            ]
+        }
     }
 }
 ```
 
-could than have a `autoload.php` file that contains:
-
-```php
-<?php
-namespace MyCompany\MyWpStarterExtension;
-
-use WeCodeMore\WpStarter\ComposerPlugin;
-spl_autoload_register(ComposerPlugin::psr4LoaderFor(__NAMESPACE__, __DIR__));
-```
-
-and the  just use PSR-4 compatible class names and namespaces and those would be autoloadable in WP Starter context only.
+will make the `helpers.php` file in package root to be loaded right before WP Starter runs its steps, plus any PSR-4 compatible class inside its `src/` folder will be available for use.
 
 
 
