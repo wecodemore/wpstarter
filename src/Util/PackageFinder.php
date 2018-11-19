@@ -125,6 +125,28 @@ class PackageFinder
     }
 
     /**
+     * @param string $name
+     * @return PackageInterface[]
+     */
+    public function search(string $name)
+    {
+        $packages = $this->all();
+        $found = [];
+
+        foreach ($packages as $package) {
+            if ($package->getName() === $name
+                || $package->getPrettyName() === $name
+                || fnmatch($name, $package->getName(), FNM_PATHNAME|FNM_PERIOD|FNM_CASEFOLD)
+                || fnmatch($name, $package->getPrettyName(), FNM_PATHNAME|FNM_PERIOD|FNM_CASEFOLD)
+            ) {
+                $found[] = $package;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
      * @return PackageInterface[]
      */
     private function all(): array
