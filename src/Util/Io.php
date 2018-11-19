@@ -187,6 +187,19 @@ class Io
     }
 
     /**
+     * @param string $line
+     */
+    public function writeCommentIfVerbose(string $line)
+    {
+        $lines = static::ensureLength($message);
+        foreach ($lines as $line) {
+            $this->io->write("  <comment>{$line}</comment>", true, IOInterface::VERBOSE);
+        }
+
+        return true;
+    }
+
+    /**
      * Get an array of question lines and a default response and use them to format and ask a
      * confirmation to console.
      *
