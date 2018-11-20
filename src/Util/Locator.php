@@ -169,18 +169,20 @@ final class Locator
     }
 
     /**
-     * @return LanguageListFetcher
+     * @return Unzipper
      */
-    public function languageListFetcher(): LanguageListFetcher
+    public function unzipper(): Unzipper
     {
-        if (empty($this->objects[LanguageListFetcher::class])) {
-            $this->objects[LanguageListFetcher::class] = new LanguageListFetcher(
-                $this->io(),
-                $this->urlDownloader()
+        if (empty($this->objects[Unzipper::class])) {
+            /** @var Composer $composer */
+            $composer = $this->objects[Composer::class];
+            $this->objects[Unzipper::class] = new Unzipper(
+                $this->objects[ComposerIo::class],
+                $composer->getConfig()
             );
         }
 
-        return $this->objects[LanguageListFetcher::class];
+        return $this->objects[Unzipper::class];
     }
 
     /**
