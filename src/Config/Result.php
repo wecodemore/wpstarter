@@ -230,6 +230,9 @@ final class Result
             }
 
             $this->value = $resolved;
+        } catch (\Error $error) {
+            $this->value = null;
+            $this->error = $error;
         } catch (\Throwable $throwable) {
             $this->value = null;
             $this->error = new \Error($throwable->getMessage(), 0, $throwable);
