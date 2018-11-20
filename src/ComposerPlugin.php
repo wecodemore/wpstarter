@@ -9,7 +9,10 @@
 namespace WeCodeMore\WpStarter;
 
 use Composer\Composer;
+use Composer\DependencyResolver\Operation\InstallOperation;
+use Composer\DependencyResolver\Operation\UpdateOperation;
 use Composer\EventDispatcher\EventSubscriberInterface;
+use Composer\Installer\PackageEvent;
 use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
 use Composer\Plugin\Capable;
@@ -62,6 +65,16 @@ final class ComposerPlugin implements
     private $autorun = false;
 
     /**
+     * @var bool
+     */
+    private $update = false;
+
+    /**
+     * @var PackageInterface[]
+     */
+    private $updatedPackages = [];
+
+    /**
      * A very simple PSR-4 compatible loader function.
      *
      * @param string $namespace
@@ -106,8 +119,10 @@ final class ComposerPlugin implements
         // phpcs:enable
 
         return [
-            'post-install-cmd' => 'autorun',
-            'post-update-cmd' => 'autorun',
+            'post-install-cmd' => 'autorunInstall',
+            'post-update-cmd' => 'autorunUpdate',
+            'pre-package-update' => 'prePackage',
+            'pre-package-install' => 'prePackage',
         ];
     }
 
@@ -162,17 +177,43 @@ final class ComposerPlugin implements
     }
 
     /**
+     * @param PackageEvent $event
+     */
+    public function prePackage(PackageEvent $event)
+    {
+        $operation = $event->getOperation();
+
+        $package = null;
+        if ($operation instanceof UpdateOperation) {
+            $package = $operation->getTargetPackage();
+        } elseif ($operation instanceof InstallOperation) {
+            $package = $operation->getPackage();
+        }
+
+        $package and $this->updatedPackages[$package->getName()] = $package;
+    }
+
+    /**
      * @param Event $event
      */
-    public function autorun(Event $event)
+    public function autorunInstall(Event $event)
     {
+        $this->autorun = true;
         static::setupAutoload();
         if ($this->composer->getPackage()->getType() === self::EXTENSIONS_TYPE) {
             return;
         }
 
-        $this->autorun = true;
         $this->run(Util\SelectedStepsFactory::autorun());
+    }
+
+    /**
+     * @param Event $event
+     */
+    public function autorunUpdate(Event $event)
+    {
+        $this->update = true;
+        $this->autorunInstall($event);
     }
 
     /**
@@ -180,17 +221,7 @@ final class ComposerPlugin implements
      */
     public function run(Util\SelectedStepsFactory $factory)
     {
-        $filesystem = new Filesystem();
-        $requirements = new Util\Requirements($this->composer, $this->io, $filesystem);
-        $config = $requirements->config();
-
-        $autoload = $config[Config::AUTOLOAD]->unwrapOrFallback();
-        if ($autoload && is_file($autoload)) {
-            require_once $autoload;
-        }
-
-        $this->locator = new Util\Locator($requirements, $this->composer, $this->io, $filesystem);
-        $this->loadExtensions();
+        $config = $this->prepareRun($factory);
 
         try {
             $requireWp = $config[Config::REQUIRE_WP]->not(false);
@@ -237,6 +268,38 @@ final class ComposerPlugin implements
             $this->locator->io()->writeErrorBlock(...$lines);
             $this->autorun or exit(1);
         }
+    }
+
+    /**
+     * @param Util\SelectedStepsFactory $factory
+     * @return Config
+     * @throws \Exception
+     */
+    private function prepareRun(Util\SelectedStepsFactory $factory): Config
+    {
+        $filesystem = new Filesystem();
+
+        $requirements = new Util\Requirements(
+            $this->composer,
+            $this->io,
+            $filesystem,
+            $factory,
+            $this->autorun,
+            $this->update,
+            $this->updatedPackages
+        );
+
+        $config = $requirements->config();
+
+        $autoload = $config[Config::AUTOLOAD]->unwrapOrFallback();
+        if ($autoload && is_file($autoload)) {
+            require_once $autoload;
+        }
+
+        $this->locator = new Util\Locator($requirements, $this->composer, $this->io, $filesystem);
+        $this->loadExtensions();
+
+        return $config;
     }
 
     /**

@@ -10,6 +10,7 @@ namespace WeCodeMore\WpStarter\Util;
 
 use Composer\Composer;
 use Composer\IO\IOInterface;
+use Composer\Package\PackageInterface;
 use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\ComposerPlugin;
 use WeCodeMore\WpStarter\Config\Config;
@@ -46,11 +47,19 @@ final class Requirements
      * @param Composer $composer
      * @param IOInterface $io
      * @param Filesystem $filesystem
+     * @param SelectedStepsFactory $factory
+     * @param bool $autorun
+     * @param bool $update
+     * @param PackageInterface[] $updatedPackages
      */
     public function __construct(
         Composer $composer,
         IOInterface $io,
-        Filesystem $filesystem
+        Filesystem $filesystem,
+        SelectedStepsFactory $factory,
+        bool $autorun,
+        bool $update,
+        array $updatedPackages
     ) {
 
         $this->filesystem = $filesystem;
@@ -61,6 +70,12 @@ final class Requirements
         $root = $this->paths->root();
 
         $config = $this->extractConfig($root, $extra);
+        $isSelectedCommandMode =  $factory->isSelectedCommandMode();
+        $config[Config::IS_WPSTARTER_COMMAND] = !$autorun;
+        $config[Config::IS_WPSTARTER_SELECTED_COMMAND] = !$autorun && $isSelectedCommandMode;
+        $config[Config::IS_COMPOSER_UPDATE] = $autorun && $update;
+        $config[Config::IS_COMPOSER_INSTALL] = $autorun && !$update;
+        $config[Config::COMPOSER_UPDATED_PACKAGES] = $updatedPackages;
 
         $this->config = new Config($config, new Validator($this->paths, $filesystem));
         $this->io = new Io($io);

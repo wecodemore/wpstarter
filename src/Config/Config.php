@@ -19,10 +19,11 @@ use WeCodeMore\WpStarter\Step\ContentDevStep;
 final class Config implements \ArrayAccess
 {
     const AUTOLOAD = 'autoload';
-    const CONTENT_DEV_OPERATION = 'content-dev-op';
     const CACHE_ENV = 'cache-env';
-    const CONTENT_DEV_DIR = 'content-dev-dir';
     const COMMAND_STEPS = 'command-steps';
+    const COMPOSER_UPDATED_PACKAGES = 'composer-updated-packages';
+    const CONTENT_DEV_DIR = 'content-dev-dir';
+    const CONTENT_DEV_OPERATION = 'content-dev-op';
     const CUSTOM_STEPS = 'custom-steps';
     const DROPINS = 'dropins';
     const EARLY_HOOKS_FILE = 'early-hook-file';
@@ -31,6 +32,10 @@ final class Config implements \ArrayAccess
     const ENV_EXAMPLE = 'env-example';
     const ENV_FILE = 'env-file';
     const INSTALL_WP_CLI = 'install-wp-cli';
+    const IS_COMPOSER_UPDATE = 'is-composer-update';
+    const IS_COMPOSER_INSTALL = 'is-composer-update';
+    const IS_WPSTARTER_COMMAND = 'is-wpstarter-command';
+    const IS_WPSTARTER_SELECTED_COMMAND = 'is-wpstarter-selected-command';
     const MOVE_CONTENT = 'move-content';
     const PREVENT_OVERWRITE = 'prevent-overwrite';
     const REGISTER_THEME_FOLDER = 'register-theme-folder';
@@ -47,10 +52,11 @@ final class Config implements \ArrayAccess
     const DEFAULTS = [
         self::AUTOLOAD => 'wpstarter-autoload.php',
         self::CACHE_ENV => true,
+        self::COMMAND_STEPS => null,
+        self::COMPOSER_UPDATED_PACKAGES => [],
         self::CONTENT_DEV_OPERATION => ContentDevStep::OP_SYMLINK,
         self::CONTENT_DEV_DIR => 'content-dev',
         self::CUSTOM_STEPS => null,
-        self::COMMAND_STEPS => null,
         self::DROPINS => null,
         self::EARLY_HOOKS_FILE => '',
         self::ENV_BOOTSTRAP_DIR => null,
@@ -58,6 +64,10 @@ final class Config implements \ArrayAccess
         self::ENV_EXAMPLE => true,
         self::ENV_FILE => '.env',
         self::INSTALL_WP_CLI => true,
+        self::IS_COMPOSER_UPDATE => null,
+        self::IS_COMPOSER_INSTALL => null,
+        self::IS_WPSTARTER_COMMAND => null,
+        self::IS_WPSTARTER_SELECTED_COMMAND => null,
         self::MOVE_CONTENT => false,
         self::PREVENT_OVERWRITE => null,
         self::REGISTER_THEME_FOLDER => true,
@@ -75,10 +85,11 @@ final class Config implements \ArrayAccess
     const VALIDATION_MAP = [
         self::AUTOLOAD => 'validatePath',
         self::CACHE_ENV => 'validateBool',
+        self::COMMAND_STEPS => 'validateSteps',
+        self::COMPOSER_UPDATED_PACKAGES => 'validateArray',
         self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
         self::CONTENT_DEV_DIR => 'validatePath',
         self::CUSTOM_STEPS => 'validateSteps',
-        self::COMMAND_STEPS => 'validateSteps',
         self::DROPINS => 'validateDropins',
         self::EARLY_HOOKS_FILE => 'validateFileName',
         self::ENV_BOOTSTRAP_DIR => 'validateDirName',
@@ -86,6 +97,10 @@ final class Config implements \ArrayAccess
         self::ENV_EXAMPLE => 'validateBoolOrAskOrUrlOrPath',
         self::ENV_FILE => 'validateFileName',
         self::INSTALL_WP_CLI => 'validateBool',
+        self::IS_COMPOSER_UPDATE => 'validateBool',
+        self::IS_COMPOSER_INSTALL => 'validateBool',
+        self::IS_WPSTARTER_COMMAND => 'validateBool',
+        self::IS_WPSTARTER_SELECTED_COMMAND => 'validateBool',
         self::MOVE_CONTENT => 'validateBoolOrAsk',
         self::PREVENT_OVERWRITE => 'validateOverwrite',
         self::REGISTER_THEME_FOLDER => 'validateBoolOrAsk',
