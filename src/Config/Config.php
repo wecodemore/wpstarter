@@ -33,7 +33,7 @@ final class Config implements \ArrayAccess
     const ENV_FILE = 'env-file';
     const INSTALL_WP_CLI = 'install-wp-cli';
     const IS_COMPOSER_UPDATE = 'is-composer-update';
-    const IS_COMPOSER_INSTALL = 'is-composer-update';
+    const IS_COMPOSER_INSTALL = 'is-composer-install';
     const IS_WPSTARTER_COMMAND = 'is-wpstarter-command';
     const IS_WPSTARTER_SELECTED_COMMAND = 'is-wpstarter-selected-command';
     const MOVE_CONTENT = 'move-content';
@@ -116,7 +116,7 @@ final class Config implements \ArrayAccess
     ];
 
     /**
-     * @var array
+     * @var Result[]
      */
     private $configs;
 
