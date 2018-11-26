@@ -29,7 +29,7 @@ final class WpCliFileData
     /**
      * @var array
      */
-    private $parsed = self::DEFAULTS;
+    private $parsed;
 
     /**
      * @param array $fileData
