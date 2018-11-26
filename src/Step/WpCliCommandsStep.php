@@ -111,7 +111,10 @@ final class WpCliCommandsStep implements Step
 
         $fileCommands = [];
         if ($this->files) {
-            $fileCommands = array_filter(array_map([$this, 'buildEvalFileCommand'], $this->files));
+            foreach ($this->files as $file) {
+                $command = $this->buildEvalFileCommand($file, $paths);
+                $command and $fileCommands[] = $command;
+            }
         }
 
         $commands = array_merge($fileCommands, $this->commands);
