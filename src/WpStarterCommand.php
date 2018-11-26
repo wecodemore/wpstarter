@@ -23,6 +23,8 @@ final class WpStarterCommand extends BaseCommand
 {
     /**
      * @return void
+     *
+     * @suppress PhanTypeMismatchArgument
      */
     protected function configure()
     {
@@ -77,9 +79,8 @@ final class WpStarterCommand extends BaseCommand
         }
 
         try {
-            ComposerPlugin::setupAutoload();
-
             $plugin = new ComposerPlugin();
+            $plugin->setupAutoload();
             $plugin->activate($composer, $this->getIO());
 
             $skip = $input->hasOption('skip')
@@ -90,11 +91,11 @@ final class WpStarterCommand extends BaseCommand
                 && $input->getOption('ignore-skip-config');
 
             $flags = SelectedStepsFactory::MODE_COMMAND;
-            $skip and $flags |= SelectedStepsFactory::SKIP;
-            $skipCustom and $flags |= SelectedStepsFactory::SKIP_CUSTOM;
-            $ignoreSkipConfig and $flags |= SelectedStepsFactory::IGNORE_SKIP_CONFIG;
+            $skip and $flags |= SelectedStepsFactory::MODE_OPT_OUT;
+            $skipCustom and $flags |= SelectedStepsFactory::SKIP_CUSTOM_STEPS;
+            $ignoreSkipConfig and $flags |= SelectedStepsFactory::IGNORE_SKIP_STEPS_CONFIG;
 
-            $selected = $input->getArgument('steps') ?: [];
+            $selected = (array)($input->getArgument('steps') ?: []);
 
             $plugin->run(new SelectedStepsFactory($flags, ...$selected));
 
