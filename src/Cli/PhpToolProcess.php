@@ -79,7 +79,7 @@ class PhpToolProcess
     {
         return $this->phpProcess->execute(
             $this->tool->prepareCommand(
-                "{$this->toolPath} {$command}",
+                $this->toolPath ? "{$this->toolPath} {$command}" : $command,
                 $this->paths,
                 $this->io
             )

@@ -63,7 +63,7 @@ class WpVersion
     /**
      * @param PackageFinder $packageFinder
      * @param Io $io
-     * @param string $fallbackVersion
+     * @param string|null $fallbackVersion
      */
     public function __construct(
         PackageFinder $packageFinder,

@@ -161,6 +161,7 @@ class Filesystem
         $targetPath = $this->filesystem->normalizePath($targetPath);
         $this->createDir($targetPath);
 
+        /** @var \RecursiveDirectoryIterator $iterator */
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($sourcePath, \RecursiveDirectoryIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::SELF_FIRST
@@ -168,12 +169,10 @@ class Filesystem
 
         $done = $total = 0;
 
-        /**
-         * @var \RecursiveDirectoryIterator $iterator
-         * @var \SplFileInfo $item
-         */
+        /** @var \SplFileInfo $item */
         foreach ($iterator as $item) {
             $total++;
+            // @phan-suppress-next-line PhanUndeclaredMethod
             $target = "{$targetPath}/" . $iterator->getSubPathName();
 
             if ($item->isDir()) {
@@ -243,6 +242,6 @@ class Filesystem
             return $this->filesystem->removeDirectory($directory);
         }
 
-        return true;
+        return !file_exists($directory);
     }
 }

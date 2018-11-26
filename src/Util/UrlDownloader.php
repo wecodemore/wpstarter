@@ -18,12 +18,12 @@ use Composer\Util\RemoteFilesystem;
 class UrlDownloader
 {
     /**
-     * @var \Composer\Util\RemoteFilesystem|null
+     * @var \Composer\Util\RemoteFilesystem
      */
     private $remoteFilesystem;
 
     /**
-     * @var \Composer\Util\Filesystem|null
+     * @var \Composer\Util\Filesystem
      */
     private $filesystem;
 
@@ -59,20 +59,17 @@ class UrlDownloader
             return false;
         }
 
-        if (!dirname($filename)) {
+        $directory = dirname($filename);
+        if (!$directory) {
             $this->error = "Invalid target path to download {$url}.";
 
             return false;
         }
 
         try {
-            $this->filesystem->ensureDirectoryExists(dirname($filename));
+            $this->filesystem->ensureDirectoryExists($directory);
 
-            return $this->remoteFilesystem->copy(
-                parse_url($url, PHP_URL_HOST),
-                $url,
-                $filename
-            );
+            return $this->remoteFilesystem->copy(parse_url($url, PHP_URL_HOST), $url, $filename);
         } catch (\Throwable $exception) {
             $this->error = $exception->getMessage();
         }
@@ -97,7 +94,13 @@ class UrlDownloader
         }
 
         try {
-            return $this->remoteFilesystem->getContents(parse_url($url, PHP_URL_HOST), $url);
+            $host = parse_url($url, PHP_URL_HOST);
+            $contents = $this->remoteFilesystem->getContents($host, $url);
+            if (!$contents || !is_string($contents)) {
+                return '';
+            }
+
+            return $contents;
         } catch (\Throwable $exception) {
             $this->error = $exception->getMessage();
 

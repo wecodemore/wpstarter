@@ -38,7 +38,7 @@ class Salter
     private $max;
 
     /**
-     * @var string
+     * @var array<string,string>
      */
     private $result;
 

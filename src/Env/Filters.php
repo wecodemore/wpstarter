@@ -117,7 +117,7 @@ final class Filters
     }
 
     /**
-     * @param int|float|bool|string value
+     * @param int|float|bool|string $value
      * @return bool|int
      */
     private function filterIntOrBool($value)

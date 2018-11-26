@@ -29,7 +29,7 @@ final class WpCliFileData
     /**
      * @var array
      */
-    private $parsed;
+    private $parsed = self::DEFAULTS;
 
     /**
      * @param array $fileData
@@ -58,9 +58,9 @@ final class WpCliFileData
     }
 
     /**
-     * @return string
+     * @return bool
      */
-    public function valid()
+    public function valid(): bool
     {
         $this->setup();
 
@@ -108,26 +108,30 @@ final class WpCliFileData
 
         $data = array_replace(self::DEFAULTS, $this->raw);
 
-        if (!$data[self::FILE] || !is_string($data[self::FILE]) || !is_file($data[self::FILE])) {
+        /** @var string|null $file */
+        $file = $data[self::FILE] ?? null;
+        if (!$file || !is_string($file) || !is_file($file)) {
             $this->parsed = self::DEFAULTS;
 
             return;
         }
 
-        $ext = (string)pathinfo($data[self::FILE], PATHINFO_EXTENSION);
+        $ext = pathinfo($file, PATHINFO_EXTENSION);
         if (strtolower($ext) !== 'php') {
             $this->parsed = self::DEFAULTS;
 
             return;
         }
 
-        $args = is_array($data[self::ARGS]) ? array_filter($data[self::ARGS], 'is_string') : [];
-        $skip = filter_var($data[self::SKIP_WORDPRESS], FILTER_VALIDATE_BOOLEAN);
+        /** @var array $baseArgs */
+        $baseArgs = $data[self::ARGS] ?? [];
+        $args = is_array($baseArgs) ? array_filter($baseArgs, 'is_string') : [];
+        $skip = (bool)filter_var($data[self::SKIP_WORDPRESS], FILTER_VALIDATE_BOOLEAN);
 
         $this->parsed = [
             self::FILE => $data[self::FILE],
             self::ARGS => array_filter($args),
-            self::SKIP_WORDPRESS => (bool)$skip,
+            self::SKIP_WORDPRESS => $skip,
             self::VALID => true,
         ];
     }

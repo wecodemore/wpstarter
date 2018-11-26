@@ -608,6 +608,8 @@ class Validator
         $trimmed = $normalized;
         $startWithSlash = $trimmed[0] === '/';
         $startWithSlash and $trimmed = substr($trimmed, 1);
+
+        $relStartMatch = [];
         while (!$startWithSlash && preg_match('~^\.{1,2}/(.+)?~', $trimmed, $relStartMatch)) {
             $trimmed = $relStartMatch[1];
         }
@@ -821,6 +823,8 @@ class Validator
     /**
      * @param $script
      * @return bool
+     *
+     * @suppress PhanUnreferencedPrivateMethod
      */
     private function isCallback($script): bool
     {

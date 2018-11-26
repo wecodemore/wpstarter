@@ -39,11 +39,6 @@ final class WpCliCommandsStep implements Step
     private $process;
 
     /**
-     * @var \WeCodeMore\WpStarter\Env\WordPressEnvBridge
-     */
-    private $env;
-
-    /**
      * @var string[]
      */
     private $commands = [];
@@ -60,7 +55,6 @@ final class WpCliCommandsStep implements Step
     {
         $this->io = $locator->io();
         $this->process = $locator->wpCliProcess();
-        $this->env = $locator->env();
     }
 
     /**
@@ -135,6 +129,7 @@ final class WpCliCommandsStep implements Step
             }
             $this->io->write('<fg=magenta>' . str_repeat('-', 60) . '</>');
             $this->io->write('');
+
             usleep(200000);
         }
 
@@ -179,7 +174,7 @@ final class WpCliCommandsStep implements Step
     }
 
     /**
-     * @param string[] $commands
+     * @param string ...$commands
      */
     private function initMessage(string ...$commands)
     {

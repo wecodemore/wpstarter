@@ -23,7 +23,7 @@ class Io
     /**
      * Return an array where each item is a slice of the given string with less than 51 characters.
      *
-     * @param string[] $lines
+     * @param string ...$lines
      * @return array
      *
      * phpcs:disable Generic.Metrics.NestingLevel
@@ -68,7 +68,7 @@ class Io
     /**
      * @param string $before
      * @param string $after
-     * @param string[] $lines
+     * @param string ...$lines
      * @return array
      */
     private static function createBlock(
@@ -159,7 +159,10 @@ class Io
      */
     public function write(string $line)
     {
-        $this->io->write("  {$line}");
+        $lines = static::ensureLength($line);
+        foreach ($lines as $line) {
+            $this->io->write("  {$line}");
+        }
     }
 
     /**
@@ -175,7 +178,7 @@ class Io
      */
     public function writeErrorLineIfVerbose(string $line)
     {
-        $this->io->writeError("  <fg=red>{$line}</>", IOInterface::VERBOSE);
+        $this->io->writeError("  <fg=red>{$line}</>", true, IOInterface::VERBOSE);
     }
 
     /**
@@ -188,10 +191,11 @@ class Io
 
     /**
      * @param string $line
+     * @return bool
      */
-    public function writeCommentIfVerbose(string $line)
+    public function writeCommentIfVerbose(string $line): bool
     {
-        $lines = static::ensureLength($message);
+        $lines = static::ensureLength($line);
         foreach ($lines as $line) {
             $this->io->write("  <comment>{$line}</comment>", true, IOInterface::VERBOSE);
         }
@@ -247,7 +251,7 @@ class Io
         $question = implode("\n", $lines) . "\n\n";
 
         $prompt = '';
-        foreach ($answers as $expected => $label) {
+        foreach ($answers as $label) {
             $prompt and $prompt .= ' | ';
             $prompt .= '<question><option=bold>' . $label . '</option=bold>';
         }
@@ -280,7 +284,7 @@ class Io
     }
 
     /**
-     * @param string[] $lines
+     * @param string ...$lines
      * @return bool
      */
     public function writeErrorBlock(string ...$lines): bool
@@ -289,7 +293,7 @@ class Io
     }
 
     /**
-     * @param string[] $lines
+     * @param string ...$lines
      * @return bool
      */
     public function writeSuccessBlock(string ...$lines): bool
@@ -299,7 +303,7 @@ class Io
 
     /**
      * @param string $color
-     * @param string[] $lines
+     * @param string ...$lines
      * @return bool
      */
     public function writeColorBlock(string $color, string ...$lines): bool
@@ -320,7 +324,7 @@ class Io
      *
      * @param  string $background
      * @param  bool $isError
-     * @param  string[] $lines
+     * @param  string ...$lines
      * @return bool
      */
     private function writeBlock(

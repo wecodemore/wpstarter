@@ -20,7 +20,7 @@ namespace WeCodeMore\WpStarter\Config;
 final class Result
 {
     /**
-     * @var null
+     * @var mixed
      */
     private $value;
 
@@ -85,7 +85,7 @@ final class Result
     }
 
     /**
-     * @param null $value
+     * @param mixed|null $value
      * @param \Error|null $error
      *
      * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
@@ -148,7 +148,7 @@ final class Result
 
     /**
      * @param mixed $thing
-     * @param array $things
+     * @param mixed ...$things
      * @return bool
      *
      * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
@@ -165,7 +165,7 @@ final class Result
     }
 
     /**
-     * @param null $fallback
+     * @param mixed $fallback
      * @return mixed
      *
      * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
@@ -212,6 +212,7 @@ final class Result
         $resolver = $this->value;
 
         try {
+            // @phan-suppress-next-line PhanTypePossiblyInvalidCallable
             $value = $resolver();
 
             $resolved = $value;

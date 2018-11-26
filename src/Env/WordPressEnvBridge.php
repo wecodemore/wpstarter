@@ -212,7 +212,7 @@ class WordPressEnvBridge
 
     /**
      * @param string $file Environment file path relative to `$path`
-     * @param string $path Environment file path
+     * @param string|null $path Environment file path
      * @return void
      */
     public function load(string $file = '.env', string $path = null)
@@ -342,7 +342,7 @@ class WordPressEnvBridge
     }
 
     /**
-     * @param string[] $names
+     * @param string ...$names
      * @return array
      */
     public function readMany(string ...$names): array
@@ -401,7 +401,7 @@ class WordPressEnvBridge
         // the cached instance will work.
         $symfonyLoaded and $content .= "putenv('SYMFONY_DOTENV_VARS={$symfonyLoaded}');\n\n";
 
-        foreach (self::$cache as $key => [$value, $filtered]) {
+        foreach (self::$cache as $key => list($value, $filtered)) {
             // For WP constants, dump the `define` with filtered value, if any.
             if (self::WP_CONSTANTS[$key] ?? null) {
                 $define = $value !== $filtered

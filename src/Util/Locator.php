@@ -19,6 +19,8 @@ use WeCodeMore\WpStarter\Config\Config;
 
 /**
  * Service locator for WP Starter objects that is passed to Steps so the can do what they need.
+ *
+ * @phan-file-suppress PhanPossiblyNonClassMethodCall, PhanPartialTypeMismatchReturn
  */
 final class Locator
 {
@@ -36,13 +38,11 @@ final class Locator
      * @param Requirements $requirements
      * @param Composer $composer
      * @param ComposerIo $io
-     * @param ComposerFilesystem $filesystem
      */
     public function __construct(
         Requirements $requirements,
         Composer $composer,
-        ComposerIo $io,
-        ComposerFilesystem $filesystem
+        ComposerIo $io
     ) {
 
         if (!$this->objects) {
@@ -58,7 +58,7 @@ final class Locator
                 Io::class => $requirements->io(),
                 ComposerIo::class => $io,
                 Composer::class => $composer,
-                ComposerFilesystem::class => $filesystem,
+                ComposerFilesystem::class => $requirements->filesystem(),
             ];
         }
     }
@@ -294,7 +294,6 @@ final class Locator
         }
 
         return new Cli\PhpToolProcessFactory(
-            $this->config(),
             $this->paths(),
             $this->io(),
             new Cli\PharInstaller($this->io(), $this->urlDownloader()),

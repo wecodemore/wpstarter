@@ -29,11 +29,7 @@ class Unzipper
      */
     public function __construct(IOInterface $io, Config $config)
     {
-        /**
-         * We create this anonymous class extending ZipDownloader because its extract* methods
-         * we are interested in are protected, and the public `extract()` method does not return.
-         */
-        $this->unzipper = $this->createUnzipper($io, $config, Platform::isWindows());
+        $this->unzipper = $this->createUnzipper($io, $config);
     }
 
     /**
@@ -45,37 +41,40 @@ class Unzipper
      */
     public function unzip(string $zipPath, string $target): bool
     {
-        /** @noinspection PhpUndefinedMethodInspection */
-        return $this->unzipper->unzip($zipPath, $target);
+        /** @var callable(string, string): bool */
+        $unzip = [$this->unzipper, 'unzip'];
+
+        return $unzip($zipPath, $target);
     }
 
     /**
+     * We create this anonymous class extending ZipDownloader because its extract* methods
+     * we are interested in are protected, and the public `extract()` method does not return.
+     *
      * @param IOInterface $io
      * @param Config $config
-     * @param bool $isWindows
      * @return ZipDownloader
      *
      * phpcs:disable Generic.Metrics.NestingLevel
      */
-    private function createUnzipper(IOInterface $io, Config $config, bool $isWindows): ZipDownloader
+    private function createUnzipper(IOInterface $io, Config $config): ZipDownloader
     {
         // phpcs:enable
 
-        return new class($io, $config, $isWindows) extends ZipDownloader
+        return new class($io, $config) extends ZipDownloader
         {
             /**
              * @var bool
              */
-            private $isWindows;
+            private $useZipArchive;
 
             /**
              * @param IOInterface $io
              * @param Config $config
-             * @param bool $isWindows
              */
-            public function __construct(IOInterface $io, Config $config, bool $isWindows)
+            public function __construct(IOInterface $io, Config $config)
             {
-                $this->isWindows = $isWindows;
+                $this->useZipArchive = Platform::isWindows();
                 parent::__construct($io, $config);
             }
 
@@ -87,7 +86,7 @@ class Unzipper
             public function unzip(string $zipPath, string $target): bool
             {
                 try {
-                    return $this->isWindows
+                    return $this->useZipArchive
                         ? $this->extractWithZipArchive($zipPath, $target, false)
                         : $this->extractWithSystemUnzip($zipPath, $target, false);
                 } catch (\Throwable $exception) {
