@@ -35,13 +35,26 @@ class PharInstaller
 
     /**
      * @param PhpTool $info
-     * @param string|null $path
+     * @param string $path
      * @return string
      */
     public function install(PhpTool $info, string $path): string
     {
         $url = $info->pharUrl();
         $name = $info->niceName();
+
+        if (!$url || !$name) {
+            $this->io->write(
+                sprintf(
+                    "Skipping installation of PHP tool '%s'.\nName: %s, URL: %s.",
+                    get_class($info),
+                    $name ? "'{$name}'" : '(empty)',
+                    $url ? "'{$url}'" : '(empty)'
+                )
+            );
+
+            return '';
+        }
 
         $this->io->write(sprintf('Installing %s...', $name));
         if (!$this->urlDownloader->save($url, $path) || !file_exists($path)) {
