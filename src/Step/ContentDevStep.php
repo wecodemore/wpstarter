@@ -44,11 +44,6 @@ final class ContentDevStep implements OptionalStep
     const OPERATIONS = [self::OP_COPY, self::OP_SYMLINK, self::OP_NONE];
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\Io
-     */
-    private $io;
-
-    /**
      * @var \WeCodeMore\WpStarter\Util\Filesystem
      */
     private $filesystem;
@@ -57,11 +52,6 @@ final class ContentDevStep implements OptionalStep
      * @var \Composer\Util\Filesystem
      */
     private $composerFilesystem;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Config\Config
-     */
-    private $config;
 
     /**
      * @var string
@@ -74,14 +64,17 @@ final class ContentDevStep implements OptionalStep
     private $error = 'Some errors occurred while publishing content-dev dir.';
 
     /**
+     * @var string
+     */
+    private $contentDevDir = '';
+
+    /**
      * @param Locator $locator
      */
     public function __construct(Locator $locator)
     {
-        $this->io = $locator->io();
         $this->filesystem = $locator->filesystem();
         $this->composerFilesystem = $locator->composerFilesystem();
-        $this->config = $locator->config();
     }
 
     /**
@@ -149,6 +142,7 @@ final class ContentDevStep implements OptionalStep
         }
 
         $srcBase = $config[Config::CONTENT_DEV_DIR]->unwrap();
+        $this->contentDevDir = $srcBase;
         $scrDirs = ["{$srcBase}/plugins", "{$srcBase}/themes", "{$srcBase}/mu-plugins"];
         $targetBase = $paths->wpContent();
 
@@ -198,9 +192,10 @@ final class ContentDevStep implements OptionalStep
      */
     public function success(): string
     {
-        $dir = $this->config[Config::CONTENT_DEV_DIR]->unwrap();
+        $message = '<comment>Development content</comment> published successfully';
+        $message .= $this->contentDevDir ? " from '/{$this->contentDevDir }'." : '.';
 
-        return "<comment>Development content</comment> published successfully from '/{$dir}'.";
+        return $message;
     }
 
     /**
