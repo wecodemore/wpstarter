@@ -72,9 +72,16 @@ class MuPluginList
             return [];
         }
 
-        $fullpath = $this->paths->root($path);
+        if (!is_dir($path)) {
+            $absolute = $this->paths->root($path);
+            if (!is_dir($absolute)) {
+                return [];
+            }
 
-        $files = glob("{$fullpath}/*.php");
+            $path = $absolute;
+        }
+
+        $files = glob("{$path}/*.php");
         if (!$files) {
             return [];
         }
