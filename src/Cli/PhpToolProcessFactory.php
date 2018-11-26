@@ -8,18 +8,13 @@
 
 namespace WeCodeMore\WpStarter\Cli;
 
-use WeCodeMore\WpStarter\Config\Config;
+use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Util\Io;
 use WeCodeMore\WpStarter\Util\PackageFinder;
 use WeCodeMore\WpStarter\Util\Paths;
 
 class PhpToolProcessFactory
 {
-    /**
-     * @var Config
-     */
-    private $config;
-
     /**
      * @var Paths
      */
@@ -41,21 +36,18 @@ class PhpToolProcessFactory
     private $packageFinder;
 
     /**
-     * @param Config $config
      * @param Paths $paths
      * @param Io $io
      * @param PharInstaller $pharInstaller
      * @param PackageFinder $packageFinder
      */
     public function __construct(
-        Config $config,
         Paths $paths,
         Io $io,
         PharInstaller $pharInstaller,
         PackageFinder $packageFinder
     ) {
 
-        $this->config = $config;
         $this->paths = $paths;
         $this->io = $io;
         $this->pharInstaller = $pharInstaller;
@@ -64,11 +56,21 @@ class PhpToolProcessFactory
 
     /**
      * @param PhpTool $command
-     * @param string $phpPath
+     * @param string|null $phpPath
      * @return PhpToolProcess
      */
-    public function create(PhpTool $command, string $phpPath): PhpToolProcess
+    public function create(PhpTool $command, string $phpPath = null): PhpToolProcess
     {
+        ($phpPath === null) and $phpPath = (new PhpExecutableFinder())->find();
+        if (!$phpPath) {
+            throw new \RuntimeException(
+                sprintf(
+                    'Failed installation for %s: PHP executable not found.',
+                    $command->niceName()
+                )
+            );
+        }
+
         $fsPath = $this->lookForPackage($command);
 
         // Installed via Composer, build executor and return
@@ -77,6 +79,7 @@ class PhpToolProcessFactory
         }
 
         $targetPath = $command->pharTarget($this->paths);
+
         if ($targetPath && file_exists($targetPath)) {
             return new PhpToolProcess($phpPath, $command, $targetPath, $this->paths, $this->io);
         }
@@ -88,7 +91,7 @@ class PhpToolProcessFactory
             throw new \RuntimeException(
                 sprintf(
                     'Failed installation for %s: '
-                    . 'phar download URL is invalid or phar download is disabled',
+                    . 'phar download URL is invalid or phar download is disabled.',
                     $command->niceName()
                 )
             );
@@ -112,6 +115,7 @@ class PhpToolProcessFactory
     private function lookForPackage(PhpTool $command): string
     {
         $package = $this->packageFinder->findByName($command->packageName());
+
         if (!$package) {
             return '';
         }
