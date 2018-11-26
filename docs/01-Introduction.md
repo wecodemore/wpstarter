@@ -16,7 +16,7 @@ Composer is the de-facto standard dependency management tool for PHP. Pretty muc
 
 **WordPress has no official support for Composer** and creating a website project with dependencies entirely based on Composer will require some effort and "bootstrap" work.
 
-The main scope of this package is to simplify this process.
+The main scope of WP Starter is to simplify this process.
 
 The additional scope of the project is to provide a mean to **configure WordPress by using [environment variables](https://en.wikipedia.org/wiki/Environment_variable)** instead of PHP constants.
 
