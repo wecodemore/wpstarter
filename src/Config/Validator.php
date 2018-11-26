@@ -573,7 +573,7 @@ class Validator
 
         if ($hasInvalidChars
             || !str_replace([' ', '.', '~', '%', '@', '='], '', $normalized)
-            || substr_count('..', $normalized)
+            || substr_count($normalized, '..')
         ) {
             return Result::errored("{$value} is not a valid file name.");
         }
