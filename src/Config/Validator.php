@@ -340,23 +340,24 @@ class Validator
             return Result::errored('Files to be evaluated by WP CLI must be provided as array.');
         }
 
-        $files = array_reduce(
-            $value,
-            function (array $files, $file): array {
-                $data = is_array($file) ? Cli\WpCliFileData::fromArray($file) : null;
-                (!$data && is_string($file)) and $data = Cli\WpCliFileData::fromPath($file);
-                $data->valid() and $files[] = $data;
+        $valid = [];
+        foreach ($value as $file) {
+            if (!is_array($file) && !is_string($file)) {
+                continue;
+            }
 
-                return $files;
-            },
-            []
-        );
+            $data = is_array($file)
+                ? Cli\WpCliFileData::fromArray($file)
+                : Cli\WpCliFileData::fromPath($file);
 
-        if (!$files) {
+            $data->valid() and $valid[] = $data;
+        }
+
+        if (!$valid) {
             return Result::errored('No valid file has been provided to be evaluated by WP CLI.');
         }
 
-        return Result::ok($files);
+        return Result::ok($valid);
     }
 
     /**
