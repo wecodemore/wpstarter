@@ -8,6 +8,7 @@
 
 namespace WeCodeMore\WpStarter\Cli;
 
+use Symfony\Component\Finder\Finder;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util\Io;
 use WeCodeMore\WpStarter\Util\Paths;
@@ -77,8 +78,27 @@ class WpCliTool implements PhpTool
     public function pharTarget(Paths $paths): string
     {
         $default = $paths->root('/wp-cli.phar');
-        $candidates = glob($paths->root('/wp-cli-*.phar')) ?: [];
-        array_unshift($candidates, $default);
+        if (file_exists($default)) {
+            return $default;
+        }
+
+        $candidates = preg_match('~/wp-cli-.+?\.phar$~', $this->pharUrl(), $matches)
+            ? [$paths->root($matches[0])]
+            : [];
+
+        $existingFiles = Finder::create()->name('wp-cli-*.phar')->in($paths->root('/'));
+
+        /** @var \SplFileInfo $existingFile */
+        foreach ($existingFiles as $existingFile) {
+            $fileName = $existingFile->getBasename('.phar');
+            $fullPath = $paths->root("/{$fileName}.phar");
+
+            if (!in_array($fullPath, $candidates, true)
+                && version_compare((string)substr($fileName, 7), $this->minVersion(), '>=')
+            ) {
+                $candidates[] = $fullPath;
+            }
+        }
 
         foreach ($candidates as $candidate) {
             if (file_exists($candidate)) {
@@ -114,6 +134,7 @@ class WpCliTool implements PhpTool
     public function checkPhar(string $pharPath, Io $io): bool
     {
         list($algorithm, $hashUrl) = $this->hashAlgorithmUrl($io);
+
         $this->io->write(sprintf('Checking %s via %s hash...', $this->niceName(), $algorithm));
         $releaseHash = trim($this->urlDownloader->fetch($hashUrl));
         if (!$releaseHash) {
@@ -123,7 +144,7 @@ class WpCliTool implements PhpTool
             return false;
         }
 
-        $pharHash = hash($algorithm, file_get_contents($pharPath));
+        $pharHash = hash($algorithm, (string)file_get_contents($pharPath));
         if (!hash_equals($releaseHash, $pharHash)) {
             @unlink($pharPath);
             $io->writeError("{$algorithm} hash check failed for downloaded WP CLI phar.");
@@ -147,7 +168,7 @@ class WpCliTool implements PhpTool
 
     /**
      * @param Io $io
-     * @return array
+     * @return array{0:string,1:string}
      */
     private function hashAlgorithmUrl(Io $io): array
     {
