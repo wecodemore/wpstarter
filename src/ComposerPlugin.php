@@ -21,13 +21,12 @@ use Composer\Plugin\Capability\CommandProvider;
 use Composer\Script\Event;
 use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Util;
-use WeCodeMore\WpStarter\Step;
-use WeCodeMore\WpStarter\Util\Io;
 
 /**
  * Composer plugin class to run all the WP Starter steps on Composer install or update and also adds
  * 'wpstarter' command to allow doing same thing "on demand".
+ *
+ * phpcs:disable Inpsyde.CodeQuality.NoAccessors
  */
 final class ComposerPlugin implements
     PluginInterface,
@@ -38,6 +37,12 @@ final class ComposerPlugin implements
 
     const EXTRA_KEY = 'wpstarter';
     const EXTENSIONS_TYPE = 'wpstarter-extension';
+
+    const MODE = 'mode';
+    const MODE_NONE = 0;
+    const MODE_COMMAND = 1;
+    const MODE_COMPOSER_INSTALL = 4;
+    const MODE_COMPOSER_UPDATE = 8;
 
     /**
      * @var bool
@@ -60,14 +65,9 @@ final class ComposerPlugin implements
     private $locator;
 
     /**
-     * @var bool
+     * @var int
      */
-    private $autorun = false;
-
-    /**
-     * @var bool
-     */
-    private $update = false;
+    private $mode = self::MODE_NONE;
 
     /**
      * @var PackageInterface[]
@@ -75,54 +75,15 @@ final class ComposerPlugin implements
     private $updatedPackages = [];
 
     /**
-     * A very simple PSR-4 compatible loader function.
-     *
-     * @param string $namespace
-     * @param string $dir
-     * @return callable
-     */
-    public static function psr4LoaderFor(string $namespace, string $dir): callable
-    {
-        return function (string $class) use ($namespace, $dir) {
-            if (stripos($class, $namespace) === 0) {
-                $file = substr(str_replace('\\', '/', $class), strlen($namespace)) . '.php';
-                require_once $dir . $file;
-            }
-        };
-    }
-
-    /**
-     * WP Starter is required from Composer, which means it is deployed with WordPress, and so
-     * any autoloading setting that WP Starter declares will "pollute" the Composer autoloader that
-     * is loaded at every WordPress request.
-     * For this reason we keep in the autoload section of composer.json only the needed bare-minimum
-     * (basically this class) then we register a simple PSR-4 loader for the rest.
-     *
-     * @return void
-     */
-    public static function setupAutoload()
-    {
-        static::$autoload or spl_autoload_register(
-            static::psr4LoaderFor(__NAMESPACE__, __DIR__),
-            true,
-            true
-        );
-
-        static::$autoload = true;
-    }
-
-    /**
-     * phpcs:disable Inpsyde.CodeQuality.NoAccessors
+     * @return array
      */
     public static function getSubscribedEvents(): array
     {
-        // phpcs:enable
-
         return [
-            'post-install-cmd' => 'autorunInstall',
-            'post-update-cmd' => 'autorunUpdate',
-            'pre-package-update' => 'prePackage',
-            'pre-package-install' => 'prePackage',
+            'post-install-cmd' => 'onAutorunBecauseInstall',
+            'post-update-cmd' => 'onAutorunBecauseUpdate',
+            'pre-package-update' => 'onPrePackageOperation',
+            'pre-package-install' => 'onPrePackageOperation',
         ];
     }
 
@@ -147,17 +108,15 @@ final class ComposerPlugin implements
     }
 
     /**
-     * phpcs:disable Inpsyde.CodeQuality.NoAccessors
+     * @return array
      */
     public function getCapabilities(): array
     {
-        // phpcs:enable
-
         return [CommandProvider::class => __CLASS__];
     }
 
     /**
-     * phpcs:disable Inpsyde.CodeQuality.NoAccessors
+     * @return array
      */
     public function getCommands(): array
     {
@@ -177,9 +136,29 @@ final class ComposerPlugin implements
     }
 
     /**
+     * WP Starter is required from Composer, which means it is deployed with WordPress, and so
+     * any autoloading setting that WP Starter declares will "pollute" the Composer autoloader that
+     * is loaded at every WordPress request.
+     * For this reason we keep in the autoload section of composer.json only the needed bare-minimum
+     * then we register a simple PSR-4 loader for the rest.
+     *
+     * @return void
+     */
+    public function setupAutoload()
+    {
+        static::$autoload or spl_autoload_register(
+            $this->psr4LoaderFor(__NAMESPACE__, __DIR__),
+            true,
+            true
+        );
+
+        static::$autoload = true;
+    }
+
+    /**
      * @param PackageEvent $event
      */
-    public function prePackage(PackageEvent $event)
+    public function onPrePackageOperation(PackageEvent $event)
     {
         $operation = $event->getOperation();
 
@@ -190,16 +169,18 @@ final class ComposerPlugin implements
             $package = $operation->getPackage();
         }
 
-        $package and $this->updatedPackages[$package->getName()] = $package;
+        if ($package && ($package->getType() !== 'composer-plugin')) {
+            $this->updatedPackages[$package->getName()] = $package;
+        }
     }
 
     /**
      * @param Event $event
      */
-    public function autorunInstall(Event $event)
+    public function onAutorunBecauseInstall(Event $event)
     {
-        $this->autorun = true;
-        static::setupAutoload();
+        $this->mode or $this->mode = self::MODE_COMPOSER_INSTALL;
+        $this->setupAutoload();
         if ($this->composer->getPackage()->getType() === self::EXTENSIONS_TYPE) {
             return;
         }
@@ -210,10 +191,10 @@ final class ComposerPlugin implements
     /**
      * @param Event $event
      */
-    public function autorunUpdate(Event $event)
+    public function onAutorunBecauseUpdate(Event $event)
     {
-        $this->update = true;
-        $this->autorunInstall($event);
+        $this->mode = self::MODE_COMPOSER_UPDATE;
+        $this->onAutorunBecauseInstall($event);
     }
 
     /**
@@ -221,43 +202,55 @@ final class ComposerPlugin implements
      */
     public function run(Util\SelectedStepsFactory $factory)
     {
-        $config = $this->prepareRun($factory);
+        $this->mode or $this->mode = self::MODE_COMMAND;
 
+        // Why 2 `try`: the 2nd `catch` relies on the Locator, that is built in `prepareRun()`
+        // which means we can't call `prepareRun()` in the same `try`.
         try {
-            $requireWp = $config[Config::REQUIRE_WP]->not(false);
-            $fallbackVer = $config[Config::WP_VERSION]->unwrapOrFallback('');
-            $wpVersion = $this->checkWp($requireWp, $fallbackVer, $config);
-            if (!$wpVersion && $requireWp) {
-                $this->autorun or exit(1);
+            $config = $this->prepareRun($factory);
+        } catch (\Throwable $throwable) {
+            $print = function (string $line) {
+                $this->io->writeError(sprintf('  <fg=red>%s</>', trim($line)));
+            };
 
-                return;
+            $this->io->write('');
+            $print($throwable->getMessage());
+            if ($this->io->isVerbose()) {
+                $this->io->write('');
+                array_map($print, explode("\n", $throwable->getTraceAsString()));
             }
 
-            $commandMode = $factory->isSelectedCommandMode();
-            $commandMode or $this->logo();
+            if ($this->mode === self::MODE_COMMAND) {
+                exit(1);
+            }
 
-            $skipDbCheck = $config[Config::SKIP_DB_CHECK];
-            if ($skipDbCheck->notEmpty() && $skipDbCheck->not(true)) {
+            return;
+        }
+
+        $this->convertErrorsToExceptions();
+        $exit = 0;
+
+        try {
+            $this->loadExtensions();
+            $this->checkWp($config);
+
+            $isCommandMode = $factory->isSelectedCommandMode();
+            $isCommandMode or $this->logo();
+
+            if ($config[Config::SKIP_DB_CHECK]->is(false)) {
                 $this->locator->dbChecker()->check();
             }
 
-            $steps = $factory->selectAndFactory($this->locator, $this->composer);
-            if (!$steps) {
-                $message = $factory->lastFatalError() ?: 'Nothing to run.';
-                throw new \Exception($message);
-            }
+            $runner = $isCommandMode
+                ? Step\Steps::commandMode($this->locator, $this->composer)
+                : Step\Steps::composerMode($this->locator, $this->composer);
 
-            $this->maybePrintFactoryError($factory, $this->locator->io());
-
-            $stepRunner = new Step\Steps($this->locator, $this->composer, $commandMode);
-            foreach ($steps as $step) {
-                $stepRunner->addStep($step);
-            }
-
-            $stepRunner->run($this->locator->config(), $this->locator->paths());
-
-            $commandMode and exit(0);
+            $runner
+                ->addStep(...$this->factoryStepsToRun($factory))
+                ->run($this->locator->config(), $this->locator->paths());
         } catch (\Throwable $throwable) {
+            $exit = 1;
+
             $lines = [$throwable->getMessage()];
             if ($this->io->isVerbose()) {
                 $lines = explode("\n", $throwable->getTraceAsString());
@@ -266,7 +259,11 @@ final class ComposerPlugin implements
             }
 
             $this->locator->io()->writeErrorBlock(...$lines);
-            $this->autorun or exit(1);
+        } finally {
+            restore_error_handler();
+            if ($this->mode === self::MODE_COMMAND) {
+                exit($exit);
+            }
         }
     }
 
@@ -277,17 +274,34 @@ final class ComposerPlugin implements
      */
     private function prepareRun(Util\SelectedStepsFactory $factory): Config
     {
-        $filesystem = new Filesystem();
-
-        $requirements = new Util\Requirements(
-            $this->composer,
-            $this->io,
-            $filesystem,
-            $factory,
-            $this->autorun,
-            $this->update,
-            $this->updatedPackages
-        );
+        switch ($this->mode) {
+            case (self::MODE_COMPOSER_INSTALL):
+                $requirements = Util\Requirements::forComposerInstall(
+                    $this->composer,
+                    $this->io,
+                    new Filesystem(),
+                    $factory,
+                    $this->updatedPackages
+                );
+                break;
+            case (self::MODE_COMPOSER_UPDATE):
+                $requirements = Util\Requirements::forComposerUpdate(
+                    $this->composer,
+                    $this->io,
+                    new Filesystem(),
+                    $factory,
+                    $this->updatedPackages
+                );
+                break;
+            default:
+                $requirements = Util\Requirements::forCommand(
+                    $this->composer,
+                    $this->io,
+                    new Filesystem(),
+                    $factory
+                );
+                break;
+        }
 
         $config = $requirements->config();
 
@@ -296,40 +310,26 @@ final class ComposerPlugin implements
             require_once $autoload;
         }
 
-        $this->locator = new Util\Locator($requirements, $this->composer, $this->io, $filesystem);
-        $this->loadExtensions();
+        $this->locator = new Util\Locator($requirements, $this->composer, $this->io);
 
         return $config;
     }
 
     /**
-     * @param bool $requireWp
-     * @param string $fallbackVer
-     * @param Config $config
-     * @return string
+     * @return void
      */
-    private function checkWp(bool $requireWp, string $fallbackVer, Config $config): string
+    private function convertErrorsToExceptions()
     {
-        $wpVersion = '';
-        if ($requireWp) {
-            $wpVersionDiscover = new Util\WpVersion(
-                $this->locator->packageFinder(),
-                $this->locator->io(),
-                $fallbackVer
-            );
-            $wpVersion = $wpVersionDiscover->discover();
-        }
+        set_error_handler( // phpcs:ignore
+            function (int $severity, string $message, string $file = null, int $line = null) {
+                if ($file && $line) {
+                    $message = rtrim($message, '. ') . ", in {$file} line {$line}.";
+                }
 
-        if (!$wpVersion && $requireWp) {
-            return '';
-        }
-
-        // If WP version found and no version is in configs, let's set it with the finding.
-        if ($wpVersion && !$fallbackVer) {
-            $config[Config::WP_VERSION] = $fallbackVer;
-        }
-
-        return $wpVersion;
+                throw new \Exception($message, $severity);
+            },
+            E_ALL
+        );
     }
 
     /**
@@ -367,24 +367,94 @@ final class ComposerPlugin implements
         $packagePath = $this->locator->packageFinder()->findPathOf($package);
         $filesystem = $this->locator->composerFilesystem();
 
-        foreach ($files as $file) {
-            if (is_string($file)) {
-                $fullpath = $filesystem->normalizePath("{$packagePath}/{$file}");
-                file_exists($fullpath) and require_once $fullpath;
-            }
-        }
-
         foreach ($psr4 as $namespace => $dir) {
             if (!is_string($namespace) || !is_string($dir)) {
                 continue;
             }
             $fullpath = $filesystem->normalizePath("{$packagePath}/{$dir}");
             is_dir($fullpath) and spl_autoload_register(
-                static::psr4LoaderFor(rtrim($namespace, '\\/'), $fullpath),
+                $this->psr4LoaderFor(rtrim($namespace, '\\/'), $fullpath),
                 true,
                 true
             );
         }
+
+        foreach ($files as $file) {
+            if (is_string($file)) {
+                $fullpath = $filesystem->normalizePath("{$packagePath}/{$file}");
+                file_exists($fullpath) and require_once $fullpath;
+            }
+        }
+    }
+
+    /**
+     * @param Config $config
+     * @return string
+     */
+    private function checkWp(Config $config): string
+    {
+        $requireWp = $config[Config::REQUIRE_WP]->not(false);
+        $fallbackVer = $config[Config::WP_VERSION]->unwrapOrFallback('');
+        $wpVersion = '';
+        if ($requireWp) {
+            $wpVersionDiscover = new Util\WpVersion(
+                $this->locator->packageFinder(),
+                $this->locator->io(),
+                $fallbackVer
+            );
+            $wpVersion = $wpVersionDiscover->discover();
+        }
+
+        if (!$wpVersion && $requireWp) {
+            throw new \RuntimeException('WordPress is required but not found.');
+        }
+
+        // If WP version found and no version is in configs, let's set it with the finding.
+        if ($wpVersion && !$fallbackVer) {
+            $config[Config::WP_VERSION] = $fallbackVer;
+        }
+
+        return $wpVersion;
+    }
+
+    /**
+     * @param Util\SelectedStepsFactory $factory
+     * @return Step\Step[]
+     */
+    private function factoryStepsToRun(Util\SelectedStepsFactory $factory): array
+    {
+        $steps = $factory->selectAndFactory($this->locator, $this->composer);
+        if (!$steps) {
+            throw new \Exception($factory->lastFatalError() ?: 'Nothing to run.');
+        }
+
+        $error = $factory->lastError();
+        if ($error) {
+            $io = $this->locator->io();
+            $text = Util\Io::ensureLength($error);
+            $io->writeErrorLine('');
+            array_walk($text, [$io, 'writeErrorLine']);
+            $io->writeErrorLine('');
+        }
+
+        return $steps;
+    }
+
+    /**
+     * @param string $namespace
+     * @param string $dir
+     * @return callable
+     *
+     * @suppress PhanUnreferencedClosure
+     */
+    private function psr4LoaderFor(string $namespace, string $dir): callable
+    {
+        return function (string $class) use ($namespace, $dir) {
+            if (stripos($class, $namespace) === 0) {
+                $file = substr(str_replace('\\', '/', $class), strlen($namespace)) . '.php';
+                require_once $dir . $file;
+            }
+        };
     }
 
     /**
@@ -402,20 +472,5 @@ LOGO;
         // phpcs:enable
 
         $this->io->write("\n{$logo}\n");
-    }
-
-    /**
-     * @param Util\SelectedStepsFactory $factory
-     * @param Io $io
-     */
-    private function maybePrintFactoryError(Util\SelectedStepsFactory $factory, Io $io)
-    {
-        $error = $factory->lastError();
-        if ($error) {
-            $text = Io::ensureLength($error);
-            $io->writeErrorLine('');
-            array_walk($text, [$io, 'writeErrorLine']);
-            $io->writeErrorLine('');
-        }
     }
 }
