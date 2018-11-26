@@ -113,7 +113,7 @@ final class ContentDevStep implements OptionalStep
             return true;
         }
 
-        $operation = $this->io->ask(
+        $operation = $io->ask(
             [
                 'Which operation do you want to perform for content development folders to make '
                 . 'them available in WP content dir?',
@@ -226,10 +226,12 @@ final class ContentDevStep implements OptionalStep
                 continue;
             }
 
+            $all++;
+
             $devContentSubfolderBase = basename($devContentSubfolder);
             $target = "{$contentDir}/{$devContentSubfolderBase}";
             $this->maybeUnlinkTarget($devContentSubfolder, $target);
-            $this->filesystem->copyDir($devContentSubfolder, $target);
+            $this->filesystem->copyDir($devContentSubfolder, $target) and $done++;
         }
 
         return $done === $all;
@@ -320,9 +322,8 @@ final class ContentDevStep implements OptionalStep
      */
     private function maybeUnlinkTarget(string $source, string $target)
     {
-        $isFile = is_file($source);
-        if ($isFile) {
-            is_link($target) and $this->composerFilesystem->unlink($target);
+        if (is_file($source) && is_link($target)) {
+            $this->composerFilesystem->unlink($target);
 
             return;
         }
