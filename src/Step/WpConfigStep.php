@@ -9,7 +9,6 @@
 namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -44,19 +43,9 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
     private $composerFilesystem;
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\UrlDownloader
-     */
-    private $urlDownloader;
-
-    /**
      * @var \WeCodeMore\WpStarter\Util\Salter
      */
     private $salter;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Config\Config
-     */
-    private $config;
 
     /**
      * @param Locator $locator
@@ -67,9 +56,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         $this->builder = $locator->fileContentBuilder();
         $this->filesystem = $locator->filesystem();
         $this->composerFilesystem = $locator->composerFilesystem();
-        $this->urlDownloader = $locator->urlDownloader();
         $this->salter = $locator->salter();
-        $this->config = $locator->config();
     }
 
     /**

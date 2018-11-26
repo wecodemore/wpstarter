@@ -101,7 +101,7 @@ final class DropinStep implements FileCreationStepInterface
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        list($action, $source) = $this->determineActionAndSource($paths);
+        list($action, $source) = $this->determineActionAndSource();
 
         if (!$action || !$source) {
             $this->io->writeError("{$this->url} is not a valid URL nor a valid path.");
@@ -212,10 +212,9 @@ final class DropinStep implements FileCreationStepInterface
     /**
      * Check if a string is a valid relative path or an url.
      *
-     * @param  Paths $paths
      * @return array
      */
-    private function determineActionAndSource(Paths $paths): array
+    private function determineActionAndSource(): array
     {
         if (filter_var($this->url, FILTER_VALIDATE_URL)) {
             return [self::ACTION_DOWNLOAD, $this->url];

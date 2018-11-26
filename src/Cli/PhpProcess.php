@@ -56,14 +56,6 @@ class PhpProcess
     }
 
     /**
-     * @return string
-     */
-    public function phpPath(): string
-    {
-        return $this->phpPath;
-    }
-
-    /**
      * @param string $command
      * @param string|null $cwd
      * @return bool

@@ -27,19 +27,9 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
     const NAME = 'build-env-example';
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\Io
-     */
-    private $io;
-
-    /**
      * @var \WeCodeMore\WpStarter\Config\Config
      */
     private $config;
-
-    /**
-     * @var Paths
-     */
-    private $paths;
 
     /**
      * @var \WeCodeMore\WpStarter\Util\Filesystem
@@ -61,9 +51,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      */
     public function __construct(Locator $locator)
     {
-        $this->io = $locator->io();
         $this->config = $locator->config();
-        $this->paths = $locator->paths();
         $this->filesystem = $locator->filesystem();
         $this->urlDownloader = $locator->urlDownloader();
     }

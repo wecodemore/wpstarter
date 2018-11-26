@@ -26,11 +26,6 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
     private $filesystem;
 
     /**
-     * @var Io
-     */
-    private $io;
-
-    /**
      * @var string
      */
     private $error = '';
@@ -51,7 +46,6 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
     public function __construct(Locator $locator)
     {
         $this->filesystem = $locator->filesystem();
-        $this->io = $locator->io();
     }
 
     /**
