@@ -57,6 +57,10 @@ class PackageFinder
      */
     public function findByType(string $type): array
     {
+        if (!$type) {
+            return [];
+        }
+
         $list = [];
         $packages = $this->all();
 
@@ -86,6 +90,10 @@ class PackageFinder
      */
     public function findByVendor(string $vendor): array
     {
+        if (!$vendor) {
+            return [];
+        }
+
         $list = [];
         $packages = $this->all();
 
@@ -109,6 +117,10 @@ class PackageFinder
      */
     public function findByName(string $name)
     {
+        if (!$name) {
+            return null;
+        }
+
         $packages = $this->all();
 
         foreach ($packages as $package) {
@@ -128,8 +140,12 @@ class PackageFinder
      * @param string $name
      * @return PackageInterface[]
      */
-    public function search(string $name)
+    public function search(string $name): array
     {
+        if (!$name) {
+            return [];
+        }
+
         $packages = $this->all();
         $found = [];
 
