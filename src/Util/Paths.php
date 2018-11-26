@@ -48,9 +48,33 @@ final class Paths implements \ArrayAccess
     private $customTemplatesDir = [];
 
     /**
-     * @var array
+     * @var array<string,string>
      */
     private $paths;
+
+    /**
+     * @param string $root
+     * @param Config $config
+     * @param array $extra
+     * @param Filesystem $filesystem
+     * @return Paths
+     */
+    public static function withRoot(
+        string $root,
+        Config $config,
+        array $extra,
+        Filesystem $filesystem
+    ): Paths {
+
+        if (!is_dir($root)) {
+            throw new \InvalidArgumentException('Cant instantiate Paths object from invalid root.');
+        }
+
+        $instance = new static($config, $extra, $filesystem);
+        $instance->paths = $instance->parse($root);
+
+        return $instance;
+    }
 
     /**
      * @param Config $config
@@ -206,6 +230,12 @@ final class Paths implements \ArrayAccess
             $this->paths = $this->parse();
         }
 
+        if (!is_string($offset)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s offset must be a string, %s given.', __CLASS__, gettype($offset))
+            );
+        }
+
         return array_key_exists($offset, $this->paths);
     }
 
@@ -254,11 +284,13 @@ final class Paths implements \ArrayAccess
     }
 
     /**
+     * @param string|null $root
      * @return array
+     * @throws \Exception
      */
-    private function parse(): array
+    private function parse(string $root = null): array
     {
-        $cwd = $this->filesystem->normalizePath(getcwd());
+        $cwd = $root ?? $this->filesystem->normalizePath(getcwd());
 
         $wpInstallDir = $this->extra['wordpress-install-dir'] ?? 'wordpress';
         $wpContentDir = $this->extra['wordpress-content-dir'] ?? 'wp-content';
