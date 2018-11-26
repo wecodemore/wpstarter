@@ -1,7 +1,10 @@
 docs/ export-ignore
 tests/ export-ignore
+.github/
+.phan/
 .gitattributes export-ignore
 .gitignore export-ignore
 /phpunit.xml.dist export-ignore
 /phpcs.xml.dist export-ignore
+/phpstan.neon.dist export-ignore
 README.md export-ignore

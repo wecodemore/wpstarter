@@ -43,9 +43,10 @@
     "require-dev": {
         "roave/security-advisories": "*",
         "composer/composer": "^1.0",
-        "wp-cli/wp-cli": "1.2.*",
+        "wp-cli/wp-cli": "2.0.*",
         "squizlabs/php_codesniffer": "3.2.*",
         "inpsyde/php-coding-standards": "^0.13",
+        "phan/phan": "^1",
         "phpunit/phpunit": "^7",
         "mockery/mockery": "^1",
         "mikey179/vfsStream": "~1"
