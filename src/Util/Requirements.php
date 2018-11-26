@@ -43,6 +43,46 @@ final class Requirements
      */
     private $io;
 
+    public static function forCommand(
+        Composer $composer,
+        IOInterface $io,
+        Filesystem $filesystem,
+        SelectedStepsFactory $factory
+    ): Requirements {
+
+        return new static($composer, $io, $filesystem, $factory, false, false);
+    }
+
+    public static function forComposerInstall(
+        Composer $composer,
+        IOInterface $io,
+        Filesystem $filesystem,
+        SelectedStepsFactory $factory,
+        array $updatedPackages
+    ): Requirements {
+
+        return new static($composer, $io, $filesystem, $factory, true, false, $updatedPackages);
+    }
+
+    /**
+     * @param Composer $composer
+     * @param IOInterface $io
+     * @param Filesystem $filesystem
+     * @param SelectedStepsFactory $factory
+     * @param array $updatedPackages
+     * @return Requirements
+     */
+    public static function forComposerUpdate(
+        Composer $composer,
+        IOInterface $io,
+        Filesystem $filesystem,
+        SelectedStepsFactory $factory,
+        array $updatedPackages
+    ): Requirements {
+
+        return new static($composer, $io, $filesystem, $factory, true, true, $updatedPackages);
+    }
+
     /**
      * @param Composer $composer
      * @param IOInterface $io
@@ -52,14 +92,14 @@ final class Requirements
      * @param bool $update
      * @param PackageInterface[] $updatedPackages
      */
-    public function __construct(
+    private function __construct(
         Composer $composer,
         IOInterface $io,
         Filesystem $filesystem,
         SelectedStepsFactory $factory,
         bool $autorun,
         bool $update,
-        array $updatedPackages
+        array $updatedPackages = []
     ) {
 
         $this->filesystem = $filesystem;
@@ -75,7 +115,7 @@ final class Requirements
         $config[Config::IS_WPSTARTER_SELECTED_COMMAND] = !$autorun && $isSelectedCommandMode;
         $config[Config::IS_COMPOSER_UPDATE] = $autorun && $update;
         $config[Config::IS_COMPOSER_INSTALL] = $autorun && !$update;
-        $config[Config::COMPOSER_UPDATED_PACKAGES] = $updatedPackages;
+        $config[Config::COMPOSER_UPDATED_PACKAGES] = $autorun ? $updatedPackages : [];
 
         $this->config = new Config($config, new Validator($this->paths, $filesystem));
         $this->io = new Io($io);
@@ -148,7 +188,8 @@ final class Requirements
         }
 
         is_array($configs) or $configs = [];
-        $fileConfigs and $configs = array_merge($configs, (array)$fileConfigs);
+
+        $fileConfigs and $configs = array_merge((array)$configs, (array)$fileConfigs);
         $overrideConfigs and $configs = array_merge($configs, (array)$overrideConfigs);
 
         return $configs;
