@@ -9,6 +9,7 @@
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
 use WeCodeMore\WpStarter\ComposerPlugin;
+use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Tests\TestCase;
 use WeCodeMore\WpStarter\Util\Requirements;
 
@@ -33,6 +34,108 @@ class RequirementsTest extends TestCase
         );
 
         return $tester($customRoot ?: $this->fixturesPath() . '/paths-root', $extra);
+    }
+
+    public function testGenericCommandInstanceCreation()
+    {
+        $composer = \Mockery::mock(\Composer\Composer::class);
+        $composerConfig = \Mockery::mock(\Composer\Config::class);
+        $composerConfig->shouldReceive('get')->andReturn('');
+        $composer->shouldReceive('getPackage->getExtra')->andReturn([]);
+        $composer->shouldReceive('getConfig')->andReturn($composerConfig);
+
+        $io = \Mockery::mock(\Composer\IO\IOInterface::class);
+        $filesystem = \Mockery::mock(\Composer\Util\Filesystem::class);
+        $filesystem->shouldReceive('normalizePath')->andReturnUsing(
+            function (string $path): string {
+                return rtrim(str_replace('\\', '/', $path), '/');
+            }
+        );
+
+        $instance = Requirements::forGenericCommand($composer, $io, $filesystem);
+        $config = $instance->config();
+
+        static::assertTrue($config[Config::IS_WPSTARTER_COMMAND]->unwrap());
+        static::assertFalse($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->unwrap());
+        static::assertFalse($config[Config::IS_COMPOSER_UPDATE]->unwrap());
+        static::assertFalse($config[Config::IS_COMPOSER_INSTALL]->unwrap());
+    }
+
+    public function testSelectedStepsCommandInstanceCreation()
+    {
+        $composer = \Mockery::mock(\Composer\Composer::class);
+        $composerConfig = \Mockery::mock(\Composer\Config::class);
+        $composerConfig->shouldReceive('get')->andReturn('');
+        $composer->shouldReceive('getPackage->getExtra')->andReturn([]);
+        $composer->shouldReceive('getConfig')->andReturn($composerConfig);
+
+        $io = \Mockery::mock(\Composer\IO\IOInterface::class);
+        $filesystem = \Mockery::mock(\Composer\Util\Filesystem::class);
+        $filesystem->shouldReceive('normalizePath')->andReturnUsing(
+            function (string $path): string {
+                return rtrim(str_replace('\\', '/', $path), '/');
+            }
+        );
+
+        $instance = Requirements::forSelectedStepsCommand($composer, $io, $filesystem);
+        $config = $instance->config();
+
+        static::assertTrue($config[Config::IS_WPSTARTER_COMMAND]->unwrap());
+        static::assertTrue($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->unwrap());
+        static::assertFalse($config[Config::IS_COMPOSER_UPDATE]->unwrap());
+        static::assertFalse($config[Config::IS_COMPOSER_INSTALL]->unwrap());
+    }
+
+    public function testComposerInstallInstanceCreation()
+    {
+        $composer = \Mockery::mock(\Composer\Composer::class);
+        $composerConfig = \Mockery::mock(\Composer\Config::class);
+        $composerConfig->shouldReceive('get')->andReturn('');
+        $composer->shouldReceive('getPackage->getExtra')->andReturn([]);
+        $composer->shouldReceive('getConfig')->andReturn($composerConfig);
+
+        $io = \Mockery::mock(\Composer\IO\IOInterface::class);
+        $filesystem = \Mockery::mock(\Composer\Util\Filesystem::class);
+        $filesystem->shouldReceive('normalizePath')->andReturnUsing(
+            function (string $path): string {
+                return rtrim(str_replace('\\', '/', $path), '/');
+            }
+        );
+
+        $instance = Requirements::forComposerInstall($composer, $io, $filesystem, ['foo', 'bar']);
+        $config = $instance->config();
+
+        static::assertFalse($config[Config::IS_WPSTARTER_COMMAND]->unwrap());
+        static::assertFalse($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->unwrap());
+        static::assertFalse($config[Config::IS_COMPOSER_UPDATE]->unwrap());
+        static::assertTrue($config[Config::IS_COMPOSER_INSTALL]->unwrap());
+        static::assertSame(['foo', 'bar'], $config[Config::COMPOSER_UPDATED_PACKAGES]->unwrap());
+    }
+
+    public function testComposerUpdateInstanceCreation()
+    {
+        $composer = \Mockery::mock(\Composer\Composer::class);
+        $composerConfig = \Mockery::mock(\Composer\Config::class);
+        $composerConfig->shouldReceive('get')->andReturn('');
+        $composer->shouldReceive('getPackage->getExtra')->andReturn([]);
+        $composer->shouldReceive('getConfig')->andReturn($composerConfig);
+
+        $io = \Mockery::mock(\Composer\IO\IOInterface::class);
+        $filesystem = \Mockery::mock(\Composer\Util\Filesystem::class);
+        $filesystem->shouldReceive('normalizePath')->andReturnUsing(
+            function (string $path): string {
+                return rtrim(str_replace('\\', '/', $path), '/');
+            }
+        );
+
+        $instance = Requirements::forComposerUpdate($composer, $io, $filesystem, []);
+        $config = $instance->config();
+
+        static::assertFalse($config[Config::IS_WPSTARTER_COMMAND]->unwrap());
+        static::assertFalse($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->unwrap());
+        static::assertTrue($config[Config::IS_COMPOSER_UPDATE]->unwrap());
+        static::assertFalse($config[Config::IS_COMPOSER_INSTALL]->unwrap());
+        static::assertSame([], $config[Config::COMPOSER_UPDATED_PACKAGES]->unwrap());
     }
 
     /**

@@ -43,32 +43,57 @@ final class Requirements
      */
     private $io;
 
-    public static function forCommand(
+    /**
+     * @param Composer $composer
+     * @param IOInterface $io
+     * @param Filesystem $filesystem
+     * @return Requirements
+     */
+    public static function forGenericCommand(
         Composer $composer,
         IOInterface $io,
-        Filesystem $filesystem,
-        SelectedStepsFactory $factory
+        Filesystem $filesystem
     ): Requirements {
 
-        return new static($composer, $io, $filesystem, $factory, false, false);
-    }
-
-    public static function forComposerInstall(
-        Composer $composer,
-        IOInterface $io,
-        Filesystem $filesystem,
-        SelectedStepsFactory $factory,
-        array $updatedPackages
-    ): Requirements {
-
-        return new static($composer, $io, $filesystem, $factory, true, false, $updatedPackages);
+        return new static($composer, $io, $filesystem, false, false, false);
     }
 
     /**
      * @param Composer $composer
      * @param IOInterface $io
      * @param Filesystem $filesystem
-     * @param SelectedStepsFactory $factory
+     * @return Requirements
+     */
+    public static function forSelectedStepsCommand(
+        Composer $composer,
+        IOInterface $io,
+        Filesystem $filesystem
+    ): Requirements {
+
+        return new static($composer, $io, $filesystem, true, false, false);
+    }
+
+    /**
+     * @param Composer $composer
+     * @param IOInterface $io
+     * @param Filesystem $filesystem
+     * @param array $updatedPackages
+     * @return Requirements
+     */
+    public static function forComposerInstall(
+        Composer $composer,
+        IOInterface $io,
+        Filesystem $filesystem,
+        array $updatedPackages
+    ): Requirements {
+
+        return new static($composer, $io, $filesystem, false, true, false, $updatedPackages);
+    }
+
+    /**
+     * @param Composer $composer
+     * @param IOInterface $io
+     * @param Filesystem $filesystem
      * @param array $updatedPackages
      * @return Requirements
      */
@@ -76,29 +101,28 @@ final class Requirements
         Composer $composer,
         IOInterface $io,
         Filesystem $filesystem,
-        SelectedStepsFactory $factory,
         array $updatedPackages
     ): Requirements {
 
-        return new static($composer, $io, $filesystem, $factory, true, true, $updatedPackages);
+        return new static($composer, $io, $filesystem, false, true, true, $updatedPackages);
     }
 
     /**
      * @param Composer $composer
      * @param IOInterface $io
      * @param Filesystem $filesystem
-     * @param SelectedStepsFactory $factory
-     * @param bool $autorun
-     * @param bool $update
+     * @param bool $isSelectedCommandMode
+     * @param bool $isComposer
+     * @param bool $isComposerUpdate
      * @param PackageInterface[] $updatedPackages
      */
     private function __construct(
         Composer $composer,
         IOInterface $io,
         Filesystem $filesystem,
-        SelectedStepsFactory $factory,
-        bool $autorun,
-        bool $update,
+        bool $isSelectedCommandMode,
+        bool $isComposer,
+        bool $isComposerUpdate,
         array $updatedPackages = []
     ) {
 
@@ -110,12 +134,11 @@ final class Requirements
         $root = $this->paths->root();
 
         $config = $this->extractConfig($root, $extra);
-        $isSelectedCommandMode =  $factory->isSelectedCommandMode();
-        $config[Config::IS_WPSTARTER_COMMAND] = !$autorun;
-        $config[Config::IS_WPSTARTER_SELECTED_COMMAND] = !$autorun && $isSelectedCommandMode;
-        $config[Config::IS_COMPOSER_UPDATE] = $autorun && $update;
-        $config[Config::IS_COMPOSER_INSTALL] = $autorun && !$update;
-        $config[Config::COMPOSER_UPDATED_PACKAGES] = $autorun ? $updatedPackages : [];
+        $config[Config::IS_WPSTARTER_COMMAND] = !$isComposer;
+        $config[Config::IS_WPSTARTER_SELECTED_COMMAND] = !$isComposer && $isSelectedCommandMode;
+        $config[Config::IS_COMPOSER_UPDATE] = $isComposer && $isComposerUpdate;
+        $config[Config::IS_COMPOSER_INSTALL] = $isComposer && !$isComposerUpdate;
+        $config[Config::COMPOSER_UPDATED_PACKAGES] = $isComposer ? $updatedPackages : [];
 
         $this->config = new Config($config, new Validator($this->paths, $filesystem));
         $this->io = new Io($io);

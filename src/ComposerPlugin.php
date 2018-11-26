@@ -274,31 +274,35 @@ final class ComposerPlugin implements
      */
     private function prepareRun(Util\SelectedStepsFactory $factory): Config
     {
-        switch ($this->mode) {
-            case (self::MODE_COMPOSER_INSTALL):
+        switch (true) {
+            case ($this->mode === self::MODE_COMPOSER_INSTALL):
                 $requirements = Util\Requirements::forComposerInstall(
                     $this->composer,
                     $this->io,
                     new Filesystem(),
-                    $factory,
                     $this->updatedPackages
                 );
                 break;
-            case (self::MODE_COMPOSER_UPDATE):
+            case ($this->mode === self::MODE_COMPOSER_UPDATE):
                 $requirements = Util\Requirements::forComposerUpdate(
                     $this->composer,
                     $this->io,
                     new Filesystem(),
-                    $factory,
                     $this->updatedPackages
                 );
                 break;
-            default:
-                $requirements = Util\Requirements::forCommand(
+            case ($factory->isSelectedCommandMode()):
+                $requirements = Util\Requirements::forSelectedStepsCommand(
                     $this->composer,
                     $this->io,
-                    new Filesystem(),
-                    $factory
+                    new Filesystem()
+                );
+                break;
+            default:
+                $requirements = Util\Requirements::forGenericCommand(
+                    $this->composer,
+                    $this->io,
+                    new Filesystem()
                 );
                 break;
         }
