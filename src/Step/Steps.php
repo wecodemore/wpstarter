@@ -32,6 +32,11 @@ final class Steps implements PostProcessStep, \Countable
     private $composer;
 
     /**
+     * @var array
+     */
+    private $scripts;
+
+    /**
      * @var \SplObjectStorage
      */
     private $steps;
@@ -64,15 +69,35 @@ final class Steps implements PostProcessStep, \Countable
     /**
      * @param Locator $locator
      * @param Composer $composer
+     * @return Steps
+     */
+    public static function composerMode(Locator $locator, Composer $composer): Steps
+    {
+        return new static($locator, $composer, false);
+    }
+
+    /**
+     * @param Locator $locator
+     * @param Composer $composer
+     * @return Steps
+     */
+    public static function commandMode(Locator $locator, Composer $composer): Steps
+    {
+        return new static($locator, $composer, true);
+    }
+
+    /**
+     * @param Locator $locator
+     * @param Composer $composer
      * @param bool $isCommandMode
      */
-    public function __construct(Locator $locator, Composer $composer, bool $isCommandMode)
+    private function __construct(Locator $locator, Composer $composer, bool $isCommandMode)
     {
         $this->locator = $locator;
         $this->composer = $composer;
-        $this->steps = new \SplObjectStorage();
-        $this->postProcessSteps = new \SplObjectStorage();
+        $this->scripts = $this->locator->config()[Config::SCRIPTS]->unwrapOrFallback([]);
         $this->isCommandMode = $isCommandMode;
+        $this->steps = new \SplObjectStorage();
     }
 
     /**
@@ -93,12 +118,12 @@ final class Steps implements PostProcessStep, \Countable
 
     /**
      * @param Step $step
-     * @param Step[] $steps
+     * @param Step ...$steps
      * @return Steps
      */
     public function addStep(Step $step, Step ...$steps): Steps
     {
-        if (!$this->running && !($this->isCommandMode && $this->runningScripts)) {
+        if (!$this->running || $this->runningScripts === 'pre') {
             $this->steps->attach($step);
             array_walk($steps, [$this->steps, 'attach']);
         }
@@ -108,12 +133,12 @@ final class Steps implements PostProcessStep, \Countable
 
     /**
      * @param Step $step
-     * @param Step[] $steps
+     * @param Step ...$steps
      * @return Steps
      */
     public function removeStep(Step $step, Step ...$steps): Steps
     {
-        if (!$this->running && !($this->isCommandMode && $this->runningScripts)) {
+        if (!$this->running || $this->runningScripts === 'pre') {
             $this->steps->detach($step);
             array_walk($steps, [$this->steps, 'detach']);
         }
@@ -134,33 +159,37 @@ final class Steps implements PostProcessStep, \Countable
     /**
      * Process all added steps.
      *
+     * "pre-wpstarter" script it is last chance to get steps to run added or removed.
+     *
      * @param Config $config
      * @param Paths $paths
      * @return int
      */
     public function run(Config $config, Paths $paths): int
     {
-        if ($this->running || $this->runningScripts || !$this->steps->count()) {
+        if ($this->running) {
+            return Step::NONE;
+        }
+
+        $io = $this->locator->io();
+
+        $this->running = true;
+
+        $this->runningScripts = 'pre';
+        $this->runStepScripts($this, $io, 'pre-');
+        $this->runningScripts = '';
+
+        // We check here because "pre" scripts can add or remove steps.
+        if (!$this->count()) {
             return Step::NONE;
         }
 
         $this->steps->rewind();
-        $io = $this->locator->io();
-
-        $scripts = $config[Config::SCRIPTS]->unwrapOrFallback([]);
-
-        $this->runningScripts = 'pre';
-        $this->runStepScripts($this, $io, $scripts, 'pre-', Step::NONE);
-        $this->runningScripts = '';
-
-        $this->running = true;
-
         while ($this->steps->valid()) {
-
             /** @var \WeCodeMore\WpStarter\Step\Step $step */
             $step = $this->steps->current();
 
-            if (!$this->runStep($step, $config, $io, $paths, $scripts)) {
+            if (!$this->runStep($step, $config, $io, $paths)) {
                 return Step::ERROR;
             }
 
@@ -170,7 +199,7 @@ final class Steps implements PostProcessStep, \Countable
         $this->postProcess($io);
 
         $this->runningScripts = 'post';
-        $this->runStepScripts($this, $io, $scripts, 'post-', Step::SUCCESS);
+        $this->runStepScripts($this, $io, 'post-', Step::SUCCESS);
         $this->runningScripts = '';
 
         $this->running = false;
@@ -184,8 +213,8 @@ final class Steps implements PostProcessStep, \Countable
     public function error(): string
     {
         return $this->errors === 1
-            ? 'One WP Starter step failed, the project might be not configured properly.'
-            : 'Some WP Starter steps failed, the project might be not configured properly.';
+            ? 'One WP Starter step failed, the project might not be configured properly.'
+            : "{$this->errors} WP Starter steps failed, project might not be configured properly.";
     }
 
     /**
@@ -203,7 +232,7 @@ final class Steps implements PostProcessStep, \Countable
      */
     public function postProcess(Io $io)
     {
-        if ($this->running || $this->runningScripts) {
+        if ($this->running) {
             return;
         }
 
@@ -215,17 +244,6 @@ final class Steps implements PostProcessStep, \Countable
             $step->postProcess($io);
             $this->postProcessSteps->next();
         }
-
-        $env = $this->locator->config()[Config::ENV_FILE]->unwrapOrFallback('.env');
-        if (!is_file($this->locator->paths()->root($env))) {
-            $lines = [
-                'Remember that to make your site fully functional you either need to have an .env '
-                . 'file with at least DB settings or set them in environment variables in some '
-                . 'other way (e.g. via webserver).',
-            ];
-
-            $io->writeColorBlock('yellow', ...$lines);
-        }
     }
 
     /**
@@ -233,21 +251,27 @@ final class Steps implements PostProcessStep, \Countable
      * @param Config $config
      * @param Io $io
      * @param Paths $paths
-     * @param array $scripts
      * @return bool
      */
-    private function runStep(Step $step, Config $config, Io $io, Paths $paths, array $scripts): bool
+    private function runStep(Step $step, Config $config, Io $io, Paths $paths): bool
     {
-        $io->writeIfVerbose('Initializing "' . $step->name() . '" step.');
-        $step instanceof PostProcessStep and $this->postProcessSteps->attach($step);
-
-        if (!$this->shouldProcess($step, $paths)) {
-            $io->writeIfVerbose('- step "' . $step->name() . '" skipped.');
-
+        $name = $step->name();
+        if (!$name) {
             return true;
         }
 
-        $this->runStepScripts($step, $io, $scripts, 'pre-', Step::NONE);
+        $io->writeIfVerbose("Initializing '{$name}' step.");
+
+        if ($step instanceof PostProcessStep) {
+            $this->postProcessSteps or $this->postProcessSteps = new \SplObjectStorage();
+            $this->postProcessSteps->attach($step);
+        }
+
+        if (!$this->shouldProcess($step, $paths, $io)) {
+            return true;
+        }
+
+        $this->runStepScripts($step, $io, 'pre-');
 
         try {
             $result = $step->run($config, $paths);
@@ -256,23 +280,18 @@ final class Steps implements PostProcessStep, \Countable
             $result = self::ERROR;
         }
 
-        $this->runStepScripts($step, $io, $scripts, 'post-', Step::ERROR);
+        $this->runStepScripts($step, $io, 'post-', $result);
 
-        if (!$this->continueOnResult($step, $io, $result)) {
-            $this->finalMessage($io);
-
-            return false;
-        }
-
-        return true;
+        return $this->continueOnStepResult($step, $result, $io);
     }
 
     /**
      * @param  \WeCodeMore\WpStarter\Step\Step $step
      * @param  Paths $paths
+     * @param Io $io
      * @return bool
      */
-    private function shouldProcess(Step $step, Paths $paths): bool
+    private function shouldProcess(Step $step, Paths $paths, Io $io): bool
     {
         $comment = '';
         $process = $step->allowed($this->locator->config(), $paths);
@@ -290,22 +309,22 @@ final class Steps implements PostProcessStep, \Countable
             $comment = $process ? '' : $step->skipped();
         }
 
-        $process or $this->locator->io()->writeComment($comment);
+        if (!$process) {
+            $comment
+                ? $io->writeComment($comment)
+                : $io->writeIfVerbose(sprintf("- Step '%s' skipped: not allowed.", $step->name()));
+        }
 
         return $process;
     }
 
     /**
-     * Show success or error message according to step process result.
-     * Increment error count in case of error.
-     * Return false in case of error for blocking steps.
-     *
      * @param  \WeCodeMore\WpStarter\Step\Step $step
-     * @param Io $io
      * @param  int $result
+     * @param Io $io
      * @return bool
      */
-    private function continueOnResult(Step $step, Io $io, int $result): bool
+    private function continueOnStepResult(Step $step, int $result, Io $io): bool
     {
         if ($result === Step::SUCCESS) {
             $this->printMessages($io, $step->success(), false);
@@ -314,103 +333,83 @@ final class Steps implements PostProcessStep, \Countable
         if (($result & Step::ERROR) === Step::ERROR) {
             $this->printMessages($io, $step->error(), true);
             $this->errors++;
-            if ($step instanceof BlockingStep) {
-                return false;
-            }
         }
 
-        return true;
+        $continue = ($result !== Step::ERROR) || !($step instanceof BlockingStep);
+        if (!$continue) {
+            $this->finalMessage($io);
+        }
+
+        return $continue;
     }
 
     /**
      * @param Step $step
      * @param Io $io
-     * @param array $scripts
      * @param string $prefix
      * @param int $result
      */
-    private function runStepScripts(
-        Step $step,
-        Io $io,
-        array $scripts,
-        string $prefix,
-        int $result
-    ) {
+    private function runStepScripts(Step $step, Io $io, string $prefix, int $result = Step::NONE)
+    {
+        $name = $step->name();
+        $scriptLabel = "'{$prefix}' scripts for '{$name}' step";
 
-        $scriptsKey = $prefix . $step->name();
-
-        $toRun = array_key_exists($scriptsKey, $scripts) ? (array)$scripts[$scriptsKey] : null;
-        if (!$toRun) {
+        $allStepScripts = $this->scripts[$prefix . $name] ?? null;
+        if (!$allStepScripts) {
             return;
         }
 
-        $callbacks = array_filter($toRun, 'is_callable');
-        $countValid = count($callbacks);
-        $countAll = count($toRun);
+        $validStepScripts = array_filter($allStepScripts, 'is_callable');
 
-        if ($countValid !== $countAll) {
-            $countErrors = $countAll - $countValid;
-            $message = $countErrors > 1
-                ? "Found {$countErrors} invalid script callbacks for {$scriptsKey}"
-                : 'Found one invalid script callback';
-            $io->writeErrorLineIfVerbose("{$message}, will be ignored.");
+        $invalidScriptsCount = count($allStepScripts) - count($validStepScripts);
+        if ($invalidScriptsCount) {
+            $message = $invalidScriptsCount > 1
+                ? "Found {$invalidScriptsCount} invalid script callbacks for {$scriptLabel}, they"
+                : "Found one invalid script callback for {$scriptLabel}, it";
+            $io->writeErrorLineIfVerbose("{$message} will be ignored.");
         }
 
-        if (!$callbacks) {
+        if (!$validStepScripts) {
             return;
         }
 
-        $runner = function (callable $script) use ($scriptsKey, $step, $result, $io) {
-            $this->runStepScript($script, $scriptsKey, $step, $result, $io);
-        };
+        $io->writeIfVerbose("Start running {$scriptLabel}...");
 
-        $io->writeIfVerbose("Running '{$scriptsKey}' scripts...");
-        array_walk($toRun, $runner);
+        foreach ($validStepScripts as $script) {
+            $this->runStepScript($script, $scriptLabel, $step, $result, $io);
+        }
     }
 
     /**
      * @param callable $script
-     * @param string $scriptsKey
+     * @param string $label
      * @param Step $step
      * @param int $result
      * @param Io $io
      */
-    private function runStepScript(
-        callable $script,
-        string $scriptsKey,
-        Step $step,
-        int $result,
-        Io $io
-    ) {
-
+    private function runStepScript(callable $script, string $label, Step $step, int $result, Io $io)
+    {
         try {
             $script($result, $step, $this->locator, $this->composer);
         } catch (\Throwable $error) {
-            $io->writeErrorBlock(
-                "Error running a script of event '{$scriptsKey}':",
-                $error->getMessage()
-            );
+            $io->writeErrorBlock("Error running {$label}:", $error->getMessage());
         }
     }
 
     /**
-     * Print messages to console line by line.
-     *
      * @param Io $io
      * @param string $message
      * @param bool $error
      */
     private function printMessages(Io $io, string $message, bool $error = false)
     {
-        $messages = explode(PHP_EOL, $message);
+        $messages = explode("\n", $message);
         foreach ($messages as $line) {
-            $error ? $io->writeError($line) : $io->writeSuccess($line);
+            $error ? $io->writeError(trim($line)) : $io->writeSuccess(trim($line));
         }
     }
 
     /**
-     * Print to console final message.
-     *
      * @param Io $io
      * @return int
      */
