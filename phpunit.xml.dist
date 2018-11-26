@@ -21,5 +21,14 @@
         <testsuite name="integration">
             <directory>./tests/integration</directory>
         </testsuite>
+        <testsuite name="integration:env">
+            <directory>./tests/integration/Env</directory>
+        </testsuite>
+        <testsuite name="integration:cli">
+            <directory>./tests/integration/Cli</directory>
+        </testsuite>
+        <testsuite name="integration:util">
+            <directory>./tests/integration/Util</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

@@ -9,20 +9,22 @@
 namespace WeCodeMore\WpStarter\Tests;
 
 use Composer;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use WeCodeMore\WpStarter\Config;
 use WeCodeMore\WpStarter\Util;
 use WeCodeMore\WpStarter\Cli;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
-    protected function setUp()
-    {
-        parent::setUp();
-    }
+    use MockeryPHPUnitIntegration;
 
+    /**
+     * @return string
+     */
     protected function tearDown()
     {
-        parent::setUp();
+        \Mockery::close();
+        parent::tearDown();
     }
 
     /**
@@ -39,6 +41,23 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     protected function packagePath(): string
     {
         return str_replace('\\', '/', getenv('PACKAGE_PATH'));
+    }
+
+    /**
+     * @param array $configs
+     * @param array $extra
+     * @param string $vendorDir
+     * @param string $binDir
+     * @return Config\Config
+     */
+    protected function makeConfig(
+        array $configs = [],
+        array $extra = [],
+        string $vendorDir = __DIR__,
+        string $binDir = __DIR__
+    ): Config\Config {
+
+        return new Config\Config($configs, $this->makeValidator($extra, $vendorDir, $binDir));
     }
 
     /**
@@ -92,7 +111,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             Util\FileContentBuilder::class,
             Util\OverwriteHelper::class,
             Util\Salter::class,
-            Util\LanguageListFetcher::class,
             Cli\PharInstaller::class,
         ];
 
@@ -125,9 +143,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
         $root = $this->fixturesPath() . '/paths-root';
 
-        $cwd = getcwd();
-        chdir($root);
-
         $config = \Mockery::mock(Composer\Config::class);
         $config->shouldReceive('get')->with('vendor-dir')->andReturn("{$root}/vendor");
         $config->shouldReceive('get')->with('bin-dir')->andReturn("{$root}/vendor/bin");
@@ -137,11 +152,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             'wordpress-content-dir' => 'public/wp-content',
         ];
 
-        $paths = new Util\Paths($config, $extra, new Composer\Util\Filesystem());
-        $paths->offsetExists(Util\Paths::ROOT); // to trigger parse() before root is restored
-
-        chdir($cwd);
-
-        return $paths;
+        return Util\Paths::withRoot($root, $config, $extra, new Composer\Util\Filesystem());
     }
 }
