@@ -27,7 +27,7 @@ final class WpCliFileData
     private $raw;
 
     /**
-     * @var array
+     * @var array{file:string,args:array,skip-wordpress:bool,valid:bool}
      */
     private $parsed;
 
