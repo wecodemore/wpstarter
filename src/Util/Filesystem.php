@@ -95,26 +95,36 @@ class Filesystem
     /**
      * Symlink implementation which uses junction on dirs on Windows.
      *
-     * @param string $sourcePath
      * @param string $targetPath
+     * @param string $linkPath
      * @return bool
      */
-    public function symlink(string $sourcePath, string $targetPath): bool
+    public function symlink(string $targetPath, string $linkPath): bool
     {
+        $isWindows = Platform::isWindows();
+        $triedRelative = false;
+        $absoluteAttempt = null;
+
         try {
-            if (Platform::isWindows() && is_dir($sourcePath) && is_dir($targetPath)) {
-                $this->filesystem->junction($targetPath, $sourcePath);
+            if ($isWindows && is_dir($targetPath) && is_dir($linkPath)) {
+                $this->filesystem->junction($linkPath, $targetPath);
             }
 
-            if ($this->filesystem->isAbsolutePath($sourcePath)
-                && $this->filesystem->isAbsolutePath($targetPath)
+            if ($this->filesystem->isAbsolutePath($targetPath)
+                && $this->filesystem->isAbsolutePath($linkPath)
             ) {
-                $this->filesystem->relativeSymlink($targetPath, $sourcePath);
+                $triedRelative = true;
+                $this->filesystem->relativeSymlink($targetPath, $linkPath);
             }
 
-            return @symlink($sourcePath, $targetPath);
+            return @symlink($targetPath, $linkPath);
         } catch (\Throwable $exception) {
-            return false;
+            // On Windows, relative symlink for files often fails, so we attempt absolute symlink.
+            if ($isWindows && $triedRelative && is_file($targetPath) && !file_exists($linkPath)) {
+                $absoluteAttempt = @symlink($targetPath, $linkPath);
+            }
+
+            return $absoluteAttempt ?? false;
         }
     }
 

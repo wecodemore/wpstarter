@@ -8,7 +8,7 @@
 
 namespace WeCodeMore\WpStarter\Step;
 
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 
 /**
  * Steps that run a routine after all steps have been processed.
@@ -18,7 +18,7 @@ interface PostProcessStep extends Step
     /**
      * Runs after all steps have been processed. Useful to print some messages or do some cleanup.
      *
-     * @param \WeCodeMore\WpStarter\Util\Io $io
+     * @param \WeCodeMore\WpStarter\Io\Io $io
      */
     public function postProcess(Io $io);
 }

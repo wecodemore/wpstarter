@@ -15,7 +15,7 @@ use WeCodeMore\WpStarter\Cli\WpCliTool;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Config\Validator;
 use WeCodeMore\WpStarter\Tests\IntegrationTestCase;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class WpCliToolTest extends IntegrationTestCase

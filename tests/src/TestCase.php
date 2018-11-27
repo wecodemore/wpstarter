@@ -10,9 +10,10 @@ namespace WeCodeMore\WpStarter\Tests;
 
 use Composer;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use WeCodeMore\WpStarter\Config;
-use WeCodeMore\WpStarter\Util;
 use WeCodeMore\WpStarter\Cli;
+use WeCodeMore\WpStarter\Config;
+use WeCodeMore\WpStarter\Io;
+use WeCodeMore\WpStarter\Util;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
@@ -106,7 +107,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             Config\Config::class,
             Util\Filesystem::class,
             Util\Paths::class,
-            Util\Io::class,
+            Io\Io::class,
             Util\UrlDownloader::class,
             Util\FileContentBuilder::class,
             Util\OverwriteHelper::class,

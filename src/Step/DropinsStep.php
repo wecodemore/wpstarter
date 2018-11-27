@@ -41,7 +41,7 @@ final class DropinsStep implements Step
     ];
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\Io
+     * @var \WeCodeMore\WpStarter\Io\Io
      */
     private $io;
 

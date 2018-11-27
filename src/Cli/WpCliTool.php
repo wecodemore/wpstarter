@@ -10,7 +10,7 @@ namespace WeCodeMore\WpStarter\Cli;
 
 use Symfony\Component\Finder\Finder;
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
 
@@ -138,8 +138,8 @@ class WpCliTool implements PhpTool
         $this->io->write(sprintf('Checking %s via %s hash...', $this->niceName(), $algorithm));
         $releaseHash = trim($this->urlDownloader->fetch($hashUrl));
         if (!$releaseHash) {
-            $io->writeError("Failed to download {$algorithm} hash content from {$hashUrl}.");
-            $io->writeError($this->urlDownloader->error());
+            $io->writeErrorBlock("Failed to download {$algorithm} hash content from {$hashUrl}.");
+            $io->writeErrorBlock($this->urlDownloader->error());
 
             return false;
         }
@@ -147,7 +147,7 @@ class WpCliTool implements PhpTool
         $pharHash = hash($algorithm, (string)file_get_contents($pharPath));
         if (!hash_equals($releaseHash, $pharHash)) {
             @unlink($pharPath);
-            $io->writeError("{$algorithm} hash check failed for downloaded WP CLI phar.");
+            $io->writeErrorBlock("{$algorithm} hash check failed for downloaded WP CLI phar.");
 
             return false;
         }

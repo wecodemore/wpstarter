@@ -16,6 +16,7 @@ use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 use WeCodeMore\WpStarter\Cli;
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Io\Io;
 
 /**
  * Service locator for WP Starter objects that is passed to Steps so the can do what they need.

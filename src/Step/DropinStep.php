@@ -8,7 +8,7 @@
 
 namespace WeCodeMore\WpStarter\Step;
 
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\Util\Paths;
@@ -40,7 +40,7 @@ final class DropinStep implements FileCreationStepInterface
     private $actionAndSource;
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\Io
+     * @var \WeCodeMore\WpStarter\Io\Io
      */
     private $io;
 
@@ -67,7 +67,7 @@ final class DropinStep implements FileCreationStepInterface
     /**
      * @param string $name
      * @param string $url
-     * @param \WeCodeMore\WpStarter\Util\Io $io
+     * @param \WeCodeMore\WpStarter\Io\Io $io
      * @param UrlDownloader $urlDownloader
      * @param \WeCodeMore\WpStarter\Util\OverwriteHelper $overwrite
      */
@@ -104,7 +104,7 @@ final class DropinStep implements FileCreationStepInterface
         list($action, $source) = $this->determineActionAndSource();
 
         if (!$action || !$source) {
-            $this->io->writeError("{$this->url} is not a valid URL nor a valid path.");
+            $this->io->writeErrorBlock("{$this->url} is not a valid URL nor a valid path.");
 
             return false;
         }

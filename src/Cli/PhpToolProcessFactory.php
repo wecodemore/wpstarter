@@ -9,7 +9,7 @@
 namespace WeCodeMore\WpStarter\Cli;
 
 use Symfony\Component\Process\PhpExecutableFinder;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\PackageFinder;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -37,7 +37,7 @@ class PhpToolProcessFactory
 
     /**
      * @param Paths $paths
-     * @param Io $io
+     * @param \WeCodeMore\WpStarter\Io\Io $io
      * @param PharInstaller $pharInstaller
      * @param PackageFinder $packageFinder
      */
@@ -124,7 +124,7 @@ class PhpToolProcessFactory
         $minVersion = $command->minVersion();
 
         if ($minVersion && version_compare($version, $minVersion, '<')) {
-            $this->io->writeError(
+            $this->io->writeErrorBlock(
                 sprintf(
                     'Installed %s version %s is lower than minimum required %s.',
                     $command->niceName(),

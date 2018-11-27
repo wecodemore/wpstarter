@@ -9,7 +9,7 @@
 namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Cli;
@@ -128,7 +128,7 @@ final class WpCliCommandsStep implements Step
             $this->io->write("<fg=magenta>\$ wp {$commandDesc} {$dashes}</>");
             $continue = $this->process->execute($command);
             if (!$continue) {
-                $this->io->writeErrorLine("'wp {$command}' FAILED! Quitting WP CLI.");
+                $this->io->writeError("'wp {$command}' FAILED! Quitting WP CLI.");
             }
             $this->io->write('<fg=magenta>' . str_repeat('-', 60) . '</>');
             $this->io->write('');

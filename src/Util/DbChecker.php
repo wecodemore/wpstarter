@@ -9,6 +9,7 @@
 namespace WeCodeMore\WpStarter\Util;
 
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
+use WeCodeMore\WpStarter\Io\Io;
 
 /**
  * Check status of WP DB and set two constants holding status for DB found and WP installed.

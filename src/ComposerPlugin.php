@@ -435,10 +435,7 @@ final class ComposerPlugin implements
         $error = $factory->lastError();
         if ($error) {
             $io = $this->locator->io();
-            $text = Util\Io::ensureLength($error);
-            $io->writeErrorLine('');
-            array_walk($text, [$io, 'writeErrorLine']);
-            $io->writeErrorLine('');
+            $io->writeError("\n{$error}\n");
         }
 
         return $steps;

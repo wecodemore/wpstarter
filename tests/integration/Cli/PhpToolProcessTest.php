@@ -12,7 +12,7 @@ use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Cli\PhpToolProcess;
 use WeCodeMore\WpStarter\Tests\DummyPhpTool;
 use WeCodeMore\WpStarter\Tests\IntegrationTestCase;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 
 class PhpToolProcessTest extends IntegrationTestCase
 {
@@ -32,7 +32,6 @@ class PhpToolProcessTest extends IntegrationTestCase
 
     /**
      * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcess
-     *
      * @see \WeCodeMore\WpStarter\Tests\DummyPhpTool::prepareCommand
      */
     public function testExecute()

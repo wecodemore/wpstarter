@@ -10,7 +10,7 @@ namespace WeCodeMore\WpStarter\Step;
 
 use Composer\Composer;
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -228,7 +228,7 @@ final class Steps implements PostProcessStep, \Countable
     /**
      * Runs after all steps have been processed bay calling post process method on all steps.
      *
-     * @param \WeCodeMore\WpStarter\Util\Io $io
+     * @param \WeCodeMore\WpStarter\Io\Io $io
      */
     public function postProcess(Io $io)
     {
@@ -366,7 +366,7 @@ final class Steps implements PostProcessStep, \Countable
             $message = $invalidScriptsCount > 1
                 ? "Found {$invalidScriptsCount} invalid script callbacks for {$scriptLabel}, they"
                 : "Found one invalid script callback for {$scriptLabel}, it";
-            $io->writeErrorLineIfVerbose("{$message} will be ignored.");
+            $io->writeErrorIfVerbose("{$message} will be ignored.");
         }
 
         if (!$validStepScripts) {
@@ -403,10 +403,7 @@ final class Steps implements PostProcessStep, \Countable
      */
     private function printMessages(Io $io, string $message, bool $error = false)
     {
-        $messages = explode("\n", $message);
-        foreach ($messages as $line) {
-            $error ? $io->writeError(trim($line)) : $io->writeSuccess(trim($line));
-        }
+        $error ? $io->writeErrorBlock($message) : $io->writeSuccess($message);
     }
 
     /**
@@ -422,7 +419,7 @@ final class Steps implements PostProcessStep, \Countable
         usleep(250000);
 
         if ($this->errors > 0) {
-            $io->writeError($this->error());
+            $io->writeErrorBlock($this->error());
 
             return self::ERROR;
         }

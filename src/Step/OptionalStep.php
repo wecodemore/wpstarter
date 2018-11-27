@@ -9,7 +9,7 @@
 namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 
 /**
  * Optional steps, depending on settings this step can be skipped based on user interaction.
@@ -23,10 +23,10 @@ interface OptionalStep extends Step
      *
      * To actually display the question on screen, use `$io->confirm()`.
      *
-     * @see \WeCodeMore\WpStarter\Util\Io::askConfirm()
+     * @see \WeCodeMore\WpStarter\Io\Io::askConfirm()
      *
      * @param  \WeCodeMore\WpStarter\Config\Config $config
-     * @param  \WeCodeMore\WpStarter\Util\Io $io
+     * @param  \WeCodeMore\WpStarter\Io\Io $io
      * @return bool
      */
     public function askConfirm(Config $config, Io $io): bool;

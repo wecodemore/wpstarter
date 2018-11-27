@@ -24,7 +24,7 @@ use WeCodeMore\WpStarter\Step\WpCliConfigStep;
 use WeCodeMore\WpStarter\Step\WpConfigStep;
 use WeCodeMore\WpStarter\Tests\DummyStep;
 use WeCodeMore\WpStarter\Tests\TestCase;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\SelectedStepsFactory;
 
 class SelectedStepsFactoryTest extends TestCase

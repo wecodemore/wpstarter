@@ -10,7 +10,7 @@ namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
 use Composer\Package\PackageInterface;
 use WeCodeMore\WpStarter\Tests\TestCase;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\PackageFinder;
 use WeCodeMore\WpStarter\Util\WpVersion;
 

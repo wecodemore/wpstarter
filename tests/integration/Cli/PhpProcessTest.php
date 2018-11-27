@@ -11,7 +11,7 @@ namespace WeCodeMore\WpStarter\Tests\Integration\Cli;
 use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Cli\PhpProcess;
 use WeCodeMore\WpStarter\Tests\IntegrationTestCase;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 
 class PhpProcessTest extends IntegrationTestCase
 {

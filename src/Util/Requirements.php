@@ -15,6 +15,8 @@ use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\ComposerPlugin;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Config\Validator;
+use WeCodeMore\WpStarter\Io\Formatter;
+use WeCodeMore\WpStarter\Io\Io;
 
 /**
  * Sort of factory and service locator for objects that are required for WP Starter bootstrapping.
@@ -141,7 +143,7 @@ final class Requirements
         $config[Config::COMPOSER_UPDATED_PACKAGES] = $isComposer ? $updatedPackages : [];
 
         $this->config = new Config($config, new Validator($this->paths, $filesystem));
-        $this->io = new Io($io);
+        $this->io = new Io($io, new Formatter());
 
         $templatesDir = $this->config[Config::TEMPLATES_DIR];
         $templatesDir->notEmpty() and $this->paths->useCustomTemplatesDir($templatesDir->unwrap());

@@ -23,7 +23,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
     const NAME = 'build-wp-config';
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\Io
+     * @var \WeCodeMore\WpStarter\Io\Io
      */
     private $io;
 

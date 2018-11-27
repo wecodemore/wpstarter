@@ -9,6 +9,7 @@
 namespace WeCodeMore\WpStarter\Util;
 
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Step\OptionalStep;
 
 /**

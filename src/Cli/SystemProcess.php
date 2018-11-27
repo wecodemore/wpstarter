@@ -9,7 +9,7 @@
 namespace WeCodeMore\WpStarter\Cli;
 
 use Symfony\Component\Process\Process;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\Paths;
 
 class SystemProcess
@@ -70,7 +70,7 @@ class SystemProcess
             $this->printer or $this->printer = function (string $type, string $buffer) {
                 $lines = array_filter(array_map('rtrim', explode("\n", $buffer)));
                 Process::ERR === $type
-                    ? array_walk($lines, [$this->io, 'writeErrorLine'])
+                    ? array_walk($lines, [$this->io, 'writeError'])
                     : array_walk($lines, [$this->io, 'write']);
             };
 
@@ -79,7 +79,7 @@ class SystemProcess
             return $process->isSuccessful();
         } catch (\Throwable $exception) {
             $lines = array_map('rtrim', explode("\n", $exception->getMessage()));
-            array_walk($lines, [$this->io, 'writeErrorLine']);
+            array_walk($lines, [$this->io, 'writeError']);
 
             return false;
         }

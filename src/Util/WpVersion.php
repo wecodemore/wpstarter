@@ -8,6 +8,8 @@
 
 namespace WeCodeMore\WpStarter\Util;
 
+use WeCodeMore\WpStarter\Io\Io;
+
 /**
  * Helper to get and normalize the version of WordPress installed via Composer.
  *

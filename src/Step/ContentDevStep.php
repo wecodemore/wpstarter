@@ -8,8 +8,10 @@
 
 namespace WeCodeMore\WpStarter\Step;
 
+use Composer\Util\Platform;
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
+use WeCodeMore\WpStarter\Io\Question;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -106,14 +108,16 @@ final class ContentDevStep implements OptionalStep
             return true;
         }
 
-        $operation = $io->ask(
+        $question = new Question(
             [
-                'Which operation do you want to perform for content development folders to make '
-                . 'them available in WP content dir?',
+                'Which operation do you want to perform for content development folders '
+                . 'to make them available in WP content dir?',
             ],
             ['s' => '[S]ymlink', 'c' => '[C]opy', 'n' => '[N]othing'],
-            'n'
+            's'
         );
+
+        $operation = $io->ask($question);
 
         if ($operation === 'n') {
             return false;
@@ -143,10 +147,11 @@ final class ContentDevStep implements OptionalStep
 
         $srcBase = $config[Config::CONTENT_DEV_DIR]->unwrap();
         $this->contentDevDir = $srcBase;
-        $scrDirs = ["{$srcBase}/plugins", "{$srcBase}/themes", "{$srcBase}/mu-plugins"];
         $targetBase = $paths->wpContent();
 
-        $successDirs = $operation === self::OP_COPY
+        $scrDirs = ["{$srcBase}/plugins", "{$srcBase}/themes", "{$srcBase}/mu-plugins"];
+
+        $errorsOnDirs = $operation === self::OP_COPY
             ? $this->copyDirs($scrDirs, $targetBase)
             : $this->symlinkDirs($scrDirs, $targetBase);
 
@@ -157,22 +162,29 @@ final class ContentDevStep implements OptionalStep
             DropinsStep::DROPINS
         );
 
-        $successFiles = $operation === self::OP_COPY
+        $errorsOnFiles = $operation === self::OP_COPY
             ? $this->copyFiles($scrFiles, $targetBase)
             : $this->symlinkFiles($scrFiles, $targetBase);
 
-        $this->error = sprintf(
-            "Some errors occurred while %sing content-dev dir '%s' to '%s'.",
-            $operation,
-            $srcBase,
-            $targetBase
-        );
+        $errors = $errorsOnDirs + $errorsOnFiles;
+        if ($errors) {
+            $this->error = sprintf(
+                "%s occurred while %sing content-dev dir '%s' to '%s'.",
+                $errors > 1 ? "{$errors} errors" : 'One error',
+                $operation,
+                $srcBase,
+                $targetBase
+            );
+            if ($operation === self::OP_SYMLINK && Platform::isWindows()) {
+                $this->error .= "\nOn Windows make sure to run terminal as administrator.";
+            }
+        }
 
-        if ($successDirs && $successFiles) {
+        if (!$errors) {
             return Step::SUCCESS;
         }
 
-        if (!$successDirs && !$successFiles) {
+        if ($errors >= (count($scrDirs) + count($scrFiles))) {
             return Step::ERROR;
         }
 
@@ -209,9 +221,9 @@ final class ContentDevStep implements OptionalStep
     /**
      * @param array $devContentSubfolders
      * @param string $contentDir
-     * @return bool
+     * @return int
      */
-    private function copyDirs(array $devContentSubfolders, string $contentDir): bool
+    private function copyDirs(array $devContentSubfolders, string $contentDir): int
     {
         $done = 0;
         $all = 0;
@@ -229,15 +241,15 @@ final class ContentDevStep implements OptionalStep
             $this->filesystem->copyDir($devContentSubfolder, $target) and $done++;
         }
 
-        return $done === $all;
+        return $all - $done;
     }
 
     /**
      * @param array $devContentSubfolders
      * @param string $contentDir
-     * @return bool
+     * @return int
      */
-    private function symlinkDirs(array $devContentSubfolders, string $contentDir): bool
+    private function symlinkDirs(array $devContentSubfolders, string $contentDir): int
     {
         $done = 0;
         $all = 0;
@@ -253,22 +265,23 @@ final class ContentDevStep implements OptionalStep
             $devContentSubfolderBase = basename($devContentSubfolder);
             foreach ($items as $item) {
                 $all++;
-                $target = "{$contentDir}/{$devContentSubfolderBase}/" . basename($item);
-                $this->maybeUnlinkTarget($item, $target);
-                $this->filesystem->createDir(dirname($target));
-                $this->filesystem->symlink($item, $target) and $done++;
+                $linkPath = "{$contentDir}/{$devContentSubfolderBase}/" . basename($item);
+                file_exists($linkPath) and @unlink($linkPath);
+                $this->maybeUnlinkTarget($item, $linkPath);
+                $this->filesystem->createDir(dirname($linkPath));
+                $this->filesystem->symlink($item, $linkPath) and $done++;
             }
         }
 
-        return $done === $all;
+        return $all - $done;
     }
 
     /**
      * @param array $srcFiles
      * @param string $contentDir
-     * @return bool
+     * @return int
      */
-    private function copyFiles(array $srcFiles, string $contentDir): bool
+    private function copyFiles(array $srcFiles, string $contentDir): int
     {
         $done = 0;
         $all = 0;
@@ -284,15 +297,15 @@ final class ContentDevStep implements OptionalStep
             $this->filesystem->copyFile($srcFile, $target) and $done++;
         }
 
-        return $done === $all;
+        return $all - $done;
     }
 
     /**
      * @param array $srcFiles
      * @param string $contentDir
-     * @return bool
+     * @return int
      */
-    private function symlinkFiles(array $srcFiles, string $contentDir): bool
+    private function symlinkFiles(array $srcFiles, string $contentDir): int
     {
         $done = 0;
         $all = 0;
@@ -303,12 +316,13 @@ final class ContentDevStep implements OptionalStep
             }
 
             $all++;
-            $target = "{$contentDir}/" . basename($srcFile);
-            $this->maybeUnlinkTarget($srcFile, $target);
-            $this->filesystem->symlink($srcFile, $target) and $done++;
+            $linkPath = "{$contentDir}/" . basename($srcFile);
+            file_exists($linkPath) and @unlink($linkPath);
+            $this->maybeUnlinkTarget($srcFile, $linkPath);
+            $this->filesystem->symlink($srcFile, $linkPath) and $done++;
         }
 
-        return $done === $all;
+        return $all - $done;
     }
 
     /**

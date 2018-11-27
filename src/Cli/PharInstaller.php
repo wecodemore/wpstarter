@@ -8,7 +8,7 @@
 
 namespace WeCodeMore\WpStarter\Cli;
 
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class PharInstaller
@@ -58,15 +58,15 @@ class PharInstaller
 
         $this->io->write(sprintf('Installing %s...', $name));
         if (!$this->urlDownloader->save($url, $path) || !file_exists($path)) {
-            $this->io->writeError(sprintf('Failed to download %s phar from %s.', $name, $url));
-            $this->io->writeError($this->urlDownloader->error());
+            $this->io->writeErrorBlock(sprintf('Failed to download %s phar from %s.', $name, $url));
+            $this->io->writeErrorBlock($this->urlDownloader->error());
 
             return '';
         }
 
         if (!$info->checkPhar($path, $this->io)) {
             @unlink($path);
-            $this->io->writeError('Phar validation failed. Downloaded phar is probably corrupted.');
+            $this->io->writeErrorBlock('Phar validation failed. Downloaded phar is probably corrupted.');
 
             return '';
         }

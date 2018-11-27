@@ -12,7 +12,7 @@ use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Step\OptionalStep;
 use WeCodeMore\WpStarter\Tests\TestCase;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\OverwriteHelper;
 
 class OverwriteHelperTest extends TestCase

@@ -10,7 +10,7 @@ namespace WeCodeMore\WpStarter\Tests;
 
 use PHPUnit\Framework\Assert;
 use WeCodeMore\WpStarter\Cli\PhpTool;
-use WeCodeMore\WpStarter\Util\Io;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\Paths;
 
 class DummyPhpTool implements PhpTool
