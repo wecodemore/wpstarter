@@ -69,6 +69,13 @@
     "config": {
         "optimize-autoloader": true
     },
+    "scripts": {
+        "qa": [
+            "sh ./vendor/bin/phpcs",
+            "sh ./vendor/bin/phan",
+            "sh ./vendor/bin/phpunit"
+        ]
+    },
     "extra": {
         "class": "WeCodeMore\\WpStarter\\ComposerPlugin",
         "branch-alias": {

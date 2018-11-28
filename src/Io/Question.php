@@ -32,7 +32,7 @@ class Question
 
     /**
      * @param string[] $lines
-     * @param string[] $answers
+     * @param array<string,string> $answers
      * @param string|null $default
      */
     public function __construct(array $lines, array $answers = [], string $default = null)
@@ -63,6 +63,7 @@ class Question
         array_change_key_case($validAnswers, CASE_LOWER);
         $answerKeys = array_map('trim', array_keys($validAnswers));
 
+        // @phan-suppress-next-line PhanTypeMismatchProperty
         $this->answers = array_combine($answerKeys, array_values($validAnswers));
 
         $default and $default = strtolower(trim($default));
@@ -83,7 +84,7 @@ class Question
     /**
      * @return string
      */
-    public function defaultAnswer(): string
+    public function defaultAnswerKey(): string
     {
         return $this->default;
     }
@@ -91,7 +92,7 @@ class Question
     /**
      * @return string
      */
-    public function defaultAnswerValue(): string
+    public function defaultAnswerText(): string
     {
         return $this->default ? $this->answers[$this->default] : '';
     }
@@ -111,14 +112,11 @@ class Question
             return [];
         }
 
-        array_unshift($this->lines, 'QUESTION:');
-
-        $prompt = implode(' | ', $this->answers);
-
-        $this->default and $prompt .= "\n  Default: '{$this->default}'";
         $this->question = array_values($this->lines);
+        array_unshift($this->question, 'QUESTION:');
         $this->question[] = "";
-        $this->question[] = "  {$prompt}";
+        $this->question[] = implode(' | ', $this->answers);
+        $this->default and $this->question[] = "Default: '{$this->default}'";
 
         return $this->question;
     }

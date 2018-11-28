@@ -13,10 +13,11 @@ class Formatter
     const DEFAULT_LINE_LENGTH = 58;
 
     /**
+     * @param int $lineLength
      * @param string ...$lines
      * @return array
      */
-    public function ensureLinesLength(string ...$lines): array
+    public function ensureLinesLength(int $lineLength, string ...$lines): array
     {
         if (!$lines) {
             return [];
@@ -26,19 +27,27 @@ class Formatter
         $normalized = [];
 
         foreach ($lines as $line) {
-            $trimmed = trim($line);
-            if (!$trimmed) {
+            if (!$this->trimLine($line)) {
                 $normalized[] = $line;
                 continue;
             }
 
-            $normalizedByLength = $this->normalizeLength($trimmed);
+            $normalizedByLength = $this->normalizeLength(trim($line), $lineLength);
             foreach ($normalizedByLength as $normalizedLine) {
                 $normalized[] = $normalizedLine;
             }
         }
 
         return $normalized;
+    }
+
+    /**
+     * @param string ...$lines
+     * @return array
+     */
+    public function ensureDefaultLinesLength(string ...$lines): array
+    {
+        return $this->ensureLinesLength(self::DEFAULT_LINE_LENGTH, ...$lines);
     }
 
     /**
@@ -72,6 +81,43 @@ class Formatter
     }
 
     /**
+     * @param string ...$items
+     * @return string[]
+     */
+    public function createList(string ...$items): array
+    {
+        return $this->createListWithPrefix(' -', ...$items);
+    }
+
+    /**
+     * @param string $prefix
+     * @param string ...$items
+     * @return string[]
+     */
+    public function createListWithPrefix(string $prefix, string ...$items): array
+    {
+        $prefix = rtrim($prefix) . ' ';
+        $prefixLen = strlen(strip_tags($prefix));
+        $filler = str_repeat(' ', $prefixLen);
+
+        $list = [];
+        foreach ($items as $item) {
+            if (!$item) {
+                continue;
+            }
+
+            $length = self::DEFAULT_LINE_LENGTH - (strlen($this->trimLine($prefix)) + 1);
+            $innerLines = $this->ensureLinesLength($length, $item);
+            $list[] = $prefix . array_shift($innerLines);
+            foreach ($innerLines as $innerLine) {
+                $innerLine and $list[] = $filler . $innerLine;
+            }
+        }
+
+        return $list;
+    }
+
+    /**
      * @param string $text
      * @param int $length
      * @return string[]
@@ -85,17 +131,18 @@ class Formatter
             if (!$word) {
                 continue;
             }
-            if (!trim(strip_tags($word))) {
+            if (!$this->trimLine($word)) {
                 $buffer .= $word;
                 continue;
             }
-            if (strlen(strip_tags($buffer . $word)) > ($length - 7)) {
-                $normalized[] = trim($buffer);
-                $buffer = "{$word} ";
+            if (strlen(strip_tags($buffer . $word)) > ($length - 4)) {
+                $trimmedBuffer = trim($buffer);
+                $trimmedBuffer and $normalized[] = $trimmedBuffer;
+                $buffer = $word;
                 continue;
             }
 
-            $buffer .= "{$word} ";
+            $buffer .= " {$word}";
         }
 
         $leftOver = trim($buffer);
@@ -125,8 +172,9 @@ class Formatter
         $before = rtrim($before);
         $after = ltrim($after);
 
-        $lines = $this->ensureLinesLength(...$lines);
+        $lines = $this->ensureDefaultLinesLength(...$lines);
 
+        // Will later ensure empty lines on top and on bottom, so remove if they're already there.
         $count = count($lines);
         $firstLineIsEmpty = !$this->trimLine($lines[0]);
         $lastLineIsEmpty = $count > 1 && !$this->trimLine($lines[$count - 1]);
@@ -147,6 +195,7 @@ class Formatter
             return [];
         }
 
+        // Ensure empty line on top and on bottom of block
         array_unshift($lines, '');
         array_unshift($spaces, ['', '']);
         $lines[] = '';
@@ -170,12 +219,11 @@ class Formatter
     {
         $split = [];
         foreach ($lines as $line) {
-            $trimmed = trim($line);
-            if (!$trimmed) {
+            if (!$this->trimLine($line)) {
                 $split[] = '';
             }
 
-            $innerLines = preg_split('~\n+~', $trimmed);
+            $innerLines = preg_split('~\n+~', trim($line));
             foreach ($innerLines as $innerLine) {
                 $trimmedInner = trim($innerLine);
                 $trimmedInner and $split[] = $trimmedInner;
@@ -263,16 +311,13 @@ class Formatter
                 continue;
             }
 
-            $missingSpaceLength = ($maxLength - strlen($trimmed));
-            if (!$missingSpaceLength) {
+            $missingSpaceLength = $maxLength - strlen($trimmed);
+            if ($missingSpaceLength < 1) {
                 $spacesMap[$i] = ['', ''];
                 continue;
             }
 
-            $spacesMap[$i] = [
-                '',
-                str_repeat(' ', $missingSpaceLength),
-            ];
+            $spacesMap[$i] = ['', str_repeat(' ', $missingSpaceLength)];
         }
 
         return $spacesMap;

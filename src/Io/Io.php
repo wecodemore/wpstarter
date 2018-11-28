@@ -37,26 +37,21 @@ class Io
 
     /**
      * @param  string $message
-     * @return bool
+     * @return void
      */
-    public function writeSuccess(string $message): bool
+    public function writeSuccess(string $message)
     {
-        $lines = $this->formatter->ensureLinesLength($message);
-        foreach ($lines as $i => $line) {
-            $prefix = $i === 0 ? '  - <info>[OK]</info> ' : '         ';
-            $this->io->write($prefix . $line);
-        }
-
-        return true;
+        $lines = $this->formatter->createListWithPrefix('  - <info>[OK]</info>', $message);
+        array_map([$this->io, 'write'], $lines);
     }
 
     /**
      * @param string ...$lines
-     * @return bool
+     * @return void
      */
-    public function writeSuccessBlock(string ...$lines): bool
+    public function writeSuccessBlock(string ...$lines)
     {
-        return $this->writeColorCenteredBlock('green', ...$lines);
+        $this->writeCenteredColorBlock('green', 'white', ...$lines);
     }
 
     /**
@@ -65,7 +60,7 @@ class Io
      */
     public function writeComment(string $message): bool
     {
-        $lines = $this->formatter->ensureLinesLength($message);
+        $lines = $this->formatter->ensureDefaultLinesLength($message);
         foreach ($lines as $line) {
             $this->io->write("  <comment>{$line}</comment>");
         }
@@ -79,7 +74,7 @@ class Io
      */
     public function writeCommentIfVerbose(string $line): bool
     {
-        $lines = $this->formatter->ensureLinesLength($line);
+        $lines = $this->formatter->ensureDefaultLinesLength($line);
         foreach ($lines as $line) {
             $this->io->write("  <comment>{$line}</comment>", true, IOInterface::VERBOSE);
         }
@@ -88,11 +83,20 @@ class Io
     }
 
     /**
+     * @param string ...$lines
+     * @return void
+     */
+    public function writeCommentBlock(string ...$lines)
+    {
+        $this->writeFilledColorBlock('yellow', 'black', ...$lines);
+    }
+
+    /**
      * @param string $line
      */
     public function writeError(string $line)
     {
-        $lines = $this->formatter->ensureLinesLength($line);
+        $lines = $this->formatter->ensureDefaultLinesLength($line);
         foreach ($lines as $line) {
             $this->io->writeError("  <fg=red>{$line}</>");
         }
@@ -108,11 +112,11 @@ class Io
 
     /**
      * @param string ...$lines
-     * @return bool
+     * @return void
      */
-    public function writeErrorBlock(string ...$lines): bool
+    public function writeErrorBlock(string ...$lines)
     {
-        return $this->writeColorBlock('red', ...$lines);
+        $this->writeFilledErrorColorBlock('red', 'white', ...$lines);
     }
 
     /**
@@ -120,7 +124,7 @@ class Io
      */
     public function write(string $line)
     {
-        $lines = $this->formatter->ensureLinesLength($line);
+        $lines = $this->formatter->ensureDefaultLinesLength($line);
         foreach ($lines as $line) {
             $this->io->write("  {$line}");
         }
@@ -146,7 +150,7 @@ class Io
     {
         $question = new Question($lines, ['y' => '[Y]es', 'n' => '[N]o'], $default ? 'y' : 'n');
         $answer = $this->ask($question);
-        $answer or $answer = $question->defaultAnswer();
+        $answer or $answer = $question->defaultAnswerKey();
 
         return $answer === 'y';
     }
@@ -171,105 +175,97 @@ class Io
         $block = $this->formatter->createFilledBlock('<question>', '</question>', ...$lines);
         $questionText = implode("\n", $block);
 
+        $tooMuchTriesException = new \Exception('Too much tries.');
+
         try {
             $answer = null;
             $count = 0;
             while (!is_string($answer) || !$question->isValidAnswer((string)$answer)) {
                 if ($count > 4) {
                     usleep(250000);
-                    throw new \Exception('Too much tries.');
+                    throw $tooMuchTriesException;
                 }
                 if ($count > 0) {
                     $this->writeComment('Invalid answer, try again.');
                     usleep(250000);
                 }
-                $answer = $this->io->ask($questionText, $question->defaultAnswer());
+                $answer = $this->io->ask($questionText, $question->defaultAnswerKey());
                 $answer = is_string($answer) ? strtolower(trim($answer)) : null;
                 $count++;
             }
 
             return $answer === null ? null : (string)$answer;
-        } catch (\Throwable $exception) {
-            $default = $question->defaultAnswerValue();
+        } catch (\Exception $exception) {
+            if ($exception !== $tooMuchTriesException) {
+                throw $exception;
+            }
+
+            $default = $question->defaultAnswerText();
             $this->writeError($exception->getMessage());
             $this->writeError("Going to use default: \"{$default}\".");
 
-            return $default;
+            return $question->defaultAnswerKey();
         }
     }
 
     /**
-     * @param string $color
+     * @param string $background
+     * @param string $frontground
      * @param string ...$lines
-     * @return bool
+     * @return void
      */
-    public function writeColorBlock(string $color, string ...$lines): bool
-    {
-        return $this->writeBlock($color, strtolower($color) === 'red', ...$lines);
+    public function writeFilledColorBlock(
+        string $background,
+        string $frontground = 'black',
+        string ...$lines
+    ) {
+
+        $this->writeColorBlock($background, $frontground, false, false, ...$lines);
     }
 
     /**
-     * @param string $color
+     * @param string $background
+     * @param string $frontground
      * @param string ...$lines
-     * @return bool
+     * @return void
      */
-    public function writeColorCenteredBlock(string $color, string ...$lines): bool
-    {
-        return $this->writeCenteredBlock($color, strtolower($color) === 'red', ...$lines);
+    public function writeCenteredColorBlock(
+        string $background,
+        string $frontground = 'black',
+        string ...$lines
+    ) {
+
+        $this->writeColorBlock($background, $frontground, true, false, ...$lines);
     }
 
     /**
-     * Print to console a block of text using an array of lines.
-     *
-     * @param  string $background
-     * @param  bool $isError
-     * @param  string ...$lines
-     * @return bool
+     * @param string $background
+     * @param string $frontground
+     * @param string ...$lines
+     * @return void
      */
-    private function writeBlock(
+    public function writeFilledErrorColorBlock(
         string $background,
-        bool $isError,
+        string $frontground = 'black',
         string ...$lines
-    ): bool {
+    ) {
 
-        $frontground = $isError ? 'white;options=bold' : 'black';
-
-        $block = $this->formatter->createFilledBlock(
-            "<bg={$background};fg={$frontground}>",
-            '</>',
-            ...$lines
-        );
-
-        $isError ? $this->io->writeError($block) : $this->io->write($block);
-
-        return !$isError;
+        $this->writeColorBlock($background, $frontground, false, true, ...$lines);
     }
 
     /**
-     * Print to console a block of text using an array of lines.
-     *
-     * @param  string $background
-     * @param  bool $isError
-     * @param  string ...$lines
-     * @return bool
+     * @param string $background
+     * @param string $frontground
+     * @param string ...$lines
+     * @return void
      */
-    private function writeCenteredBlock(
+    public function writeCenteredErrorColorBlock(
         string $background,
-        bool $isError,
+        string $frontground = 'black',
         string ...$lines
-    ): bool {
+    ) {
 
-        $frontground = $isError ? 'white;options=bold' : 'black';
-
-        $block = $this->formatter->createCenteredBlock(
-            "<bg={$background};fg={$frontground}>",
-            '</>',
-            ...$lines
-        );
-
-        $isError ? $this->io->writeError($block) : $this->io->write($block);
-
-        return !$isError;
+        $this->writeColorBlock($background, $frontground, true, true, ...$lines);
     }
 
     /**
@@ -278,5 +274,32 @@ class Io
     public function isVerbose(): bool
     {
         return $this->io->isVerbose();
+    }
+
+    /**
+     * @param string $background
+     * @param string $frontground
+     * @param bool $centered
+     * @param bool $isError
+     * @param string ...$lines
+     * @return bool
+     */
+    private function writeColorBlock(
+        string $background,
+        string $frontground,
+        bool $centered,
+        bool $isError,
+        string ...$lines
+    ): bool {
+
+        $before = "<bg={$background};fg={$frontground}>";
+
+        $block = $centered
+            ? $this->formatter->createCenteredBlock($before, '</>', ...$lines)
+            : $this->formatter->createFilledBlock($before, '</>', ...$lines);
+
+        $isError ? $this->io->writeError($block) : $this->io->write($block);
+
+        return !$isError;
     }
 }
