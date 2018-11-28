@@ -19,12 +19,15 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
     use MockeryPHPUnitIntegration;
 
-    /**
-     * @return string
-     */
+    protected function setUp()
+    {
+        parent::setUp();
+        $this->startMockery();
+    }
+
     protected function tearDown()
     {
-        \Mockery::close();
+        $this->closeMockery();
         parent::tearDown();
     }
 

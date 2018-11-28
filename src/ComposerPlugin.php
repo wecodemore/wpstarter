@@ -204,8 +204,11 @@ final class ComposerPlugin implements
     {
         $this->mode or $this->mode = self::MODE_COMMAND;
 
-        // Why 2 `try`: the 2nd `catch` relies on the Locator, that is built in `prepareRun()`
-        // which means we can't call `prepareRun()` in the same `try`.
+        /*
+         * Why two try/catch blocks: the 2nd `catch` relies on the Locator, that is built inside
+         * `prepareRun()` which means we can't call `prepareRun()` in the same `try`.
+         */
+
         try {
             $config = $this->prepareRun($factory);
         } catch (\Throwable $throwable) {
@@ -234,14 +237,14 @@ final class ComposerPlugin implements
             $this->loadExtensions();
             $this->checkWp($config);
 
-            $isCommandMode = $factory->isSelectedCommandMode();
-            $isCommandMode or $this->logo();
+            $isSelectedCommandMode = $factory->isSelectedCommandMode();
+            $isSelectedCommandMode or $this->logo();
 
             if ($config[Config::SKIP_DB_CHECK]->is(false)) {
                 $this->locator->dbChecker()->check();
             }
 
-            $runner = $isCommandMode
+            $runner = $isSelectedCommandMode
                 ? Step\Steps::commandMode($this->locator, $this->composer)
                 : Step\Steps::composerMode($this->locator, $this->composer);
 
