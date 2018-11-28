@@ -9,6 +9,7 @@
 namespace WeCodeMore\WpStarter\Tests\Unit\Config;
 
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Config\Error;
 use WeCodeMore\WpStarter\Config\Result;
 use WeCodeMore\WpStarter\Tests\TestCase;
 
@@ -111,10 +112,10 @@ class ConfigTest extends TestCase
         $config = new Config(['hello' => 'Hello!'], $this->makeValidator());
 
         $config->appendValidator('hello', function () {
-            throw new \RuntimeException('No hello!');
+            throw new Error('No hello!');
         });
 
-        $this->expectException(\Error::class);
+        $this->expectException(Error::class);
         $this->expectExceptionMessage('No hello!');
 
         $config['hello']->unwrap();

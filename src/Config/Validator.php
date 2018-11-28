@@ -307,16 +307,10 @@ class Validator
         }
 
         $value = substr($value, 3);
+        $hasPath = preg_match('~^(.+)(\-\-path=[^ ]+)(.+)?$~', $value, $matches);
+        $hasPath and $value = trim($matches[1] . $matches[3]);
 
-        try {
-            $hasPath = preg_match('~^(.+)(\-\-path=[^ ]+)(.+)?$~', $value, $matches);
-            $hasPath and $value = trim($matches[1] . $matches[3]);
-            $command = (string)new StringInput($value);
-        } catch (\Throwable $exception) {
-            return Result::error(new \Error($exception->getMessage(), 0, $exception));
-        }
-
-        return Result::ok($command);
+        return Result::ok((string)new StringInput($value));
     }
 
     /**
@@ -803,19 +797,10 @@ class Validator
     public function validateCustom(callable $method, $value): Result
     {
         try {
-            set_error_handler( // phpcs:ignore
-                function (int $code, string $message) {
-                    throw new \Error($message, $code);
-                }
-            );
-
             $validated = $method($value);
-            restore_error_handler();
             ($validated instanceof Result) or $validated = Result::ok($validated);
-        } catch (\Error $error) {
+        } catch (Error $error) {
             $validated = Result::error($error);
-        } catch (\Throwable $throwable) {
-            $validated = Result::error(new \Error($throwable->getMessage(), 0, $throwable));
         }
 
         return $validated;

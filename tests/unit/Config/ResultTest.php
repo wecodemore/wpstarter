@@ -8,6 +8,7 @@
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Config;
 
+use WeCodeMore\WpStarter\Config\Error;
 use WeCodeMore\WpStarter\Config\Result;
 use WeCodeMore\WpStarter\Tests\TestCase;
 
@@ -26,7 +27,7 @@ class ResultTest extends TestCase
         $this->expectExceptionMessage('Meh!');
         $error2->unwrap();
     }
-    
+
     public function testOk()
     {
         $result = Result::ok('ok!');
@@ -69,7 +70,7 @@ class ResultTest extends TestCase
     {
         $result = Result::error();
 
-        $this->expectException(\Error::class);
+        $this->expectException(Error::class);
         $result->unwrap();
     }
 
@@ -77,7 +78,7 @@ class ResultTest extends TestCase
     {
         $result = Result::errored('Meh!');
 
-        $this->expectException(\Error::class);
+        $this->expectException(Error::class);
         $this->expectExceptionMessage('Meh!');
         $result->unwrap();
     }

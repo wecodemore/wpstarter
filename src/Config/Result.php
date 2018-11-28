@@ -42,7 +42,6 @@ final class Result
      */
     public static function ok($value): Result
     {
-        // phpcs:enable
         return new static($value);
     }
 
@@ -55,12 +54,12 @@ final class Result
     }
 
     /**
-     * @param \Error|null $error
+     * @param Error|null $error
      * @return Result
      */
-    public static function error(\Error $error = null): Result
+    public static function error(Error $error = null): Result
     {
-        return new static(null, $error ?: new \Error('Error.'));
+        return new static(null, $error ?: new Error('Error.'));
     }
 
     /**
@@ -69,7 +68,7 @@ final class Result
      */
     public static function errored(string $message): Result
     {
-        return static::error(new \Error($message));
+        return static::error(new Error($message));
     }
 
     /**
@@ -86,13 +85,14 @@ final class Result
 
     /**
      * @param mixed|null $value
-     * @param \Error|null $error
+     * @param Error|null $error
      *
      * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
-    private function __construct($value = null, \Error $error = null)
+    private function __construct($value = null, Error $error = null)
     {
         // phpcs:enable
+
         if ($value instanceof Result) {
             $this->value = $value->value;
             $this->error = $value->error;
@@ -100,7 +100,12 @@ final class Result
             return;
         }
 
-        $this->value = $value;
+        if ($value instanceof Error && !$error) {
+            $error = $value;
+            $value = null;
+        }
+
+        $this->value = $error ? null : $value;
         $this->error = $error;
     }
 
@@ -231,12 +236,9 @@ final class Result
             }
 
             $this->value = $resolved;
-        } catch (\Error $error) {
+        } catch (Error $error) {
             $this->value = null;
             $this->error = $error;
-        } catch (\Throwable $throwable) {
-            $this->value = null;
-            $this->error = new \Error($throwable->getMessage(), 0, $throwable);
         }
     }
 }

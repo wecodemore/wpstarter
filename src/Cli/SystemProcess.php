@@ -99,6 +99,8 @@ class SystemProcess
 
             return $process->isSuccessful();
         } catch (\Throwable $exception) {
+            $this->io->writeErrorIfVerbose($exception->getMessage());
+
             return false;
         }
     }
