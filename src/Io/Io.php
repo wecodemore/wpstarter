@@ -51,7 +51,7 @@ class Io
      */
     public function writeSuccessBlock(string ...$lines)
     {
-        $this->writeCenteredColorBlock('green', 'white', ...$lines);
+        $this->writeCenteredColorBlock('green', 'black', ...$lines);
     }
 
     /**
