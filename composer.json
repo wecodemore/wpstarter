@@ -84,7 +84,9 @@
             ]
         },
         "branch-alias": {
-            "dev-master": "2.x-dev"
+            "dev-master": "2.x-dev",
+            "dev-dev": "3.x-dev",
+            "dev-version-2": "2.x-dev"
         }
     }
 }
