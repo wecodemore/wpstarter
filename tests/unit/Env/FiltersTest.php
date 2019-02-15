@@ -84,6 +84,8 @@ class FiltersTest extends TestCase
             [Filters::FILTER_STRING, false, ''],
             [Filters::FILTER_STRING, true, '1'],
             [Filters::FILTER_STRING, [], null],
+            [Filters::FILTER_STRING, '', ''],
+            [Filters::FILTER_STRING, "", ''],
             [Filters::FILTER_INT_OR_BOOL, 1, 1],
             [Filters::FILTER_INT_OR_BOOL, '1', 1],
             [Filters::FILTER_INT_OR_BOOL, 123.123, 123],

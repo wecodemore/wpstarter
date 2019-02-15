@@ -315,14 +315,17 @@ class WordPressEnvBridge
         $loadedVar = self::$loadedVars && $this->isLoadedVar($name);
 
         $value = null;
+        $readGetEnv = false;
         switch (true) {
             case ($loadedVar && $serverSafe):
                 // Both $_SERVER and getenv() are ok.
-                $value = $_ENV[$name] ?? $_SERVER[$name] ?? getenv($name) ?: null;
+                $value = $_ENV[$name] ?? $_SERVER[$name] ?? null;
+                $readGetEnv = true;
                 break;
             case ($loadedVar && !$serverSafe):
                 // $_SERVER is not ok, getenv() is.
-                $value = $_ENV[$name] ?? getenv($name) ?: null;
+                $value = $_ENV[$name] ?? null;
+                $readGetEnv = true;
                 break;
             case (!$loadedVar && $serverSafe):
                 // $_SERVER is ok, getenv() is not.
@@ -332,6 +335,11 @@ class WordPressEnvBridge
                 // Neither $_SERVER nor getenv() are ok.
                 $value = $_ENV[$name] ?? null;
                 break;
+        }
+
+        if ($value === null && $readGetEnv) {
+            $value = getenv($name);
+            $value === false and $value = null;
         }
 
         if ($value === null) {
