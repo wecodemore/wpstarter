@@ -76,16 +76,16 @@ class PackageFinderTest extends IntegrationTestCase
     {
         $finder = $this->createFinder();
 
-        $inpsydePackages = $finder->findByVendor('inpsyde');
+        $roavePackages = $finder->findByVendor('roave');
 
         $names = [];
-        foreach ($inpsydePackages as $package) {
+        foreach ($roavePackages as $package) {
             static::assertInstanceOf(PackageInterface::class, $package);
             $names[] = $package->getName();
         }
 
         static::assertCount(1, $names);
-        static::assertContains('inpsyde/php-coding-standards', $names);
+        static::assertContains('roave/security-advisories', $names);
     }
 
     /**
