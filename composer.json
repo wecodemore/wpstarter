@@ -50,7 +50,7 @@
         "phan/phan": "^1",
         "phpunit/phpunit": "^7",
         "mockery/mockery": "^1",
-        "mikey179/vfsStream": "~1"
+        "mikey179/vfsstream": "~1"
     },
     "autoload": {
         "classmap": [
