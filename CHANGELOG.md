@@ -1,5 +1,14 @@
 # Change Log for WPStarter
 
+## [2.4.5] - 2019-02-15
+* Reduced platform requirements.
+* v3 enters beta, "dev" branch becomes v3.
+
+## [2.4.4] - 2018-11-01
+* Added Github templates.
+* Added platform requirements.
+* Avoid warning when plugin dir is empty. [#62]
+
 ## [2.4.3] - 2018-05-07
 * Templates: Add EOF lines. See [#67].
 * Removed check for required env vars [#63]
