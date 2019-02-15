@@ -327,8 +327,8 @@ final class ComposerPlugin implements
      */
     private function convertErrorsToExceptions()
     {
-        set_error_handler( // phpcs:ignore
-            function (int $severity, string $message, string $file = null, int $line = null) {
+        set_error_handler( // @phan-suppress-next-line PhanTypeMismatchArgumentInternal
+            function (int $severity, string $message, string $file = '', int $line = 0) {
                 if ($file && $line) {
                     $message = rtrim($message, '. ') . ", in {$file} line {$line}.";
                 }

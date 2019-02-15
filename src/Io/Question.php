@@ -66,8 +66,10 @@ class Question
         // @phan-suppress-next-line PhanTypeMismatchProperty
         $this->answers = array_combine($answerKeys, array_values($validAnswers));
 
-        $default and $default = strtolower(trim($default));
-        array_key_exists($default, $this->answers) or $default = null;
+        if ($default !== null) {
+            $default = strtolower(trim($default));
+            array_key_exists($default, $this->answers) or $default = null;
+        }
 
         $this->default = $default ?? $answerKeys[0];
     }

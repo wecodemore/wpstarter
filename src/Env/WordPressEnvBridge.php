@@ -541,7 +541,7 @@ class WordPressEnvBridge
     {
         $basePath === null and $basePath = getcwd();
 
-        $fullpath = realpath(rtrim(rtrim($basePath, '\\/') . "/{$filename}", '\\/'));
+        $fullpath = realpath(rtrim(rtrim((string)$basePath, '\\/') . "/{$filename}", '\\/'));
         if (!$fullpath || !is_file($fullpath) || !is_readable($fullpath)) {
             return '';
         }

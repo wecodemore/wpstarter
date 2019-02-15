@@ -217,7 +217,7 @@ final class Result
         $resolver = $this->value;
 
         try {
-            // @phan-suppress-next-line PhanTypePossiblyInvalidCallable
+            // @phan-suppress-next-line PhanUndeclaredInvokeInCallable, PhanTypePossiblyInvalidCallable
             $value = $resolver();
 
             $resolved = $value;
