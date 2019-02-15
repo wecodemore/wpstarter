@@ -9,6 +9,7 @@
         <exclude name="WordPress.XSS"/>
         <exclude name="WordPress.VIP"/>
         <exclude name="WordPress.PHP.DiscouragedPHPFunctions"/>
+        <exclude name="WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler"/>
     </rule>
 
     <rule ref="Inpsyde.CodeQuality.Psr4">
