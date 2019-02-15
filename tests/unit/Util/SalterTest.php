@@ -20,7 +20,7 @@ class SalterTest extends TestCase
 
         foreach (Salter::KEYS as $key) {
             static::assertArrayHasKey($key, $keys);
-            static::assertInternalType('string', $keys[$key]);
+            static::assertIsString($keys[$key]);
             static::assertSame(64, strlen($keys[$key]));
         }
     }

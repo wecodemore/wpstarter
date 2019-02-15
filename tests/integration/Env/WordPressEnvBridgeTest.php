@@ -309,7 +309,7 @@ class WordPressEnvBridgeTest extends TestCase
         $cleanLoaded(true);
 
         static::assertSame([], WordPressEnvBridge::loadedVars());
-        static::assertInternalType('array', $oldCache);
+        static::assertIsArray($oldCache);
 
         $cleanLoaded(false);
 
