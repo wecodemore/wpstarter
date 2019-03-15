@@ -1,4 +1,11 @@
-# Change Log for WPStarter
+# Changelog
+
+## [2.4.6] - 2019-03-15
+* Maintenance release: allow for 2.* version of Dotenv package.
+* Raise PHP requirement to 5.3.9
+
+## [3.0.0-beta.1] - 2019-02-15
+* First beta release of v3 series.
 
 ## [2.4.5] - 2019-02-15
 * Reduced platform requirements.

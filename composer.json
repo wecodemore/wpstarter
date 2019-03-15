@@ -32,7 +32,7 @@
         }
     ],
     "require": {
-        "php": ">=5.3.2",
+        "php": ">=5.3.9",
         "ext-curl": "*",
         "ext-dom": "*",
         "ext-filter": "*",
@@ -41,7 +41,7 @@
         "ext-mbstring": "*",
         "ext-mysqli": "*",
         "ext-SPL": "*",
-        "vlucas/phpdotenv": "~2.0",
+        "vlucas/phpdotenv": "^2.0",
         "johnpbloch/wordpress": ">=4.2"
     },
     "require-dev": {
