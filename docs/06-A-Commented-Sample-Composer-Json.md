@@ -4,42 +4,43 @@ Below there’s a sample `composer.json` not very different from what can be use
 
 ```json
 {
-  "name": "my-company/my-project",
-  "type": "project",
-  "license": "proprietary",
-  "repositories": [
-    {
-      "type": "composer",
-      "url": "https://wpackagist.org"
-    }
-  ],
-  "require": {
-    "composer/installers": "^1.6",
-    "wecodemore/wpstarter": "^3",
-    "johnpbloch/wordpress": "4.9",
-    "inpsyde/wonolog":"^1",
-    "wpackagist-plugin/wordfence":">=7.1.14",
-    "wpackagist-plugin/memcached":"3.0.*",
-    "frc/batcache": "1.3.*"
-  },
-  "extra": {
-    "wordpress-install-dir": "public/wp",
-    "wordpress-content-dir": "public/wp-content",
-    "installer-paths":       {
-      "public/wp-content/plugins/{$name}": [
-        "type:wordpress-plugin"
-      ],
-      "public/wp-content/mu-plugins/{$name}": [
-        "type:wordpress-muplugin"
-      ],
-      "public/wp-content/themes/{$name}": [
-        "type:wordpress-theme"
-      ],
-      "public/wp-content/{$name}": [
-        "type:wordpress-dropin"
-      ]
-    }
-  }
+    "name": "my-company/my-project",
+    "type": "project",
+    "description": "My Project Description",
+    "license": "proprietary",
+    "require": {
+        "composer/installers": "^1.6",
+        "frc/batcache": "1.3.*",
+        "inpsyde/wonolog": "^1",
+        "johnpbloch/wordpress": "^4.9",
+        "wecodemore/wpstarter": "^3",
+        "wpackagist-plugin/memcached": "3.0.*",
+        "wpackagist-plugin/wordfence": "^7.1.14"
+    },
+    "extra": {
+        "installer-paths": {
+            "public/wp-content/plugins/{$name}": [
+                "type:wordpress-plugin"
+            ],
+            "public/wp-content/mu-plugins/{$name}": [
+                "type:wordpress-muplugin"
+            ],
+            "public/wp-content/themes/{$name}": [
+                "type:wordpress-theme"
+            ],
+            "public/wp-content/{$name}": [
+                "type:wordpress-dropin"
+            ]
+        },
+        "wordpress-content-dir": "public/wp-content",
+        "wordpress-install-dir": "public/wp"
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://wpackagist.org"
+        }
+    ]
 }
 ```
 
@@ -63,13 +64,7 @@ But the exact same configuration could have been placed in a **`extra.wpstarter`
 
 ## `composer.json` step by step
 
-`"name"`, `"type"`, and `"license"` root properties of `composer.json` are basic Composer settings so not specific to WP Starter at all. Please refer to [Composer documentation](https://getcomposer.org/doc/) if not familiar with it. 
-
-### Repositories
-
-In the sample `composer.json` we used [`"repositories"`](https://getcomposer.org/doc/05-repositories.md) setting to tell Composer to use [WordPress Packagist](https://wpackagist.org/). This is a free Composer repository (maintained by [Outlandish](http://outlandish.com/)) that exposes plugins and themes available on the official [wp.org](https://wordpress.org/) repository as Composer packages.
-
-The official Composer repository, [Packagist](https://packagist.org/), is already checked by Composer, so there's no need to add it.
+`"name"`, `"type"`, `"description"` and `"license"` root properties of `composer.json` are basic Composer settings so not specific to WP Starter at all. Please refer to [Composer documentation](https://getcomposer.org/doc/) if not familiar with it. 
 
 ### Require
 
@@ -139,6 +134,13 @@ WP Starter handles this issue for us. The `MuLoaderStep` takes care of creating 
 However, even that will not work for the package `"wpackagist-plugin/memcached"` because this is a *dropin*, even if its type says `"wordpress-plugin"` (due to the fact the WP official repository only supports plugins and themes and not MU plugins nor dropins). We will see how to fix this with a single line of configuration in our `wpstarter.json`.
 
 Moreover, it is _partially_ working for `"frc/batcache"`, in fact this package contains both a *MU plugin* and a *dropin*, and its package type says `"wordpress-muplugin"`, which means that for the provided MU plugin file we are setup, but for the dropin we need another line of configuration in our `wpstarter.json`.
+
+### Repositories
+
+In the sample `composer.json` we used [`"repositories"`](https://getcomposer.org/doc/05-repositories.md) setting to tell Composer to use [WordPress Packagist](https://wpackagist.org/). This is a free Composer repository (maintained by [Outlandish](http://outlandish.com/)) that exposes plugins and themes available on the official [wp.org](https://wordpress.org/) repository as Composer packages.
+
+The official Composer repository, [Packagist](https://packagist.org/), is already checked by Composer, so there's no need to add it.
+
 
 
 
