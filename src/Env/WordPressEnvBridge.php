@@ -41,6 +41,7 @@ class WordPressEnvBridge
         'SAVEQUERIES' => Filters::FILTER_BOOL,
         'SCRIPT_DEBUG' => Filters::FILTER_BOOL,
         'SUBDOMAIN_INSTALL' => Filters::FILTER_BOOL,
+        'SUNRISE' => null,
         'WP_ALLOW_MULTISITE' => Filters::FILTER_BOOL,
         'WP_ALLOW_REPAIR' => Filters::FILTER_BOOL,
         'WP_AUTO_UPDATE_CORE' => Filters::FILTER_BOOL,
