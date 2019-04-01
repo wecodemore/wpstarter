@@ -148,7 +148,7 @@ final class Env
     /**
      * @var array
      */
-    private static $isBoolOrInt = array('WP_POST_REVISIONS');
+    private static $isBoolOrInt = array('WP_POST_REVISIONS', 'SUNRISE');
 
     /**
      * @var array
