@@ -424,6 +424,7 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertTrue(defined('FS_CHMOD_DIR'));
         static::assertSame(7, WP_POST_REVISIONS);
         static::assertSame(0644, FS_CHMOD_DIR);
+        static::assertSame('on', SUNRISE);
 
         static::assertTrue($bridge->isWpSetup());
         static::assertFalse($bridge->hasCachedValues());
@@ -467,6 +468,7 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame(7, WP_POST_REVISIONS);
         static::assertSame(0644, FS_CHMOD_DIR);
         static::assertSame("", COOKIE_DOMAIN);
+        static::assertSame("on", SUNRISE);
 
         // Variables from actual env are not set in env in the dump file...
         static::assertFalse(getenv('WP_POST_REVISIONS'));
@@ -493,6 +495,10 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame('', $_ENV['COOKIE_DOMAIN'] ?? null);
         static::assertSame('', $_SERVER['COOKIE_DOMAIN'] ?? null);
         static::assertSame('', $cachedBridge->read('COOKIE_DOMAIN'));
+        static::assertSame('', getenv('COOKIE_DOMAIN'));
+        static::assertSame('on', $_ENV['SUNRISE'] ?? null);
+        static::assertSame('on', $_SERVER['SUNRISE'] ?? null);
+        static::assertSame('on', $cachedBridge->read('SUNRISE'));
 
         // These loaded env vars were NOT accessed in previous test, but they can be accessed now.
         static::assertSame('Bad!', getenv('MY_BAD_VAR'));
