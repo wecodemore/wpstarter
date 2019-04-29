@@ -266,8 +266,8 @@ final class ContentDevStep implements OptionalStep
             foreach ($items as $item) {
                 $all++;
                 $linkPath = "{$contentDir}/{$devContentSubfolderBase}/" . basename($item);
-                file_exists($linkPath) and @unlink($linkPath);
                 $this->maybeUnlinkTarget($item, $linkPath);
+                $this->filesystem->removeRealDir($linkPath);
                 $this->filesystem->createDir(dirname($linkPath));
                 $this->filesystem->symlink($item, $linkPath) and $done++;
             }
@@ -317,8 +317,8 @@ final class ContentDevStep implements OptionalStep
 
             $all++;
             $linkPath = "{$contentDir}/" . basename($srcFile);
-            file_exists($linkPath) and @unlink($linkPath);
             $this->maybeUnlinkTarget($srcFile, $linkPath);
+            file_exists($linkPath) and @unlink($linkPath);
             $this->filesystem->symlink($srcFile, $linkPath) and $done++;
         }
 

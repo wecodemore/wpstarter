@@ -102,29 +102,26 @@ class Filesystem
     public function symlink(string $targetPath, string $linkPath): bool
     {
         $isWindows = Platform::isWindows();
-        $triedRelative = false;
-        $absoluteAttempt = null;
+        $directories = is_dir($targetPath);
 
         try {
-            if ($isWindows && is_dir($targetPath) && is_dir($linkPath)) {
-                $this->filesystem->junction($linkPath, $targetPath);
+            if ($isWindows && $directories) {
+                $this->filesystem->junction($targetPath, $linkPath);
+
+                return $this->filesystem->isJunction($linkPath);
             }
 
-            if ($this->filesystem->isAbsolutePath($targetPath)
-                && $this->filesystem->isAbsolutePath($linkPath)
-            ) {
-                $triedRelative = true;
-                $this->filesystem->relativeSymlink($targetPath, $linkPath);
+            $absolute = $this->filesystem->isAbsolutePath($targetPath)
+                && $this->filesystem->isAbsolutePath($linkPath);
+
+            // Attempt relative symlink, but not on Windows
+            if ($absolute && !$isWindows) {
+                return $this->filesystem->relativeSymlink($targetPath, $linkPath);
             }
 
             return @symlink($targetPath, $linkPath);
         } catch (\Throwable $exception) {
-            // On Windows, relative symlink for files often fails, so we attempt absolute symlink.
-            if ($isWindows && $triedRelative && is_file($targetPath) && !file_exists($linkPath)) {
-                $absoluteAttempt = @symlink($targetPath, $linkPath);
-            }
-
-            return $absoluteAttempt ?? false;
+            return false;
         }
     }
 
@@ -241,10 +238,7 @@ class Filesystem
      */
     public function removeRealDir(string $directory): bool
     {
-        if ($this->filesystem->isSymlinkedDirectory($directory)
-            || $this->filesystem->isJunction($directory)
-            || is_link($directory)
-        ) {
+        if ($this->isLink($directory)) {
             return false;
         }
 
@@ -253,5 +247,16 @@ class Filesystem
         }
 
         return !file_exists($directory);
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function isLink(string $path): bool
+    {
+        return $this->filesystem->isSymlinkedDirectory($path)
+            || $this->filesystem->isJunction($path)
+            || is_link($path);
     }
 }
