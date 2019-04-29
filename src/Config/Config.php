@@ -70,7 +70,7 @@ final class Config implements \ArrayAccess
         self::IS_WPSTARTER_SELECTED_COMMAND => null,
         self::MOVE_CONTENT => false,
         self::PREVENT_OVERWRITE => null,
-        self::REGISTER_THEME_FOLDER => true,
+        self::REGISTER_THEME_FOLDER => false,
         self::REQUIRE_WP => true,
         self::SCRIPTS => null,
         self::SKIP_DB_CHECK => false,
