@@ -411,11 +411,12 @@ class WordPressEnvBridge
         $symfonyLoaded and $content .= "putenv('SYMFONY_DOTENV_VARS={$symfonyLoaded}');\n\n";
 
         foreach (self::$cache as $key => list($value, $filtered)) {
+            $slashed = addslashes($value);
             // For WP constants, dump the `define` with filtered value, if any.
             if (array_key_exists($key, self::WP_CONSTANTS)) {
                 $define = $value !== $filtered
                     ? var_export($filtered, true) // phpcs:ignore
-                    : "'{$value}'";
+                    : "'{$slashed}'";
                 $content .= "define('{$key}', {$define});\n";
             }
 
@@ -426,9 +427,9 @@ class WordPressEnvBridge
             }
 
             // For env loaded from file, dump the variable definition.
-            $content .= "putenv('{$key}={$value}');\n";
-            $content .= "\$_ENV['{$key}'] = '{$value}';\n";
-            (strpos($key, 'HTTP_') !== 0) and $content .= "\$_SERVER['{$key}'] = '{$value}';\n\n";
+            $content .= "putenv('{$key}={$slashed}');\n";
+            $content .= "\$_ENV['{$key}'] = '{$slashed}';\n";
+            (strpos($key, 'HTTP_') !== 0) and $content .= "\$_SERVER['{$key}'] = '{$slashed}';\n\n";
         }
 
         $content .= sprintf("return %s;\n", var_export(static::$cache, true)); // phpcs:ignore
