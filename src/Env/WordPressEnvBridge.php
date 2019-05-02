@@ -411,7 +411,7 @@ class WordPressEnvBridge
         $symfonyLoaded and $content .= "putenv('SYMFONY_DOTENV_VARS={$symfonyLoaded}');\n\n";
 
         foreach (self::$cache as $key => list($value, $filtered)) {
-            $slashed = addslashes($value);
+            $slashed = str_replace("'", "\'", $value);
             // For WP constants, dump the `define` with filtered value, if any.
             if (array_key_exists($key, self::WP_CONSTANTS)) {
                 $define = $value !== $filtered
