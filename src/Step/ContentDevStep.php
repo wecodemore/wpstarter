@@ -149,7 +149,12 @@ final class ContentDevStep implements OptionalStep
         $this->contentDevDir = $srcBase;
         $targetBase = $paths->wpContent();
 
-        $scrDirs = ["{$srcBase}/plugins", "{$srcBase}/themes", "{$srcBase}/mu-plugins"];
+        $scrDirs = [
+            "{$srcBase}/plugins",
+            "{$srcBase}/themes",
+            "{$srcBase}/mu-plugins",
+            "{$srcBase}/languages",
+        ];
 
         $errorsOnDirs = $operation === self::OP_COPY
             ? $this->copyDirs($scrDirs, $targetBase)
