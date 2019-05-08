@@ -106,6 +106,7 @@ class WordPressEnvBridge
         'WP_CONTENT_DIR' => Filters::FILTER_STRING,
         'WP_CONTENT_URL' => Filters::FILTER_STRING,
         'WP_DEFAULT_THEME' => Filters::FILTER_STRING,
+        'WP_DISABLE_FATAL_ERROR_HANDLER' => Filters::FILTER_BOOL,
         'WP_HOME' => Filters::FILTER_STRING,
         'WP_LANG_DIR' => Filters::FILTER_STRING,
         'WP_MAX_MEMORY_LIMIT' => Filters::FILTER_STRING,
