@@ -116,12 +116,15 @@ final class Locator
     public function urlDownloader(): UrlDownloader
     {
         if (empty($this->objects[UrlDownloader::class])) {
+            /** @var ComposerIo $composerIo */
+            $composerIo = $this->objects[ComposerIo::class];
             $this->objects[UrlDownloader::class] = new UrlDownloader(
                 $this->objects[ComposerFilesystem::class],
                 Factory::createRemoteFilesystem(
-                    $this->objects[ComposerIo::class],
+                    $composerIo,
                     $this->objects[Composer::class]->getConfig()
-                )
+                ),
+                $composerIo->isVerbose()
             );
         }
 

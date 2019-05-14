@@ -33,13 +33,23 @@ class UrlDownloader
     private $error = '';
 
     /**
+     * @var bool
+     */
+    private $isVerbose;
+
+    /**
      * @param Filesystem $filesystem
      * @param RemoteFilesystem $remoteFilesystem
      */
-    public function __construct(Filesystem $filesystem, RemoteFilesystem $remoteFilesystem)
-    {
+    public function __construct(
+        Filesystem $filesystem,
+        RemoteFilesystem $remoteFilesystem,
+        bool $isVerbose
+    ) {
+
         $this->remoteFilesystem = $remoteFilesystem;
         $this->filesystem = $filesystem;
+        $this->isVerbose = $isVerbose;
     }
 
     /**
@@ -69,7 +79,12 @@ class UrlDownloader
         try {
             $this->filesystem->ensureDirectoryExists($directory);
 
-            return $this->remoteFilesystem->copy(parse_url($url, PHP_URL_HOST), $url, $filename);
+            return $this->remoteFilesystem->copy(
+                parse_url($url, PHP_URL_HOST),
+                $url,
+                $filename,
+                $this->isVerbose
+            );
         } catch (\Throwable $exception) {
             $this->error = $exception->getMessage();
         }
@@ -95,7 +110,7 @@ class UrlDownloader
 
         try {
             $host = parse_url($url, PHP_URL_HOST);
-            $contents = $this->remoteFilesystem->getContents($host, $url);
+            $contents = $this->remoteFilesystem->getContents($host, $url, $this->isVerbose);
             if (!$contents || !is_string($contents)) {
                 return '';
             }
