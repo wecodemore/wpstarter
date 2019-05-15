@@ -12,6 +12,7 @@ use Composer\Composer;
 use Composer\Factory;
 use Composer\IO\IOInterface as ComposerIo;
 use Composer\Util\Filesystem as ComposerFilesystem;
+use Composer\Config as ComposerConfig;
 use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 use WeCodeMore\WpStarter\Cli;
@@ -97,6 +98,14 @@ final class Locator
     }
 
     /**
+     * @return ComposerConfig
+     */
+    public function composerConfig(): ComposerConfig
+    {
+        return $this->objects[Composer::class]->getConfig();
+    }
+
+    /**
      * @return Filesystem
      */
     public function filesystem(): Filesystem
@@ -120,10 +129,7 @@ final class Locator
             $composerIo = $this->objects[ComposerIo::class];
             $this->objects[UrlDownloader::class] = new UrlDownloader(
                 $this->objects[ComposerFilesystem::class],
-                Factory::createRemoteFilesystem(
-                    $composerIo,
-                    $this->objects[Composer::class]->getConfig()
-                ),
+                Factory::createRemoteFilesystem($composerIo, $this->composerConfig()),
                 $composerIo->isVerbose()
             );
         }
