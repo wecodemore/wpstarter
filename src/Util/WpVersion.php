@@ -53,12 +53,6 @@ class WpVersion
         // first 3 numbers, always 3 numbers (padding with zeroes if needed)
         $numbers = array_map('intval', array_replace([0, 0, 0], array_slice($numeric, 0, 3)));
 
-        // for many years to come WP will not have 1st number  bigger than 9, and if they
-        // stick with current versioning schema, second number will never be bigger than 9.
-        if ($numbers[0] > 9 || $numbers[1] > 9) {
-            return '';
-        }
-
         return implode('.', $numbers);
     }
 
