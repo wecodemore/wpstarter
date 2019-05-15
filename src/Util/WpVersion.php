@@ -81,29 +81,28 @@ class WpVersion
      */
     public function discover(): string
     {
-        $versionsData = [];
+        $versions = [];
         $packages = $this->packageFinder->findByType(self::WP_PACKAGE_TYPE);
         foreach ($packages as $package) {
-            $versionsData[] = [$package->getVersion(), $package->isDev()];
-            if (count($versionsData) > 1) {
+            $versions[] = (string)$package->getVersion();
+            if (count($versions) > 1) {
                 break;
             }
         }
 
-        if (!$versionsData) {
+        if (!$versions) {
             return $this->bail('no-wp');
         }
 
-        if (count($versionsData) > 1) {
+        if (count($versions) > 1) {
             return $this->bail('more-wp');
         }
 
-        $isDevPackage = $versionsData[0][1];
         $fallback = $this->fallbackVersion ? static::normalize($this->fallbackVersion) : null;
-        $version = static::normalize((string)$versionsData[0][0]) ?: $fallback;
+        $version = static::normalize(reset($versions)) ?: $fallback;
 
         if (!$version) {
-            return $isDevPackage ? $this->bail('dev-wp') : $this->bail('invalid-wp');
+            return $this->bail('invalid-wp');
         }
 
         if (!version_compare($version, self::MIN_WP_VERSION, '>=')) {
