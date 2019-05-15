@@ -58,7 +58,7 @@ class WpVersionTest extends TestCase
         static::assertSame('4.8.0', $wpVer->discover());
     }
 
-    public function testDiscoverFailForDevWordPress()
+    public function testDiscoverForDevWordPress()
     {
         $packageFinder = \Mockery::mock(PackageFinder::class);
         $io = \Mockery::mock(Io::class);
@@ -68,13 +68,12 @@ class WpVersionTest extends TestCase
         $package1 = \Mockery::mock(PackageInterface::class);
         $package1->shouldReceive('getType')->andReturn('wordpress-core');
         $package1->shouldReceive('getVersion')->andReturn('99999-dev');
-        $package1->shouldReceive('isDev')->andReturn(true);
 
         $packageFinder->shouldReceive('findByType')
             ->with(WpVersion::WP_PACKAGE_TYPE)
             ->andReturn([$package1]);
 
-        static::assertSame('', $wpVer->discover());
+        static::assertSame('99999.0.0', $wpVer->discover());
     }
 
     public function testDiscoverSuccessForDevNumericVersion()
@@ -155,9 +154,6 @@ class WpVersionTest extends TestCase
             ['1.2.3-456', '1.2.3'],
             ['1.2.3.4-789', '1.2.3'],
             ['', ''],
-            ['10', ''],
-            ['10.0.1', ''],
-            ['1.11', ''],
             ['a3.5', ''],
             ['9.9.9999', '9.9.9999'],
         ];

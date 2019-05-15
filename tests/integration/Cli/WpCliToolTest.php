@@ -43,7 +43,8 @@ class WpCliToolTest extends IntegrationTestCase
             Factory::createRemoteFilesystem(
                 $this->createComposerIo(),
                 $this->createComposerConfig()
-            )
+            ),
+            false
         );
 
         return new WpCliTool(

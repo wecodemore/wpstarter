@@ -24,7 +24,7 @@ class ConfigTest extends TestCase
 
         static::assertTrue($config['foo']->is('bar'));
         static::assertTrue($config[Config::ENV_EXAMPLE]->is(false));
-        static::assertTrue($config[Config::REGISTER_THEME_FOLDER]->is(true));
+        static::assertTrue($config[Config::REGISTER_THEME_FOLDER]->is(false));
     }
 
     public function testSetNewOrDefaultConfig()

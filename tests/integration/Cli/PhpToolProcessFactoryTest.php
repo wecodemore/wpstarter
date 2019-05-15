@@ -44,7 +44,8 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
             Factory::createRemoteFilesystem(
                 $this->createComposerIo(),
                 $this->createComposerConfig()
-            )
+            ),
+            false
         );
 
         $composer = $this->createComposer();
@@ -202,7 +203,8 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
             Factory::createRemoteFilesystem(
                 $this->createComposerIo(),
                 $this->createComposerConfig()
-            )
+            ),
+            false
         );
 
         $tool = new WpCliTool(

@@ -44,7 +44,8 @@ class PharInstallerTest extends IntegrationTestCase
             Composer\Factory::createRemoteFilesystem(
                 $this->createComposerIo(),
                 $this->createComposerConfig()
-            )
+            ),
+            false
         );
     }
 

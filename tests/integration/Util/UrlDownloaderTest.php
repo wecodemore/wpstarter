@@ -26,7 +26,8 @@ class UrlDownloaderTest extends IntegrationTestCase
             Factory::createRemoteFilesystem(
                 $this->createComposerIo(),
                 $this->createComposerConfig()
-            )
+            ),
+            false
         );
     }
 

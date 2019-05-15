@@ -233,9 +233,6 @@ class ValidatorTest extends TestCase
         static::assertFalse($validator->validateWpVersion(null)->notEmpty());
         static::assertFalse($validator->validateWpVersion(true)->notEmpty());
         static::assertFalse($validator->validateWpVersion(true)->notEmpty());
-        static::assertFalse($validator->validateWpVersion(12)->notEmpty());
-        static::assertFalse($validator->validateWpVersion('10.2')->notEmpty());
-        static::assertFalse($validator->validateWpVersion('4.10')->notEmpty());
 
         static::assertTrue($validator->validateWpVersion('1')->is('1.0.0'));
         static::assertTrue($validator->validateWpVersion('1.2')->is('1.2.0'));
