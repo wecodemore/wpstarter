@@ -147,6 +147,10 @@ class PackageFinder
         }
 
         $packages = $this->all();
+        if ($name === '*' || $name === '*/*') {
+            return $packages;
+        }
+
         $found = [];
 
         foreach ($packages as $package) {
