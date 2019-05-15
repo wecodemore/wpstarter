@@ -260,7 +260,7 @@ final class Steps implements PostProcessStep, \Countable
             return true;
         }
 
-        $io->writeIfVerbose("Initializing '{$name}' step.");
+        $io->writeIfVerbose("- Initializing '{$name}' step.");
 
         if ($step instanceof PostProcessStep) {
             $this->postProcessSteps or $this->postProcessSteps = new \SplObjectStorage();

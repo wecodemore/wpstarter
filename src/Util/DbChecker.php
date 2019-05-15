@@ -151,6 +151,6 @@ class DbChecker
      */
     private function write(string $line)
     {
-        $this->io->writeIfVerbose("-  <info>[WPDB Check]</info> <comment>{$line}</comment>");
+        $this->io->writeIfVerbose("- <info>[WPDB Check]</info> <comment>{$line}</comment>");
     }
 }
