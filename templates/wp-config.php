@@ -83,6 +83,7 @@ switch ($env) {
         defined('WP_DEBUG_LOG') or define('WP_DEBUG_LOG', false);
         defined('SAVEQUERIES') or define('SAVEQUERIES', true);
         defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', true);
+        defined('WP_DISABLE_FATAL_ERROR_HANDLER') or define('WP_DISABLE_FATAL_ERROR_HANDLER', true);
         break;
     case 'staging':
         defined('WP_DEBUG') or define('WP_DEBUG', true);
