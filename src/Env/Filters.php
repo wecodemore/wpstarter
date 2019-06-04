@@ -27,6 +27,7 @@ final class Filters
     const FILTER_BOOL = 'bool';
     const FILTER_INT = 'int';
     const FILTER_INT_OR_BOOL = 'int|bool';
+    const FILTER_STRING_OR_BOOL = 'string|bool';
     const FILTER_STRING = 'string';
     const FILTER_OCTAL_MOD = 'mod';
     const FILTER_TABLE_PREFIX = 'table-prefix';
@@ -63,6 +64,8 @@ final class Filters
                 return $this->filterString($value);
             case self::FILTER_INT_OR_BOOL:
                 return $this->filterIntOrBool($value);
+            case self::FILTER_STRING_OR_BOOL:
+                return $this->filterStringOrBool($value);
             case self::FILTER_OCTAL_MOD:
                 return $this->filterOctalMod($value);
             case self::FILTER_TABLE_PREFIX:
@@ -123,6 +126,17 @@ final class Filters
     private function filterIntOrBool($value)
     {
         return is_numeric($value) ? $this->filterInt($value) : $this->filterBool($value);
+    }
+
+    /**
+     * @param int|float|bool|string $value
+     * @return bool|int
+     */
+    private function filterStringOrBool($value)
+    {
+        $var = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+        return $var === null ? $this->filterString($value) : $this->filterBool($value);
     }
 
     /**
