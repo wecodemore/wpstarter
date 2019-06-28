@@ -27,6 +27,8 @@ class WordPressEnvBridge
         'AUTOMATIC_UPDATER_DISABLED' => Filters::FILTER_BOOL,
         'AUTOSAVE_INTERVAL' => Filters::FILTER_INT,
 
+        'BACKGROUND_COLOR' => Filters::FILTER_STRING,
+        'BACKGROUND_IMAGE' => Filters::FILTER_STRING,
         'BLOGUPLOADDIR' => Filters::FILTER_STRING,
         'BLOG_ID_CURRENT_SITE' => Filters::FILTER_INT,
 
@@ -79,6 +81,11 @@ class WordPressEnvBridge
         'FTP_SSL' => Filters::FILTER_BOOL,
         'FTP_USER' => Filters::FILTER_STRING,
 
+        'HEADER_IMAGE' => Filters::FILTER_STRING,
+        'HEADER_IMAGE_WIDTH' => Filters::FILTER_INT,
+        'HEADER_IMAGE_HEIGHT' => Filters::FILTER_INT,
+        'HEADER_TEXTCOLOR' => Filters::FILTER_STRING,
+
         'IMAGE_EDIT_OVERWRITE' => Filters::FILTER_BOOL,
 
         'LOGGED_IN_COOKIE' => Filters::FILTER_STRING,
@@ -94,6 +101,7 @@ class WordPressEnvBridge
         'NOBLOGREDIRECT' => Filters::FILTER_STRING,
         'NONCE_KEY' => Filters::FILTER_STRING,
         'NONCE_SALT' => Filters::FILTER_STRING,
+        'NO_HEADER_TEXT' => Filters::FILTER_STRING,
 
         'PASS_COOKIE' => Filters::FILTER_STRING,
         'PATH_CURRENT_SITE' => Filters::FILTER_STRING,
@@ -113,6 +121,7 @@ class WordPressEnvBridge
         'SECURE_AUTH_COOKIE' => Filters::FILTER_STRING,
         'SECURE_AUTH_KEY' => Filters::FILTER_STRING,
         'SECURE_AUTH_SALT' => Filters::FILTER_STRING,
+        'SHORTINIT' => Filters::FILTER_BOOL,
         'SITECOOKIEPATH' => Filters::FILTER_STRING,
         'SITE_ID_CURRENT_SITE' => Filters::FILTER_INT,
         'SUBDOMAIN_INSTALL' => Filters::FILTER_BOOL,
