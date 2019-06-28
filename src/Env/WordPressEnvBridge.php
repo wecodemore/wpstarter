@@ -18,8 +18,8 @@ class WordPressEnvBridge
     const WP_CONSTANTS = [
         'ABSPATH' => Filters::FILTER_STRING,
         'ADMIN_COOKIE_PATH' => Filters::FILTER_STRING,
-        'ALLOW_UNFILTERED_UPLOADS' => Filters::FILTER_BOOL,
         'ALLOW_SUBDIRECTORY_INSTALL' => Filters::FILTER_BOOL,
+        'ALLOW_UNFILTERED_UPLOADS' => Filters::FILTER_BOOL,
         'ALTERNATE_WP_CRON' => Filters::FILTER_BOOL,
         'AUTH_COOKIE' => Filters::FILTER_STRING,
         'AUTH_KEY' => Filters::FILTER_STRING,
@@ -27,19 +27,19 @@ class WordPressEnvBridge
         'AUTOMATIC_UPDATER_DISABLED' => Filters::FILTER_BOOL,
         'AUTOSAVE_INTERVAL' => Filters::FILTER_INT,
 
-        'BLOG_ID_CURRENT_SITE' => Filters::FILTER_INT,
         'BLOGUPLOADDIR' => Filters::FILTER_STRING,
+        'BLOG_ID_CURRENT_SITE' => Filters::FILTER_INT,
 
         'COMPRESS_CSS' => Filters::FILTER_BOOL,
         'COMPRESS_SCRIPTS' => Filters::FILTER_BOOL,
         'CONCATENATE_SCRIPTS' => Filters::FILTER_BOOL,
-        'COOKIE_DOMAIN' => Filters::FILTER_STRING,
         'COOKIEHASH' => Filters::FILTER_STRING,
         'COOKIEPATH' => Filters::FILTER_STRING,
+        'COOKIE_DOMAIN' => Filters::FILTER_STRING,
         'CORE_UPGRADE_SKIP_NEW_BUNDLED' => Filters::FILTER_BOOL,
+        'CUSTOM_TAGS' => Filters::FILTER_STRING,
         'CUSTOM_USER_META_TABLE' => Filters::FILTER_STRING,
         'CUSTOM_USER_TABLE' => Filters::FILTER_STRING,
-        'CUSTOM_TAGS' => Filters::FILTER_STRING,
 
         'DB_CHARSET' => Filters::FILTER_STRING,
         'DB_COLLATE' => Filters::FILTER_STRING,
@@ -52,18 +52,16 @@ class WordPressEnvBridge
         'DISALLOW_FILE_EDIT' => Filters::FILTER_BOOL,
         'DISALLOW_FILE_MODS' => Filters::FILTER_BOOL,
         'DISALLOW_UNFILTERED_HTML' => Filters::FILTER_BOOL,
-        'DO_NOT_UPGRADE_GLOBAL_TABLES' => Filters::FILTER_BOOL,
         'DOMAIN_CURRENT_SITE' => Filters::FILTER_STRING,
+        'DO_NOT_UPGRADE_GLOBAL_TABLES' => Filters::FILTER_BOOL,
 
         'EDIT_ANY_USER' => Filters::FILTER_BOOL,
         'EMPTY_TRASH_DAYS' => Filters::FILTER_INT,
         'ENFORCE_GZIP' => Filters::FILTER_BOOL,
         'ERRORLOGFILE' => Filters::FILTER_STRING,
 
-        'FORCE_SSL_LOGIN' => Filters::FILTER_BOOL,
         'FORCE_SSL_ADMIN' => Filters::FILTER_BOOL,
-        'FTP_SSH' => Filters::FILTER_BOOL,
-        'FTP_SSL' => Filters::FILTER_BOOL,
+        'FORCE_SSL_LOGIN' => Filters::FILTER_BOOL,
         'FS_CHMOD_DIR' => Filters::FILTER_OCTAL_MOD,
         'FS_CHMOD_FILE' => Filters::FILTER_OCTAL_MOD,
         'FS_CONNECT_TIMEOUT' => Filters::FILTER_INT,
@@ -77,6 +75,8 @@ class WordPressEnvBridge
         'FTP_PLUGIN_DIR' => Filters::FILTER_STRING,
         'FTP_PRIKEY' => Filters::FILTER_STRING,
         'FTP_PUBKEY' => Filters::FILTER_STRING,
+        'FTP_SSH' => Filters::FILTER_BOOL,
+        'FTP_SSL' => Filters::FILTER_BOOL,
         'FTP_USER' => Filters::FILTER_STRING,
 
         'IMAGE_EDIT_OVERWRITE' => Filters::FILTER_BOOL,
@@ -86,8 +86,8 @@ class WordPressEnvBridge
         'LOGGED_IN_SALT' => Filters::FILTER_STRING,
 
         'MEDIA_TRASH' => Filters::FILTER_BOOL,
-        'MU_BASE' => Filters::FILTER_STRING,
         'MULTISITE' => Filters::FILTER_BOOL,
+        'MU_BASE' => Filters::FILTER_STRING,
         'MYSQL_CLIENT_FLAGS' => Filters::FILTER_INT,
         'MYSQL_NEW_LINK' => Filters::FILTER_BOOL,
 
@@ -97,14 +97,14 @@ class WordPressEnvBridge
 
         'PASS_COOKIE' => Filters::FILTER_STRING,
         'PATH_CURRENT_SITE' => Filters::FILTER_STRING,
-        'PO_MAX_LINE_LEN' => Filters::FILTER_INT,
-        'POST_BY_EMAIL' => Filters::FILTER_BOOL,
         'PLUGINS_COOKIE_PATH' => Filters::FILTER_STRING,
+        'POST_BY_EMAIL' => Filters::FILTER_BOOL,
+        'PO_MAX_LINE_LEN' => Filters::FILTER_INT,
         'PRIMARY_NETWORK_ID' => Filters::FILTER_INT,
 
         'RANDOM_COMPAT_READ_BUFFER' => Filters::FILTER_INT,
-        'RECOVERY_MODE_EMAIL' => Filters::FILTER_STRING,
         'RECOVERY_MODE_COOKIE' => Filters::FILTER_STRING,
+        'RECOVERY_MODE_EMAIL' => Filters::FILTER_STRING,
 
         'SAVEQUERIES' => Filters::FILTER_BOOL,
         'SCRIPT_DEBUG' => Filters::FILTER_BOOL,
@@ -113,8 +113,8 @@ class WordPressEnvBridge
         'SECURE_AUTH_COOKIE' => Filters::FILTER_STRING,
         'SECURE_AUTH_KEY' => Filters::FILTER_STRING,
         'SECURE_AUTH_SALT' => Filters::FILTER_STRING,
-        'SITE_ID_CURRENT_SITE' => Filters::FILTER_INT,
         'SITECOOKIEPATH' => Filters::FILTER_STRING,
+        'SITE_ID_CURRENT_SITE' => Filters::FILTER_INT,
         'SUBDOMAIN_INSTALL' => Filters::FILTER_BOOL,
         'SUNRISE' => null,
 
@@ -125,6 +125,12 @@ class WordPressEnvBridge
         'USER_COOKIE' => Filters::FILTER_STRING,
 
         'VHOST' => Filters::FILTER_STRING,
+
+        'WPLANG' => Filters::FILTER_STRING,
+        'WPMU_ACCEL_REDIRECT' => Filters::FILTER_BOOL,
+        'WPMU_PLUGIN_DIR' => Filters::FILTER_STRING,
+        'WPMU_PLUGIN_URL' => Filters::FILTER_STRING,
+        'WPMU_SENDFILE' => Filters::FILTER_BOOL,
 
         'WP_ACCESSIBLE_HOSTS' => Filters::FILTER_STRING,
         'WP_ALLOW_MULTISITE' => Filters::FILTER_BOOL,
@@ -148,9 +154,9 @@ class WordPressEnvBridge
         'WP_MAIL_INTERVAL' => Filters::FILTER_INT,
         'WP_MAX_MEMORY_LIMIT' => Filters::FILTER_STRING,
         'WP_MEMORY_LIMIT' => Filters::FILTER_STRING,
-        'WP_POST_REVISIONS' => Filters::FILTER_INT_OR_BOOL,
         'WP_PLUGIN_DIR' => Filters::FILTER_STRING,
         'WP_PLUGIN_URL' => Filters::FILTER_STRING,
+        'WP_POST_REVISIONS' => Filters::FILTER_INT_OR_BOOL,
         'WP_PROXY_BYPASS_HOSTS' => Filters::FILTER_STRING,
         'WP_PROXY_HOST' => Filters::FILTER_STRING,
         'WP_PROXY_PASSWORD' => Filters::FILTER_STRING,
@@ -159,22 +165,17 @@ class WordPressEnvBridge
         'WP_SITEURL' => Filters::FILTER_STRING,
         'WP_TEMP_DIR' => Filters::FILTER_STRING,
         'WP_USE_EXT_MYSQL' => Filters::FILTER_BOOL,
-        'WPLANG' => Filters::FILTER_STRING,
-        'WPMU_ACCEL_REDIRECT' => Filters::FILTER_BOOL,
-        'WPMU_PLUGIN_DIR' => Filters::FILTER_STRING,
-        'WPMU_PLUGIN_URL' => Filters::FILTER_STRING,
-        'WPMU_SENDFILE' => Filters::FILTER_BOOL,
     ];
 
     const WP_STARTER_VARS = [
         'DB_TABLE_PREFIX' => Filters::FILTER_TABLE_PREFIX,
-        'WP_ENV' => Filters::FILTER_STRING,
-        'WP_ADMIN_COLOR' => Filters::FILTER_STRING,
-        'WP_FORCE_SSL_FORWARDED_PROTO' => Filters::FILTER_BOOL,
-        'WP_INSTALLED' => Filters::FILTER_BOOL,
         'WORDPRESS_ENV' => Filters::FILTER_STRING,
         'WPDB_ENV_VALID' => Filters::FILTER_BOOL,
         'WPDB_EXISTS' => Filters::FILTER_BOOL,
+        'WP_ADMIN_COLOR' => Filters::FILTER_STRING,
+        'WP_ENV' => Filters::FILTER_STRING,
+        'WP_FORCE_SSL_FORWARDED_PROTO' => Filters::FILTER_BOOL,
+        'WP_INSTALLED' => Filters::FILTER_BOOL,
     ];
 
     const CACHE_DUMP_FILE = '/.env.cached.php';
