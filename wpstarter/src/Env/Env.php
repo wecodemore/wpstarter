@@ -62,7 +62,6 @@ final class Env
         'WP_CACHE',
         'WP_DEBUG',
         'WP_DEBUG_DISPLAY',
-        'WP_DEBUG_LOG',
         'WPMU_ACCEL_REDIRECT',
         'WPMU_SENDFILE',
     );
@@ -154,6 +153,11 @@ final class Env
      * @var array
      */
     private static $isMod = array('FS_CHMOD_DIR', 'FS_CHMOD_FILE');
+
+    /**
+     * @var array
+     */
+    private static $isBoolOrString = array('WP_DEBUG_LOG');
 
     /**
      * @var array
@@ -258,6 +262,12 @@ final class Env
                             break;
                         }
                         $values[$var] = (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                        break;
+                    case in_array($var, self::$isBoolOrString, true):
+                        $test = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                        if ($test !== null) {
+                            $values[$var] = (bool)$test;
+                        }
                         break;
                     case in_array($var, self::$isMod, true):
                         $check = $this->checkMod($value);
