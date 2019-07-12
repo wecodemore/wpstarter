@@ -113,7 +113,7 @@ final class Filters
     private function filterString($value): string
     {
         if (!is_scalar($value)) {
-            throw new \Exception('Invalid integer.');
+            throw new \Exception('Invalid scalar.');
         }
 
         return (string)filter_var($value, FILTER_SANITIZE_STRING);

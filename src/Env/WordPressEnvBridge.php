@@ -151,7 +151,7 @@ class WordPressEnvBridge
         'WP_CRON_LOCK_TIMEOUT' => Filters::FILTER_INT,
         'WP_DEBUG' => Filters::FILTER_BOOL,
         'WP_DEBUG_DISPLAY' => Filters::FILTER_BOOL,
-        'WP_DEBUG_LOG' => Filters::FILTER_BOOL,
+        'WP_DEBUG_LOG' => Filters::FILTER_STRING_OR_BOOL,
         'WP_DEFAULT_THEME' => Filters::FILTER_STRING,
         'WP_DISABLE_FATAL_ERROR_HANDLER' => Filters::FILTER_BOOL,
         'WP_HOME' => Filters::FILTER_STRING,
