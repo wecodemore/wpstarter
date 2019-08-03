@@ -29,7 +29,7 @@ For example, those could be set into the webserver ([Apache](https://httpd.apach
 
 As additional advantage, env vars can be set "on the fly" acting on the system, e.g. a continuous integration service can set them without touching the code.
 
-Finally, not being code env vars don't need to be kept under version control, avoiding the issue of having to keep "secrets" under version control.
+Finally, not being code, env vars don't need to be kept under version control, avoiding the issue of having to keep "secrets" under version control.
 
 It is undeniable that the setting of values on the "bare environment" could be quite cumbersome. This is why many applications and tools support "env files".
 
