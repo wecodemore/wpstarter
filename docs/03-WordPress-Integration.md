@@ -4,9 +4,9 @@
 
 Considering that WordPress has no official support for Composer, there's also no official way to integrate WordPress with Composer.
 
-These days many people agree to do this by **treating WordPress as a dependency**, like any other dependency. Because WordPress, at this day, does not officially provide a repository of WordPress core with support for Composer (basically having a `composer.json`) the most used package for this scope is the non-official package maintained by [John P. Bloch](https://johnpbloch.com/), that at the moment of writing has around 2.5 millions of downloads from [packagist.org](https://packagist.org/packages/johnpbloch/wordpress).
+These days many people agree to do this by **treating WordPress as a dependency**, like any other dependency. To date, Wordpress does not officially provide a Composer compatible repository of WordPress core (basically having a `composer.json`). The most used non-official package with Composer support is maintained by [John P. Bloch](https://johnpbloch.com/), that at the moment of writing has around 2.5 millions of downloads from [packagist.org](https://packagist.org/packages/johnpbloch/wordpress).
 
-That said, WP Starter does **not** declare that package as a dependency, allowing for the use of custom packages or even to not install WordPress via Composer at all.
+That said, WP Starter does **not** declare that package as a dependency, allowing for the use of custom packages or even bypassing the installation of Wordpress entirely.
 
 For example, an alternative way could be to use Composer [repositories](https://getcomposer.org/doc/05-repositories.md) settings to build a custom package using the official zip distribution:
 
@@ -41,7 +41,7 @@ Yet more ways to install WordPress could include using a [custom package](https:
 
 When WordPress is installed using a core package like the [one](https://packagist.org/packages/johnpbloch/wordpress) from [John P. Bloch](https://johnpbloch.com/), the package comes with default themes (Twenty*) and plugins ("Akismet", "Hello Dolly").
 
-Those are often not used at all, all the more so in WP Starter installations they are not recognized by WordPress, because the content folder is customized to be a separate folder outside the core Wordpress folder.
+Those are often not used at all, all the more so in WP Starter installations where they are not recognized by WordPress, because the content folder is customized to be a separate folder outside the core Wordpress folder.
 
 WP Starter provides an option to register default themes shipped with core packages, so that they can be recognized, but more often than not default themes and plugins are just unnecessary.
 
