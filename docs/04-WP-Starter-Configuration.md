@@ -1,12 +1,12 @@
 # WP Starter Configuration
 
-**WP Starter can work without any setup at all**, however one of its greatest features is its flexibility that allows for fine grained customization of every aspect according to ones own requirements.
+**WP Starter can work without any setup at all**, however one of its greatest features is its flexibility that allows for fine grained customization of every aspect according to the project requirements.
 
 
 
 ## Configuration in `composer.json`
 
-Just like any other Composer plugin, WP Starter configuration goes into `extra` section of `composer.json`.
+Like other Composer plugins, WP Starter configuration goes into `extra` section of `composer.json`.
 
 More specifically, it goes into a sub-object `wpstarter` in the  `extra` section.
 
@@ -36,7 +36,7 @@ WP Starter will recognize the file and will load configuration from there, witho
 
 
 
-## Configuration in custom file
+## Configuration in a custom file
 
 Instead of using a file named `wpstarter.json` in root folder it is also possible to tell WP Starter to use a different file to load configuration.
 
@@ -52,7 +52,7 @@ To do this, in  `composer.json` it is necessary to use the `extra.wpstarter` con
 }
 ```
 
-This also enables to have the configuration file available in a custom Composer package and make it available to WP Starter by pointing the file in vendor folder:
+This also enables to have the configuration file available in a custom Composer package and make it available to WP Starter by pointing to the file in vendor folder:
 
 ```json
 {
@@ -66,7 +66,8 @@ This also enables to have the configuration file available in a custom Composer 
 
 ## Configuration precedence
 
-In case *both* `wpstarter` section in  `composer.json` (no matter if as object or as path to a custom file) and  `wpstarter.json` file are there, both configurations are loaded and in the case the same configuration values are placed in both places, the value in  `wpstarter.json` will take precedence.
+
+The values in `wpstarter.json` takes precedence when  composer.json contains an `extra.wpstarter` section  (regardless if as an object or as a path to a custom file) with duplicate values to the `wpstarter.json`.
 
 
 
