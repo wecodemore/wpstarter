@@ -73,14 +73,14 @@ The values in `wpstarter.json` takes precedence when  composer.json contains an 
 
 ## Generic configuration
 
-There are two configuration values that affect WP Starter that are **not** placed inside the `extra.wpstarter` object, nor can be set in `wpstarter.json`:
+There are two configuration values that affect WP Starter that **cannot** be placed inside the `extra.wpstarter` object, nor can they be set in `wpstarter.json`:
 
 - `"wordpress-install-dir"`
 - `"wordpress-content-dir"`
 
 These two configuration values might contain a custom path where to place, respectively, WordPress core files and WordPress "content packages": plugin, themes, MU plugins, and dropins.
 
-`"wordpress-install-dir"` is not even a WP Starter specific configuration, but it comes from WordPress core installer. However, even if that installer is not used, this configuration should be used to tell WP Starter where WordPress core files are located.
+`"wordpress-install-dir"` is not even a WP Starter specific configuration, but it comes from the WordPress core installer. Regardless of whether the Wordpress core installer is used, this configuration is required to tell WP Starter where WordPress core files are located.
 
 This configuration defaults to `"./wordpress"` meaning a `wordpress` folder inside project root.
 
