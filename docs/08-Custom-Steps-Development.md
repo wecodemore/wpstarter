@@ -1,8 +1,8 @@
 # Custom Steps Development
 
-Many times might be desirable to perform custom operations to automate the setup of the website.
+It may often be desirable to perform custom operations to automate the setup of websites.
 
-A "natural" solution would be to use shell scripts or simple PHP scripts for the scope, however when it is needed something a bit beyond the most trivial tasks those things start to become hard to write, to maintain and to reuse.
+A "natural" solution would be to use shell scripts or simple PHP scripts for this scope, however when something beyond the most trivial tasks is required, such solutions become more complex to write,  maintain and reuse.
 
 Moreover, if we write custom steps integrated in WP Starter (and so also in Composer) we are able to:
 
@@ -83,13 +83,13 @@ It has several methods, each for one path:
 
 ## Making steps classes autoloadable
 
-When creating custom steps or even extending steps via scripts it is necessary that step classes and scripts callbacks are autoloadable, or it is not possible to WP Starter to run them.
+When creating custom steps or even extending steps via scripts it is necessary that step classes and scripts callbacks are autoloadable, or it is not possible for WP Starter to run them.
 
-The obvious way to do that it is to use entries in the via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json`. That obviously works, but considering that Composer is used to require WordPress, and that Composer autoload  is loaded at every WordPress request, "polluting" Composer autoload with things that are not meant to be run in production is probably not a good idea considering that the autoloader can have quite a substantial impact on web request time.
+The obvious way to do that it is to use entries via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json`. That obviously works, but considering that Composer is used to require WordPress, and that Composer autoload  is loaded at every WordPress request, "polluting" Composer autoload with things that are not meant to be run in production is probably not a good idea considering that the autoloader can have quite a substantial impact on web request time.
 
-WP Starter itself registers a custom autoloader just in time before running its steps, and only register in `composer.json` autoload the minimum required, that is its plugin class and little more.
+WP Starter itself registers a custom autoloader just in time before running its steps, and only registers  in `composer.json` autoload the minimum required, that is its plugin class and little more.
 
-WP Starter also offers to users the possibility to require a PHP file before starting running steps. This file can then be used to manually require files, declare functions, or register autoloaders.
+WP Starter also offers to users the possibility to require a PHP file before running WP Starter steps. This file can then be used to manually require files, declare functions, or register autoloaders.
 
 WP Starter will also look for a file named, by default, `"wpstarter-autoload.php"` in project root, but the path can be configured using the **`autoload`** setting.
 
@@ -130,7 +130,7 @@ In such packages, especially in custom scripts and steps, it is very likely nece
 
 However, when installing (or updating) Composer packages that declares WP Starter as a dependency, right after Composer ends installation (or update), WP Starter will set in, trying to run its steps.
 
-A special **package type**, **`wpstarter-extension`** , can be used in such packages to avoid that issue: when WP Starter will recognize that root package has `wpstarter-extension` type, will do just nothing on Composer installation or update.
+A special **package type**, **`wpstarter-extension`** , can be used in such packages to avoid that issue: when WP Starter will recognize that root package has `wpstarter-extension` type, will do nothing on Composer installation or update.
 
 Moreover, packages of type `wpstarter-extension` can use the setting `extra.wpstarter-autoload` to setup an autoload strategy that will only be used when WP Starter perform its tasks, without affecting regular application autoload.
 
@@ -224,9 +224,9 @@ First of all, let's notice how the interface implemented is not `Step`, but `Fil
 
 That interface extends `Step` by only adding the `targetPath` method that has to return the full path where the created file will be saved.
 
-Thanks to that method WP Starter will check if the file exists before even attempting to create it and will try to overwrite it only if the `prevent-overwrite` WP Starter setting permit so. For example, if `prevent-overwrite` is set to `"ask"` WP Starter will ask the user a confirmation before overwriting the existing file, or if `prevent-overwrite` is explicitly set to don't overwrite `.htaccess` the entire step will be skipped at all.
+Thanks to that method WP Starter will check if the file exists before even attempting to create it and will try to overwrite it only if the `prevent-overwrite` WP Starter setting permit so. For example, if `prevent-overwrite` is set to `"ask"` WP Starter will ask the user a confirmation before overwriting the existing file, or if `prevent-overwrite` is explicitly set to not  overwrite `.htaccess` the entire step will be skipped at all.
 
-Considering that WP Starter will check for us that any overwrite will happen with respect to user settings, we don't really have reasons to don't run this step. Which means that `allowed()` method can just return `true`.
+Considering that WP Starter will check for us that any overwrite will happen with respect to user settings, we don't really have reasons to not run this step. Which means that `allowed()` method can just return `true`.
 
 Finally it's time to build the step routine, that is the `run()` method.
 

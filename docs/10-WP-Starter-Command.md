@@ -49,9 +49,9 @@ In the example above only *"publish-content-dev"* and *"wp-cli"* steps would be 
 
 By using the `--skip` option it is possible to run the command in "opt-out" mode: the list of step names provided to command, are those to be skipped, and not those to be run.
 
-This is useful when the steps to skip are less than the skip to run. 
+This is useful when the steps to skip are less than the steps to run. 
 
-Note that when using this option, one or more step names are required. By running the command with only `--skip` but no step name will make the command fail.
+Note that when using this option, one or more step names are required. By running the command with only `--skip` but no step names, will make the command fail.
 
 ```shell
 composer wpstarter --skip publish-content-dev wp-cli
@@ -105,7 +105,7 @@ Or can be used in combination with `--skip` and `--skip-custom`. For example:
 composer wpstarter --ignore-skip-config --skip wp-cli
 ```
 
-means run all the run all the default steps, plus the custom steps, but don't run *"wp-cli"* step. Or even:
+means run all the default steps, plus the custom steps, but don't run *"wp-cli"* step. Or even:
 
 ```shell
 composer wpstarter --ignore-skip-config --skip-custom --skip wp-cli
@@ -123,29 +123,29 @@ The simples form of the command:
 composer wpstarter
 ```
 
-has to be considered as "opt-out" form where no step are selected to be skipped, rather than "opt-in" form where no step has been selected to run. This is why ` --ignore-skip-config` and `--skip-custom` can be used as the only option even if has been said those are ignored in "opt-in" mode.
+has to be considered as "opt-out" form where no step are selected to be skipped, rather than "opt-in" form where no step has been selected to run. This is why ` --ignore-skip-config` and `--skip-custom` can be used as the only option even if it has been said those are ignored in "opt-in" mode.
 
 
 
 ## Command-only steps
 
-The step names passed as argument to `wpstarter` command in "opt-in" mode must be recognized as valid steps to be run.
+The step names passed as arguments to `wpstarter` command in "opt-in" mode must be recognized as valid steps to be run.
 
 Which means that they are either default steps or steps added to `custom-steps` configuration.
 
-In both cases those steps would also be run every time Composer installs or updated dependencies or when the `wpstarter` command is run on its simplest form.
+In both cases those steps would also be run every time Composer installs or updates dependencies or when the `wpstarter` command is run on its simplest form.
 
-Sometimes, however, might be desirable run some steps on demand ("opt-in" mode) but **not** running them after every Composer install or update.
+Sometimes, however, it might be desirable run some steps on demand ("opt-in" mode) but **not** to run them after every Composer install or update.
 
 That can be obtained by adding steps to `command-steps` setting, which format is identical to `custom-steps`.
 
-That setting has the exact same format of `custom-steps` setting, but steps added to `command-steps` **are only took into account when running the command in "opt-in" mode**, allowing for "picking" them explicitly.
+That setting has the exact same format of `custom-steps` setting, but steps added to `command-steps` **are only taken into account when running the command in "opt-in" mode**, allowing for "picking" them explicitly.
 
-For example, imagine to have a custom step that run `yarn` for each package of type "wordpress-plugin" or "wordpress-theme" of a given specific vendor. Such script could be written without making a WP Starter step, but using WP Starter is convenient because:
+For example, imagine a custom step that runs `yarn` for each package of type "wordpress-plugin" or "wordpress-theme" of a given specific vendor. Such script could be written without making a WP Starter step, but using WP Starter is convenient because it provides an:
 
 - easy way access to relevant paths
 - easy way to find target packages, thanks to WP Starter `PackageFinder` object
-- easy (and OS-agnostic) way to run shell process via WP Starter `SystemProcess` object build on top of [Symfony `Process` component](https://symfony.com/doc/current/components/process.html).
+- easy (and OS-agnostic) way to run shell processes via WP Starter `SystemProcess` object built on top of [Symfony `Process` component](https://symfony.com/doc/current/components/process.html).
 
 What's relevant here about such step class would be:
 
