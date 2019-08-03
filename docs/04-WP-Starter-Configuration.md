@@ -1,6 +1,6 @@
 # WP Starter Configuration
 
-Even if **WP Starter can work without any setup at all**, one of its greatest features is to also be very flexible, because every single aspect of it can be customized according to own needs.
+**WP Starter can work without any setup at all**, however one of its greatest features is its flexibility that allows for fine grained customization of every aspect according to ones own requirements.
 
 
 
@@ -40,7 +40,7 @@ WP Starter will recognize the file and will load configuration from there, witho
 
 Instead of using a file named `wpstarter.json` in root folder it is also possible to tell WP Starter to use a different file to load configuration.
 
-An use case could be to reuse the same WP Starter configuration for many websites that resides under the same parent folder.
+A use case could be to reuse the same WP Starter configuration for many websites that resides under the same parent folder.
 
 To do this, in  `composer.json` it is necessary to use the `extra.wpstarter` configuration to set the path of the custom file. The path must be relative to the folder containing the `composer.json`:
 
