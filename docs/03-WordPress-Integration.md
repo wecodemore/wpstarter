@@ -196,7 +196,7 @@ switch ($environment) {
 
 #### WP_HOME
 
-This is not a WP Starter variable, but standard WordPress configuration constants.
+This is not a WP Starter variable, but a standard WordPress configuration constant.
 
 However, unlike WordPress, WP Starter will always make sure it is set.
 
