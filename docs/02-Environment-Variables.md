@@ -76,7 +76,7 @@ Configuring WP Starter to **bypass** the loading of env files is accomplished vi
 
 WP Starter loads an `.env` file found in the project root folder, and it is worth noting that if no additional configuration is made, project root is also the folder assumed as webroot for the project.
 
-This is a non-issue in local-only installations, however it can be a quite serious issue on anything that goes online. In fact, an `.env` file inside webroot could expose secrets stored in it (at very minimum DB credentials).
+This is a non-issue in local-only installations, however it can be quite a serious issue on anything that goes online. In fact, an `.env` file inside webroot could expose secrets stored in it (at very minimum DB credentials).
 
 To avoid this issue there are at least three different ways:
 
