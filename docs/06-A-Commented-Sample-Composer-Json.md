@@ -1,6 +1,6 @@
 # A Commented Sample `composer.json`
 
-Below there’s a sample `composer.json` not very different from what can be used in real world for a WP Starter powered website:
+The sample `composer.json` below is not very different from what can be used in real world WP Starter powered website:
 
 ```json
 {
@@ -84,7 +84,7 @@ The package is actually no more than a "wrapper" package to provide two differen
 
 [**`"wpackagist-plugin/wordfence"`**](https://wordpress.org/plugins/wordfence/) is an example of a plugin we might want to add to our website. This plugin does not support Composer. But we can require it via *WordPress Packagist*, because we have included that in our  `"repositories"` setting.
 
-[**"wpackagist-plugin/memcached"**](https://wordpress.org/plugins/memcached/) is another plugin that we can add via *WordPress Packagist*. It has been added here as example of a special case. In fact, this plugin is not really a plugin, but a **dropin**. By reading [install instruction](https://wordpress.org/plugins/memcached/#installation) they say that after plugin installation we need to *"Copy object-cache.php to wp-content"*, but WP Starter can do that for us, we'll see soon how.
+[**"wpackagist-plugin/memcached"**](https://wordpress.org/plugins/memcached/) is another plugin that we can add via *WordPress Packagist*. It has been added here as example of a special case. In fact, this plugin is not really a plugin, but a **dropin**. By reading the [installation instructions](https://wordpress.org/plugins/memcached/#installation) they say that after plugin installation we need to *"Copy object-cache.php to wp-content"*, but WP Starter can do that for us. We'll soon see how.
 
 [**`"frc/batcache"`**](https://packagist.org/packages/frc/batcache) is a plugin that is available on Packagist, so it is easily required. However, it represents another special case. Looking at its [source](https://github.com/frc/batcache) it contains both a **MU plugin** ([`batcache.php`](https://github.com/frc/batcache/blob/frc/batcache.php)) and a **dropin** ([`advanced-cache.php`](https://github.com/frc/batcache/blob/frc/advanced-cache.php)). We will see how with a very minimum configuration WP Starter will handle it perfectly, placing everything in the right place without any manual intervention nor custom scripts.
 
@@ -100,7 +100,7 @@ The package is actually no more than a "wrapper" package to provide two differen
 
 WP core installer is an "installer plugin". It tells Composer where to place the packages of type `"wordpress-core"`, that are not supported by Composer installers. By default the plugin tells Composer to install WordPress in the `./wordpress` directory, but provides the **`extra.wordpress-install-dir`** to customize it.
 
-In our sample, we are telling to place WP in the folder `public/wp`, because having a "public" folder and WordPress folder in it, will enable us to use `./public/` as webroot and **place the `.env` file inside the *project* root, so outside of webroot, and that's very recommended for security reasons**.
+In our sample, we are telling to place WP in the folder `public/wp`, because having a "public" folder and WordPress folder in it, will enable us to use `./public/` as webroot and **place the `.env` file inside the *project* root, so outside of webroot, and that's recommended for security reasons**.
 
 #### WP content configuration
 
@@ -112,7 +112,7 @@ The way we inform WP Starter about the location of WP content folder is  **`extr
 
 #### Composer Installers configuration
 
-We are requiring Composer Installers to allow WordPress plugins, themes, MU plugins, and dropins to be placed inside WP content folder instead of default vendor folder.
+We require Composer Installers to allow WordPress plugins, themes, MU plugins, and dropins to be placed inside WP content folder instead of default vendor folder.
 
 By default Composer Installers tells Composer to place those WordPress-related packages in the `/wp-content` folder inside the project root folder.
 

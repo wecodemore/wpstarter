@@ -289,7 +289,7 @@ For example:
 
 Before and after each step WP Starter allow users to run "scripts", which are nothing else than PHP callbacks (because of limitation of JSON, only plain PHP functions or class static methods are supported).
 
-The scripts to be ran has to be added to the `scripts` WP Starter setting, which must be a map from scripts slugs to an array of fully-qualified callback names.
+The scripts to be run has to be added to the `scripts` WP Starter setting, which must be a map from scripts slugs to an array of fully-qualified callback names.
 
 Slug must be composed with a prefix that is `pre-` (which means "before") or `post-` (which means "after") followed by the target step slug (custom steps works as well).
 

@@ -2,11 +2,11 @@
 
 WP Starter takes care of the file structure of the website and its configuration at filesystem level, however it does nothing, for example, for the database.
 
-If the aim is to automate the complete bootstrap of the website, it is clear that WP Starter is not enough. The way to go to complete what we need is surely [WP CLI](https://wp-cli.org/).
+If the aim is to automate the complete bootstrap of the website, it is clear that WP Starter is not enough. [WP CLI](https://wp-cli.org/) completes our requirements.
 
-The setup of the website via WP CLI is something that can be surely done independently from WP Starter. For example, assuming we have an deploy / CI tool that installs Composer dependencies triggering WP Starter, the same deploy / CI tool can take care of running WP CLI commands.
+The setup of a website via WP CLI is something that can be done independently from WP Starter. For example, assuming we have a deploy / CI tool that installs Composer dependencies triggering WP Starter, the same deploy / CI tool can take care of running WP CLI commands.
 
-What WP Starter will do anyway is to write a `wp-cli.yml` to point the correct WP path so that commands don’t need to pass `--path` argument to WP CLI commands.
+WP Starter writes a `wp-cli.yml` pointing to the correct WP path so that commands don’t need to pass `--path` argument to WP CLI commands.
 
 However, by telling WP Starter to take care of WP CLI commands, WP Starter will also take care of **making sure WP CLI is available**.
 
@@ -20,16 +20,16 @@ When WP Starter is configured to run WP CLI commands, before running them it mak
 2. if not, it checks a WP CLI phar is available on project root
 3. if not, download WP CLI phar and checks its integrity via SHA512 checksum provided by WP CLI
 
-Which means that in any case WP CLI will be available and WP Starter will know where to find it and in which form it comes (Composer package or phar), so it will know *how and where* to send commands.
+This means that WP CLI will always be available and WP Starter will know where to find it and in which form it comes (Composer package or phar), so it will know *how and where* to send commands.
 
-In short, by letting WP Starter running WP CLI commands it is possible to:
+In short, by letting WP Starter run WP CLI commands it is possible to:
 
-- don’t bother with WP CLI installation
+- not bother with WP CLI installation
 - write commands in a way that is agnostic of how and where WP CLI is available
 
-It worth mentioning here that there's a configuration value `install-wp-cli` that can be set to `false` preventing WP Starter to ever attempt to download WP CLI phar.
+It is worth mentioning here that there's a configuration value `install-wp-cli` that can be set to `false` preventing WP Starter to ever attempt to download WP CLI phar.
 
-In that's the case and if WP Starter does not find WP CLI, any attempt to run WP CLI commands via WP Starter will fail.
+If `install-wp-cli` is set to false and WP Starter does not find WP CLI, any attempt to run WP CLI commands via WP Starter will fail.
 
 
 
@@ -39,7 +39,7 @@ Now that benefit of using WP Starter for WP CLI commands are known, let’s see 
 
 ### Evaluation of files
 
-One of the way supported by WP Starter to run WP CLI commands is to evaluate files via [WP CLI `eval-file` command](https://developer.wordpress.org/cli/commands/eval-file/).
+One of the ways supported by WP Starter to run WP CLI commands is to evaluate files via [WP CLI `eval-file` command](https://developer.wordpress.org/cli/commands/eval-file/).
 
 This can be done by setting an array of files in the `wp-cli-files` setting:
 
@@ -54,7 +54,7 @@ This can be done by setting an array of files in the `wp-cli-files` setting:
 
 Nice thing about this approach is that paths can be any local path, including files in vendor folder installed via Composer, which means that it is possible to effectively create packages containing WP CLI-evaluated files to be shared across projects.
 
-Who is familiar with `eval-file` command might have noticed that by only providing file name there’s no way to control command arguments.
+Those familiar with the `eval-file` command might observe that by only providing the file name there’s no way to control command arguments.
 
 This can be done by passing an array of objects like this:
 
@@ -88,7 +88,7 @@ One simple way to setup WP CLI commands to run is to just set an array of comman
 }
 ```
 
-The same array of commands can be placed in a separate JSON file, whose path is then used as same configuration value:
+The same array of commands can be placed in a separate JSON file, whose path is then used as the same configuration value:
 
 ```json
 {
@@ -96,7 +96,7 @@ The same array of commands can be placed in a separate JSON file, whose path is 
 }
 ```
 
-This method is quite simple to use, but not very powerful, for example does not allow to run commands conditionally.
+This method is quite simple to use, but not very powerful, for example it does not allow for conditional commands.
 
 One possible solution in some cases might be to use a PHP file that does whatever it needs to do and finally returns an array of commands. For example:
 
