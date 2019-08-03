@@ -1,6 +1,6 @@
 # WP Starter Steps
 
-WP Starter is at its core a command line script that performs, in order, a set of tasks that are called **"steps"**.
+At its core, WP Starter is a command line script that performs, in order, a set of tasks that are called **"steps"**.
 
 A step is nothing more than a PHP class performing a given specific operation.
 
@@ -36,13 +36,13 @@ The (current) list of default WP Starter steps is (in order of execution):
 
 ## Customizable templates
 
-Several steps produces files. Files are built using "templates" as base, where placeholders in the format `{{{PLACEHOLDER}}}` are replaced with values calculated by the step.
+Several steps produce files. Files are built using "templates" as a base, where placeholders in the format `{{{PLACEHOLDER}}}` are replaced with values calculated by the step.
 
 Templates are located in the `/templates` directory under WP Starter root.
 
 However, users might replace all or some templates via the `templates-dir` configuration.
 
-If that setting is filled and files with same name of the ones in the default templates directory are found in the given directory, those will be used instead of the standard ones.
+If that setting is filled and if files with the same name as the ones in the default templates directory are found in the given directory, those will be used instead of the standard ones.
 
 Considering that `templates-dir` could be any folder, and considering that WP Starter always run _after_ Composer install/update, it is possible to have Composer packages containing WP Starter templates and so having reusable templates to use in different projects.
 
@@ -54,27 +54,27 @@ Considering that `templates-dir` could be any folder, and considering that WP St
 
 This task will check that the WP Starter is able to reach required paths. It will check that WordPress and WP content folder exists and that the Composer autoload file is found.
 
-This ensures that subsequent steps will perform operation in right paths. Moreover, it ensures that at the moment WP Starter is performing its steps Composer have finished installing all dependencies.
+This ensures that subsequent steps will perform operations in the right paths. Moreover, it ensures that at the moment WP Starter is performing its steps Composer will have finished installing all dependencies.
 
 WP Starter will not proceed with other steps if this fails.
 
 ### `WpConfigStep`
 
-This is the main WP Starter step. It creates a `wp-config.php` that setups WordPress based on environment variables and adds WP Starter specific features as described in the *"WordPress Integration"* chapter.
+This is the main WP Starter step. It creates a `wp-config.php` that setups WordPress based on environment variables and adds WP Starter specific features as described in the [WordPress Integration](https://github.com/wunluv/wpstarter/blob/dev/docs/03-WordPress-Integration.md#cached-environment)  chapter.
 
-Just like any other step that builds a file, by overriding the template it is possible to have a completely different outcome, so what is being described in this documentation is the behavior of the file generated with _default_ template.
+Just like any other step that builds a file, by overriding the template it is possible to have a completely different outcome, so what is being described in this documentation is the behavior of the file generated with a _default_ template.
 
 The settings involved in this steps are:
 
-- `cache-env` - When false (default is true) will prevent the environment to be cached in a PHP file and always loaded on the fly. See the *"WordPress Integration"* chapter for more details.
+- `cache-env` - When false (default is true) this  prevents the environment to be cached in a PHP file and instead always loaded on the fly. See the *"WordPress Integration"* chapter for more details.
 - `register-theme-folder` - When true the default themes (those shipped with WordPress package) folder will be registered via [`register_theme_directory`](https://developer.wordpress.org/reference/functions/register_theme_directory/) and so default themes will available in WordPress
 - `env-dir` and `env-file` - Via these two settings it is possible to load a different env file instead of the default `.env` located under project root.
 - `early-hook-file` - If a file path is provided via this setting WordPress will load the file very early, but after having "manually" loaded `plugin.php` so that it is possible to add callbacks to hooks fired very early. See the *"WordPress Integration"* chapter for more details.
 - `env-bootstrap-dir` - A custom directory where to look for environment-specific bootstrap files. Environment-specific bootstrap files are PHP files named after the current environment (set in the `WP_ENV` env var) that are loaded very early (right after  `plugin.php` is loaded by WP Starter) allowing to fine-tune WordPress for specific environments. See the *"WordPress Integration"* chapter for more details.
 
-Besides of these configuration, few path-related settings in `composer.json` will affect this step as well:
+Besides these configurations, a few path-related settings in `composer.json` will affect this step as well:
 
-- [`vendor-dir`](https://getcomposer.org/doc/06-config.md#vendor-dir)Composer configuration will affect the step because it will tell where to look for autoload file
+- [`vendor-dir`](https://getcomposer.org/doc/06-config.md#vendor-dir) Composer configuration will affect the step because it specifies where to look for the autoload file
 - `wordpress-install-dir` specific of [WordPress core installer](https://github.com/johnpbloch/wordpress-core-installer) will tell where WordPress `ABSPATH` is located
 - `wordpress-content-dir` will tell where content folder is located. This is used to declare the [`WP_CONTENT_DIR`](https://codex.wordpress.org/Determining_Plugin_and_Content_Directories#Constants) constant so that WordPress can correctly handle a content folder located outside WordPress core folder.
 
@@ -82,13 +82,13 @@ WP Starter will not proceed with other steps if this fails for any reason.
 
 ### `IndexStep`
 
-In a typical WP Starter powered installation, WordPress is not installed at the webroot, meaning that WordPress `ABSPATH` (the folder that contains `/wp-includes` and `/wp-admin`) is not the webroot.
+In a typical WP Starter powered installation, WordPress is not installed at the webroot, meaning that WordPress `ABSPATH` (the directory that contains `/wp-includes` and `/wp-admin`) is not the webroot.
 
-This is a fairly common setup even for installation not using WP Starter. There's a codex page that explain the approaches to [give WordPress its own directory.](https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory)
+This is a fairly common setup even for installations not using WP Starter. There's a codex page that explain the approaches to [give WordPress its own directory.](https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory)
 
 As described there, we need to create an `index.php` file located at webroot. This step does exactly that.
 
-The only setting affecting this step is the `wordpress-install-dir` specific of [WordPress core installer](https://github.com/johnpbloch/wordpress-core-installer) which will tells Composer where to place WordPress files and folders.
+The only setting affecting this step is the `wordpress-install-dir` specific of [WordPress core installer](https://github.com/johnpbloch/wordpress-core-installer) which tells Composer where to place WordPress files and folders.
 
 WP Starter will not proceed with other steps if this fails for any reason.
 
@@ -96,7 +96,7 @@ WP Starter will not proceed with other steps if this fails for any reason.
 
 This step will clear the environment cache file if found. See *"WordPress Integration"* chapter for more info about cached environment.
 
-There are no configuration affecting this step.
+There are no configurations affecting this step.
 
 ### `MuLoaderStep`
 
@@ -106,7 +106,7 @@ MU plugins are supported by [Composer Installers](http://composer.github.io/inst
 
 However, Composer will place each of them in an **own subdirectory**, but unfortunately WordPress is not able to load MU plugins from subfolders: for WordPress a MU plugin is a single file placed *directly* inside `wp-content/mu-plugins`.
 
-This step creates a MU plugin, placed in `wp-content/mu-plugins` folder, that loads all the MU plugins that Composer placed in own subfolder.
+This step creates a MU plugin, placed in `wp-content/mu-plugins` folder, that loads all the MU plugins that Composer placed in its own subfolder.
 
 There's no configuration affecting this step. The MU plugins to load are identified by WP Starter looking at installed Composer packages with [type](https://getcomposer.org/doc/04-schema.md#type) `"wordpress-muplugin"`.
 
@@ -116,17 +116,17 @@ If no MU plugin packages are installed via Composer, the step is entirely skippe
 
 It is a quite standard practice for applications that support `.env` files to provide a `.env.example` file as a blueprint of the available configurations.
 
-WP Starter ships with a template for such file that includes all the env var names that resemble WP configuration constants and what this step does is to copy that file in project root folder.
+WP Starter ships with a template for such file that includes all the env var names that resemble WP configuration constants and this step copies that file into the project root folder.
 
 The step outcome might actually change based on the `env-example` setting. By setting it to `false`, the step is entirely skipped. Moreover, the step is also skipped if an `.env` file is found, as it makes no sense providing an example for something that exists already.
 
-When `env-example` setting is `true` WP Starter will copy the template in project root, and when the setting is `"ask"` WP Starter will ask user before copying.
+When `env-example` setting is `true` WP Starter will copy the template in project root, and when the setting is `"ask"` WP Starter will ask the user before copying.
 
-Finally, `env-example` setting can also be a path to copy the example file from, or even URL from where to download it. This latest case it is not very recommended, because no security check is done on the downloaded file, so make sure at least to point a trusted server and use an HTTPS instead of plain HTTP.
+Finally, `env-example` setting can also be a path to copy the example file from, or even a URL from where to download it. This latter is not recommended, because no security check is done on the downloaded file, so make sure at least to point to a trusted server and use HTTPS instead of plain HTTP.
 
 ## `DropinsStep`
 
-WordPress support special files called "dropins" that if placed in WP content folder are loaded very early and can be used to customize different aspects of WordPress.
+WordPress supports special files called "dropins" that if placed in the WP content folder are loaded very early and can be used to customize different aspects of WordPress.
 
 It seems there's no official documentation that lists all the available dropins, so the "source of truth" in this case is the source code itself, namely the source code of [`_get_dropins()`](https://developer.wordpress.org/reference/functions/_get_dropins/) function.
 
@@ -148,17 +148,17 @@ plus a few more supported only on multisite installations:
 
 Documentation can be found online for many of them.
 
-Even if these files are supported by Composer installers, the same issue of MU plugin happens for them: WordPress will not recognize them from subfolder.
+Even if these files are supported by Composer installers, they face the same issue as MU plugins: WordPress will not recognize them in a subfolder.
 
-Unlike for MU plugins, for dropins the issue can't be solved via a "loader", because WordPress only loads specific file names, so the only way to make dropins installable via Composer and also make them recognizable by WordPress is to either **symlink or copy them in content folder** after the installation.
+Unlike for MU plugins, for dropins the issue can't be solved via a "loader", because WordPress only loads specific file names, so the only way to make dropins installable via Composer and also make them recognizable by WordPress is to either **symlink or copy them into the content folder** after the installation.
 
 WP Starter, via this step, allows to do that.
 
 The main configuration involved is `dropins` which is an array of files to copy.
 
-Besides local paths (which includes files pulled as part of Composer packages in vendor dir) the step is also capable to use arbitrary URLs as source. This latest case it is not very recommended, because no security check is done on the downloaded file, so make sure at least to point a trusted server and use an HTTPS instead of plain HTTP.
+Besides local paths (which includes files pulled as part of Composer packages in vendor dir) the step is also capable to use arbitrary URLs as source. This latter is not recommended, because no security check is done on the downloaded file, so make sure at least to point a trusted server and use an HTTPS instead of plain HTTP.
 
-An additional configuration that affect the step is `unknown-dropins`. By setting this to `true` WP Starter will ignore the list of supported dropins from WordPress and just copy every file provided in the `dropins` setting to WP content folder. The default is `false`, because setting this to true, in combination of usage of URLs as source might be a security issue. The setting could also have the value of "ask" and in that case WP Starter will ask confirmation to user before copying a file not recognized as dropin.
+An additional configuration that affects the step is `unknown-dropins`. By setting this to `true` WP Starter will ignore the list of supported dropins from WordPress and just copy every file provided in the `dropins` setting to WP content folder. The default is `false`, because setting this to true, in combination of usage of URLs as source might be a security issue. The setting could also have the value of "ask" and in that case WP Starter will ask confirmation to the user before copying a file not recognized as a dropin.
 
 ### `MoveContentStep`
 
@@ -168,7 +168,7 @@ Because WP Starter normally uses a non-standard WP content folder located outsid
 
 The scope of this step is to move the default plugins and themes from the `/wp-content` folder to the project content folder, so that WordPress will recognize them.
 
-The main setting affecting this step is `move-content` that can be set to`true` to enable the step. When `false` (default) this step is skipped at all. The value of the setting can also be *"ask"* and if so WP Starter will ask user before moving the files.
+The main setting affecting this step is `move-content` that can be set to`true` to enable the step. When `false` (default) this step is skipped. The value of the setting can also be *"ask"* and if so WP Starter will ask the user before moving the files.
 
 When the `register-theme-folder` setting is `true` WP Starter will also skip this step because default themes will be available anyway and otherwise a non-existing theme folder would be registered.
 
@@ -176,15 +176,15 @@ When the `register-theme-folder` setting is `true` WP Starter will also skip thi
 
 Often a WP Starter project is made of a `composer.json` and little less, because WordPress "content" packages: plugins, themes, and MU-plugins are pulled from *separate* Composer packages.
 
-However, it happens that project developers want to place project-specific "content" packages in the same repository of the project, because it does not worth to have a separate package for them or because being very project specific there's no place to reuse them and consequently no reason to maintain them separately.
+However, it happens that project developers want to place project-specific "content" packages in the same repository of the project, because it's not worth having a separate package for them or because being very project specific there's no place to reuse them and consequently no reason to maintain them separately.
 
 One way to do this is to just place those project-specific plugins or themes in the project WP content folder, which is the folder that will make them recognizable by WordPress, but it is also the folder where Composer will place plugins and themes pulled via separate packages.
 
-This introduces complexity in managing VCS, because, very likely the developer does not want to keep Composer dependencies under version control, but surely wants to keep under version control plugins and themes belonging in the project. So, in practice, the content folder can't be entirely Git-ignored (nor entirely disposable).
+This introduces complexity in managing VCS, because, most likely the developer wants to avoid keeping Composer managed dependencies under version control, yet surely wants to keep project specific plugins and themes under version control. So, in practice, the content folder can't be entirely Git-ignored (nor entirely disposable).
 
 WP Starter offers a different, totally optional, approach for this issue.
 
-Plugins and themes that are developed in the project repository, can be placed in a dedicated folder and WP Starter will either symlink or copy them to project WP content folder so that WordPress can find them with no issue.
+Plugins and themes that are developed in the project repository, can be placed in a dedicated folder and WP Starter will either symlink or copy them to the project WP content folder so that WordPress can find them with no issue.
 
 `ContentDevStep` step is responsible to do exactly that.
 
@@ -207,7 +207,7 @@ Note for **Windows** users: if symlinking fails, make sure to run the terminal a
 
 ### `WpCliConfigStep`
 
-This step automatically generates in the project root a [`wp-cli.yml`](https://make.wordpress.org/cli/handbook/config/#config-files) that only contains setting for the WordPress path, allowing WP CLI commands to be ran on the project root, without the need to pass the `--path` argument every time (see WP CLI [documentation](https://make.wordpress.org/cli/handbook/config/#global-parameters)).
+This step automatically generates in the project root a [`wp-cli.yml`](https://make.wordpress.org/cli/handbook/config/#config-files) that only contains setting for the WordPress path, allowing WP CLI commands to be run on the project root, without the need to pass the `--path` argument every time (see WP CLI [documentation](https://make.wordpress.org/cli/handbook/config/#global-parameters)).
 
 The only setting that affects this step is the `wordpress-install-dir` specific of [WordPress core installer](https://github.com/johnpbloch/wordpress-core-installer) which will tell where WordPress is located.
 
@@ -221,17 +221,17 @@ However, by adding commands to WP Starter configuration WP Starter will ensure t
 
 First of all, WP Starter will check if WP CLI has been required via Composer. If so, it will do nothing, as it is already available. If WP CLI is not found among installed packages, WP Starter looks for a `wp-cli.phar` in project root, and if even that is not found WP Starter will download the WP CLI phar and will verify it using the hash provided by WP CLI.
 
-It means that adding commands to WP Starter configuration requires exact same effort than adding them to Composer scripts or to any other automation mechanism, but using WP Starter it is possible to get installation of WP CLI "for free".
+It means that adding commands to WP Starter configuration requires the same effort as adding them to Composer scripts or to any other automation mechanism, but by using WP Starter it is possible to get installation of WP CLI "for free".
 
-There's a dedicated documentation chapter, *"Running WP CLI Commands"*, that describes how to setup WP Starter to run WP CLI commands and which WP Starter settings are involved.
+There's a dedicated documentation chapter, [Running WP ClI Commands](https://github.com/wunluv/wpstarter/blob/dev/docs/07-Running-WP-CLI-Commands.md), that describes how to setup WP Starter to run WP CLI commands and which WP Starter settings are involved.
 
 
 
 ## Add, replace or remove steps to run
 
-By default WP Starter will run all the steps, even if some of them are skipped during runtime because conditions to run them are not met, for example the WP CLI commands step will not run if there are no commands to be ran.
+By default WP Starter will run all the steps, even if some of them are skipped during runtime because conditions to run them are not met, for example the WP CLI commands step will not run if there are no commands to be run.
 
-WP Starter allows to customize which step has to be ran in different ways:
+WP Starter allows to customize which step has to be run in different ways:
 
 - by naming steps that should completely be skipped
 - by adding new custom steps
@@ -267,11 +267,11 @@ It must be a map of unique step "slugs" to step classes, for example:
 
 For how to actually develop the step class please refer to *"Custom Steps Development"* chapter.
 
-To be able to be ran the step classes must be autoloadable, more on this in the  *"Custom Steps Development"* chapter.
+To be able to be run, the step classes must be autoloadable. More on this in the  [Custom Steps Development](https://github.com/wunluv/wpstarter/blob/dev/docs/08-Custom-Steps-Development.md) chapter.
 
 ### Replacing default steps
 
-Replace an existing default step is not different from adding a custom step where the step "slug" matches the slug of the default step (see the table at the beginning of this page to read default steps slugs).
+Replace an existing default step is not different from adding a custom step where the step "slug" matches the slug of the default step (see the table at the beginning of this page to read default step slugs).
 
 For example:
 
@@ -315,15 +315,20 @@ function (int $result, Step $step, Locator $locator, Composer $composer);
 
 Where:
 
-- `$result` is an integer that can be compared with `WeCodeMore\WpStarter\Step\Step` class constants: `Step::ERROR`, `Step::SUCCESS` and `Step::NONE`, that respectively means that the step failed, succeeded or was not executed (e.g. skipped).
-  Result is, of course, only available for the _post_ scripts, for _pre_ scripts it will always be `Step::NONE`. Please note that any check on this value should be done by bitmask check and not direct comparison. In fact, it is possible that some "composed" steps, e.g. the "dropins" step, might return an integer equal to `Step::SUCCESS | Step::ERROR` meaning that it *partially* succeeded.
+- `$result` is an integer that can be compared with `WeCodeMore\WpStarter\Step\Step` class constants: 
+    - `Step::ERROR` - the step failed
+    - `Step::SUCCESS` - the step succeeded or was executed
+    - `Step::NONE` - the step was not executed/skipped
+    
+
+  $result is, of course, only available for the _post_ scripts. For _pre_ scripts it will always be `Step::NONE`. Please note that any check on this value should be done by a bitmask check and not direct comparison. In fact, it is possible that some "composed" steps, e.g. the "dropins" step, might return an integer equal to `Step::SUCCESS | Step::ERROR` meaning that it *partially* succeeded.
 - `$step` is the target step object, that is an instance of `\WeCodeMore\WpStarter\Step\Step`.
-- `$locator` is an instance of `WeCodeMore\WpStarter\Util\Locator` an object that provides instances of other objects parts of WP Starter. In the *"Custom Steps Development"* chapter there are more details about this object.
+- `$locator` is an instance of `WeCodeMore\WpStarter\Util\Locator` an object that provides instances of other objects parts of WP Starter. In the [Custom Steps Development](https://github.com/wunluv/wpstarter/blob/dev/docs/08-Custom-Steps-Development.md) chapter there are more details about this object.
 - `$composer` is an instance of `Composer\Composer` the main Composer object.
 
-Besides the scripts for the *actual* steps, there are an additional couple of pre/post scripts: `pre-wpstarter` and `post-wpstarter`, that run respectively before any step starts and after all the steps completed.
+Besides the scripts for the *actual* steps, there are an additional couple of pre/post scripts: `pre-wpstarter` and `post-wpstarter`, that run respectively before any step starts and after all the steps are completed.
 
-For this "special" couple of scripts, the step object passed as second parameter will be an instance of `WeCodeMore\WpStarter\Step\Steps` that is a sort of "steps runner" which implements `Step` interface as well. This is especially interesting for the `pre-wpstarter` script, because callbacks attached to that script can call on the passed `Steps` object its `addStep()` / `removeStep()` methods, adding or removing steps "on the fly".
+For this "special" couple of scripts, the step object passed as a second parameter will be an instance of `WeCodeMore\WpStarter\Step\Steps` that is a sort of "steps runner" which implements `Step` interface as well. This is especially interesting for the `pre-wpstarter` script, because callbacks attached to that script can call on the passed `Steps` object via its `addStep()` / `removeStep()` methods, adding or removing steps "on the fly".
 
 
 
