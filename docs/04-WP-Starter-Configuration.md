@@ -1,12 +1,12 @@
 # WP Starter Configuration
 
-Even if **WP Starter can work without any setup at all**, one of its greatest features is to also be very flexible, because every single aspect of it can be customized according to own needs.
+**WP Starter can work without any setup at all**, however one of its greatest features is its flexibility that allows for fine grained customization of every aspect according to the project requirements.
 
 
 
 ## Configuration in `composer.json`
 
-Just like any other Composer plugin, WP Starter configuration goes into `extra` section of `composer.json`.
+Like other Composer plugins, WP Starter configuration goes into `extra` section of `composer.json`.
 
 More specifically, it goes into a sub-object `wpstarter` in the  `extra` section.
 
@@ -36,11 +36,11 @@ WP Starter will recognize the file and will load configuration from there, witho
 
 
 
-## Configuration in custom file
+## Configuration in a custom file
 
 Instead of using a file named `wpstarter.json` in root folder it is also possible to tell WP Starter to use a different file to load configuration.
 
-An use case could be to reuse the same WP Starter configuration for many websites that resides under the same parent folder.
+A use case could be to reuse the same WP Starter configuration for many websites that resides under the same parent folder.
 
 To do this, in  `composer.json` it is necessary to use the `extra.wpstarter` configuration to set the path of the custom file. The path must be relative to the folder containing the `composer.json`:
 
@@ -52,7 +52,7 @@ To do this, in  `composer.json` it is necessary to use the `extra.wpstarter` con
 }
 ```
 
-This also enables to have the configuration file available in a custom Composer package and make it available to WP Starter by pointing the file in vendor folder:
+This also enables to have the configuration file available in a custom Composer package and make it available to WP Starter by pointing to the file in vendor folder:
 
 ```json
 {
@@ -66,20 +66,21 @@ This also enables to have the configuration file available in a custom Composer 
 
 ## Configuration precedence
 
-In case *both* `wpstarter` section in  `composer.json` (no matter if as object or as path to a custom file) and  `wpstarter.json` file are there, both configurations are loaded and in the case the same configuration values are placed in both places, the value in  `wpstarter.json` will take precedence.
+
+The values in `wpstarter.json` takes precedence when  composer.json contains an `extra.wpstarter` section  (regardless if as an object or as a path to a custom file) with duplicate values to the `wpstarter.json`.
 
 
 
 ## Generic configuration
 
-There are two configuration values that affect WP Starter that are **not** placed inside the `extra.wpstarter` object, nor can be set in `wpstarter.json`:
+There are two configuration values that affect WP Starter that **cannot** be placed inside the `extra.wpstarter` object, nor can they be set in `wpstarter.json`:
 
 - `"wordpress-install-dir"`
 - `"wordpress-content-dir"`
 
 These two configuration values might contain a custom path where to place, respectively, WordPress core files and WordPress "content packages": plugin, themes, MU plugins, and dropins.
 
-`"wordpress-install-dir"` is not even a WP Starter specific configuration, but it comes from WordPress core installer. However, even if that installer is not used, this configuration should be used to tell WP Starter where WordPress core files are located.
+`"wordpress-install-dir"` is not even a WP Starter specific configuration, but it comes from the WordPress core installer. Regardless of whether the Wordpress core installer is used, this configuration is required to tell WP Starter where WordPress core files are located.
 
 This configuration defaults to `"./wordpress"` meaning a `wordpress` folder inside project root.
 
