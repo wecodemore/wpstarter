@@ -60,7 +60,7 @@ WP Starter will not proceed with other steps if this fails.
 
 ### `WpConfigStep`
 
-This is the main WP Starter step. It creates a `wp-config.php` that setups WordPress based on environment variables and adds WP Starter specific features as described in the [WordPress Integration](https://github.com/wunluv/wpstarter/blob/dev/docs/03-WordPress-Integration.md#cached-environment)  chapter.
+This is the main WP Starter step. It creates a `wp-config.php` that setups WordPress based on environment variables and adds WP Starter specific features as described in the **WordPress Integration**  chapter.
 
 Just like any other step that builds a file, by overriding the template it is possible to have a completely different outcome, so what is being described in this documentation is the behavior of the file generated with a _default_ template.
 
@@ -223,7 +223,7 @@ First of all, WP Starter will check if WP CLI has been required via Composer. If
 
 It means that adding commands to WP Starter configuration requires the same effort as adding them to Composer scripts or to any other automation mechanism, but by using WP Starter it is possible to get installation of WP CLI "for free".
 
-There's a dedicated documentation chapter, [Running WP ClI Commands](https://github.com/wunluv/wpstarter/blob/dev/docs/07-Running-WP-CLI-Commands.md), that describes how to setup WP Starter to run WP CLI commands and which WP Starter settings are involved.
+There's a dedicated documentation chapter, **Running WP ClI Commands**, that describes how to setup WP Starter to run WP CLI commands and which WP Starter settings are involved.
 
 
 
@@ -267,7 +267,7 @@ It must be a map of unique step "slugs" to step classes, for example:
 
 For how to actually develop the step class please refer to *"Custom Steps Development"* chapter.
 
-To be able to be run, the step classes must be autoloadable. More on this in the  [Custom Steps Development](https://github.com/wunluv/wpstarter/blob/dev/docs/08-Custom-Steps-Development.md) chapter.
+To be able to be run, the step classes must be autoloadable. More on this in the  **Custom Steps Development** chapter.
 
 ### Replacing default steps
 
@@ -323,7 +323,7 @@ Where:
 
   $result is, of course, only available for the _post_ scripts. For _pre_ scripts it will always be `Step::NONE`. Please note that any check on this value should be done by a bitmask check and not direct comparison. In fact, it is possible that some "composed" steps, e.g. the "dropins" step, might return an integer equal to `Step::SUCCESS | Step::ERROR` meaning that it *partially* succeeded.
 - `$step` is the target step object, that is an instance of `\WeCodeMore\WpStarter\Step\Step`.
-- `$locator` is an instance of `WeCodeMore\WpStarter\Util\Locator` an object that provides instances of other objects parts of WP Starter. In the [Custom Steps Development](https://github.com/wunluv/wpstarter/blob/dev/docs/08-Custom-Steps-Development.md) chapter there are more details about this object.
+- `$locator` is an instance of `WeCodeMore\WpStarter\Util\Locator` an object that provides instances of other objects parts of WP Starter. In the **Custom Steps Development** chapter there are more details about this object.
 - `$composer` is an instance of `Composer\Composer` the main Composer object.
 
 Besides the scripts for the *actual* steps, there are an additional couple of pre/post scripts: `pre-wpstarter` and `post-wpstarter`, that run respectively before any step starts and after all the steps are completed.
