@@ -11,7 +11,7 @@ Alphabetically ordered:
 |     command-steps     | Custom steps to be ran via WP Starter command.<br />Array of fully-qualified step class names.<br />Given classes must be autoloadable. |             []             |
 |     custom-steps      | Array of custom steps to add to WP Starter.<br />Array of fully-qualified step class names.<br />Given classes must be autoloadable. |             []             |
 |        dropins        | Array of dropins files to move to WP content dir.<br />Can be local paths or remote URLs. |             []             |
-|    early-hook-file    | PHP file that adds callbacks to early hooks.<br />Must be path to file, relative to root.<br /> |            null            |
+|    early-hook-file    | PHP file that adds callbacks to early hooks.<br />Must be a file name, placed in `env-bootstrap-dir` or in `env-dir` as fallback.<br /> |            null            |
 |   env-bootstrap-dir   | Folder where to look for env bootstrap files.<br />Path to folder relative to root. |            null            |
 |        env-dir        | Folder where to look for `.env` file.<br />Path to folder relative to root. |            "./"            |
 |      env-example      | How to deal with `.env.example` file. Can be:<br />- `true` (copy default example file to root)<br />- `false` (do nothing)<br />- path, relative to root, to example file to copy.<br />- `"ask"` (user will be asked what to do) |            true            |

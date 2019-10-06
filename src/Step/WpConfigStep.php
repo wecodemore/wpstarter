@@ -108,6 +108,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         }
 
         $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
+        $envRelDir = $this->relPath($from, $envDir);
 
         $register = $config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback(false);
         ($register === OptionalStep::ASK) and $register = $this->askForRegister();
@@ -120,9 +121,9 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
             'AUTOLOAD_PATH' => $this->relPath("{$from}/index.php", $autoload, false),
             'CACHE_ENV' => $cacheEnv ? '1' : '',
             'EARLY_HOOKS_FILE' => $earlyHook,
-            'ENV_BOOTSTRAP_DIR' => $envBootstrapDir ? "{$envBootstrapDir}/" : '',
+            'ENV_BOOTSTRAP_DIR' => $envBootstrapDir ?: $envRelDir,
             'ENV_FILE_NAME' => $config[Config::ENV_FILE]->unwrapOrFallback('.env'),
-            'ENV_REL_PATH' => $this->relPath($from, $envDir),
+            'ENV_REL_PATH' => $envRelDir,
             'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
             'WP_CONTENT_PATH' => $contentRelDir,
             'WP_CONTENT_URL_RELATIVE' => $this->stripDot($contentRelDir),

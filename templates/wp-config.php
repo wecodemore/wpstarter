@@ -71,10 +71,10 @@ require_once ABSPATH . 'wp-includes/plugin.php';
 
 /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
 if ($env
-    && file_exists("{{{ENV_BOOTSTRAP_DIR}}}{$env}.php")
-    && is_readable("{{{ENV_BOOTSTRAP_DIR}}}{$env}.php")
+    && file_exists("{{{ENV_BOOTSTRAP_DIR}}}/{$env}.php")
+    && is_readable("{{{ENV_BOOTSTRAP_DIR}}}/{$env}.php")
 ) {
-    require_once "{{{ENV_BOOTSTRAP_DIR}}}{$env}.php";
+    require_once "{{{ENV_BOOTSTRAP_DIR}}}/{$env}.php";
 }
 switch ($env) {
     case 'development':
@@ -117,10 +117,10 @@ if ($envLoader->read('WP_FORCE_SSL_FORWARDED_PROTO')
  * "enable_loading_advanced_cache_dropin" or to just-in-time define configuration constants.
  */
 if ('{{{EARLY_HOOKS_FILE}}}'
-    && file_exists('{{{EARLY_HOOKS_FILE}}}')
-    && is_readable('{{{EARLY_HOOKS_FILE}}}')
+    && file_exists("{{{ENV_BOOTSTRAP_DIR}}}/{{{EARLY_HOOKS_FILE}}}.php")
+    && is_readable("{{{ENV_BOOTSTRAP_DIR}}}/{{{EARLY_HOOKS_FILE}}}.php")
 ) {
-    require_once '{{{EARLY_HOOKS_FILE}}}';
+    require_once '{{{ENV_BOOTSTRAP_DIR}}}/{{{EARLY_HOOKS_FILE}}}';
 }
 
 /** Setting WP_HOME is not strictly required, but highly recommended. */
