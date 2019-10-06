@@ -163,12 +163,13 @@ To make such advanced configuration that involves WordPress, the `{$environment}
 
 ##### Default environments
 
-If **`WP_ENV`** variable is set to either `"development"`, `"staging"` or `"production"` WP Starter will setup WordPress debug-related PHP constants accordingly.
+If **`WP_ENV`** variable is set to one of: `"local"`, `"development"`, `"staging"`, `"production"`, WP Starter will setup WordPress debug-related PHP constants accordingly.
 
 The code that does it looks like this:
 
 ```php
 switch ($environment) {
+    case 'local':
     case 'development':
         defined('WP_DEBUG') or define('WP_DEBUG', true);
         defined('WP_DEBUG_DISPLAY') or define('WP_DEBUG_DISPLAY', true);
@@ -193,6 +194,8 @@ switch ($environment) {
         break;
 }
 ```
+
+On top of that, if **`WP_ENV`** is `local`, and `WP_LOCAL_DEV` is not defined, it will be defined to `true`.
 
 #### WP_HOME
 

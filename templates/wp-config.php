@@ -77,6 +77,7 @@ if ($env
     require_once "{{{ENV_BOOTSTRAP_DIR}}}/{$env}.php";
 }
 switch ($env) {
+    case 'local':
     case 'development':
         defined('WP_DEBUG') or define('WP_DEBUG', true);
         defined('WP_DEBUG_DISPLAY') or define('WP_DEBUG_DISPLAY', true);
@@ -100,6 +101,9 @@ switch ($env) {
         defined('SAVEQUERIES') or define('SAVEQUERIES', false);
         defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', false);
         break;
+}
+if ($env === 'local' && !defined('WP_LOCAL_DEV')) {
+    define('WP_LOCAL_DEV', true);
 }
 unset($env);
 
