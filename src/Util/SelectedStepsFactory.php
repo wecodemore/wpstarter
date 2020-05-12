@@ -14,6 +14,7 @@ namespace WeCodeMore\WpStarter\Util;
 use Composer\Composer;
 use WeCodeMore\WpStarter\ComposerPlugin;
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Step\Step;
 use WeCodeMore\WpStarter\Step\WpCliCommandsStep;
 
@@ -121,7 +122,7 @@ class SelectedStepsFactory
         $this->emptyOptOutInput = false;
         $this->maybeWantIgnoreConfig = 0;
 
-        $availableSteps = $this->availableStepsNameToClassMap($locator->config());
+        $availableSteps = $this->availableStepsNameToClassMap($locator->config(), $locator->io());
 
         if (!$availableSteps) {
             return [];
@@ -153,9 +154,10 @@ class SelectedStepsFactory
 
     /**
      * @param Config $config
+     * @param Io $io
      * @return array
      */
-    private function availableStepsNameToClassMap(Config $config): array
+    private function availableStepsNameToClassMap(Config $config, Io $io): array
     {
         $defaultSteps = ComposerPlugin::defaultSteps();
         $customSteps = $config[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
@@ -170,7 +172,7 @@ class SelectedStepsFactory
         }
 
         $availableSteps = $this->filterInvalidSteps(
-            $this->filterOutSkippedSteps($config, $availableSteps)
+            $this->filterOutSkippedSteps($config, $availableSteps, $io)
         );
 
         if (
@@ -206,11 +208,13 @@ class SelectedStepsFactory
     /**
      * @param Config $config
      * @param array $allAvailableStepNameToClassMap
+     * @param Io $io
      * @return array
      */
     private function filterOutSkippedSteps(
         Config $config,
-        array $allAvailableStepNameToClassMap
+        array $allAvailableStepNameToClassMap,
+        Io $io
     ): array {
 
         // In opt-out mode, steps to opt-out are required
@@ -245,6 +249,7 @@ class SelectedStepsFactory
             if ($skipNamesByConfig && in_array($name, $skipNamesByConfig, true)) {
                 $skippedByConfig++;
                 $skipped = true;
+                $io->writeIfVerbose("- Step '{$name}' will be skipped: disabled in config.");
 
                 // If config say to skip something that was passed explicitly, we have to remove it
                 // otherwise we will later try to build it.

@@ -19,7 +19,7 @@ use Composer\IO\IOInterface;
 class Io
 {
     /**
-     * @var \Composer\IO\IOInterface
+     * @var IOInterface
      */
     private $io;
 
@@ -29,7 +29,7 @@ class Io
     private $formatter;
 
     /**
-     * @param \Composer\IO\IOInterface $io
+     * @param IOInterface $io
      * @param Formatter|null $formatter
      */
     public function __construct(IOInterface $io, Formatter $formatter = null)
