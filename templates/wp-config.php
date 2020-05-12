@@ -24,26 +24,26 @@ define('WPSTARTER_PATH', realpath(__DIR__ . '{{{ENV_REL_PATH}}}'));
  * overridden from file, even if `WPSTARTER_ENV_LOADED` is not set.
  */
 $envLoader = '{{{CACHE_ENV}}}'
-    ? WordPressEnvBridge::buildFromCacheDump(__DIR__ . WordPressEnvBridge::CACHE_DUMP_FILE)
+    ? WordPressEnvBridge::buildFromCacheDump(WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE)
     : new WordPressEnvBridge();
 
 if (!$envLoader->hasCachedValues()) {
     $envLoader->load('{{{ENV_FILE_NAME}}}', WPSTARTER_PATH);
-    $env = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
-    if ($env && $env !== 'example') {
-        $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$env}", WPSTARTER_PATH);
+    $envName = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
+    if ($envName && $envName !== 'example') {
+        $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$envName}", WPSTARTER_PATH);
     }
     $envLoader->setupConstants();
 }
 
-isset($env) or $env = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
+isset($envName) or $envName = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
 
 if (
-    $env
-    && file_exists(WPSTARTER_PATH . "/{$env}.php")
-    && is_readable(WPSTARTER_PATH . "/{$env}.php")
+    $envName
+    && file_exists(WPSTARTER_PATH . "/{$envName}.php")
+    && is_readable(WPSTARTER_PATH . "/{$envName}.php")
 ) {
-    require_once WPSTARTER_PATH . "/{$env}.php";
+    require_once WPSTARTER_PATH . "/{$envName}.php";
 }
 
 /** Set optional database settings if not already set. */
@@ -91,7 +91,7 @@ if (
 }
 
 /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
-switch ($env) {
+switch ($envName) {
     case 'local':
     case 'development':
         defined('WP_DEBUG') or define('WP_DEBUG', true);
@@ -117,10 +117,9 @@ switch ($env) {
         defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', false);
         break;
 }
-if ($env === 'local' && !defined('WP_LOCAL_DEV')) {
+if ($envName === 'local' && !defined('WP_LOCAL_DEV')) {
     define('WP_LOCAL_DEV', true);
 }
-unset($env);
 
 /** Fix `is_ssl()` behind load balancers. */
 if (
@@ -167,11 +166,14 @@ add_filter(
 /** On shutdown we dump environment so that on subsequent requests we can load it faster */
 if ('{{{CACHE_ENV}}}' && $envLoader->isWpSetup()) {
     register_shutdown_function(
-        static function () use ($envLoader) {
-            $envLoader->dumpCached(__DIR__ . WordPressEnvBridge::CACHE_DUMP_FILE);
+        static function () use ($envLoader, $envName) {
+            $skipCache = apply_filters('wpstarter.skip.cache-env', $envName === 'local', $envName);
+            $skipCache or $envLoader->dumpCached(WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
         }
     );
 }
+
+unset($envName, $cacheEnv);
 
 ###################################################################################################
 #  I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion.  #
