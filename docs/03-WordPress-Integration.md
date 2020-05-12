@@ -237,7 +237,7 @@ In the `wp-config.php` that WP Starter generates, the file is loaded early, so t
 
 ### Early hook file
 
-In WP Starter configuration it is possible to set an "early hooks file" loaded very early (right after   `{$environment}.php`) that can be used to add callbacks to hooks triggered very early, like for example [`"enable_loading_advanced_cache_dropin"`](https://developer.wordpress.org/reference/hooks/enable_loading_advanced_cache_dropin/) or to set just-in-time WordPress configuration PHP constants.
+In WP Starter configuration it is possible to set an "early hooks file" loaded very early (right after `{$environment}.php`) that can be used to add callbacks to hooks triggered very early, like for example [`"enable_loading_advanced_cache_dropin"`](https://developer.wordpress.org/reference/hooks/enable_loading_advanced_cache_dropin/) or to set just-in-time WordPress configuration PHP constants.
 
 
 

@@ -91,7 +91,7 @@ final class Config implements \ArrayAccess
         self::CONTENT_DEV_DIR => 'validatePath',
         self::CUSTOM_STEPS => 'validateSteps',
         self::DROPINS => 'validateDropins',
-        self::EARLY_HOOKS_FILE => 'validateFileName',
+        self::EARLY_HOOKS_FILE => 'validatePath',
         self::ENV_BOOTSTRAP_DIR => 'validateDirName',
         self::ENV_DIR => 'validatePath',
         self::ENV_EXAMPLE => 'validateBoolOrAskOrUrlOrPath',

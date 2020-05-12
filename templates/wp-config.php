@@ -70,11 +70,11 @@ defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}
 require_once ABSPATH . 'wp-includes/plugin.php';
 
 /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
-if ($env
-    && file_exists("{{{ENV_BOOTSTRAP_DIR}}}/{$env}.php")
-    && is_readable("{{{ENV_BOOTSTRAP_DIR}}}/{$env}.php")
+if ('{{{EARLY_HOOKS_FILE}}}'
+    && file_exists(__DIR__ . "{{{EARLY_HOOKS_FILE}}}")
+    && is_readable(__DIR__ . "{{{EARLY_HOOKS_FILE}}}")
 ) {
-    require_once "{{{ENV_BOOTSTRAP_DIR}}}/{$env}.php";
+    require_once __DIR__ . '{{{EARLY_HOOKS_FILE}}}';
 }
 switch ($env) {
     case 'local':
