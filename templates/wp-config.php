@@ -121,10 +121,10 @@ if ($envLoader->read('WP_FORCE_SSL_FORWARDED_PROTO')
  * "enable_loading_advanced_cache_dropin" or to just-in-time define configuration constants.
  */
 if ('{{{EARLY_HOOKS_FILE}}}'
-    && file_exists("{{{ENV_BOOTSTRAP_DIR}}}/{{{EARLY_HOOKS_FILE}}}.php")
-    && is_readable("{{{ENV_BOOTSTRAP_DIR}}}/{{{EARLY_HOOKS_FILE}}}.php")
+    && file_exists(__DIR__ . '{{{EARLY_HOOKS_FILE}}}')
+    && is_readable(__DIR__ . '{{{EARLY_HOOKS_FILE}}}')
 ) {
-    require_once '{{{ENV_BOOTSTRAP_DIR}}}/{{{EARLY_HOOKS_FILE}}}';
+    require_once __DIR__ . '{{{EARLY_HOOKS_FILE}}}';
 }
 
 /** Setting WP_HOME is not strictly required, but highly recommended. */
