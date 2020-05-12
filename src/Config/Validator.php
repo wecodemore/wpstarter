@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Config;
 
@@ -566,7 +569,8 @@ class Validator
             $normalized
         );
 
-        if ($hasInvalidChars
+        if (
+            $hasInvalidChars
             || !str_replace([' ', '.', '~', '%', '@', '='], '', $normalized)
             || substr_count($normalized, '..')
         ) {
@@ -649,7 +653,8 @@ class Validator
             return Result::errored("Glob path must be in a non-empty string.");
         }
 
-        if (!str_replace(['*', '.', '/', '?'], '', $value)
+        if (
+            !str_replace(['*', '.', '/', '?'], '', $value)
             && !substr_count($value, '..')
             && !substr_count($value, '//')
         ) {

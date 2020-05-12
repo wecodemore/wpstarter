@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Util;
 
@@ -170,7 +173,8 @@ class SelectedStepsFactory
             $this->filterOutSkippedSteps($config, $availableSteps)
         );
 
-        if (!$config[Config::WP_CLI_FILES]->notEmpty()
+        if (
+            !$config[Config::WP_CLI_FILES]->notEmpty()
             && !$config[Config::WP_CLI_COMMANDS]->notEmpty()
         ) {
             unset($availableSteps[WpCliCommandsStep::NAME]);
@@ -322,7 +326,8 @@ class SelectedStepsFactory
             }
 
             // Make sure WP CLI steps goes at the end.
-            if (is_a($stepClass, WpCliCommandsStep::class, true)
+            if (
+                is_a($stepClass, WpCliCommandsStep::class, true)
                 || ($stepName === WpCliCommandsStep::NAME)
             ) {
                 $wpCliSteps[] = $step;

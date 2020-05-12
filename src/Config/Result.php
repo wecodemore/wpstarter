@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Config;
 
@@ -91,7 +94,7 @@ final class Result
      */
     private function __construct($value = null, Error $error = null)
     {
-        // phpcs:enable
+        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
 
         if ($value instanceof Result) {
             $this->value = $value->value;
@@ -115,8 +118,6 @@ final class Result
     public function notEmpty(): bool
     {
         $this->maybeResolve();
-
-        // phpcs:enable
 
         return $this->error ? false : $this->value !== null;
     }
@@ -146,7 +147,7 @@ final class Result
     {
         $this->maybeResolve();
 
-        // phpcs:enable
+        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
 
         return !$this->is($compare);
     }
@@ -162,7 +163,7 @@ final class Result
     {
         $this->maybeResolve();
 
-        // phpcs:enable
+        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
 
         array_unshift($things, $thing);
 
@@ -180,7 +181,8 @@ final class Result
     {
         $this->maybeResolve();
 
-        // phpcs:enable
+        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
+        // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
 
         return $this->notEmpty() ? $this->value : $fallback;
     }
@@ -192,9 +194,10 @@ final class Result
      */
     public function unwrap()
     {
+        // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
+
         $this->maybeResolve();
 
-        // phpcs:enable
         if ($this->error) {
             throw $this->error;
         }

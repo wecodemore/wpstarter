@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Util;
 
@@ -59,7 +62,7 @@ class OverwriteHelper
         $this->preventFor = $config[Config::PREVENT_OVERWRITE]->unwrapOrFallback(false);
 
         if (is_array($this->preventFor)) {
-            $trim = function (string $path) use ($filesystem): string {
+            $trim = static function (string $path) use ($filesystem): string {
                 return trim($filesystem->normalizePath($path), '/');
             };
             $this->preventFor = array_map($trim, $this->preventFor);

@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Util;
 
@@ -55,13 +58,13 @@ class Unzipper
      * @param Config $config
      * @return ZipDownloader
      *
-     * phpcs:disable Generic.Metrics.NestingLevel
+     * phpcs:disable Inpsyde.CodeQuality.NestingLevel
      */
     private function createUnzipper(IOInterface $io, Config $config): ZipDownloader
     {
-        // phpcs:enable
+        // phpcs:enable Inpsyde.CodeQuality.NestingLevel
 
-        return new class($io, $config) extends ZipDownloader
+        return new class ($io, $config) extends ZipDownloader
         {
             /**
              * @var bool

@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Step;
 
@@ -232,7 +235,8 @@ final class DropinsStep implements Step
                 continue;
             }
 
-            if (file_exists("{$target}/{$file}")
+            if (
+                file_exists("{$target}/{$file}")
                 && !$this->overwriteHelper->shouldOverwrite("{$target}/{$file}")
             ) {
                 continue;
@@ -296,7 +300,8 @@ final class DropinsStep implements Step
      */
     private function isKnownDropin(string $filename, Config $config): bool
     {
-        if ($config[Config::UNKNOWN_DROPINS]->is(true)
+        if (
+            $config[Config::UNKNOWN_DROPINS]->is(true)
             || in_array($filename, self::DROPINS, true)
         ) {
             return true;

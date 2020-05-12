@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Io;
 
@@ -39,7 +42,7 @@ class Question
     {
         $this->lines = array_filter(
             $lines,
-            function (string $line): bool {
+            static function (string $line): bool {
                 return (bool)trim($line);
             }
         );
@@ -50,7 +53,7 @@ class Question
 
         $validAnswers = array_filter(
             $answers,
-            function (string $value, string $key): bool {
+            static function (string $value, string $key): bool {
                 return trim($value) && trim($key);
             },
             ARRAY_FILTER_USE_BOTH

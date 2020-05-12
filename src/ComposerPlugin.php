@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter;
 
@@ -120,8 +123,6 @@ final class ComposerPlugin implements
      */
     public function getCommands(): array
     {
-        // phpcs:enable
-
         return [new WpStarterCommand()];
     }
 
@@ -328,7 +329,7 @@ final class ComposerPlugin implements
     private function convertErrorsToExceptions()
     {
         set_error_handler( // @phan-suppress-next-line PhanTypeMismatchArgumentInternal
-            function (int $severity, string $message, string $file = '', int $line = 0) {
+            static function (int $severity, string $message, string $file = '', int $line = 0) {
                 if ($file && $line) {
                     $message = rtrim($message, '. ') . ", in {$file} line {$line}.";
                 }
@@ -453,7 +454,7 @@ final class ComposerPlugin implements
      */
     private function psr4LoaderFor(string $namespace, string $dir): callable
     {
-        return function (string $class) use ($namespace, $dir) {
+        return static function (string $class) use ($namespace, $dir) {
             if (stripos($class, $namespace) === 0) {
                 $file = substr(str_replace('\\', '/', $class), strlen($namespace)) . '.php';
                 require_once $dir . $file;

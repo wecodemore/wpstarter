@@ -4,10 +4,14 @@
     <file>./src</file>
 
     <arg value="sp"/>
+    <arg name="colors"/>
+    <config name="testVersion" value="7.0-"/>
 
     <rule ref="Inpsyde">
-        <exclude name="WordPress.XSS"/>
-        <exclude name="WordPress.VIP"/>
+        <exclude name="WordPress.Security"/>
+        <exclude name="WordPress.PHP.NoSilencedErrors"/>
+        <exclude name="WordPressVIPMinimum.Constants.ConstantString"/>
+        <exclude name="WordPress.DB.RestrictedFunctions"/>
         <exclude name="WordPress.PHP.DiscouragedPHPFunctions"/>
         <exclude name="WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler"/>
     </rule>
@@ -18,12 +22,6 @@
                 name="psr4"
                 type="array"
                 value="WeCodeMore\WpStarter=>src,WeCodeMore\WpStarter\Tests=>tests\src,WeCodeMore\WpStarter\Tests\Unit=>tests\unit,WeCodeMore\WpStarter\Tests\Integration=>tests\integration"/>
-        </properties>
-    </rule>
-
-    <rule ref="Inpsyde.CodeQuality.ElementNameMinimalLength">
-        <properties>
-            <property name="allowedShortNames" type="array" value="i,id,to,up,ok,no,go,it,db,is,wp,io" />
         </properties>
     </rule>
 

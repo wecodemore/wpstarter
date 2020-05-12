@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Util;
 
@@ -100,7 +103,8 @@ class PackageFinder
         $vendor = rtrim($vendor, '/') . '/';
 
         foreach ($packages as $package) {
-            if (stripos($package->getPrettyName(), $vendor) === 0
+            if (
+                stripos($package->getPrettyName(), $vendor) === 0
                 || stripos($package->getName(), $vendor) === 0
             ) {
                 $list[] = $package;
@@ -124,10 +128,11 @@ class PackageFinder
         $packages = $this->all();
 
         foreach ($packages as $package) {
-            if ($package->getName() === $name
+            if (
+                $package->getName() === $name
                 || $package->getPrettyName() === $name
-                || fnmatch($name, $package->getName(), FNM_PATHNAME|FNM_PERIOD|FNM_CASEFOLD)
-                || fnmatch($name, $package->getPrettyName(), FNM_PATHNAME|FNM_PERIOD|FNM_CASEFOLD)
+                || fnmatch($name, $package->getName(), FNM_PATHNAME | FNM_PERIOD | FNM_CASEFOLD)
+                || fnmatch($name, $package->getPrettyName(), FNM_PATHNAME | FNM_PERIOD | FNM_CASEFOLD)
             ) {
                 return $package;
             }
@@ -154,10 +159,11 @@ class PackageFinder
         $found = [];
 
         foreach ($packages as $package) {
-            if ($package->getName() === $name
+            if (
+                $package->getName() === $name
                 || $package->getPrettyName() === $name
-                || fnmatch($name, $package->getName(), FNM_PATHNAME|FNM_PERIOD|FNM_CASEFOLD)
-                || fnmatch($name, $package->getPrettyName(), FNM_PATHNAME|FNM_PERIOD|FNM_CASEFOLD)
+                || fnmatch($name, $package->getName(), FNM_PATHNAME | FNM_PERIOD | FNM_CASEFOLD)
+                || fnmatch($name, $package->getPrettyName(), FNM_PATHNAME | FNM_PERIOD | FNM_CASEFOLD)
             ) {
                 $found[] = $package;
             }

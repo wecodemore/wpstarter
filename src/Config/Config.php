@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Config;
 
@@ -246,7 +249,7 @@ final class Config implements \ArrayAccess
      */
     private function validateValue(string $name, $value): Result
     {
-        // phpcs:enable
+        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
 
         /** @var string|callable $method */
         $method = $this->validationMap[$name] ?? null;

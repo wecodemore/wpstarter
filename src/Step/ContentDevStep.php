@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Step;
 
@@ -161,7 +164,7 @@ final class ContentDevStep implements OptionalStep
             : $this->symlinkDirs($scrDirs, $targetBase);
 
         $scrFiles = array_map(
-            function (string $dropin) use ($srcBase): string {
+            static function (string $dropin) use ($srcBase): string {
                 return "{$srcBase}/{$dropin}";
             },
             DropinsStep::DROPINS
@@ -342,7 +345,8 @@ final class ContentDevStep implements OptionalStep
             return;
         }
 
-        if ($this->composerFilesystem->isSymlinkedDirectory($target)
+        if (
+            $this->composerFilesystem->isSymlinkedDirectory($target)
             || $this->composerFilesystem->isJunction($target)
         ) {
             $this->composerFilesystem->removeDirectory($target);
