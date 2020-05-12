@@ -169,7 +169,7 @@ class SelectedStepsFactory
             $availableSteps = array_merge($availableSteps, $commandSteps);
         }
 
-        $availableSteps = $this->filterInValidSteps(
+        $availableSteps = $this->filterInvalidSteps(
             $this->filterOutSkippedSteps($config, $availableSteps)
         );
 
@@ -187,7 +187,7 @@ class SelectedStepsFactory
      * @param array $allSteps
      * @return array
      */
-    private function filterInValidSteps(array $allSteps): array
+    private function filterInvalidSteps(array $allSteps): array
     {
         return array_filter(
             $allSteps,
@@ -221,11 +221,11 @@ class SelectedStepsFactory
         }
 
         $skipNamesByInput = $this->optOutMode ? $this->commandStepNames : [];
-        $skipClassesByConfig = $this->ignoreSkipConfig
+        $skipNamesByConfig = $this->ignoreSkipConfig
             ? []
             : $config[Config::SKIP_STEPS]->unwrapOrFallback([]);
 
-        if (!$skipNamesByInput && !$skipClassesByConfig) {
+        if (!$skipNamesByInput && !$skipNamesByConfig) {
             return $allAvailableStepNameToClassMap;
         }
 
@@ -242,7 +242,7 @@ class SelectedStepsFactory
             }
 
             // In other cases, let's skip what in skip config (unless ignore-skip config is set)
-            if ($skipClassesByConfig && in_array($class, $skipClassesByConfig, true)) {
+            if ($skipNamesByConfig && in_array($name, $skipNamesByConfig, true)) {
                 $skippedByConfig++;
                 $skipped = true;
 
@@ -260,7 +260,7 @@ class SelectedStepsFactory
         }
 
         $this->inputErrors += count($skipNamesByInput) - $skippedByInput;
-        $this->configErrors += count($skipClassesByConfig) - $skippedByConfig;
+        $this->configErrors += count($skipNamesByConfig) - $skippedByConfig;
 
         // If ignoring passed steps because of config, warn user to maybe use ignore config flag
         $countOldCommandStepNames = count($this->commandStepNames);

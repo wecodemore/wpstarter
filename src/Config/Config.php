@@ -92,7 +92,7 @@ final class Config implements \ArrayAccess
         self::COMPOSER_UPDATED_PACKAGES => 'validateArray',
         self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
         self::CONTENT_DEV_DIR => 'validatePath',
-        self::CUSTOM_STEPS => 'validateSteps',
+        self::CUSTOM_STEPS => 'validateArray',
         self::DROPINS => 'validateDropins',
         self::EARLY_HOOKS_FILE => 'validatePath',
         self::ENV_BOOTSTRAP_DIR => 'validateDirName',
