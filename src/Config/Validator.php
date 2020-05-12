@@ -846,7 +846,7 @@ class Validator
      */
     private function isValidEntityName(string $value, $namespace = true): bool
     {
-        $parts = $namespace ? explode('\\', $value) : [$value];
+        $parts = $namespace ? explode('\\', ltrim($value, '\\')) : [$value];
         foreach ($parts as $part) {
             if (!preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $part)) {
                 return false;
