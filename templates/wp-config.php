@@ -38,6 +38,14 @@ if (!$envLoader->hasCachedValues()) {
 
 isset($env) or $env = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
 
+if (
+    $env
+    && file_exists(WPSTARTER_PATH . "/{$env}.php")
+    && is_readable(WPSTARTER_PATH . "/{$env}.php")
+) {
+    require_once WPSTARTER_PATH . "/{$env}.php";
+}
+
 /** Set optional database settings if not already set. */
 defined('DB_HOST') or define('DB_HOST', 'localhost');
 defined('DB_CHARSET') or define('DB_CHARSET', 'utf8');
@@ -69,13 +77,20 @@ defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}
 /** Load plugin.php early, so we can call `add_action` below. */
 require_once ABSPATH . 'wp-includes/plugin.php';
 
-/** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
-if ('{{{EARLY_HOOKS_FILE}}}'
-    && file_exists(__DIR__ . "{{{EARLY_HOOKS_FILE}}}")
-    && is_readable(__DIR__ . "{{{EARLY_HOOKS_FILE}}}")
+/**
+ * Load early hooks file if any.
+ * Early hooks file allows to add hooks that are triggered before plugins are loaded, e.g.
+ * "enable_loading_advanced_cache_dropin" or to just-in-time define configuration constants.
+ */
+if (
+    '{{{EARLY_HOOKS_FILE}}}'
+    && file_exists(__DIR__ . '{{{EARLY_HOOKS_FILE}}}')
+    && is_readable(__DIR__ . '{{{EARLY_HOOKS_FILE}}}')
 ) {
     require_once __DIR__ . '{{{EARLY_HOOKS_FILE}}}';
 }
+
+/** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
 switch ($env) {
     case 'local':
     case 'development':
@@ -108,23 +123,12 @@ if ($env === 'local' && !defined('WP_LOCAL_DEV')) {
 unset($env);
 
 /** Fix `is_ssl()` behind load balancers. */
-if ($envLoader->read('WP_FORCE_SSL_FORWARDED_PROTO')
+if (
+    $envLoader->read('WP_FORCE_SSL_FORWARDED_PROTO')
     && array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER)
     && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
 ) {
     $_SERVER['HTTPS'] = 'on';
-}
-
-/**
- * Load early hooks file if any.
- * Early hooks file allows to add hooks that are triggered before plugins are loaded, e.g.
- * "enable_loading_advanced_cache_dropin" or to just-in-time define configuration constants.
- */
-if ('{{{EARLY_HOOKS_FILE}}}'
-    && file_exists(__DIR__ . '{{{EARLY_HOOKS_FILE}}}')
-    && is_readable(__DIR__ . '{{{EARLY_HOOKS_FILE}}}')
-) {
-    require_once __DIR__ . '{{{EARLY_HOOKS_FILE}}}';
 }
 
 /** Setting WP_HOME is not strictly required, but highly recommended. */
@@ -144,7 +148,7 @@ defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/') . '/{{
 if (filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN)) {
     add_action(
         'plugins_loaded',
-        function () {
+        static function () {
             register_theme_directory(ABSPATH . 'wp-content/themes');
         },
         0
@@ -154,7 +158,7 @@ if (filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN)) {
 /** Allow changing admin color scheme. Useful to distinguish environments in the dashboard. */
 add_filter(
     'get_user_option_admin_color',
-    function ($color) use ($envLoader) {
+    static function ($color) use ($envLoader) {
         return $envLoader->read('WP_ADMIN_COLOR') ?: $color;
     },
     999
@@ -163,7 +167,7 @@ add_filter(
 /** On shutdown we dump environment so that on subsequent requests we can load it faster */
 if ('{{{CACHE_ENV}}}' && $envLoader->isWpSetup()) {
     register_shutdown_function(
-        function () use ($envLoader) {
+        static function () use ($envLoader) {
             $envLoader->dumpCached(__DIR__ . WordPressEnvBridge::CACHE_DUMP_FILE);
         }
     );
