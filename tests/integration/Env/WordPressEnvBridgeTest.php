@@ -177,7 +177,7 @@ class WordPressEnvBridgeTest extends TestCase
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
-        $bridge->setupWordPress();
+        $bridge->setupConstants();
 
         static::assertTrue(defined('DB_HOST'));
         static::assertSame('localhost', DB_HOST);
@@ -287,6 +287,7 @@ class WordPressEnvBridgeTest extends TestCase
 
         $loadedVars = WordPressEnvBridge::loadedVars();
 
+        $bridge->setupConstants();
         $bridge->dumpCached($cacheFile);
 
         static::assertTrue(file_exists($cacheFile));
@@ -353,13 +354,13 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame($oldCache, $newCache);
 
         // These variables were accessed via read() and should be part of the dump
-        static::assertContains("putenv('MY_AWESOME_VAR=Awesome!');", $cachedContent);
-        static::assertContains("putenv('DB_NAME=wp');", $cachedContent);
-        static::assertContains("define('DB_NAME', 'wp');", $cachedContent);
+        static::assertStringContainsString("putenv('MY_AWESOME_VAR=Awesome!');", $cachedContent);
+        static::assertStringContainsString("putenv('DB_NAME=wp');", $cachedContent);
+        static::assertStringContainsString("define('DB_NAME', 'wp');", $cachedContent);
         // ... and these variables were NOT accessed via read() but still should be part of the dump
-        static::assertContains("putenv('MY_BAD_VAR=Bad!');", $cachedContent);
-        static::assertContains("putenv('EMPTY_TRASH_DAYS=12');", $cachedContent);
-        static::assertContains("define('EMPTY_TRASH_DAYS', 12);", $cachedContent);
+        static::assertStringContainsString("putenv('MY_BAD_VAR=Bad!');", $cachedContent);
+        static::assertStringContainsString("putenv('EMPTY_TRASH_DAYS=12');", $cachedContent);
+        static::assertStringContainsString("define('EMPTY_TRASH_DAYS', 12);", $cachedContent);
 
         // WP constants are set for actual env, accessed loaded env, and not accessed loaded env
         static::assertTrue(defined('WP_POST_REVISIONS'));
@@ -401,8 +402,10 @@ class WordPressEnvBridgeTest extends TestCase
     /**
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testsSetupWordPress()
+    public function testsSetupConstants()
     {
+        $this->deleteCacheFile();
+
         $cacheFile = $this->fixturesPath() . '/cached.env.php';
 
         if (file_exists($cacheFile)) {
@@ -415,16 +418,33 @@ class WordPressEnvBridgeTest extends TestCase
         $bridge = new WordPressEnvBridge();
         $bridge->loadFile($this->fixturesPath() . '/example.env');
         $bridge->write('FOO', 'Bar!');
-        $bridge->setupWordPress();
+
+        $bridge->write(
+            'WP_STARTER_ENV_TO_CONST',
+            'PLUGIN_CONFIG_ONE,PLUGIN_CONFIG_TWO:INT,PLUGIN_CONFIG_THREE:BOOL,PLUGIN_CONFIG_FOUR'
+        );
+
+        $bridge->setupConstants();
 
         static::assertTrue(defined('DB_HOST'));
         static::assertTrue(defined('DB_NAME'));
         static::assertTrue(defined('DB_PASSWORD'));
         static::assertTrue(defined('WP_POST_REVISIONS'));
         static::assertTrue(defined('FS_CHMOD_DIR'));
+
+        static::assertTrue(defined('PLUGIN_CONFIG_ONE'));
+        static::assertTrue(defined('PLUGIN_CONFIG_TWO'));
+        static::assertTrue(defined('PLUGIN_CONFIG_THREE'));
+        static::assertTrue(defined('PLUGIN_CONFIG_FOUR'));
+        static::assertFalse(defined('PLUGIN_CONFIG_FIVE'));
+
         static::assertSame(7, WP_POST_REVISIONS);
         static::assertSame(0644, FS_CHMOD_DIR);
         static::assertSame('on', SUNRISE);
+
+        static::assertSame(2, PLUGIN_CONFIG_TWO);
+        static::assertTrue(PLUGIN_CONFIG_THREE);
+        static::assertSame('4', PLUGIN_CONFIG_FOUR);
 
         static::assertTrue($bridge->isWpSetup());
         static::assertFalse($bridge->hasCachedValues());
@@ -434,7 +454,7 @@ class WordPressEnvBridgeTest extends TestCase
 
     /**
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
-     * @depends testsSetupWordPress
+     * @depends testsSetupConstants
      */
     public function testLoadCacheFromScratch()
     {
@@ -447,14 +467,7 @@ class WordPressEnvBridgeTest extends TestCase
 
         $cachedBridge = WordPressEnvBridge::buildFromCacheDump($cacheFile);
 
-        $notDeleted = false;
-        @unlink($cacheFile);
-        if (file_exists($cacheFile)) {
-            // Try again
-            usleep(2500);
-            @unlink($cacheFile);
-            $notDeleted = file_exists($cacheFile);
-        }
+        $deleted = $this->deleteCacheFile();
 
         static::assertFalse($cachedBridge->isWpSetup());
         static::assertTrue($cachedBridge->hasCachedValues());
@@ -506,8 +519,27 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame('Bad!', $_SERVER['MY_BAD_VAR'] ?? null);
         static::assertSame('Bad!', $cachedBridge->read('MY_BAD_VAR'));
 
-        if ($notDeleted) {
+        if (!$deleted) {
             static::markTestIncomplete('Warning: Cache file was not deleted.');
         }
+    }
+
+    /**
+     * @return bool
+     */
+    private function deleteCacheFile(): bool
+    {
+        $cacheFile = $this->fixturesPath() . '/cached.env.php';
+
+        $deleted = true;
+        @unlink($cacheFile);
+        if (file_exists($cacheFile)) {
+            // Try again
+            usleep(2500);
+            @unlink($cacheFile);
+            $deleted = !file_exists($cacheFile);
+        }
+
+        return $deleted;
     }
 }

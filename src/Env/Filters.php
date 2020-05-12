@@ -36,6 +36,25 @@ final class Filters
     const FILTER_TABLE_PREFIX = 'table-prefix';
 
     /**
+     * @param string $name
+     * @return string
+     */
+    public static function resolveFilterName(string $name): string
+    {
+        $cleanName = $name ? trim($name) : '';
+        if (!$cleanName) {
+            return '';
+        }
+
+        $constant = 'FILTER_' . strtoupper($cleanName);
+        if ($constant !== 'FILTER_TABLE_PREFIX' && defined(__CLASS__ . "::{$constant}")) {
+            return constant(__CLASS__ . "::{$constant}");
+        }
+
+        return '';
+    }
+
+    /**
      * Return given value filtered based on "mode".
      *
      * @param string $mode One of the `FILTER_*` class constants.

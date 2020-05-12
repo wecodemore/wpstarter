@@ -179,18 +179,28 @@ class WordPressEnvBridge
         'WP_USE_EXT_MYSQL' => Filters::FILTER_BOOL,
     ];
 
-    const WP_STARTER_VARS = [
-        'DB_TABLE_PREFIX' => Filters::FILTER_TABLE_PREFIX,
-        'WORDPRESS_ENV' => Filters::FILTER_STRING,
-        'WPDB_ENV_VALID' => Filters::FILTER_BOOL,
-        'WPDB_EXISTS' => Filters::FILTER_BOOL,
-        'WP_ADMIN_COLOR' => Filters::FILTER_STRING,
-        'WP_ENV' => Filters::FILTER_STRING,
-        'WP_FORCE_SSL_FORWARDED_PROTO' => Filters::FILTER_BOOL,
-        'WP_INSTALLED' => Filters::FILTER_BOOL,
-    ];
-
     const CACHE_DUMP_FILE = '/.env.cached.php';
+    const CUSTOM_ENV_TO_CONST_VAR_NAME = 'WP_STARTER_ENV_TO_CONST';
+    const DB_TABLE_PREFIX_VAR_NAME = 'DB_TABLE_PREFIX';
+    const WP_ADMIN_COLOR_VAR_NAME = 'WP_ADMIN_COLOR';
+    const WP_ENV_VAR_NAME = 'WORDPRESS_ENV';
+    const WP_ENV_ALT_VAR_NAME = 'WP_ENV';
+    const WP_FORCE_SSL_FORWARDED_PROTO_VAR_NAME = 'WP_FORCE_SSL_FORWARDED_PROTO';
+    const WP_INSTALLED_VAR_NAME = 'WP_INSTALLED';
+    const WPDB_ENV_VALID_VAR_NAME = 'WPDB_ENV_VALID';
+    const WPDB_EXISTS_VAR_NAME = 'WPDB_EXISTS';
+
+    const WP_STARTER_VARS = [
+        self::CUSTOM_ENV_TO_CONST_VAR_NAME => Filters::FILTER_STRING,
+        self::DB_TABLE_PREFIX_VAR_NAME => Filters::FILTER_TABLE_PREFIX,
+        self::WP_ADMIN_COLOR_VAR_NAME => Filters::FILTER_STRING,
+        self::WP_ENV_VAR_NAME => Filters::FILTER_STRING,
+        self::WP_ENV_ALT_VAR_NAME => Filters::FILTER_STRING,
+        self::WP_FORCE_SSL_FORWARDED_PROTO_VAR_NAME => Filters::FILTER_BOOL,
+        self::WP_INSTALLED_VAR_NAME => Filters::FILTER_BOOL,
+        self::WPDB_ENV_VALID_VAR_NAME => Filters::FILTER_BOOL,
+        self::WPDB_EXISTS_VAR_NAME => Filters::FILTER_BOOL,
+    ];
 
     /**
      * @var Dotenv
@@ -221,6 +231,16 @@ class WordPressEnvBridge
      * @var bool
      */
     private $fromCache = false;
+
+    /**
+     * @var array<string, string>
+     */
+    private $customFiltersConfig = [];
+
+    /**
+     * @var array<string>
+     */
+    private $definedConstants = [];
 
     /**
      * @var bool
@@ -468,8 +488,11 @@ class WordPressEnvBridge
 
         foreach (self::$cache as $key => list($value, $filtered)) {
             $slashed = str_replace("'", "\'", $value);
-            // For WP constants, dump the `define` with filtered value, if any.
-            if (array_key_exists($key, self::WP_CONSTANTS)) {
+            // For defined constants, dump the `define` with filtered value, if any.
+            if (
+                in_array($key, $this->definedConstants, true)
+                || array_key_exists($key, self::WP_CONSTANTS)
+            ) {
                 $define = $value !== $filtered
                     ? var_export($filtered, true) // phpcs:ignore
                     : "'{$slashed}'";
@@ -496,26 +519,38 @@ class WordPressEnvBridge
     }
 
     /**
-     * Return all environment variables that have been set
-     *
-     * @return array
+     * @return void
      */
-    public function setupWordPress(): array
+    public function setupConstants()
     {
         static $done;
         if ($done) {
-            return [];
+            return;
         }
 
         $done = true;
-        $set = [];
+        $names = [];
         foreach (self::WP_CONSTANTS as $key => $filter) {
-            $this->defineWpConstant($key) and $set[] = $key;
+            $this->defineConstantFromVar($key) and $names[] = $key;
         }
 
-        $this->wordPressSetup = count(array_intersect($set, ['DB_NAME', 'DB_USER'])) === 2;
+        $customVarsToSetStr = (string)$this->read(self::CUSTOM_ENV_TO_CONST_VAR_NAME);
+        $customVarsToSet = explode(',', $customVarsToSetStr);
+        foreach ($customVarsToSet as $customVarToSetStr) {
+            $varData = explode(':', $customVarToSetStr ? trim($customVarToSetStr) : '', 2);
+            $varName = $varData[0] ?? null;
+            if (!$varName) {
+                continue;
+            }
 
-        return $set;
+            $varFilter = Filters::resolveFilterName($varData[1] ?? '');
+            $varFilter and $this->customFiltersConfig[$varName] = $varFilter;
+            $this->defineConstantFromVar($varName) and $names[] = $varName;
+        }
+
+        $this->definedConstants = $names;
+        $this->customFiltersConfig = [];
+        $this->wordPressSetup = count(array_intersect($names, ['DB_NAME', 'DB_USER'])) === 2;
     }
 
     /**
@@ -549,7 +584,11 @@ class WordPressEnvBridge
         // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
 
         /** @var string|null $filter */
-        $filter = self::WP_CONSTANTS[$name] ?? self::WP_STARTER_VARS[$name] ?? null;
+        $filter = self::WP_CONSTANTS[$name]
+            ?? self::WP_STARTER_VARS[$name]
+            ?? $this->customFiltersConfig[$name]
+            ?? null;
+
         if (!$filter) {
             self::$cache[$name] = [$value, $value];
 
@@ -569,14 +608,15 @@ class WordPressEnvBridge
      * @param string $name
      * @return bool True if a constant has been defined.
      */
-    private function defineWpConstant(string $name): bool
+    private function defineConstantFromVar(string $name): bool
     {
         $value = $this->read($name);
+
         if ($value === null) {
             return false;
         }
 
-        define($name, $value);
+        defined($name) or define($name, $value);
 
         return true;
     }

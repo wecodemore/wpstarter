@@ -33,7 +33,7 @@ if (!$envLoader->hasCachedValues()) {
     if ($env && $env !== 'example') {
         $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$env}", WPSTARTER_PATH);
     }
-    $defined = $envLoader->setupWordPress();
+    $envLoader->setupConstants();
 }
 
 isset($env) or $env = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
