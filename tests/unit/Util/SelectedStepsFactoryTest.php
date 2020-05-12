@@ -117,7 +117,7 @@ class SelectedStepsFactoryTest extends TestCase
 
         static::assertCount(1, $steps);
         static::assertInstanceOf(CheckPathStep::class, $steps[0]);
-        static::assertContains('invalid step', $factory->lastError());
+        static::assertStringContainsString('invalid step', $factory->lastError());
     }
 
     public function testOptInInvalidSteps()
@@ -128,14 +128,14 @@ class SelectedStepsFactoryTest extends TestCase
             'bar'
         );
 
-        $locator = $this->makeLocator($this->makeConfig());
+        $locator = $this->makeLocator($this->makeConfig(), \Mockery::mock(Io::class));
 
         $composer = \Mockery::mock(Composer::class);
 
         $steps = $factory->selectAndFactory($locator, $composer);
 
         static::assertCount(0, $steps);
-        static::assertContains('invalid steps', $factory->lastError());
+        static::assertStringContainsString('invalid steps', $factory->lastError());
     }
 
     public function testOptInCommandSteps()
@@ -143,7 +143,7 @@ class SelectedStepsFactoryTest extends TestCase
         $factory = new SelectedStepsFactory(SelectedStepsFactory::MODE_COMMAND, 'dummy');
 
         $config = [Config::COMMAND_STEPS => ['dummy' => DummyStep::class]];
-        $locator = $this->makeLocator($this->makeConfig($config));
+        $locator = $this->makeLocator($this->makeConfig($config), \Mockery::mock(Io::class));
         $composer = \Mockery::mock(Composer::class);
 
         $steps = $factory->selectAndFactory($locator, $composer);
@@ -158,13 +158,13 @@ class SelectedStepsFactoryTest extends TestCase
         $factory = new SelectedStepsFactory(SelectedStepsFactory::MODE_COMMAND, 'cmd-step');
 
         $config = [Config::COMMAND_STEPS => ['cmd-step' => DummyStep::class]];
-        $locator = $this->makeLocator($this->makeConfig($config));
+        $locator = $this->makeLocator($this->makeConfig($config), \Mockery::mock(Io::class));
         $composer = \Mockery::mock(Composer::class);
 
         $steps = $factory->selectAndFactory($locator, $composer);
 
         static::assertCount(0, $steps);
-        static::assertContains('invalid step setting', $factory->lastError());
+        static::assertStringContainsString('invalid step setting', $factory->lastError());
     }
 
     public function testOptInValidStepsWithSkipConfig()
@@ -176,7 +176,8 @@ class SelectedStepsFactoryTest extends TestCase
         );
 
         $locator = $this->makeLocator(
-            $this->makeConfig([Config::SKIP_STEPS => [CheckPathStep::class]])
+            $this->makeConfig([Config::SKIP_STEPS => [CheckPathStep::NAME]]),
+            \Mockery::mock(Io::class)
         );
 
         $composer = \Mockery::mock(Composer::class);
@@ -185,7 +186,7 @@ class SelectedStepsFactoryTest extends TestCase
 
         static::assertCount(1, $steps);
         static::assertInstanceOf(FlushEnvCacheStep::class, $steps[0]);
-        static::assertContains('--ignore-skip-config', $factory->lastError());
+        static::assertStringContainsString('--ignore-skip-config', $factory->lastError());
     }
 
     public function testOptInValidStepsWithSkipButSkipConfigIgnored()
@@ -228,7 +229,7 @@ class SelectedStepsFactoryTest extends TestCase
             WpCliCommandsStep::NAME
         );
 
-        $locator = $this->makeLocator($this->makeConfig());
+        $locator = $this->makeLocator($this->makeConfig(), \Mockery::mock(Io::class));
 
         $composer = \Mockery::mock(Composer::class);
 
@@ -256,7 +257,7 @@ class SelectedStepsFactoryTest extends TestCase
             'foo'
         );
 
-        $locator = $this->makeLocator($this->makeConfig());
+        $locator = $this->makeLocator($this->makeConfig(), \Mockery::mock(Io::class));
 
         $composer = \Mockery::mock(Composer::class);
 
@@ -264,7 +265,7 @@ class SelectedStepsFactoryTest extends TestCase
 
         static::assertCount(1, $steps);
         static::assertInstanceOf(FlushEnvCacheStep::class, $steps[0]);
-        static::assertContains('invalid step name', $factory->lastError());
+        static::assertStringContainsString('invalid step name', $factory->lastError());
     }
 
     public function testOptOutValidStepsWithSkipConfig()
@@ -278,16 +279,16 @@ class SelectedStepsFactoryTest extends TestCase
 
         $config = [
             Config::SKIP_STEPS => [
-                MuLoaderStep::class,
-                EnvExampleStep::class,
-                DropinsStep::class,
-                MoveContentStep::class,
-                ContentDevStep::class,
-                WpCliConfigStep::class,
+                MuLoaderStep::NAME,
+                EnvExampleStep::NAME,
+                DropinsStep::NAME,
+                MoveContentStep::NAME,
+                ContentDevStep::NAME,
+                WpCliConfigStep::NAME,
             ],
         ];
 
-        $locator = $this->makeLocator($this->makeConfig($config));
+        $locator = $this->makeLocator($this->makeConfig($config), \Mockery::mock(Io::class));
 
         $composer = \Mockery::mock(Composer::class);
 
@@ -295,7 +296,6 @@ class SelectedStepsFactoryTest extends TestCase
 
         static::assertCount(1, $steps);
         static::assertInstanceOf(FlushEnvCacheStep::class, $steps[0]);
-        static::assertSame('', $factory->lastError());
         static::assertSame('', $factory->lastError());
     }
 
@@ -347,12 +347,12 @@ class SelectedStepsFactoryTest extends TestCase
 
         $factory = new SelectedStepsFactory($flags);
 
-        $locator = $this->makeLocator($this->makeConfig());
+        $locator = $this->makeLocator($this->makeConfig(), \Mockery::mock(Io::class));
         $composer = \Mockery::mock(Composer::class);
 
         $steps = $factory->selectAndFactory($locator, $composer);
 
         static::assertSame([], $steps);
-        static::assertContains('was expecting one or more step', $factory->lastError());
+        static::assertStringContainsString('was expecting one or more step', $factory->lastError());
     }
 }

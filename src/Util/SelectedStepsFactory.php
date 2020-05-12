@@ -249,7 +249,9 @@ class SelectedStepsFactory
             if ($skipNamesByConfig && in_array($name, $skipNamesByConfig, true)) {
                 $skippedByConfig++;
                 $skipped = true;
-                $io->writeIfVerbose("- Step '{$name}' will be skipped: disabled in config.");
+                $this->commandMode or $io->writeIfVerbose(
+                    "- Step '{$name}' will be skipped: disabled in config."
+                );
 
                 // If config say to skip something that was passed explicitly, we have to remove it
                 // otherwise we will later try to build it.
