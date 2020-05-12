@@ -106,7 +106,7 @@ class WpCliToolTest extends IntegrationTestCase
         $this->downloadWpCliPhar($url, $targetFile);
 
         static::assertFalse($tool->checkPhar($targetFile, new Io($this->createComposerIo())));
-        static::assertContains('hash check failed', $this->collectOutput());
+        static::assertStringContainsString('hash check failed', $this->collectOutput());
     }
 
     /**
@@ -132,7 +132,7 @@ class WpCliToolTest extends IntegrationTestCase
         $this->downloadWpCliPhar($url, $targetFile);
 
         static::assertFalse($tool->checkPhar($targetFile, new Io($this->createComposerIo())));
-        static::assertContains('Failed to download', $this->collectOutput());
+        static::assertStringContainsString('Failed to download', $this->collectOutput());
     }
 
     /**

@@ -50,8 +50,8 @@ class UrlDownloaderTest extends IntegrationTestCase
 
         $html = $downloader->fetch('https://www.w3.org/');
 
-        static::assertContains('<html', $html);
-        static::assertContains('World Wide Web', $html);
+        static::assertStringContainsString('<html', $html);
+        static::assertStringContainsString('World Wide Web', $html);
     }
 
     /**
@@ -69,7 +69,7 @@ class UrlDownloaderTest extends IntegrationTestCase
 
         $html = file_get_contents($targetFile);
 
-        static::assertContains('<html', $html);
-        static::assertContains('World Wide Web', $html);
+        static::assertStringContainsString('<html', $html);
+        static::assertStringContainsString('World Wide Web', $html);
     }
 }

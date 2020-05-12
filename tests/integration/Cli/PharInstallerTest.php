@@ -100,7 +100,7 @@ class PharInstallerTest extends IntegrationTestCase
         $output = ltrim($this->collectOutput());
 
         static::assertStringStartsWith('Installing ', $output);
-        static::assertContains('installed successfully', $output);
+        static::assertStringContainsString('installed successfully', $output);
         static::assertTrue($dir->hasChild('wp-cli.phar'));
         static::assertSame($targetFile, $installed);
     }
@@ -149,7 +149,7 @@ class PharInstallerTest extends IntegrationTestCase
 
         $output = ltrim($this->collectOutput());
 
-        static::assertContains('Installing ', $output);
+        static::assertStringContainsString('Installing ', $output);
         static::assertFalse($dir->hasChild('wp-cli.phar'));
         static::assertSame('', $installed);
     }
@@ -171,7 +171,7 @@ class PharInstallerTest extends IntegrationTestCase
         $output = ltrim($this->collectOutput());
 
         static::assertStringStartsWith('Installing ', $output);
-        static::assertContains('Failed to download', $output);
+        static::assertStringContainsString('Failed to download', $output);
         static::assertFalse($dir->hasChild('wp-cli.phar'));
         static::assertSame('', $installed);
     }

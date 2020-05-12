@@ -31,7 +31,7 @@ class IoTest extends TestCase
             ->with(\Mockery::type('string'))
             ->andReturnUsing(
                 function (string $error) {
-                    static::assertContains('Invalid answer, try again', $error);
+                    static::assertStringContainsString('Invalid answer, try again', $error);
                 }
             );
         $composerIo
@@ -43,8 +43,8 @@ class IoTest extends TestCase
                     static $i;
                     $i = $i ?? 0;
                     $i++;
-                    $i === 1 and static::assertContains('Too much tries', $error);
-                    $i === 2 and static::assertContains('Going to use default', $error);
+                    $i === 1 and static::assertStringContainsString('Too much tries', $error);
+                    $i === 2 and static::assertStringContainsString('Going to use default', $error);
                 }
             );
 
@@ -79,9 +79,9 @@ class IoTest extends TestCase
             ->once()
             ->andReturnUsing(
                 function (string $message): string {
-                    static::assertContains('Yes or No?', $message);
-                    static::assertContains('[Y]es | [N]o', $message);
-                    static::assertContains("Default: 'n'", $message);
+                    static::assertStringContainsString('Yes or No?', $message);
+                    static::assertStringContainsString('[Y]es | [N]o', $message);
+                    static::assertStringContainsString("Default: 'n'", $message);
 
                     return 'y';
                 }
@@ -100,9 +100,9 @@ class IoTest extends TestCase
             ->once()
             ->andReturnUsing(
                 function (string $message): string {
-                    static::assertContains('Yes or No?', $message);
-                    static::assertContains('[Y]es | [N]o', $message);
-                    static::assertContains("Default: 'n'", $message);
+                    static::assertStringContainsString('Yes or No?', $message);
+                    static::assertStringContainsString('[Y]es | [N]o', $message);
+                    static::assertStringContainsString("Default: 'n'", $message);
 
                     return 'N';
                 }
@@ -121,9 +121,9 @@ class IoTest extends TestCase
             ->once()
             ->andReturnUsing(
                 function (string $message): string {
-                    static::assertContains('Yes or No?', $message);
-                    static::assertContains('[Y]es | [N]o', $message);
-                    static::assertContains("Default: 'y'", $message);
+                    static::assertStringContainsString('Yes or No?', $message);
+                    static::assertStringContainsString('[Y]es | [N]o', $message);
+                    static::assertStringContainsString("Default: 'y'", $message);
 
                     return ' Y';
                 }
@@ -142,9 +142,9 @@ class IoTest extends TestCase
             ->once()
             ->andReturnUsing(
                 function (string $message): string {
-                    static::assertContains('Yes or No?', $message);
-                    static::assertContains('[Y]es | [N]o', $message);
-                    static::assertContains("Default: 'y'", $message);
+                    static::assertStringContainsString('Yes or No?', $message);
+                    static::assertStringContainsString('[Y]es | [N]o', $message);
+                    static::assertStringContainsString("Default: 'y'", $message);
 
                     return ' n';
                 }

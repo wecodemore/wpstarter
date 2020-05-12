@@ -42,8 +42,8 @@ class PhpToolProcessTest extends IntegrationTestCase
 
         $output = $this->collectOutput();
 
-        static::assertContains("Dummy!\n", $output);
-        static::assertContains('I ran tool with env!', $output);
+        static::assertStringContainsString("Dummy!\n", $output);
+        static::assertStringContainsString('I ran tool with env!', $output);
     }
 
     /**

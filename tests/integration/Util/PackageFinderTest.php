@@ -45,8 +45,8 @@ class PackageFinderTest extends IntegrationTestCase
         }
 
         static::assertCount(2, $names);
-        static::assertContains('composer/installers', $names);
-        static::assertContains('dealerdirect/phpcodesniffer-composer-installer', $names);
+        static::assertTrue(in_array('composer/installers', $names, true));
+        static::assertTrue(in_array('dealerdirect/phpcodesniffer-composer-installer', $names, true));
     }
 
     /**
@@ -85,7 +85,7 @@ class PackageFinderTest extends IntegrationTestCase
         }
 
         static::assertCount(1, $names);
-        static::assertContains('roave/security-advisories', $names);
+        static::assertTrue(in_array('roave/security-advisories', $names, true));
     }
 
     /**
@@ -116,8 +116,8 @@ class PackageFinderTest extends IntegrationTestCase
         }
 
         static::assertCount(2, $names);
-        static::assertContains('squizlabs/php_codesniffer', $names);
-        static::assertContains('dealerdirect/phpcodesniffer-composer-installer', $names);
+        static::assertTrue(in_array('squizlabs/php_codesniffer', $names, true));
+        static::assertTrue(in_array('dealerdirect/phpcodesniffer-composer-installer', $names, true));
     }
 
 }

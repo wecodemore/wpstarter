@@ -36,7 +36,7 @@ class SystemProcessTest extends IntegrationTestCase
         $php = (new PhpExecutableFinder())->find();
 
         static::assertTrue($process->execute($php . ' -r "echo getenv(\'FOO\');"'));
-        static::assertContains('I ran with env!', $this->collectOutput());
+        static::assertStringContainsString('I ran with env!', $this->collectOutput());
     }
 
     /**

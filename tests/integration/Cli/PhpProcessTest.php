@@ -35,7 +35,7 @@ class PhpProcessTest extends IntegrationTestCase
         $process = $this->createPhpProcess();
 
         static::assertTrue($process->execute('-r "echo \'I ran!\';"'));
-        static::assertContains('I ran!', $this->collectOutput());
+        static::assertStringContainsString('I ran!', $this->collectOutput());
     }
 
     /**
@@ -46,7 +46,7 @@ class PhpProcessTest extends IntegrationTestCase
         $process = $this->createPhpProcess()->withEnvironment(['FOO' => 'I ran with env!']);
 
         static::assertTrue($process->execute('-r "echo getenv(\'FOO\');"'));
-        static::assertContains('I ran with env!', $this->collectOutput());
+        static::assertStringContainsString('I ran with env!', $this->collectOutput());
     }
 
     /**
@@ -72,6 +72,6 @@ class PhpProcessTest extends IntegrationTestCase
         static::assertFalse($process->execute('-r "throw new \Exception(\'Failed!\');"'));
         // Let's make sure current process is not affected...
         static::assertTrue($process->execute('-r "echo \'I ran!\';"'));
-        static::assertContains('I ran!', $this->collectOutput());
+        static::assertStringContainsString('I ran!', $this->collectOutput());
     }
 }

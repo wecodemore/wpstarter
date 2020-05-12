@@ -93,7 +93,10 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
 
         $factory->create($tool);
 
-        static::assertContains('lower than minimum required 9999.9999', $this->collectOutput());
+        static::assertStringContainsString(
+            'lower than minimum required 9999.9999',
+            $this->collectOutput()
+        );
     }
 
     /**
@@ -151,7 +154,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
 
         $process = $factory->create($tool);
 
-        static::assertContains('Installing ', $this->collectOutput());
+        static::assertStringContainsString('Installing ', $this->collectOutput());
 
         $this->assertProcessWorks($process);
     }
