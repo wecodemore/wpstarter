@@ -198,13 +198,13 @@ There are several ways to prevent WP Starter to generate and use cached environm
 
 - when `WP_ENV` env var described above is `"local"` the cache by default is not created.
 - when the **`cache-env`** configuration is `false`, the cache by default is not created.
-- there's a WordPress filter `'wpstarter.skip.cache-env'` that can be used to disable the cache creation.
+- there's a WordPress filter `'wpstarter.skip-cache-env'` that can be used to disable the cache creation.
 
 The `'wpstarter.skip.cache-env'` filter is interesting because it allows to disable cache in specific environments by using the **`{$environment}.php`** file described above.
 For example, it is possible to skip environment cache in "development" environment having a `development.php` file that contains:
 
 ```php
-add_filter('wpstarter.skip.cache-env', '__return_true');
+add_filter('wpstarter.skip-cache-env', '__return_true');
 ```
 
 The filter is executed very late (so could be added in MU plugins, plugins and even themes) and also passes the environment name as second parameter.
@@ -212,12 +212,10 @@ The filter is executed very late (so could be added in MU plugins, plugins and e
 For example, to only allow cache in production there a code lie the following can be used:
 
 ```php
-add_filter('wpstarter.skip.cache-env', function ($skip, $envName) {
+add_filter('wpstarter.skip-cache-env', function ($skip, $envName) {
     return $skip || $envName !== 'production';
 });
 ```
-
-#### 
 
 
 
