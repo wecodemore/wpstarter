@@ -4,9 +4,9 @@
 
 Considering that WordPress has no official support for Composer, there's also no official way to integrate WordPress with Composer.
 
-These days many people agree to do this by **treating WordPress as a dependency**, like any other dependency. To date, Wordpress does not officially provide a Composer compatible repository of WordPress core (basically having a `composer.json`). The most used non-official package with Composer support is maintained by [John P. Bloch](https://johnpbloch.com/), that at the moment of writing has around 2.5 millions of downloads from [packagist.org](https://packagist.org/packages/johnpbloch/wordpress).
+These days many people agree to do this by **treating WordPress as a dependency**, like any other dependency. To date, WordPress does not officially provide a Composer compatible repository of WordPress core (basically having a `composer.json`). The most used non-official package with Composer support is maintained by [John P. Bloch](https://johnpbloch.com/), that at the moment of writing has almost 4 millions of downloads from [packagist.org](https://packagist.org/packages/johnpbloch/wordpress), but there's also [roots/wordpress](https://packagist.org/packages/roots/wordpress) with hundreds of thousand of downloads.
 
-That said, WP Starter does **not** declare that package as a dependency, allowing for the use of custom packages or even bypassing the installation of Wordpress entirely.
+That said, WP Starter does **not** declare that package as a dependency, allowing for the use of custom packages or even bypassing the installation of WordPress entirely.
 
 For example, an alternative way could be to use Composer [repositories](https://getcomposer.org/doc/05-repositories.md) settings to build a custom package using the official zip distribution:
 
@@ -33,9 +33,15 @@ For example, an alternative way could be to use Composer [repositories](https://
 }
 ```
 
+Please note that if you don't install WordPress as a Composer dependency, and that's also the case when using 
+
 The benefit in the example above is that we get a release without default `/wp-content` folder, and so without default themes and plugins, that we don't require in our installation and that might slowdown deploy for no reason. The problem, however, is that we need to update the `repositories` setting every time we want to update WordPress.
 
 Yet more ways to install WordPress could include using a [custom package](https://getcomposer.org/doc/articles/handling-private-packages-with-satis.md), or make use of the [wp-downloader](https://github.com/wecodemore/wp-downloader) Composer plugin.
+
+Please note: if WordPress is **not** installed as Composer package (and that the case for  [wp-downloader](https://github.com/wecodemore/wp-downloader)) then the WP Starter setting `{ "require-wp": false }` must be set or WP starter will look for WordPress among packages and will fail not finding it.
+
+
 
 ### Dealing with default content
 
@@ -175,48 +181,15 @@ switch ($environment) {
 
 On top of that, if **`WP_ENV`** is `local`, and `WP_LOCAL_DEV` is not defined, it will be defined to `true`.
 
+
+
 #### Cached Environment
 
-To parse env files and setup environment variables, and then setup WordPress constants based on the environment, is a bit expensive.
+Parsing the environment and define constants for it can be quite expensive process. Thanks to code placed in `wp-config.php` that runs on "shutdown" the environment is cached in a file named `.env.cached.php` that contains PHP code that declares env variables and define constants.
 
-Half of the reason is the env file parsing itself (which can be avoided by setting environment variables in the actual environment). The other half is the fact that WP Starter has no way to know which environment variables matching WP constants are set in the environment before trying to access them. Which means that WP Starter needs to loop **all** the possible WordPress constants, and for each of them try to access an environment variable named in the same way and if that is found finally define a constant.
+Details about this process and way to prevent this are described in the ["Environment-Variables"](02-Environment-Variables.md) section.
 
-To avoid this overhead at every request, the WP Starter `wp-config.php` registers a function to be run on "shutdown"  that *dumps* the environment variables that have been accessed with success during the first request into a PHP file so that on subsequent requests the environment "bootstrap" will be much faster.
 
-This cache file is saved in the same folder that contains the `.env` file and is named `.env.cached.php`.
-
-However, having a **cached environment means that any change to it will require the cache file to be deleted**. WP Starter does it via one of its steps ("flush-env-cache") so after a Composer install / update or after running WP Starter command the environment cache is always clean.
-
-Of course it is possible to clean env cache on demand by explicitly running the command:
-
-```shell
-composer wpstarter flush-env-cache
-```
-
-(Read more about running specific steps via `wpstarter` command in the *"WP Starter Command"* chapter)
-
-There are several ways to prevent WP Starter to generate and use cached environment in first place.
-
-- when `WP_ENV` env var described above is `"local"` the cache by default is not created.
-- when the **`cache-env`** configuration is `false`, the cache by default is not created.
-- there's a WordPress filter `'wpstarter.skip.cache-env'` that can be used to disable the cache creation.
-
-The `'wpstarter.skip.cache-env'` filter is interesting because it allows to disable cache in specific environments by using the **`{$environment}.php`** file described above.
-For example, it is possible to skip environment cache in "development" environment having a `development.php` file that contains:
-
-```php
-add_filter('wpstarter.skip.cache-env', '__return_true');
-```
-
-The filter is executed very late (so could be added in MU plugins, plugins and even themes) and also passes the environment name as second param.
-
-For example, to only allow cache in production there a code lie the following can be used:
-
-```php
-add_filter('wpstarter.skip.cache-env', function ($skip, $envName) {
-    return $skip || $envName !== 'production';
-});
-```
 
 #### WP_HOME
 
@@ -273,6 +246,20 @@ WP Starter can do that. To enable this feature it is necessary to set the enviro
 There might be security implications in this, please see the "Make WordPress" ticket [#31288](https://core.trac.wordpress.org/ticket/31288) for details.
 
 The gist of it is that `HTTP_X_FORWARDED_PROTO` is a server variable filled from an a HTTP header (like any `$_SERVER` variable whose name starts with `HTTP_`) which means that it could be set by the client or by a [MITM](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) proxy. On the other hand, environment variable can only be set on the server, so checking the env variable makes the presence of HTTP header trustable.
+
+
+
+## Admin URL
+
+When using WP starter, the suggested way to install WordPress is to use a separate folder for core files.
+
+The docs section ["A Commented Sample `composer.json`"](06-A-Commented-Sample-Composer-Json.md) show an example on how to obtain it. 
+
+When that is done, the `admin_url` becomes something like `example.com/wp/wp-admin/` (assuming WordPress is installed in the "/wp" folder).
+
+Might be desirable to "rewrite" this URL to the usual `/wp-admin/` removing the subfolder. This is something that can be obtained via web-server configuration.
+
+An example `.htaccess` file that contains rewrite rules for WordPress projects (compatible with multisite) can be found here: https://github.com/inpsyde/wpstarter-boilerplate/blob/master/templates/.htaccess.example
 
 
 

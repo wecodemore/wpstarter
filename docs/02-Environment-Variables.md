@@ -119,6 +119,25 @@ if ($config) {
 
 There are many places in which such code can be placed, for example a MU plugin.
 
+Alternatively WP Starter can be instructed to do something like this automatically.
+
+The way to go is to use an environment variable called `WP_STARTER_ENV_TO_CONST` that needs to contain a list of of comma-separated list of environment variables that needs to be turned into constants:
+
+```shell
+WP_STARTER_ENV_TO_CONST=AWESOME_PLUGIN_CONFIG,ANOTHER_VAR,YET_ANOTHER
+```
+
+With such env variable set, WP Start will declare constants for the three env variables.
+
+Please note that env variables are always strings, while PHP constants can be any static type. For WordPress constants that is not an issue because WP Starter knows the expected type can cast the value before define the constant. For custom variables, in case the constant needs to have a different type that can be specified using the syntax: `NAME:TYPE`. For example, having env variables like these:
+
+```shell
+WP_STARTER_ENV_TO_CONST=AWESOME_PLUGIN_CONFIG:BOOL,ANOTHER_VAR
+AWESOME_PLUGIN_CONFIG=true
+```
+
+WP Starter will define `AWESOME_PLUGIN_CONFIG` as boolean: `define('AWESOME_PLUGIN_CONFIG', true)`.
+
 
 
 ## WP Starter specific env vars
@@ -152,6 +171,53 @@ Learn more about configuration in the _"WP-Starter-Configuration"_ chapter.
 
 Those are a few env vars that are used in `wp-config.php` that WP Starter generates.
 They are documented in the *"WordPress Integration"* documentation chapter.
+
+
+
+## Cached Environment
+
+To parse env files and setup environment variables, and then setup WordPress constants based on the environment, is a bit expensive.
+
+Half of the reason is the env file parsing itself (which can be avoided by setting environment variables in the actual environment). The other half is the fact that WP Starter has no way to know which environment variables matching WP constants are set in the environment before trying to access them. Which means that WP Starter needs to loop **all** the possible WordPress constants, and for each of them try to access an environment variable named in the same way and if that is found finally define a constant.
+
+To avoid this overhead at every request, the WP Starter `wp-config.php` registers a function to be run on "shutdown"  that *dumps* the environment variables that have been accessed with success during the first request into a PHP file so that on subsequent requests the environment "bootstrap" will be much faster.
+
+This cache file is saved in the same folder that contains the `.env` file and is named `.env.cached.php`.
+
+However, having a **cached environment means that any change to it will require the cache file to be deleted**. WP Starter does it via one of its steps ("flush-env-cache") so after a Composer install / update or after running WP Starter command the environment cache is always clean.
+
+Of course it is possible to clean env cache on demand by explicitly running the command:
+
+```shell
+composer wpstarter flush-env-cache
+```
+
+(Read more about running specific steps via `wpstarter` command in the *"WP Starter Command"* chapter)
+
+There are several ways to prevent WP Starter to generate and use cached environment in first place.
+
+- when `WP_ENV` env var described above is `"local"` the cache by default is not created.
+- when the **`cache-env`** configuration is `false`, the cache by default is not created.
+- there's a WordPress filter `'wpstarter.skip.cache-env'` that can be used to disable the cache creation.
+
+The `'wpstarter.skip.cache-env'` filter is interesting because it allows to disable cache in specific environments by using the **`{$environment}.php`** file described above.
+For example, it is possible to skip environment cache in "development" environment having a `development.php` file that contains:
+
+```php
+add_filter('wpstarter.skip.cache-env', '__return_true');
+```
+
+The filter is executed very late (so could be added in MU plugins, plugins and even themes) and also passes the environment name as second parameter.
+
+For example, to only allow cache in production there a code lie the following can be used:
+
+```php
+add_filter('wpstarter.skip.cache-env', function ($skip, $envName) {
+    return $skip || $envName !== 'production';
+});
+```
+
+#### 
 
 
 
