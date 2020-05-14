@@ -201,6 +201,8 @@ If no environment variable with that name is found, WP Starter will calculate th
 
 This might be fine in many cases, but setting `WP_HOME` is recommended to avoid issues and avoid calculation of the home URL at every request.
 
+
+
 #### WP_ADMIN_COLOR
 
 `WP_ADMIN_COLOR` environment variable will make WP Starter add a filter in the generated `wp-config.php` that will force WordPress dashboard to a specific admin color scheme, overriding the user setting.
@@ -246,6 +248,50 @@ WP Starter can do that. To enable this feature it is necessary to set the enviro
 There might be security implications in this, please see the "Make WordPress" ticket [#31288](https://core.trac.wordpress.org/ticket/31288) for details.
 
 The gist of it is that `HTTP_X_FORWARDED_PROTO` is a server variable filled from an a HTTP header (like any `$_SERVER` variable whose name starts with `HTTP_`) which means that it could be set by the client or by a [MITM](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) proxy. On the other hand, environment variable can only be set on the server, so checking the env variable makes the presence of HTTP header trustable.
+
+
+
+### Advanced customization of WP Starter `wp-config.php`
+
+All the features described above are applied via using a `wp-config.php` template that comes with WP Starter.
+
+It is possible to have a completely custom template, but sometimes what it is desired is just a small customization, like adding a line of code, and use a custom template for that is not a good approach, because to have same functionalities would be necessary to copy original template code, but loosing all the improvements and fixes that a newer versions of WP Starter could bring to the template.
+
+This is why WP Started default  `wp-config.php` template supports the concept of "sections".
+
+A section is a portion of the config file delimited with "labels" with braces, for example:
+
+```php
+CLEAN_UP : {
+    unset($envName, $envLoader, $cacheEnv);
+} #@@/CLEAN_UP
+```
+
+The above snippet represents the code for a section named _"CLEAN_UP"_.
+
+WP Starter ships an object called `WpConfigSectionEditor` that can be used to edit any of the section by appending, pre-pending, or replacing the section content. This is usually done in a custom step. 
+
+Detailed documentation about custom steps development is documented in the [Custom Steps Development](08-Custom-Steps-Development.md) section, but what's important here is that using a code like this:
+
+```php
+/** @var WeCodeMore\WpStarter\Util\WpConfigSectionEditor $editor */
+$editor->append('CLEAN_UP', 'define("SOME_CONSTANT", TRUE);');
+```
+
+the section snippet above would become:
+
+```php
+CLEAN_UP : {
+    unset($envName, $envLoader, $cacheEnv);
+    define("SOME_CONSTANT", TRUE);
+} #@@/CLEAN_UP
+```
+
+Besides `WpConfigSectionEditor::append()`, the object also have the `prepend`, `replace`, and `delete` methods, to, respectively, pre-pend, replace and delete the code in the given section.
+
+Please note that the PHP code to append/prepend/replace is not checked at all, so be sure that it is valid PHP code.
+
+An instance of `WpConfigSectionEditor` can be obtained via the `Locator` class, documentation for it is in the [Custom Steps Development](08-Custom-Steps-Development.md) section.
 
 
 

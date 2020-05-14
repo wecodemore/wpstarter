@@ -80,6 +80,8 @@ Besides these configurations, a few path-related settings in `composer.json` wil
 
 WP Starter will not proceed with other steps if this fails for any reason.
 
+The default `wp-config.php` template used by WP Starter supports "sections", that allow implementors to append/pre-pend/replace only parts of the generated `wp-config.php` without changing the other parts and without using a custom template. The [WordPress Integration](03-WordPress-Integration.md) section has documentation for this feature.
+
 ### `IndexStep`
 
 In a typical WP Starter powered installation, WordPress is not installed at the webroot, meaning that WordPress `ABSPATH` (the directory that contains `/wp-includes` and `/wp-admin`) is not the webroot.
@@ -321,7 +323,7 @@ Where:
     - `Step::NONE` - the step was not executed/skipped
     
 
-  $result is, of course, only available for the _post_ scripts. For _pre_ scripts it will always be `Step::NONE`. Please note that any check on this value should be done by a bitmask check and not direct comparison. In fact, it is possible that some "composed" steps, e.g. the "dropins" step, might return an integer equal to `Step::SUCCESS | Step::ERROR` meaning that it *partially* succeeded.
+  $result is, of course, only available for the _post_ scripts. For _pre_ scripts it will always be `Step::NONE`. Please note that any check on this value should be done by a bitmask check and not direct comparison. In fact, it is possible that some "composed" steps, e. g. the "dropins" step, might return an integer equal to `Step::SUCCESS | Step::ERROR` meaning that it *partially* succeeded.
 - `$step` is the target step object, that is an instance of `\WeCodeMore\WpStarter\Step\Step`.
 - `$locator` is an instance of `WeCodeMore\WpStarter\Util\Locator` an object that provides instances of other objects parts of WP Starter. In the **Custom Steps Development** chapter there are more details about this object.
 - `$composer` is an instance of `Composer\Composer` the main Composer object.

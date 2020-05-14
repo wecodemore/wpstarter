@@ -15,7 +15,7 @@ AUTOLOAD: {
 
     /** A reference to `.env` folder path. */
     define('WPSTARTER_PATH', realpath(__DIR__ . '{{{ENV_REL_PATH}}}'));
-} #/AUTOLOAD
+} #@@/AUTOLOAD
 
 ENV_VARIABLES: {
     /**
@@ -48,7 +48,7 @@ ENV_VARIABLES: {
     ) {
         require_once WPSTARTER_PATH . "/{$envName}.php";
     }
-} #/ENV_VARIABLES
+} #@@/ENV_VARIABLES
 
 KEYS: {
     /**#@+
@@ -63,8 +63,7 @@ KEYS: {
     defined('LOGGED_IN_SALT') or define('LOGGED_IN_SALT', '{{{LOGGED_IN_SALT}}}');
     defined('NONCE_SALT') or define('NONCE_SALT', '{{{NONCE_SALT}}}');
     /**#@-*/
-} #/KEYS
-
+} #@@/KEYS
 
 DB_SETUP : {
     /** Set optional database settings if not already set. */
@@ -77,7 +76,7 @@ DB_SETUP : {
      */
     global $table_prefix;
     $table_prefix = $envLoader->read('DB_TABLE_PREFIX') ?: 'wp_';
-} #/DB_SETUP
+} #@@/DB_SETUP
 
 /** Absolute path to the WordPress directory. */
 defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
@@ -98,7 +97,7 @@ EARLY_HOOKS : {
     ) {
         require_once __DIR__ . '{{{EARLY_HOOKS_FILE}}}';
     }
-} #/EARLY_HOOKS
+} #@@/EARLY_HOOKS
 
 DEFAULT_ENV : {
     /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
@@ -132,7 +131,7 @@ DEFAULT_ENV : {
     if ($envName === 'local' && !defined('WP_LOCAL_DEV')) {
         define('WP_LOCAL_DEV', true);
     }
-} #/DEFAULT_ENV
+} #@@/DEFAULT_ENV
 
 SSL_FIX : {
     if (
@@ -142,7 +141,7 @@ SSL_FIX : {
     ) {
         $_SERVER['HTTPS'] = 'on';
     }
-} #/SSL_FIX
+} #@@/SSL_FIX
 
 URL_CONSTANTS : {
     if (!defined('WP_HOME')) {
@@ -156,7 +155,7 @@ URL_CONSTANTS : {
     defined('WP_SITEURL') or define('WP_SITEURL', rtrim(WP_HOME, '/') . '/{{{WP_SITEURL_RELATIVE}}}');
     defined('WP_CONTENT_DIR') or define('WP_CONTENT_DIR', realpath(__DIR__ . '{{{WP_CONTENT_PATH}}}'));
     defined('WP_CONTENT_URL') or define('WP_CONTENT_URL', rtrim(WP_HOME, '/') . '/{{{WP_CONTENT_URL_RELATIVE}}}');
-} #/URL_CONSTANTS
+} #@@/URL_CONSTANTS
 
 THEMES_REGISTER : {
     /** Register default themes inside WordPress package wp-content folder. */
@@ -169,7 +168,7 @@ THEMES_REGISTER : {
             0
         );
     }
-} #/THEMES_REGISTER
+} #@@/THEMES_REGISTER
 
 ADMIN_COLOR : {
     /** Allow changing admin color scheme. Useful to distinguish environments in the dashboard. */
@@ -180,7 +179,7 @@ ADMIN_COLOR : {
         },
         999
     );
-} #/ADMIN_COLOR
+} #@@/ADMIN_COLOR
 
 ENV_CACHE : {
     /** On shutdown we dump environment so that on subsequent requests we can load it faster */
@@ -193,11 +192,11 @@ ENV_CACHE : {
             }
         );
     }
-} #/ADMIN_COLOR
+} #@@/ADMIN_COLOR
 
 CLEAN_UP : {
     unset($envName, $envLoader, $cacheEnv);
-} #/CLEAN_UP
+} #@@/CLEAN_UP
 
 ###################################################################################################
 #  I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion.  #

@@ -232,6 +232,19 @@ final class Locator
     }
 
     /**
+     * @return WpConfigSectionEditor
+     */
+    public function wpConfigSectionEditor(): WpConfigSectionEditor
+    {
+        if (empty($this->objects[WpConfigSectionEditor::class])) {
+            $editor = new WpConfigSectionEditor($this->paths());
+            $this->objects[WpConfigSectionEditor::class] = $editor;
+        }
+
+        return $this->objects[WpConfigSectionEditor::class];
+    }
+
+    /**
      * @return MuPluginList
      */
     public function muPluginsList(): MuPluginList
