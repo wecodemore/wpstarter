@@ -192,7 +192,7 @@ ENV_CACHE : {
             }
         );
     }
-} #@@/ADMIN_COLOR
+} #@@/ENV_CACHE
 
 CLEAN_UP : {
     unset($envName, $envLoader, $cacheEnv);
