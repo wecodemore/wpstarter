@@ -144,7 +144,7 @@ WP Starter will define `AWESOME_PLUGIN_CONFIG` as boolean: `define('AWESOME_PLUG
 
 As described above, all WordPress configuration constants are natively supported by WP Starter.
 
-Moreover there are a few env variables that have a special meaning for WP Starter.
+Moreover, there are a few env variables that have a special meaning for WP Starter.
 
 ### DB check env vars
 
@@ -153,7 +153,7 @@ environment is already setup for database connection.
 If so, WP Starter attempts a connection and launches a very simple SQL command. Thanks to that
 it can determine if connection is possible, if the WP DB exists, and if WP is installed.
 
-These information are stored in three env vars whose names are stored in
+This information is stored in three env vars whose names are stored in
 `WeCodeMore\WpStarter\Util\DbChecker` class constants:
 
 - `DbChecker::WPDB_ENV_VALID` - is non-empty if connection to DB is possible
@@ -165,7 +165,7 @@ previous must be non-empty as well.
 
 Sometime it might be desirable to bypass this WP Starter check and there's a way to accomplish that
 via the `skip-db-check` setting.
-Learn more about configuration in the _"WP-Starter-Configuration"_ chapter.
+Learn more about that in the _"WP-Starter-Configuration"_ chapter.
 
 ### WordPress Configuration
 
@@ -196,7 +196,7 @@ composer wpstarter flush-env-cache
 
 There are several ways to prevent WP Starter to generate and use cached environment in first place.
 
-- when `WP_ENV` env var described above is `"local"` the cache by default is not created.
+- when `WP_ENVIRONMENT_TYPE` env var is `"local"` the cache by default is not created.
 - when the **`cache-env`** configuration is `false`, the cache by default is not created.
 - there's a WordPress filter `'wpstarter.skip-cache-env'` that can be used to disable the cache creation.
 

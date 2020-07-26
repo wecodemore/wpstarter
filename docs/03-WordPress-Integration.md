@@ -4,9 +4,14 @@
 
 Considering that WordPress has no official support for Composer, there's also no official way to integrate WordPress with Composer.
 
-These days many people agree to do this by **treating WordPress as a dependency**, like any other dependency. To date, WordPress does not officially provide a Composer compatible repository of WordPress core (basically having a `composer.json`). The most used non-official package with Composer support is maintained by [John P. Bloch](https://johnpbloch.com/), that at the moment of writing has almost 4 millions of downloads from [packagist.org](https://packagist.org/packages/johnpbloch/wordpress), but there's also [roots/wordpress](https://packagist.org/packages/roots/wordpress) with hundreds of thousand of downloads.
+These days many people agree to do this by **treating WordPress as a dependency**, like any other dependency.
 
-That said, WP Starter does **not** declare that package as a dependency, allowing for the use of custom packages or even bypassing the installation of WordPress entirely.
+To date, WordPress does not officially provide a Composer compatible repository of WordPress core (basically having a `composer.json`).
+
+The most used non-official package with Composer support is maintained by [John P. Bloch](https://johnpbloch.com/), that at the moment of writing has almost 4 millions of downloads from [packagist.org](https://packagist.org/packages/johnpbloch/wordpress), 
+but there's also [roots/wordpress](https://packagist.org/packages/roots/wordpress) which is approaching the millionth download at the moment of writing.
+
+That said, WP Starter does **not** declare any of those packages as a dependency, allowing for the use of custom packages or even bypassing the installation of WordPress entirely.
 
 For example, an alternative way could be to use Composer [repositories](https://getcomposer.org/doc/05-repositories.md) settings to build a custom package using the official zip distribution:
 
@@ -18,9 +23,9 @@ For example, an alternative way could be to use Composer [repositories](https://
       "type": "package",
       "package": {
         "name": "wordpress/wordpress",
-        "version": "4.9.8",
+        "version": "5.4.2",
         "dist": {
-          "url": "https://wordpress.org/wordpress-4.9.8-no-content.zip",
+          "url": "https://wordpress.org/wordpress-5.4.2-no-content.zip",
           "type": "zip"
         }
       }
@@ -28,32 +33,40 @@ For example, an alternative way could be to use Composer [repositories](https://
   ],
   "require": {
     "wecodemore/wpstarter": "^3",
-    "wordpress/wordpress": "4.9.8"
+    "wordpress/wordpress": "5.4.2"
   }
 }
 ```
 
-Please note that if you don't install WordPress as a Composer dependency, and that's also the case when using 
 
-The benefit in the example above is that we get a release without default `/wp-content` folder, and so without default themes and plugins, that we don't require in our installation and that might slowdown deploy for no reason. The problem, however, is that we need to update the `repositories` setting every time we want to update WordPress.
+The benefit in the example above is that we get a release without default `/wp-content` folder, and 
+so without default themes and plugins, that we don't require in our installation and that might slowdown deploy for no reason. The problem, however, is that we need to update the `repositories` setting every time we want to update WordPress.
 
-Yet more ways to install WordPress could include using a [custom package](https://getcomposer.org/doc/articles/handling-private-packages-with-satis.md), or make use of the [wp-downloader](https://github.com/wecodemore/wp-downloader) Composer plugin.
+Yet more ways to install WordPress could include using a [custom package](https://getcomposer.org/doc/articles/handling-private-packages-with-satis.md),
+or make use of the [wp-downloader](https://github.com/wecodemore/wp-downloader) Composer plugin.
 
-Please note: if WordPress is **not** installed as Composer package (and that the case for  [wp-downloader](https://github.com/wecodemore/wp-downloader)) then the WP Starter setting `{ "require-wp": false }` must be set or WP starter will look for WordPress among packages and will fail not finding it.
-
+Please note: if WordPress is **not** installed as Composer package (and that the case when using 
+[wp-downloader](https://github.com/wecodemore/wp-downloader)) then the WP Starter setting `{ "require-wp": false }`
+must be set or WP Starter will look for WordPress among packages and will fail not finding it.
 
 
 ### Dealing with default content
 
-When WordPress is installed using a core package like the [one](https://packagist.org/packages/johnpbloch/wordpress) from [John P. Bloch](https://johnpbloch.com/), the package comes with default themes (Twenty*) and plugins ("Akismet", "Hello Dolly").
+When WordPress is installed using a core package like the [one](https://packagist.org/packages/johnpbloch/wordpress) 
+from [John P. Bloch](https://johnpbloch.com/), the package comes with default themes (Twenty*) and plugins ("Akismet", "Hello Dolly").
 
-Those are often not used at all, all the more so in WP Starter installations where they are not recognized by WordPress, because the content folder is customized to be a separate folder outside the core Wordpress folder.
+Those are often not used at all, all the more so in WP Starter installations where they are not recognized 
+by WordPress, because the content folder is customized to be a separate folder outside the core Wordpress folder.
 
-WP Starter provides an option to register default themes shipped with core packages, so that they can be recognized, but more often than not default themes and plugins are just unnecessary.
+WP Starter provides an option to register default themes shipped with core packages, so that they can 
+be recognized, but more often than not default themes and plugins are just unnecessary.
 
-By using a custom WordPress core package (as shown above) it is possible to not download default themes and plugins at all, but that requires to update the repositories settings at every WP update. A more sustainable approach is to delete default content after it is pulled.
+By using a custom WordPress core package (as shown above) it is possible to not download default themes 
+and plugins at all, but that requires to update the repositories settings at every WP update.
+A more sustainable approach is to delete default content after it is pulled.
 
-WP Starter offers *custom steps* and *step scripts* to do it (more on the topic in the "*WP Starter Steps*"  chapter), but often a simple bash command as [Composer script](https://getcomposer.org/doc/articles/scripts.md) can do the trick:
+WP Starter offers *custom steps* and *step scripts* to do it (more on the topic in the "*WP Starter Steps*" chapter),
+but often a simple bash command as [Composer script](https://getcomposer.org/doc/articles/scripts.md) can do the trick:
 
 ```json
 {
@@ -96,9 +109,11 @@ plus the configuration:
 }
 ```
 
-The latter way surely requires more work, but it works across operative systems and takes into account configuration (in the shell command the path to WordPress folder is hardcoded), making the script reusable. Plus, it has a nice colored output.
+The latter way surely requires more work, but it works across operative systems and takes into account configuration (in the shell command the path to WordPress folder is hardcoded), making the script reusable.
+Plus, it has a nice colored output.
 
-More on WP Starter configuration can be learned in the "*WP Starter Configuration*" chapter, and more on step scripts can be learned in the "*WP Starter Steps*" chapter.
+More on WP Starter configuration can be learned in the "*WP Starter Configuration*" chapter, 
+and more on step scripts can be learned in the "*WP Starter Steps*" chapter.
 
 
 
@@ -114,26 +129,82 @@ It is important to say that everything in this section refers to the `wp-config.
 
 In the *"Environment Variables"* chapter it has been presented how WP Starter sets WordPress constants from env variables. That is done via some code placed in the  `wp-config.php` generated by WP Starter.
 
-Besides the env vars named after WordPress configuration constants there are a few that have a special meaning for WP Starter WordPress installations.
+Beside the env vars named after WordPress configuration constants there are a few more env variables that have a special meaning for WP Starter WordPress installations.
 
-#### WP_ENV
+#### WP_ENVIRONMENT_TYPE
 
-`WP_ENV` is the main WP Starter specific environment variable and it determines the current application environment, for example "production", "staging", and so on.
+`WP_ENVIRONMENT_TYPE` is the main WP Starter specific environment variable, and it determines the current application environment, for example "production", "staging", and so on.
 
-WP Starter has extended support for three specific values of this variable: "development", "staging", and "production" (more on this below), but there's no limitations on what it can contain.
+Since WordPress 5.5, support for this environment variable was added in WordPress core and WP Starter started using it since then.
 
-For backward compatibility reasons, instead of `WP_ENV` it is possible to use `WORDPRESS_ENV` with same result.
+Before that, WP Starter v2+ used the environment variable `WP_ENV`, and `WORDPRESS_ENV` was used in WP Starter v1.
+
+For backward compatibility reasons, both `WP_ENV` and `WORDPRESS_ENV` are still supported, and in case those are used in place of `WP_ENVIRONMENT_TYPE`,
+ WP Starter will transparently set the `WP_ENVIRONMENT_TYPE` constant to ensure compatibility with WordPress 5.5.
+ 
+This means that projects that are already using `WP_ENV` or `WORDPRESS_ENV` can upgrade to latest WP Starter without any need to change environment variables.
+
+###### WP_ENVIRONMENT_TYPES
+
+It must be noted that WordPress does not allow arbitrary values for `WP_ENVIRONMENT_TYPE`, in fact it 
+requires the value of that variable to be either one of:
+
+- `"development"`
+- `"staging"`
+- `"production"`
+
+unless a different set of allowed values is configured via another environment variable (or constant): `WP_ENVIRONMENT_TYPES`.
+
+Unlike WordPress, WP Starter does not limit `WP_ENVIRONMENT_TYPE` (`WP_ENV` / `WORDPRESS_ENV`) to specific values, and in the case a different value is used,
+to maximize compatibility with WordPress, WP Starter will declare the `WP_ENVIRONMENT_TYPES` constant using a value that includes what's contained in `WP_ENVIRONMENT_TYPE`.
+However, if a `WP_ENVIRONMENT_TYPES` env var is purposely defined, WP Starter will respect that, and will only allow a `WP_ENVIRONMENT_TYPE` that is included in the set
+of values defined in `WP_ENVIRONMENT_TYPES`, or will default to "production" just like WordPress does.
+
+To clarify with an example. If a project has sets an env variable like this:
+
+```bash
+WP_ENV=prepod # WP_ENV is the legacy WP Starter env var
+```
+
+WP Starter will declare:
+
+```php
+define('WP_ENVIRONMENT_TYPE', 'prepod');
+define('WP_ENVIRONMENT_TYPES', ['development', 'staging', 'production', 'prepod']);
+```
+
+The exact same thing will happen if instead of `WP_ENV` the projects uses `WP_ENVIRONMENT_TYPE` env variable.
+
+However, if a project sets env variables like this:
+
+```bash
+WP_ENVIRONMENT_TYPES='dev,stage,production'
+WP_ENVIRONMENT_TYPE='prepod' # or the equivalent WP_ENV='prepod'
+```
+
+WP Starter will declare:
+
+```php
+define('WP_ENVIRONMENT_TYPE', 'production');
+define('WP_ENVIRONMENT_TYPES', ['dev', 'stage', 'production']);
+```
+
+So the value of `WP_ENVIRONMENT_TYPE` env var is discarded because not included in the defined `WP_ENVIRONMENT_TYPES` and it is defaulted to "production"
+just like WordPress does.
+
+Note that in this latter example, _WP Starter environment_ used for example to load environment-specific files (see below) will be "production" and not "preprod".
 
 ##### Environment-specific files
 
-After environment variables are loaded (via either _actual_ environment or via env file) WP Starter will look, in the same directory where it looks for "main" env file (by default project root), for two environment-specific files, i.e. whose name depends on the value of `WP_ENV`.
+After environment variables are loaded (via either _actual_ environment or via env file) WP Starter will look, in the same directory where it looks for "main" env file (by default project root), for two environment-specific files, 
+i.e. whose name depends on the value of `WP_ENVIRONMENT_TYPE`.
 
 They are:
 
-- an **env file** named  **`{$envFile}.{$environment}`**, where `$envFile` is the name of the "main" env file (by default `.env`) and `$environment` is the value of `WP_ENV` env var;
-- a **PHP file** named like **`{$environment}.php`**, where `$environment` is the value of `WP_ENV` env var.
+- an **env file** named  **`{$envFile}.{$environment}`**, where `$envFile` is the name of the "main" env file (by default `.env`) and `$environment` is the value of  `WP_ENVIRONMENT_TYPE` (or `WP_ENV` / `WORDPRESS_ENV`) env var;
+- a **PHP file** named like **`{$environment}.php`**, where `$environment` is the value of `WP_ENVIRONMENT_TYPE` env var.
 
-###### Environment-specific Env file
+###### Environment-specific env file
 
 If the environment-specific env file is found, it will be loaded, and all the env variables defined there will be merged with anything already loaded (via either actual environment or via main env file).
 
@@ -143,13 +214,20 @@ Note that environment-specific env file can overwrite variables in main env file
 
 If the environment-specific PHP file is found it is just included. This allows for advanced per-environment settings, e.g. force the enabled status of plugins based on environments and so on.
 
-To make such advanced configuration that involves WordPress, the `{$environment}.php` file needs to add WordPress hooks, and that *normally* would be not doable from `wp-config.php`, because WordPress hooks functions are not loaded yet, but WP Starter allows that by early loading `plugin.php` (something that can be done with no issue in recent versions of WordPress). More on this below.
+To make such an advanced configuration that involves WordPress, the `{$environment}.php` file needs to add WordPress hooks, and that *normally* would be not doable from `wp-config.php`, because WordPress hooks functions are not loaded yet, but WP Starter allows that by early loading `plugin.php` (something that can be done with no issue in recent versions of WordPress). More on this below.
 
 ##### Default environments
 
-If **`WP_ENV`** variable is set to one of: `"local"`, `"development"`, `"staging"`, `"production"`, WP Starter will setup WordPress debug-related PHP constants accordingly.
+If  **`WP_ENVIRONMENT_TYPE`**  variable is set to one of:
 
-The code that does it looks like this:
+- `"local"`
+- `"development"`
+- `"staging"`
+- `"production"`
+
+WP Starter will setup WordPress debug-related PHP constants accordingly.
+
+The code that does that looks like this:
 
 ```php
 switch ($environment) {
@@ -179,8 +257,7 @@ switch ($environment) {
 }
 ```
 
-On top of that, if **`WP_ENV`** is `local`, and `WP_LOCAL_DEV` is not defined, it will be defined to `true`.
-
+On top of that, if **`WP_ENVIRONMENT_TYPE`** is `local`, and `WP_LOCAL_DEV` is not defined, it will be defined to `true`.
 
 
 #### Cached Environment

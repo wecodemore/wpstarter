@@ -322,7 +322,10 @@ class WordPressEnvBridge
 
         $allowedTypes = $this->determineAllowedEnvTypes();
 
-        $envType = 'production';
+        $envType = (!$allowedTypes || in_array('production', $allowedTypes, true))
+            ? 'production'
+            : end($allowedTypes);
+
         foreach (self::WP_STARTER_ENV_VARS as $var) {
             $envByVar = $this->read($var);
 

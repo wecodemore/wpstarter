@@ -70,7 +70,7 @@ The settings involved in this steps are:
 - `register-theme-folder` - When true the default themes (those shipped with WordPress package) folder will be registered via [`register_theme_directory`](https://developer.wordpress.org/reference/functions/register_theme_directory/) and so default themes will available in WordPress
 - `env-dir` and `env-file` - Via these two settings it is possible to load a different env file instead of the default `.env` located under project root.
 - `early-hook-file` - If a file path is provided via this setting WordPress will load the file very early, but after having "manually" loaded `plugin.php` so that it is possible to add callbacks to hooks fired very early. See the *"WordPress Integration"* chapter for more details.
-- `env-bootstrap-dir` - A custom directory where to look for environment-specific bootstrap files. Environment-specific bootstrap files are PHP files named after the current environment (set in the `WP_ENV` env var) that are loaded very early (right after  `plugin.php` is loaded by WP Starter) allowing to fine-tune WordPress for specific environments. See the *"WordPress Integration"* chapter for more details.
+- `env-bootstrap-dir` - A custom directory where to look for environment-specific bootstrap files. Environment-specific bootstrap files are PHP files named after the current environment (set in the `WP_ENVIRONMENT_TYPE` env var) that are loaded very early (right after `plugin.php` is loaded by WP Starter) allowing to fine-tune WordPress for specific environments. See the *"WordPress Integration"* chapter for more details.
 
 Besides these configurations, a few path-related settings in `composer.json` will affect this step as well:
 
