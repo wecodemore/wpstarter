@@ -183,8 +183,6 @@ class WordPressEnvBridge
     const CUSTOM_ENV_TO_CONST_VAR_NAME = 'WP_STARTER_ENV_TO_CONST';
     const DB_TABLE_PREFIX_VAR_NAME = 'DB_TABLE_PREFIX';
     const WP_ADMIN_COLOR_VAR_NAME = 'WP_ADMIN_COLOR';
-    const WP_ENV_VAR_NAME = 'WORDPRESS_ENV';
-    const WP_ENV_ALT_VAR_NAME = 'WP_ENV';
     const WP_FORCE_SSL_FORWARDED_PROTO_VAR_NAME = 'WP_FORCE_SSL_FORWARDED_PROTO';
     const WP_INSTALLED_VAR_NAME = 'WP_INSTALLED';
     const WPDB_ENV_VALID_VAR_NAME = 'WPDB_ENV_VALID';
@@ -194,13 +192,19 @@ class WordPressEnvBridge
         self::CUSTOM_ENV_TO_CONST_VAR_NAME => Filters::FILTER_STRING,
         self::DB_TABLE_PREFIX_VAR_NAME => Filters::FILTER_TABLE_PREFIX,
         self::WP_ADMIN_COLOR_VAR_NAME => Filters::FILTER_STRING,
-        self::WP_ENV_VAR_NAME => Filters::FILTER_STRING,
-        self::WP_ENV_ALT_VAR_NAME => Filters::FILTER_STRING,
         self::WP_FORCE_SSL_FORWARDED_PROTO_VAR_NAME => Filters::FILTER_BOOL,
         self::WP_INSTALLED_VAR_NAME => Filters::FILTER_BOOL,
         self::WPDB_ENV_VALID_VAR_NAME => Filters::FILTER_BOOL,
         self::WPDB_EXISTS_VAR_NAME => Filters::FILTER_BOOL,
     ];
+
+    const WP_STARTER_ENV_VARS = [
+        'WP_ENVIRONMENT_TYPE',
+        'WP_ENV',
+        'WORDPRESS_ENV',
+    ];
+
+    const WP_DEFAULT_ENV_TYPES = ['development', 'staging', 'production'];
 
     /**
      * @var Dotenv
@@ -241,6 +245,16 @@ class WordPressEnvBridge
      * @var array<string>
      */
     private $definedConstants = [];
+
+    /**
+     * @var string|null
+     */
+    private $envType;
+
+    /**
+     * @var array<string>|null
+     */
+    private $allowedEnvTypes;
 
     /**
      * @var bool
@@ -295,6 +309,46 @@ class WordPressEnvBridge
     public function load(string $file = '.env', string $path = null)
     {
         $this->loadFile($this->fullpathFor($file, $path));
+    }
+
+    /**
+     * @return string
+     */
+    public function determineEnvType(): string
+    {
+        if ($this->envType) {
+            return $this->envType;
+        }
+
+        $allowedTypes = $this->determineAllowedEnvTypes();
+
+        $envType = 'production';
+        foreach (self::WP_STARTER_ENV_VARS as $var) {
+            $envByVar = $this->read($var);
+
+            if (!$envByVar || !is_string($envByVar)) {
+                continue;
+            }
+
+            $envByVar = strtolower($envByVar);
+            if (!$allowedTypes || in_array($envByVar, $allowedTypes, true)) {
+                $envType = $envByVar;
+                break;
+            }
+        }
+
+        if (!$allowedTypes) {
+            $allowedTypes = self::WP_DEFAULT_ENV_TYPES;
+            if (!in_array($envType, $allowedTypes, true)) {
+                $allowedTypes[] = $envType;
+            }
+
+            $this->allowedEnvTypes = $allowedTypes;
+        }
+
+        $this->envType = $envType;
+
+        return $envType;
     }
 
     /**
@@ -534,6 +588,19 @@ class WordPressEnvBridge
             $this->defineConstantFromVar($key) and $names[] = $key;
         }
 
+        // This will also make sure that the target env type is part of allowed types returned by
+        // `$this->determineAllowedEnvTypes()`.
+        $envType = $this->determineEnvType();
+        if (!defined('WP_ENVIRONMENT_TYPE')) {
+            define('WP_ENVIRONMENT_TYPE', $envType);
+            $names[] = 'WP_ENVIRONMENT_TYPE';
+        }
+
+        if (!defined('WP_ENVIRONMENT_TYPES')) {
+            define('WP_ENVIRONMENT_TYPES', $this->determineAllowedEnvTypes());
+            $names[] = 'WP_ENVIRONMENT_TYPES';
+        }
+
         $customVarsToSetStr = (string)$this->read(self::CUSTOM_ENV_TO_CONST_VAR_NAME);
         $customVarsToSet = explode(',', $customVarsToSetStr);
         foreach ($customVarsToSet as $customVarToSetStr) {
@@ -583,8 +650,11 @@ class WordPressEnvBridge
     {
         // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
 
+        $filter = in_array($name, self::WP_STARTER_ENV_VARS, true) ? Filters::FILTER_STRING : null;
+
         /** @var string|null $filter */
-        $filter = self::WP_CONSTANTS[$name]
+        $filter = $filter
+            ?? self::WP_CONSTANTS[$name]
             ?? self::WP_STARTER_VARS[$name]
             ?? $this->customFiltersConfig[$name]
             ?? null;
@@ -619,6 +689,32 @@ class WordPressEnvBridge
         defined($name) or define($name, $value);
 
         return true;
+    }
+
+    /**
+     * @return array<string>
+     */
+    private function determineAllowedEnvTypes(): array
+    {
+        if ($this->allowedEnvTypes) {
+            return $this->allowedEnvTypes;
+        }
+
+        $allowedByEnv = $this->read('WP_ENVIRONMENT_TYPES');
+        if ($allowedByEnv && is_string($allowedByEnv)) {
+            $allowedByEnv = preg_split('/[\s,]+/', $allowedByEnv, -1, PREG_SPLIT_NO_EMPTY);
+        }
+
+        $allowedEnvTypes = [];
+        foreach ((array)$allowedByEnv as $envName) {
+            if ($envName && is_string($envName)) {
+                $allowedEnvTypes[strtolower($envName)] = 1;
+            }
+        }
+
+        $this->allowedEnvTypes = array_keys($allowedEnvTypes);
+
+        return $this->allowedEnvTypes;
     }
 
     /**

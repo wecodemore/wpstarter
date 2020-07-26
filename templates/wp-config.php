@@ -32,21 +32,21 @@ ENV_VARIABLES: {
 
     if (!$envLoader->hasCachedValues()) {
         $envLoader->load('{{{ENV_FILE_NAME}}}', WPSTARTER_PATH);
-        $envName = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
-        if ($envName && $envName !== 'example') {
-            $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$envName}", WPSTARTER_PATH);
+        $envType = $envLoader->determineEnvType();
+        if ($envType && $envType !== 'example') {
+            $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$envType}", WPSTARTER_PATH);
         }
         $envLoader->setupConstants();
     }
 
-    isset($envName) or $envName = $envLoader->read('WP_ENV') ?? $envLoader->read('WORDPRESS_ENV');
+    isset($envType) or $envType = $envLoader->determineEnvType();
 
     if (
-        $envName
-        && file_exists(WPSTARTER_PATH . "/{$envName}.php")
-        && is_readable(WPSTARTER_PATH . "/{$envName}.php")
+        $envType
+        && file_exists(WPSTARTER_PATH . "/{$envType}.php")
+        && is_readable(WPSTARTER_PATH . "/{$envType}.php")
     ) {
-        require_once WPSTARTER_PATH . "/{$envName}.php";
+        require_once WPSTARTER_PATH . "/{$envType}.php";
     }
 } #@@/ENV_VARIABLES
 
@@ -101,7 +101,7 @@ EARLY_HOOKS : {
 
 DEFAULT_ENV : {
     /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
-    switch ($envName) {
+    switch ($envType) {
         case 'local':
         case 'development':
             defined('WP_DEBUG') or define('WP_DEBUG', true);
@@ -109,8 +109,7 @@ DEFAULT_ENV : {
             defined('WP_DEBUG_LOG') or define('WP_DEBUG_LOG', false);
             defined('SAVEQUERIES') or define('SAVEQUERIES', true);
             defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', true);
-            defined('WP_DISABLE_FATAL_ERROR_HANDLER') or define('WP_DISABLE_FATAL_ERROR_HANDLER',
-                true);
+            defined('WP_DISABLE_FATAL_ERROR_HANDLER') or define('WP_DISABLE_FATAL_ERROR_HANDLER', true);
             break;
         case 'staging':
             defined('WP_DEBUG') or define('WP_DEBUG', true);
@@ -128,7 +127,7 @@ DEFAULT_ENV : {
             defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', false);
             break;
     }
-    if ($envName === 'local' && !defined('WP_LOCAL_DEV')) {
+    if ($envType === 'local' && !defined('WP_LOCAL_DEV')) {
         define('WP_LOCAL_DEV', true);
     }
 } #@@/DEFAULT_ENV
@@ -185,17 +184,18 @@ ENV_CACHE : {
     /** On shutdown we dump environment so that on subsequent requests we can load it faster */
     if ('{{{CACHE_ENV}}}' && $envLoader->isWpSetup()) {
         register_shutdown_function(
-            static function () use ($envLoader, $envName) {
-                $skipCache = apply_filters('wpstarter.skip-cache-env', $envName === 'local',
-                    $envName);
-                $skipCache or $envLoader->dumpCached(WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
+            static function () use ($envLoader, $envType) {
+                $isLocal = $envType === 'local';
+                if (!apply_filters('wpstarter.skip-cache-env', $isLocal, $envType)) {
+                    $envLoader->dumpCached(WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
+                }
             }
         );
     }
 } #@@/ENV_CACHE
 
 CLEAN_UP : {
-    unset($envName, $envLoader, $cacheEnv);
+    unset($envType, $envLoader, $cacheEnv);
 } #@@/CLEAN_UP
 
 ###################################################################################################

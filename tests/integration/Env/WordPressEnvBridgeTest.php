@@ -525,6 +525,56 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testLoadWpEnvironmentTypeFromWpEnv()
+    {
+        $_ENV['WP_ENV'] = 'PREPROD';
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge->setupConstants();
+
+        static::assertTrue(defined('WP_ENVIRONMENT_TYPE'));
+        static::assertTrue(defined('WP_ENVIRONMENT_TYPES'));
+        static::assertSame('preprod', WP_ENVIRONMENT_TYPE);
+        static::assertTrue(in_array('preprod', WP_ENVIRONMENT_TYPES, true));
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testWpEnvironmentTypesLimitIsRespected()
+    {
+        $_ENV['WP_ENV'] = 'PREPROD';
+        $_ENV['WP_ENVIRONMENT_TYPES'] = 'development,staging,production';
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge->setupConstants();
+
+        static::assertTrue(defined('WP_ENVIRONMENT_TYPE'));
+        static::assertTrue(defined('WP_ENVIRONMENT_TYPES'));
+        static::assertSame('production', WP_ENVIRONMENT_TYPE);
+        static::assertSame(['development', 'staging', 'production'], WP_ENVIRONMENT_TYPES);
+    }
+
+    /**
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testCustomWpEnvironmentTypesCanBeUsed()
+    {
+        $_ENV['WP_ENV'] = 'PREPROD';
+        $_ENV['WP_ENVIRONMENT_TYPES'] = 'development,preprod,production';
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge->setupConstants();
+
+        static::assertTrue(defined('WP_ENVIRONMENT_TYPE'));
+        static::assertTrue(defined('WP_ENVIRONMENT_TYPES'));
+        static::assertSame('preprod', WP_ENVIRONMENT_TYPE);
+        static::assertSame(['development', 'preprod', 'production'], WP_ENVIRONMENT_TYPES);
+    }
+
+    /**
      * @return bool
      */
     private function deleteCacheFile(): bool
