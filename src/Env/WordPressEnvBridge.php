@@ -624,8 +624,6 @@ class WordPressEnvBridge
     }
 
     /**
-     * Return all environment variables that have been set
-     *
      * @return bool
      */
     public function isWpSetup(): bool
@@ -676,8 +674,6 @@ class WordPressEnvBridge
     }
 
     /**
-     * Define WP constants from environment variables.
-     *
      * @param string $name
      * @return bool True if a constant has been defined.
      */

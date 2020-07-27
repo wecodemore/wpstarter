@@ -155,31 +155,35 @@ requires the value of that variable to be either one of:
 
 unless a different set of allowed values is configured via another environment variable (or constant): `WP_ENVIRONMENT_TYPES`.
 
-Unlike WordPress, WP Starter does not limit `WP_ENVIRONMENT_TYPE` (`WP_ENV` / `WORDPRESS_ENV`) to specific values, and in the case a different value is used,
-to maximize compatibility with WordPress, WP Starter will declare the `WP_ENVIRONMENT_TYPES` constant using a value that includes what's contained in `WP_ENVIRONMENT_TYPE`.
-However, if a `WP_ENVIRONMENT_TYPES` env var is purposely defined, WP Starter will respect that, and will only allow a `WP_ENVIRONMENT_TYPE` that is included in the set
-of values defined in `WP_ENVIRONMENT_TYPES`, or will default to "production" just like WordPress does.
+Unlike WordPress, WP Starter does not limit `WP_ENVIRONMENT_TYPE` (`WP_ENV` / `WORDPRESS_ENV`) to 
+specific values, and in the case a different value is used, to maximize compatibility with WordPress,
+WP Starter will declare the `WP_ENVIRONMENT_TYPES` constant using a value that includes what's contained
+in `WP_ENVIRONMENT_TYPE`.
+However, if a `WP_ENVIRONMENT_TYPES` env var is purposely defined, WP Starter will respect that, and
+will only allow a `WP_ENVIRONMENT_TYPE` that is included in the set of values defined in
+`WP_ENVIRONMENT_TYPES`, or will default to "production" just like WordPress does.
 
-To clarify with an example. If a project has sets an env variable like this:
+Let's clarify with an example. If a project sets an env variable like this:
 
 ```bash
-WP_ENV=prepod # WP_ENV is the legacy WP Starter env var
+WP_ENV=preprod # WP_ENV is the legacy WP Starter's way to declare the environment type
+#WP_ENVIRONMENT_TYPES env var is not defined
 ```
 
 WP Starter will declare:
 
 ```php
-define('WP_ENVIRONMENT_TYPE', 'prepod');
-define('WP_ENVIRONMENT_TYPES', ['development', 'staging', 'production', 'prepod']);
+define('WP_ENVIRONMENT_TYPE', 'preprod');
+define('WP_ENVIRONMENT_TYPES', ['development', 'staging', 'production', 'preprod']);
 ```
 
 The exact same thing will happen if instead of `WP_ENV` the projects uses `WP_ENVIRONMENT_TYPE` env variable.
 
-However, if a project sets env variables like this:
+However, if a project sets env variables in like this:
 
 ```bash
 WP_ENVIRONMENT_TYPES='dev,stage,production'
-WP_ENVIRONMENT_TYPE='prepod' # or the equivalent WP_ENV='prepod'
+WP_ENVIRONMENT_TYPE='preprod' # or the equivalent WP_ENV='preprod'
 ```
 
 WP Starter will declare:
@@ -189,10 +193,11 @@ define('WP_ENVIRONMENT_TYPE', 'production');
 define('WP_ENVIRONMENT_TYPES', ['dev', 'stage', 'production']);
 ```
 
-So the value of `WP_ENVIRONMENT_TYPE` env var is discarded because not included in the defined `WP_ENVIRONMENT_TYPES` and it is defaulted to "production"
-just like WordPress does.
+So the value of `WP_ENVIRONMENT_TYPE` env var is discarded because not included in the defined 
+`WP_ENVIRONMENT_TYPES` and it is defaulted to "production" just like WordPress does.
 
-Note that in this latter example, _WP Starter environment_ used for example to load environment-specific files (see below) will be "production" and not "preprod".
+Note that in this latter example, _WP Starter environment_ used for example to load environment-specific
+files (see below) will be "production" and not "preprod".
 
 ##### Environment-specific files
 
