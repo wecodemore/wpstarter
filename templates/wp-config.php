@@ -272,6 +272,19 @@ DEBUG_INFO : {
     );
 } #@@/DEBUG_INFO
 
+GETENV_FILTER : {
+    /**
+     * A filter that can be used in place of `getenv` to get environment variables with benefits of
+     * cache and filtering. Example: <code>$some_var = apply_filters('getenv', 'SOME_VAR');</code>
+     */
+    add_filter(
+        'getenv',
+        static function ($name) use ($envLoader) {
+            return ($name && is_string($name)) ? $envLoader->read($name) : null;
+        },
+        PHP_INT_MAX
+    );
+} #@@/GETENV_FILTER
 
 CLEAN_UP : {
     unset($debugInfo, $envType, $envLoader, $cacheEnv, $defaultEnv);
