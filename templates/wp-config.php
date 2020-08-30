@@ -286,6 +286,10 @@ GETENV_FILTER : {
     );
 } #@@/GETENV_FILTER
 
+BEFORE_BOOTSTRAP : {
+    /** A pre-defined section to extend configuration. */
+} #@@/BEFORE_BOOTSTRAP
+
 CLEAN_UP : {
     unset($debugInfo, $envType, $envLoader, $cacheEnv, $defaultEnv);
 } #@@/CLEAN_UP
