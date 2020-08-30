@@ -199,12 +199,26 @@ class WordPressEnvBridge
     ];
 
     const WP_STARTER_ENV_VARS = [
-        'WP_ENVIRONMENT_TYPE',
         'WP_ENV',
         'WORDPRESS_ENV',
+        'WP_ENVIRONMENT_TYPE',
     ];
 
-    const WP_DEFAULT_ENV_TYPES = ['development', 'staging', 'production'];
+    const ENV_TYPES = [
+        'development' => 'development',
+        'staging' => 'staging',
+        'production' => 'production',
+        'local' => 'local',
+        'dev' => 'development',
+        'develop' => 'development',
+        'stage' => 'staging',
+        'preprod' => 'staging',
+        'pre-prod' => 'staging',
+        'pre-production' => 'staging',
+        'uat' => 'staging',
+        'prod' => 'production',
+        'live' => 'production',
+    ];
 
     /**
      * @var Dotenv
@@ -320,33 +334,14 @@ class WordPressEnvBridge
             return $this->envType;
         }
 
-        $allowedTypes = $this->determineAllowedEnvTypes();
-
-        $envType = (!$allowedTypes || in_array('production', $allowedTypes, true))
-            ? 'production'
-            : end($allowedTypes);
+        $envType = 'production';
 
         foreach (self::WP_STARTER_ENV_VARS as $var) {
             $envByVar = $this->read($var);
-
-            if (!$envByVar || !is_string($envByVar)) {
-                continue;
-            }
-
-            $envByVar = strtolower($envByVar);
-            if (!$allowedTypes || in_array($envByVar, $allowedTypes, true)) {
-                $envType = $envByVar;
+            if ($envByVar && is_string($envByVar)) {
+                $envType = strtolower($envByVar);
                 break;
             }
-        }
-
-        if (!$allowedTypes) {
-            $allowedTypes = self::WP_DEFAULT_ENV_TYPES;
-            if (!in_array($envType, $allowedTypes, true)) {
-                $allowedTypes[] = $envType;
-            }
-
-            $this->allowedEnvTypes = $allowedTypes;
         }
 
         $this->envType = $envType;
@@ -591,17 +586,10 @@ class WordPressEnvBridge
             $this->defineConstantFromVar($key) and $names[] = $key;
         }
 
-        // This will also make sure that the target env type is part of allowed types returned by
-        // `$this->determineAllowedEnvTypes()`.
         $envType = $this->determineEnvType();
         if (!defined('WP_ENVIRONMENT_TYPE')) {
-            define('WP_ENVIRONMENT_TYPE', $envType);
+            define('WP_ENVIRONMENT_TYPE', $this->determineWpEnvType($envType));
             $names[] = 'WP_ENVIRONMENT_TYPE';
-        }
-
-        if (!defined('WP_ENVIRONMENT_TYPES')) {
-            define('WP_ENVIRONMENT_TYPES', $this->determineAllowedEnvTypes());
-            $names[] = 'WP_ENVIRONMENT_TYPES';
         }
 
         $customVarsToSetStr = (string)$this->read(self::CUSTOM_ENV_TO_CONST_VAR_NAME);
@@ -691,29 +679,26 @@ class WordPressEnvBridge
     }
 
     /**
-     * @return array<string>
+     * @param string $envType
+     * @return string
      */
-    private function determineAllowedEnvTypes(): array
+    private function determineWpEnvType(string $envType): string
     {
-        if ($this->allowedEnvTypes) {
-            return $this->allowedEnvTypes;
+        $rawWpEnv = $this->read('WP_ENVIRONMENT_TYPE');
+        $rawWpEnv and $envType = strtolower($rawWpEnv);
+
+        $envTypeWp = self::ENV_TYPES[$envType] ?? null;
+        if ($envTypeWp) {
+            return $envTypeWp;
         }
 
-        $allowedByEnv = $this->read('WP_ENVIRONMENT_TYPES');
-        if ($allowedByEnv && is_string($allowedByEnv)) {
-            $allowedByEnv = preg_split('/[\s,]+/', $allowedByEnv, -1, PREG_SPLIT_NO_EMPTY);
-        }
-
-        $allowedEnvTypes = [];
-        foreach ((array)$allowedByEnv as $envName) {
-            if ($envName && is_string($envName)) {
-                $allowedEnvTypes[strtolower($envName)] = 1;
+        foreach (self::ENV_TYPES as $envTypeName => $envTypeMapped) {
+            if (strpos($envType, $envTypeName) !== false) {
+                return $envTypeMapped;
             }
         }
 
-        $this->allowedEnvTypes = array_keys($allowedEnvTypes);
-
-        return $this->allowedEnvTypes;
+        return $envType;
     }
 
     /**

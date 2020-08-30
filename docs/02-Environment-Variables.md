@@ -13,7 +13,7 @@ WordPress uses a single PHP file, `wp-config.php` that is used to declare PHP co
 This approach surely has some advantages (speed above all), but also issues. The main problems are two:
 
 - `wp-config.php` will very likely contain "secrets" that should **not** be kept under version control, but being the file required by WordPress it is hard to conciliate the two things.
-- `wp-config.php` does not support multiple environments. Meaning that if the same code will be deployed to, for example, a "staging" and a "production" server it will be necessary to have two versions of the file. This is possible using separate VCS "branches" (if the VCS of choice supports them), but then we fall into the previous issue of being forced to keep secrets versioned.
+- `wp-config.php` does not support multiple environments. Meaning if the same code will be deployed to, for example, to both a "staging" and a "production" server it will be necessary to have two versions of the file. This is possible using separate VCS "branches" (if the VCS of choice supports them), but then we fall into the previous issue of being forced to keep secrets versioned.
 
 This issue is surely not limited to WordPress.
 
@@ -48,13 +48,13 @@ GREETING="${HELLO} World!"
 
 Tools that support such files read them and set values on the environment "on the fly".
 
-By convention those file are often named `.env`.
+By convention those files are often named `.env`.
 
 
 
 ## PHP and env vars
 
-In PHP there are two functions: [`getevn`](http://php.net/manual/en/function.getenv.php) and [`putenv`](http://php.net/manual/en/function.getenv.php) that allow to, respectively, read and write env vars on the server in a OS-agnostic way.
+In PHP there are two functions: [`getevn`](http://php.net/manual/en/function.getenv.php) and [`putenv`](http://php.net/manual/en/function.getenv.php) that allow to, respectively, read and write env vars on the server in an OS-agnostic way.
 
 There's nothing in PHP core that parse env files, but is no surprise that there are different libraries to do that.
 
@@ -200,7 +200,7 @@ There are several ways to prevent WP Starter to generate and use cached environm
 - when the **`cache-env`** configuration is `false`, the cache by default is not created.
 - there's a WordPress filter `'wpstarter.skip-cache-env'` that can be used to disable the cache creation.
 
-The `'wpstarter.skip.cache-env'` filter is interesting because it allows to disable cache in specific environments by using the **`{$environment}.php`** file described above.
+The `'wpstarter.skip.cache-env'` filter is interesting because it allows disabling cache in specific environments by using the **`{$environment}.php`** file described above.
 For example, it is possible to skip environment cache in "development" environment having a `development.php` file that contains:
 
 ```php
