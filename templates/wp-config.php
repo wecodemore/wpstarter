@@ -9,12 +9,26 @@
  */
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 
+DEBUG_INFO_INIT: {
+    $debugInfo = [];
+}
+
 AUTOLOAD: {
     /** Composer autoload. */
     require_once realpath(__DIR__ . '{{{AUTOLOAD_PATH}}}');
 
-    /** A reference to `.env` folder path. */
     define('WPSTARTER_PATH', realpath(__DIR__ . '{{{ENV_REL_PATH}}}'));
+
+    $debugInfo['autoload-path'] = [
+        'label' => 'Autoload path',
+        'value' => __DIR__ . '{{{AUTOLOAD_PATH}}}',
+        'debug' => __DIR__ . '{{{AUTOLOAD_PATH}}}'
+    ];
+    $debugInfo['base-path'] = [
+        'label' => 'Base path',
+        'value' => WPSTARTER_PATH,
+        'debug' => WPSTARTER_PATH,
+    ];
 } #@@/AUTOLOAD
 
 ENV_VARIABLES: {
@@ -26,14 +40,16 @@ ENV_VARIABLES: {
      * Environment variables that are set in the *real* environment (e.g. via webserver) will not be
      * overridden from file, even if `WPSTARTER_ENV_LOADED` is not set.
      */
-    $envLoader = '{{{CACHE_ENV}}}'
+    $envCacheEnabled = filter_var('{{{CACHE_ENV}}}', FILTER_VALIDATE_BOOLEAN);
+    $envLoader = $envCacheEnabled
         ? WordPressEnvBridge::buildFromCacheDump(WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE)
         : new WordPressEnvBridge();
 
-    if (!$envLoader->hasCachedValues()) {
+    $envIsCached = $envLoader->hasCachedValues();
+    if (!$envIsCached) {
         $envLoader->load('{{{ENV_FILE_NAME}}}', WPSTARTER_PATH);
         $envType = $envLoader->determineEnvType();
-        if ($envType && $envType !== 'example') {
+        if ($envType !== 'example') {
             $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$envType}", WPSTARTER_PATH);
         }
         $envLoader->setupConstants();
@@ -41,13 +57,49 @@ ENV_VARIABLES: {
 
     isset($envType) or $envType = $envLoader->determineEnvType();
 
-    if (
-        $envType
-        && file_exists(WPSTARTER_PATH . "/{$envType}.php")
-        && is_readable(WPSTARTER_PATH . "/{$envType}.php")
-    ) {
+    $debugInfo['env-cache-file'] = [
+        'label' => 'Env cache file',
+        'value' => WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE,
+        'debug' => WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE,
+    ];
+    $debugInfo['env-cache-enabled'] = [
+        'label' => 'Env cache enabled',
+        'value' => $envCacheEnabled ? 'Yes' : 'No',
+        'debug' => $envCacheEnabled,
+    ];
+    $debugInfo['cached-env'] = [
+        'label' => 'Is env loaded from cache',
+        'value' => $envIsCached ? 'Yes' : 'No',
+        'debug' => $envIsCached,
+    ];
+    $debugInfo['env-type'] = [
+        'label' => 'Env type',
+        'value' => $envType,
+        'debug' => $envType,
+    ];
+
+    unset($envCacheEnabled, $envIsCached);
+
+    /**
+     * Core wp_get_environment_type() only supports a pre-defined list of environments types.
+     * WP Starter tries to map different environments to values supported by core, for example
+     * "dev" (or "develop", or even "develop-1") will be mapped to "development" accepted by WP.
+     * In that case, `wp_get_environment_type()` will return "development", but `WP_ENV` will still
+     * be "dev" (or "develop", or "develop-1").
+     */
+    defined('WP_ENV') or define('WP_ENV', $envType);
+
+    $phpEnvFilePath = WPSTARTER_PATH . "/{$envType}.php";
+    $hasPhpEnvFile = file_exists($phpEnvFilePath) && is_readable($phpEnvFilePath);
+    if ($hasPhpEnvFile) {
         require_once WPSTARTER_PATH . "/{$envType}.php";
     }
+    $debugInfo['env-php-file'] = [
+        'label' => 'Env-specific PHP file',
+        'value' => $hasPhpEnvFile ? WPSTARTER_PATH . "/{$envType}.php" : 'None',
+        'debug' => $hasPhpEnvFile ? WPSTARTER_PATH . "/{$envType}.php" : '',
+    ];
+    unset($phpEnvFilePath, $hasPhpEnvFile);
 } #@@/ENV_VARIABLES
 
 KEYS: {
@@ -82,7 +134,7 @@ DB_SETUP : {
 defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
 
 EARLY_HOOKS : {
-    /** Load plugin.php early, so we can call `add_action` below. */
+    /** Load plugin.php early, so we can call hooks from here on. */
     require_once ABSPATH . 'wp-includes/plugin.php';
 
     /**
@@ -90,19 +142,26 @@ EARLY_HOOKS : {
      * Early hooks file allows to add hooks that are triggered before plugins are loaded, e.g.
      * "enable_loading_advanced_cache_dropin" or to just-in-time define configuration constants.
      */
-    if (
-        '{{{EARLY_HOOKS_FILE}}}'
+    $earlyHookFile = '{{{EARLY_HOOKS_FILE}}}'
         && file_exists(__DIR__ . '{{{EARLY_HOOKS_FILE}}}')
-        && is_readable(__DIR__ . '{{{EARLY_HOOKS_FILE}}}')
-    ) {
+        && is_readable(__DIR__ . '{{{EARLY_HOOKS_FILE}}}');
+    if ($earlyHookFile) {
         require_once __DIR__ . '{{{EARLY_HOOKS_FILE}}}';
     }
+    $debugInfo['early-hooks-file'] = [
+        'label' => 'Early hooks file',
+        'value' => $earlyHookFile ? __DIR__ . '{{{EARLY_HOOKS_FILE}}}' : 'None',
+        'debug' => $earlyHookFile ? __DIR__ . '{{{EARLY_HOOKS_FILE}}}' : '',
+    ];
+    unset($earlyHookFile);
 } #@@/EARLY_HOOKS
 
 DEFAULT_ENV : {
     /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
-    switch ($envType) {
+    $defaultEnv = defined('WP_ENVIRONMENT_TYPE') ? WP_ENVIRONMENT_TYPE : WP_ENV;
+    switch ($defaultEnv) {
         case 'local':
+            defined('WP_LOCAL_DEV') or define('WP_LOCAL_DEV', true);
         case 'development':
             defined('WP_DEBUG') or define('WP_DEBUG', true);
             defined('WP_DEBUG_DISPLAY') or define('WP_DEBUG_DISPLAY', true);
@@ -127,19 +186,24 @@ DEFAULT_ENV : {
             defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', false);
             break;
     }
-    if ($envType === 'local' && !defined('WP_LOCAL_DEV')) {
-        define('WP_LOCAL_DEV', true);
-    }
+    $debugInfo['default-env-type'] = [
+        'label' => 'Env type for defaults',
+        'value' => $defaultEnv,
+        'debug' => $defaultEnv,
+    ];
 } #@@/DEFAULT_ENV
 
 SSL_FIX : {
-    if (
-        $envLoader->read('WP_FORCE_SSL_FORWARDED_PROTO')
+    $doSslFix = $envLoader->read('WP_FORCE_SSL_FORWARDED_PROTO')
         && array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER)
-        && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
-    ) {
-        $_SERVER['HTTPS'] = 'on';
-    }
+        && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https';
+    $doSslFix and $_SERVER['HTTPS'] = 'on';
+    $debugInfo['ssl_fix'] = [
+        'label' => 'SSL fix for load balancers',
+        'value' => $doSslFix ? 'Yes' : 'No',
+        'debug' => $doSslFix,
+    ];
+    unset($doSslFix);
 } #@@/SSL_FIX
 
 URL_CONSTANTS : {
@@ -158,15 +222,16 @@ URL_CONSTANTS : {
 
 THEMES_REGISTER : {
     /** Register default themes inside WordPress package wp-content folder. */
-    if (filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN)) {
-        add_action(
-            'plugins_loaded',
-            static function () {
-                register_theme_directory(ABSPATH . 'wp-content/themes');
-            },
-            0
-        );
-    }
+    $registerThemeFolder = filter_var('{{{REGISTER_THEME_DIR}}}', FILTER_VALIDATE_BOOLEAN);
+    $registerThemeFolder and add_action('plugins_loaded', static function () {
+        register_theme_directory(ABSPATH . 'wp-content/themes');
+    });
+    $debugInfo['register-core-themes'] = [
+        'label' => 'Register core themes folder',
+        'value' => $registerThemeFolder,
+        'debug' => '{{{REGISTER_THEME_DIR}}}',
+    ];
+    unset($registerThemeFolder);
 } #@@/THEMES_REGISTER
 
 ADMIN_COLOR : {
@@ -194,8 +259,22 @@ ENV_CACHE : {
     }
 } #@@/ENV_CACHE
 
+DEBUG_INFO : {
+    add_filter(
+        'debug_information',
+        static function ($info) use ($debugInfo): array {
+            is_array($info) or $info = [];
+            $info['wp-starter'] = ['label' => 'WP Starter', 'fields' => $debugInfo];
+
+            return $info;
+        },
+        30
+    );
+} #@@/DEBUG_INFO
+
+
 CLEAN_UP : {
-    unset($envType, $envLoader, $cacheEnv);
+    unset($debugInfo, $envType, $envLoader, $cacheEnv, $defaultEnv);
 } #@@/CLEAN_UP
 
 ###################################################################################################
