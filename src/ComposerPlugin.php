@@ -23,7 +23,6 @@ use Composer\Plugin\PluginInterface;
 use Composer\Plugin\Capability\CommandProvider;
 use Composer\Script\Event;
 use Composer\Util\Filesystem;
-use WeCodeMore\WpStarter\Config\Config;
 
 /**
  * Composer plugin class to run all the WP Starter steps on Composer install or update and also adds
@@ -247,7 +246,7 @@ final class ComposerPlugin implements
             $isSelectedCommandMode = $factory->isSelectedCommandMode();
             $isSelectedCommandMode or $this->logo();
 
-            if ($config[Config::SKIP_DB_CHECK]->is(false)) {
+            if ($config[Config\Config::SKIP_DB_CHECK]->is(false)) {
                 $this->locator->dbChecker()->check();
             }
 
@@ -279,10 +278,10 @@ final class ComposerPlugin implements
 
     /**
      * @param Util\SelectedStepsFactory $factory
-     * @return Config
+     * @return Config\Config
      * @throws \Exception
      */
-    private function prepareRun(Util\SelectedStepsFactory $factory): Config
+    private function prepareRun(Util\SelectedStepsFactory $factory): Config\Config
     {
         switch (true) {
             case ($this->mode === self::MODE_COMPOSER_INSTALL):
@@ -320,7 +319,7 @@ final class ComposerPlugin implements
         $config = $requirements->config();
 
         /** @var string|null $autoload */
-        $autoload = $config[Config::AUTOLOAD]->unwrapOrFallback();
+        $autoload = $config[Config\Config::AUTOLOAD]->unwrapOrFallback();
         if ($autoload && is_file($autoload)) {
             require_once $autoload;
         }
@@ -404,14 +403,14 @@ final class ComposerPlugin implements
     }
 
     /**
-     * @param Config $config
+     * @param Config\Config $config
      * @return string
      */
-    private function checkWp(Config $config): string
+    private function checkWp(Config\Config $config): string
     {
-        $requireWp = $config[Config::REQUIRE_WP]->not(false);
+        $requireWp = $config[Config\Config::REQUIRE_WP]->not(false);
         /** @var string $fallbackVer */
-        $fallbackVer = $config[Config::WP_VERSION]->unwrapOrFallback('');
+        $fallbackVer = $config[Config\Config::WP_VERSION]->unwrapOrFallback('');
         $wpVersion = '';
         if ($requireWp) {
             $wpVersionDiscover = new Util\WpVersion(
@@ -428,7 +427,7 @@ final class ComposerPlugin implements
 
         // If WP version found and no version is in configs, let's set it with the finding.
         if ($wpVersion && !$fallbackVer) {
-            $config[Config::WP_VERSION] = $fallbackVer;
+            $config[Config\Config::WP_VERSION] = $fallbackVer;
         }
 
         return $wpVersion;

@@ -807,23 +807,6 @@ class Validator
     }
 
     /**
-     * @param callable $method
-     * @param mixed $value
-     * @return Result
-     */
-    public function validateCustom(callable $method, $value): Result
-    {
-        try {
-            $validated = $method($value);
-            ($validated instanceof Result) or $validated = Result::ok($validated);
-        } catch (\Throwable $error) {
-            $validated = Result::error($error);
-        }
-
-        return $validated;
-    }
-
-    /**
      * @param mixed $script
      * @return bool
      */

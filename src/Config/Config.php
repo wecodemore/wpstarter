@@ -134,9 +134,9 @@ final class Config implements \ArrayAccess
     private $validator;
 
     /**
-     * @var array<string, string|callable>
+     * @var array<string, callable(mixed):Result>
      */
-    private $validationMap;
+    private $validationMap = [];
 
     /**
      * @param array $configs
@@ -147,7 +147,13 @@ final class Config implements \ArrayAccess
         $this->configs = [];
         $this->validator = $validator;
         $this->raw = array_merge(self::DEFAULTS, $configs);
-        $this->validationMap = self::VALIDATION_MAP;
+
+        /** @var string $key */
+        foreach (self::VALIDATION_MAP as $key => $method) {
+            /** @var callable(mixed):Result $callable */
+            $callback = [$validator, $method];
+            $this->validationMap[$key] = $callback;
+        }
     }
 
     /**
@@ -162,10 +168,10 @@ final class Config implements \ArrayAccess
 
     /**
      * @param string $name
-     * @param callable $validator
+     * @param callable $callback
      * @return Config
      */
-    public function appendValidator(string $name, callable $validator): Config
+    public function appendValidator(string $name, callable $callback): Config
     {
         if (array_key_exists($name, self::VALIDATION_MAP)) {
             throw new \InvalidArgumentException(
@@ -173,7 +179,17 @@ final class Config implements \ArrayAccess
             );
         }
 
-        $this->validationMap[$name] = $validator;
+        // phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
+        $this->validationMap[$name] = static function ($value) use ($callback): Result {
+            // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
+            try {
+                $validated = Result::ok($callback($value));
+            } catch (\Throwable $error) {
+                $validated = Result::error($error);
+            }
+
+            return $validated;
+        };
 
         return $this;
     }
@@ -243,7 +259,7 @@ final class Config implements \ArrayAccess
 
     /**
      * @param string $name
-     * @param $value
+     * @param mixed $value
      * @return Result
      *
      * @psalm-suppress MissingParamType
@@ -253,21 +269,9 @@ final class Config implements \ArrayAccess
     {
         // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
 
-        /** @var string|callable $method */
-        $method = $this->validationMap[$name] ?? null;
-        if (!$method) {
-            return Result::ok($value);
-        }
+        /** @var null|callable(mixed):Result $method */
+        $callback = $this->validationMap[$name] ?? null;
 
-        if (array_key_exists($name, self::VALIDATION_MAP)) {
-            /** @var callable(mixed):Result $factory */
-            $factory = [$this->validator, $method];
-
-            return $factory($value);
-        }
-
-        /** @var callable $method */
-
-        return $this->validator->validateCustom($method, $value);
+        return $callback ? $callback($value) : Result::ok($value);
     }
 }
