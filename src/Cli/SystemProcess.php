@@ -18,7 +18,7 @@ use WeCodeMore\WpStarter\Util\Paths;
 class SystemProcess
 {
     /**
-     * @var callable
+     * @var callable|null
      */
     private $printer;
 

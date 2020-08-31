@@ -20,7 +20,7 @@ use Composer\Util\Platform;
 class Filesystem
 {
     /**
-     * @var \Composer\Util\Filesystem
+     * @var ComposerFilesystem
      */
     private $filesystem;
 
@@ -182,7 +182,6 @@ class Filesystem
         /** @var \SplFileInfo $item */
         foreach ($iterator as $item) {
             $total++;
-            // @phan-suppress-next-line PhanUndeclaredMethod
             $target = "{$targetPath}/" . $iterator->getSubPathName();
 
             if ($item->isDir()) {
@@ -190,7 +189,7 @@ class Filesystem
                 continue;
             }
 
-            $done += $this->copyFile($item->getRealPath(), $target);
+            $done += $this->copyFile($item->getRealPath(), $target) ? 1 : 0;
         }
 
         return $done === $total;
@@ -216,7 +215,7 @@ class Filesystem
         }
 
         $stat = @stat($parentDir);
-        $permissions = $stat ? $stat['mode'] & 0007777 : 0755;
+        $permissions = $stat ? ((int)$stat['mode']) & 0007777 : 0755;
 
         if (!@mkdir($targetPath, $permissions, true) && !is_dir($targetPath)) {
             return false;

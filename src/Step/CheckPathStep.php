@@ -76,6 +76,7 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
      */
     public function run(Config $config, Paths $paths): int
     {
+        /** @var string $envDir */
         $envDir = $config[Config::ENV_DIR]->unwrapOrFallback() ?: $paths->root();
         if (strpos($envDir, $paths->wpParent()) === 0) {
             $this->envInWebRoot = $envDir;
@@ -131,13 +132,14 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
 
     /**
      * @param Io $io
+     * @return void
      */
     public function postProcess(Io $io)
     {
         if ($this->envInWebRoot) {
             $io->writeCommentBlock(
-                "The .env file is expected to be placed in '{$this->envInWebRoot}' which is the webroot.",
-                'It is strongly suggested to place .env file outside of webroot for security reasons.'
+                "The .env file is currently placed in webroot folder: '{$this->envInWebRoot}'.",
+                'It is strongly suggested having .env file outside of webroot for security reasons.'
             );
         }
 

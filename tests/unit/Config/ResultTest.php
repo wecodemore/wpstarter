@@ -70,7 +70,7 @@ class ResultTest extends TestCase
     {
         $result = Result::error();
 
-        $this->expectException(Error::class);
+        $this->expectException(\Error::class);
         $result->unwrap();
     }
 
@@ -78,7 +78,7 @@ class ResultTest extends TestCase
     {
         $result = Result::errored('Meh!');
 
-        $this->expectException(Error::class);
+        $this->expectException(\Error::class);
         $this->expectExceptionMessage('Meh!');
         $result->unwrap();
     }

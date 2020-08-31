@@ -30,7 +30,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
     const NAME = 'build-env-example';
 
     /**
-     * @var \WeCodeMore\WpStarter\Config\Config
+     * @var Config
      */
     private $config;
 
@@ -74,9 +74,10 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        return
-            $config[Config::ENV_EXAMPLE]->not(false)
-            && !is_file($paths->root($config[Config::ENV_FILE]->unwrapOrFallback('.env')));
+        /** @var string $envFile */
+        $envFile = $config[Config::ENV_FILE]->unwrapOrFallback('.env');
+
+        return $config[Config::ENV_EXAMPLE]->not(false) && !is_file($paths->root($envFile));
     }
 
     /**
@@ -114,6 +115,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      */
     public function run(Config $config, Paths $paths): int
     {
+        /** @var string|bool $source */
         $source = $this->config[Config::ENV_EXAMPLE]->unwrapOrFallback(false);
         if (!$source) {
             return Step::NONE;
@@ -121,7 +123,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
 
         $destination = $this->targetPath($paths);
 
-        if (filter_var($source, FILTER_VALIDATE_URL)) {
+        if (is_string($source) && filter_var($source, FILTER_VALIDATE_URL)) {
             return $this->download($source, $destination);
         }
 

@@ -40,7 +40,7 @@ class MuPluginList
     }
 
     /**
-     * @return array
+     * @return array<string, string>
      */
     public function pluginsList(): array
     {
@@ -66,7 +66,7 @@ class MuPluginList
 
     /**
      * @param PackageInterface $package
-     * @return string[]
+     * @return array<string>
      */
     private function pathsForPluginPackage(PackageInterface $package): array
     {
@@ -111,9 +111,13 @@ class MuPluginList
      */
     private function isPluginFile(string $file): bool
     {
+        $data = null;
         $handle = @fopen($file, 'r');
-        $data = @fread($handle, 8192);
-        @fclose($handle);
+        if ($handle) {
+            $data = @fread($handle, 8192);
+            @fclose($handle);
+        }
+
         if (!$data) {
             return false;
         }

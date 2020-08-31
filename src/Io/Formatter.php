@@ -18,7 +18,7 @@ class Formatter
     /**
      * @param int $lineLength
      * @param string ...$lines
-     * @return array
+     * @return array<string>
      */
     public function ensureLinesLength(int $lineLength, string ...$lines): array
     {
@@ -46,7 +46,7 @@ class Formatter
 
     /**
      * @param string ...$lines
-     * @return array
+     * @return array<string>
      */
     public function ensureDefaultLinesLength(string ...$lines): array
     {
@@ -111,7 +111,7 @@ class Formatter
 
             $length = self::DEFAULT_LINE_LENGTH - (strlen($this->trimLine($prefix)) + 1);
             $innerLines = $this->ensureLinesLength($length, $item);
-            $list[] = $prefix . array_shift($innerLines);
+            $list[] = $prefix . (string)array_shift($innerLines);
             foreach ($innerLines as $innerLine) {
                 $innerLine and $list[] = $filler . $innerLine;
             }
@@ -123,11 +123,12 @@ class Formatter
     /**
      * @param string $text
      * @param int $length
-     * @return string[]
+     * @return array<string>
      */
     private function normalizeLength(string $text, int $length = self::DEFAULT_LINE_LENGTH): array
     {
-        $words = preg_split('~\s+~', $text);
+        /** @var array<string> $words */
+        $words = (array)(preg_split('~\s+~', $text) ?: []);
         $buffer = '';
         $normalized = [];
         foreach ($words as $word) {
@@ -194,10 +195,6 @@ class Formatter
             ? $this->calculateSpacesToCenterLines($maxLength, ...$lines)
             : $this->calculateSpacesToFillLines($maxLength, ...$lines);
 
-        if (!$lines) {
-            return [];
-        }
-
         // Ensure empty line on top and on bottom of block
         array_unshift($lines, '');
         array_unshift($spaces, ['', '']);
@@ -216,7 +213,7 @@ class Formatter
 
     /**
      * @param string ...$lines
-     * @return string[]
+     * @return array<string>
      */
     private function splitLinesByLineEnding(string ...$lines): array
     {
@@ -226,7 +223,8 @@ class Formatter
                 $split[] = '';
             }
 
-            $innerLines = preg_split('~\n+~', trim($line));
+            /** @var array<string> $innerLines */
+            $innerLines = (array)(preg_split('~\n+~', trim($line)) ?: []);
             foreach ($innerLines as $innerLine) {
                 $trimmedInner = trim($innerLine);
                 $trimmedInner and $split[] = $trimmedInner;

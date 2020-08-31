@@ -102,14 +102,19 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
 
         $cacheEnv = $config[Config::CACHE_ENV]->unwrapOrFallback(true);
 
-        $earlyHook = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback('');
-        $earlyHook and $earlyHook = $this->relPath("{$from}/index.php", $earlyHook, false);
+        /** @var string $earlyHookFile */
+        $earlyHookFile = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback('');
+        if ($earlyHookFile) {
+            $earlyHookFile = $this->relPath("{$from}/index.php", $earlyHookFile, false);
+        }
 
+        /** @var string $envBootstrapDir */
         $envBootstrapDir = $config[Config::ENV_BOOTSTRAP_DIR]->unwrapOrFallback('');
         if ($envBootstrapDir) {
             $envBootstrapDir = $this->relPath($from, $paths->root($envBootstrapDir));
         }
 
+        /** @var string $envDir */
         $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
         $envRelDir = $this->relPath($from, $envDir);
 
@@ -123,7 +128,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         $vars = [
             'AUTOLOAD_PATH' => $this->relPath("{$from}/index.php", $autoload, false),
             'CACHE_ENV' => $cacheEnv ? '1' : '',
-            'EARLY_HOOKS_FILE' => $earlyHook,
+            'EARLY_HOOKS_FILE' => $earlyHookFile,
             'ENV_BOOTSTRAP_DIR' => $envBootstrapDir ?: $envRelDir,
             'ENV_FILE_NAME' => $config[Config::ENV_FILE]->unwrapOrFallback('.env'),
             'ENV_REL_PATH' => $envRelDir,

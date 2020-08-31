@@ -29,6 +29,7 @@ use WeCodeMore\WpStarter\Config\Config;
  * Composer plugin class to run all the WP Starter steps on Composer install or update and also adds
  * 'wpstarter' command to allow doing same thing "on demand".
  *
+ * @psalm-suppress MissingConstructor
  * phpcs:disable Inpsyde.CodeQuality.NoAccessors
  */
 final class ComposerPlugin implements
@@ -111,7 +112,7 @@ final class ComposerPlugin implements
     }
 
     /**
-     * @return array
+     * @return array<string, class-string<Capable>>
      */
     public function getCapabilities(): array
     {
@@ -119,7 +120,7 @@ final class ComposerPlugin implements
     }
 
     /**
-     * @return array
+     * @return array{WpStarterCommand}
      */
     public function getCommands(): array
     {
@@ -129,6 +130,7 @@ final class ComposerPlugin implements
     /**
      * @param Composer $composer
      * @param IOInterface $io
+     * @return void
      */
     public function activate(Composer $composer, IOInterface $io)
     {
@@ -158,6 +160,7 @@ final class ComposerPlugin implements
 
     /**
      * @param PackageEvent $event
+     * @return void
      */
     public function onPrePackageOperation(PackageEvent $event)
     {
@@ -177,6 +180,7 @@ final class ComposerPlugin implements
 
     /**
      * @param Event $event
+     * @return void
      */
     public function onAutorunBecauseInstall(Event $event)
     {
@@ -191,6 +195,7 @@ final class ComposerPlugin implements
 
     /**
      * @param Event $event
+     * @return void
      */
     public function onAutorunBecauseUpdate(Event $event)
     {
@@ -200,6 +205,7 @@ final class ComposerPlugin implements
 
     /**
      * @param Util\SelectedStepsFactory $factory
+     * @return void
      */
     public function run(Util\SelectedStepsFactory $factory)
     {
@@ -284,7 +290,7 @@ final class ComposerPlugin implements
                     $this->composer,
                     $this->io,
                     new Filesystem(),
-                    $this->updatedPackages
+                    ...$this->updatedPackages
                 );
                 break;
             case ($this->mode === self::MODE_COMPOSER_UPDATE):
@@ -292,7 +298,7 @@ final class ComposerPlugin implements
                     $this->composer,
                     $this->io,
                     new Filesystem(),
-                    $this->updatedPackages
+                    ...$this->updatedPackages
                 );
                 break;
             case ($factory->isSelectedCommandMode()):
@@ -313,6 +319,7 @@ final class ComposerPlugin implements
 
         $config = $requirements->config();
 
+        /** @var string|null $autoload */
         $autoload = $config[Config::AUTOLOAD]->unwrapOrFallback();
         if ($autoload && is_file($autoload)) {
             require_once $autoload;
@@ -328,13 +335,14 @@ final class ComposerPlugin implements
      */
     private function convertErrorsToExceptions()
     {
-        set_error_handler( // @phan-suppress-next-line PhanTypeMismatchArgumentInternal
-            static function (int $severity, string $message, string $file = '', int $line = 0) {
+        /** @psalm-suppress MixedArgumentTypeCoercion */
+        set_error_handler(
+            static function (int $code, string $msg, string $file = '', int $line = 0) {
                 if ($file && $line) {
-                    $message = rtrim($message, '. ') . ", in {$file} line {$line}.";
+                    $msg = rtrim($msg, '. ') . ", in {$file} line {$line}.";
                 }
 
-                throw new \Exception($message, $severity);
+                throw new \Exception($msg, $code);
             },
             E_ALL
         );
@@ -402,6 +410,7 @@ final class ComposerPlugin implements
     private function checkWp(Config $config): string
     {
         $requireWp = $config[Config::REQUIRE_WP]->not(false);
+        /** @var string $fallbackVer */
         $fallbackVer = $config[Config::WP_VERSION]->unwrapOrFallback('');
         $wpVersion = '';
         if ($requireWp) {
@@ -448,9 +457,7 @@ final class ComposerPlugin implements
     /**
      * @param string $namespace
      * @param string $dir
-     * @return callable
-     *
-     * @suppress PhanUnreferencedClosure
+     * @return callable(string): void
      */
     private function psr4LoaderFor(string $namespace, string $dir): callable
     {

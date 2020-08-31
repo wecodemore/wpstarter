@@ -69,7 +69,7 @@ class PharInstaller
 
         if (!$info->checkPhar($path, $this->io)) {
             @unlink($path);
-            $this->io->writeErrorBlock('Phar validation failed. Downloaded phar is probably corrupted.');
+            $this->io->writeErrorBlock('Phar validation failed. Downloaded phar seems corrupted.');
 
             return '';
         }

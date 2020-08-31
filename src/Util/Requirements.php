@@ -82,34 +82,34 @@ final class Requirements
      * @param Composer $composer
      * @param IOInterface $io
      * @param Filesystem $filesystem
-     * @param array $updatedPackages
+     * @param PackageInterface ...$updatedPackages
      * @return Requirements
      */
     public static function forComposerInstall(
         Composer $composer,
         IOInterface $io,
         Filesystem $filesystem,
-        array $updatedPackages
+        PackageInterface ...$updatedPackages
     ): Requirements {
 
-        return new static($composer, $io, $filesystem, false, true, false, $updatedPackages);
+        return new static($composer, $io, $filesystem, false, true, false, ...$updatedPackages);
     }
 
     /**
      * @param Composer $composer
      * @param IOInterface $io
      * @param Filesystem $filesystem
-     * @param array $updatedPackages
+     * @param PackageInterface ...$updatedPackages
      * @return Requirements
      */
     public static function forComposerUpdate(
         Composer $composer,
         IOInterface $io,
         Filesystem $filesystem,
-        array $updatedPackages
+        PackageInterface ...$updatedPackages
     ): Requirements {
 
-        return new static($composer, $io, $filesystem, false, true, true, $updatedPackages);
+        return new static($composer, $io, $filesystem, false, true, true, ...$updatedPackages);
     }
 
     /**
@@ -119,7 +119,7 @@ final class Requirements
      * @param bool $isSelectedCommandMode
      * @param bool $isComposer
      * @param bool $isComposerUpdate
-     * @param PackageInterface[] $updatedPackages
+     * @param PackageInterface ...$updatedPackages
      */
     private function __construct(
         Composer $composer,
@@ -128,7 +128,7 @@ final class Requirements
         bool $isSelectedCommandMode,
         bool $isComposer,
         bool $isComposerUpdate,
-        array $updatedPackages = []
+        PackageInterface ...$updatedPackages
     ) {
 
         $this->filesystem = $filesystem;
@@ -148,8 +148,10 @@ final class Requirements
         $this->config = new Config($config, new Validator($this->paths, $filesystem));
         $this->io = new Io($io, new Formatter());
 
-        $templatesDir = $this->config[Config::TEMPLATES_DIR];
-        $templatesDir->notEmpty() and $this->paths->useCustomTemplatesDir($templatesDir->unwrap());
+        $templatesDirConfig = $this->config[Config::TEMPLATES_DIR];
+        /** @var string|null $templatesDir */
+        $templatesDir = $templatesDirConfig->unwrapOrFallback();
+        $templatesDir and $this->paths->useCustomTemplatesDir($templatesDir);
     }
 
     /**

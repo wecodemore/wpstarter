@@ -46,7 +46,7 @@ class SelectedStepsFactory
     private $ignoreSkipConfig;
 
     /**
-     * @var string[]
+     * @var array<string>
      */
     private $commandStepNames;
 
@@ -82,24 +82,19 @@ class SelectedStepsFactory
      * @param int $flags
      * @param string ...$stepNames
      */
-    public function __construct(int $flags = 0, string ...$stepNames)
+    final public function __construct(int $flags = 0, string ...$stepNames)
     {
-        $this->commandMode = ($flags & self::MODE_COMMAND) === self::MODE_COMMAND;
-        if (!$this->commandMode) {
-            $this->optOutMode = false;
-            $this->skipCustomSteps = false;
-            $this->ignoreSkipConfig = false;
-            $this->commandStepNames = [];
-        }
-
-        $this->commandStepNames = $stepNames;
-
-        $this->optOutMode = ($flags & self::MODE_OPT_OUT)
-            === self::MODE_OPT_OUT;
-        $this->skipCustomSteps = ($flags & self::SKIP_CUSTOM_STEPS)
-            === self::SKIP_CUSTOM_STEPS;
-        $this->ignoreSkipConfig = ($flags & self::IGNORE_SKIP_STEPS_CONFIG)
-            === self::IGNORE_SKIP_STEPS_CONFIG;
+        $this->commandMode = $this->checkFlag($flags, self::MODE_COMMAND);
+        $this->commandStepNames = $this->commandMode ? $stepNames : [];
+        $this->optOutMode = $this->commandMode
+            ? $this->checkFlag($flags, self::MODE_OPT_OUT)
+            : false;
+        $this->skipCustomSteps = $this->commandMode
+            ? $this->checkFlag($flags, self::SKIP_CUSTOM_STEPS)
+            : false;
+        $this->ignoreSkipConfig = $this->commandMode
+            ? $this->checkFlag($flags, self::IGNORE_SKIP_STEPS_CONFIG)
+            : false;
     }
 
     /**
@@ -113,7 +108,7 @@ class SelectedStepsFactory
     /**
      * @param Locator $locator
      * @param Composer $composer
-     * @return Step[]
+     * @return array<Step>
      */
     public function selectAndFactory(Locator $locator, Composer $composer): array
     {
@@ -153,49 +148,66 @@ class SelectedStepsFactory
     }
 
     /**
+     * @param int $flags
+     * @param int $flag
+     * @return bool
+     */
+    private function checkFlag(int $flags, int $flag): bool
+    {
+        return ($flags & $flag) === $flag;
+    }
+
+    /**
      * @param Config $config
      * @param Io $io
-     * @return array
+     * @return array<string, class-string<Step>>
      */
     private function availableStepsNameToClassMap(Config $config, Io $io): array
     {
+        /** @var array<string, class-string<Step>> $defaultSteps */
         $defaultSteps = ComposerPlugin::defaultSteps();
+        /** @var array<string, string> $customSteps */
         $customSteps = $config[Config::CUSTOM_STEPS]->unwrapOrFallback([]);
+        /** @var array<string, string> $commandSteps */
         $commandSteps = $config[Config::COMMAND_STEPS]->unwrapOrFallback([]);
 
-        $availableSteps = ($this->skipCustomSteps || !$customSteps)
+        $targetSteps = ($this->skipCustomSteps || !$customSteps)
             ? $defaultSteps
             : array_merge($defaultSteps, $customSteps);
 
         if ($commandSteps && $this->isSelectedCommandMode()) {
-            $availableSteps = array_merge($availableSteps, $commandSteps);
+            $targetSteps = array_merge($targetSteps, $commandSteps);
         }
 
-        $availableSteps = $this->filterInvalidSteps(
-            $this->filterOutSkippedSteps($config, $availableSteps, $io)
-        );
+        /** @var array<string, string> $targetSteps */
+        $targetSteps = $this->filterOutSkippedSteps($config, $targetSteps, $io);
+        $availableStepClassesMap = $this->filterOutInvalidSteps($targetSteps);
 
         if (
             !$config[Config::WP_CLI_FILES]->notEmpty()
             && !$config[Config::WP_CLI_COMMANDS]->notEmpty()
         ) {
-            unset($availableSteps[WpCliCommandsStep::NAME]);
+            unset($availableStepClassesMap[WpCliCommandsStep::NAME]);
         }
 
-        return $availableSteps;
+        return $availableStepClassesMap;
     }
 
     /**
      * @param array $allSteps
-     * @return array
+     * @return array<string, class-string<Step>>
      */
-    private function filterInvalidSteps(array $allSteps): array
+    private function filterOutInvalidSteps(array $allSteps): array
     {
-        return array_filter(
+        $errors = 0;
+
+        /** @var array<string, class-string<Step>> $stepClassesMap */
+        $stepClassesMap = array_filter(
             $allSteps,
-            function (string $step): bool {
+            static function (string $step) use (&$errors): bool {
                 if (!is_a($step, Step::class, true)) {
-                    $this->configErrors++;
+                    /** @var int $errors */
+                    $errors++;
 
                     return false;
                 }
@@ -203,13 +215,18 @@ class SelectedStepsFactory
                 return true;
             }
         );
+
+        /** @var int $errors */
+        $this->configErrors += $errors;
+
+        return $stepClassesMap;
     }
 
     /**
      * @param Config $config
-     * @param array $allAvailableStepNameToClassMap
+     * @param array<string, string> $allAvailableStepNameToClassMap
      * @param Io $io
-     * @return array
+     * @return array<string, string>
      */
     private function filterOutSkippedSteps(
         Config $config,
@@ -225,6 +242,7 @@ class SelectedStepsFactory
         }
 
         $skipNamesByInput = $this->optOutMode ? $this->commandStepNames : [];
+        /** @var array<string> $skipNamesByConfig */
         $skipNamesByConfig = $this->ignoreSkipConfig
             ? []
             : $config[Config::SKIP_STEPS]->unwrapOrFallback([]);
@@ -281,8 +299,8 @@ class SelectedStepsFactory
     }
 
     /**
-     * @param array $allAvailableStepNameToClassMap
-     * @return array
+     * @param array<string, class-string<Step>> $allAvailableStepNameToClassMap
+     * @return array<string, class-string<Step>>
      */
     private function selectedStepsNameToClassMap(array $allAvailableStepNameToClassMap): array
     {
@@ -307,10 +325,10 @@ class SelectedStepsFactory
     }
 
     /**
-     * @param array<string,string> $stepsToFactory
+     * @param array<string, class-string<Step>> $stepsToFactory
      * @param Locator $locator
      * @param Composer $composer
-     * @return array
+     * @return array<Step>
      */
     private function factory(array $stepsToFactory, Locator $locator, Composer $composer): array
     {
@@ -319,7 +337,6 @@ class SelectedStepsFactory
 
         foreach ($stepsToFactory as $stepName => $stepClass) {
             try {
-                /** @var Step $step */
                 $step = new $stepClass($locator, $composer);
             } catch (\Throwable $throwable) {
                 $this->configErrors++;
@@ -391,7 +408,7 @@ class SelectedStepsFactory
         }
 
         if ($this->configErrors) {
-            $also = ($this->inputErrors || $this->emptyOptOutInput) ? 'also ' : '';
+            $also = $this->inputErrors ? 'also ' : '';
             $error = $this->configErrors > 1
                 ? "Configuration {$also}contains {$this->configErrors} invalid steps settings"
                 : "Configuration {$also}contains one invalid step setting";

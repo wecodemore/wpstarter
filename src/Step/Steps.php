@@ -35,7 +35,7 @@ final class Steps implements PostProcessStep, \Countable
     private $composer;
 
     /**
-     * @var array
+     * @var array<string, array>
      */
     private $scripts;
 
@@ -45,7 +45,7 @@ final class Steps implements PostProcessStep, \Countable
     private $steps;
 
     /**
-     * @var \SplObjectStorage
+     * @var \SplObjectStorage|null
      */
     private $postProcessSteps;
 
@@ -189,7 +189,7 @@ final class Steps implements PostProcessStep, \Countable
 
         $this->steps->rewind();
         while ($this->steps->valid()) {
-            /** @var \WeCodeMore\WpStarter\Step\Step $step */
+            /** @var Step $step */
             $step = $this->steps->current();
 
             if (!$this->runStep($step, $config, $io, $paths)) {
@@ -231,17 +231,18 @@ final class Steps implements PostProcessStep, \Countable
     /**
      * Runs after all steps have been processed bay calling post process method on all steps.
      *
-     * @param \WeCodeMore\WpStarter\Io\Io $io
+     * @param Io $io
+     * @return void
      */
     public function postProcess(Io $io)
     {
-        if ($this->running) {
+        if ($this->running || !$this->postProcessSteps) {
             return;
         }
 
         $this->postProcessSteps->rewind();
         while ($this->postProcessSteps->valid()) {
-            /** @var \WeCodeMore\WpStarter\Step\PostProcessStep $step */
+            /** @var PostProcessStep $step */
             $step = $this->postProcessSteps->current();
             $io->writeIfVerbose('Running post-processing for step "' . $step->name() . '"...');
             $step->postProcess($io);
@@ -289,8 +290,8 @@ final class Steps implements PostProcessStep, \Countable
     }
 
     /**
-     * @param  \WeCodeMore\WpStarter\Step\Step $step
-     * @param  Paths $paths
+     * @param Step $step
+     * @param Paths $paths
      * @param Io $io
      * @return bool
      */
@@ -322,8 +323,8 @@ final class Steps implements PostProcessStep, \Countable
     }
 
     /**
-     * @param  \WeCodeMore\WpStarter\Step\Step $step
-     * @param  int $result
+     * @param Step $step
+     * @param int $result
      * @param Io $io
      * @return bool
      */
@@ -351,6 +352,7 @@ final class Steps implements PostProcessStep, \Countable
      * @param Io $io
      * @param string $prefix
      * @param int $result
+     * @return void
      */
     private function runStepScripts(Step $step, Io $io, string $prefix, int $result = Step::NONE)
     {
@@ -362,6 +364,7 @@ final class Steps implements PostProcessStep, \Countable
             return;
         }
 
+        /** @var array<callable> $validStepScripts */
         $validStepScripts = array_filter($allStepScripts, 'is_callable');
 
         $invalidScriptsCount = count($allStepScripts) - count($validStepScripts);
@@ -389,6 +392,7 @@ final class Steps implements PostProcessStep, \Countable
      * @param Step $step
      * @param int $result
      * @param Io $io
+     * @return void
      */
     private function runStepScript(callable $script, string $label, Step $step, int $result, Io $io)
     {
@@ -403,6 +407,7 @@ final class Steps implements PostProcessStep, \Countable
      * @param Io $io
      * @param string $message
      * @param bool $error
+     * @return void
      */
     private function printMessages(Io $io, string $message, bool $error = false)
     {

@@ -105,7 +105,7 @@ class OverwriteHelper
 
             $relative = trim($matches[1], '/');
 
-            return $this->patternCheck($relative);
+            return $this->patternCheck($relative, $this->preventFor);
         }
 
         return !$this->preventFor;
@@ -114,16 +114,16 @@ class OverwriteHelper
     /**
      * Check if a file is set to not be overwritten using shell patterns.
      *
-     * @param  string $path
+     * @param string $path
+     * @param array $patterns
      * @return bool
      */
-    private function patternCheck(string $path): bool
+    private function patternCheck(string $path, array $patterns): bool
     {
         $overwrite = true;
-        $config = $this->preventFor;
-        while ($overwrite === true && !empty($config)) {
-            $pattern = array_shift($config);
-            $overwrite = !fnmatch($pattern, $path, FNM_NOESCAPE);
+        while ($overwrite === true && !empty($patterns)) {
+            $pattern = array_shift($patterns);
+            $overwrite = is_string($pattern) && !fnmatch($pattern, $path, FNM_NOESCAPE);
         }
 
         return $overwrite;

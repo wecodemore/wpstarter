@@ -48,7 +48,7 @@ final class Filters
 
         $constant = 'FILTER_' . strtoupper($cleanName);
         if ($constant !== 'FILTER_TABLE_PREFIX' && defined(__CLASS__ . "::{$constant}")) {
-            return constant(__CLASS__ . "::{$constant}");
+            return (string)constant(__CLASS__ . "::{$constant}");
         }
 
         return '';
@@ -98,7 +98,7 @@ final class Filters
     }
 
     /**
-     * @param bool|int|string $value
+     * @param mixed $value
      * @return bool
      */
     private function filterBool($value): bool
@@ -116,7 +116,7 @@ final class Filters
     }
 
     /**
-     * @param int|float|bool $value
+     * @param mixed $value
      * @return int
      */
     private function filterInt($value): int
@@ -129,7 +129,7 @@ final class Filters
     }
 
     /**
-     * @param string|int|float|bool $value
+     * @param mixed $value
      * @return string
      */
     private function filterString($value): string
@@ -142,7 +142,7 @@ final class Filters
     }
 
     /**
-     * @param int|float|bool|string $value
+     * @param mixed $value
      * @return bool|int
      */
     private function filterIntOrBool($value)
@@ -151,8 +151,8 @@ final class Filters
     }
 
     /**
-     * @param int|float|bool|string $value
-     * @return bool|int
+     * @param mixed $value
+     * @return bool|string
      */
     private function filterStringOrBool($value)
     {
@@ -162,7 +162,7 @@ final class Filters
     }
 
     /**
-     * @param int|string $value
+     * @param mixed $value
      * @return int
      */
     private function filterOctalMod($value): int
@@ -179,7 +179,7 @@ final class Filters
     }
 
     /**
-     * @param string $value
+     * @param mixed $value
      * @return string
      */
     private function filterTablePrefix($value): string
@@ -188,6 +188,6 @@ final class Filters
             return 'wp_';
         }
 
-        return preg_replace('#[\W]#', '', $value);
+        return (string)preg_replace('#[\W]#', '', $value);
     }
 }

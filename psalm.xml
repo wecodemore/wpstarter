@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<psalm
+    totallyTyped="true"
+    useDocblockTypes="true"
+    useDocblockPropertyTypes="true"
+    usePhpDocMethodsWithoutMagicCall="true"
+    strictBinaryOperands="true"
+    requireVoidReturnType="true"
+    useAssertForType="true"
+    rememberPropertyAssignmentsAfterCall="true"
+    allowPhpStormGenerics="true"
+    allowStringToStandInForClass="false"
+    memoizeMethodCallResults="false"
+    hoistConstants="false"
+    addParamDefaultToDocblockType="false"
+    checkForThrowsInGlobalScope="false"
+    ignoreInternalFunctionFalseReturn="false"
+    ignoreInternalFunctionNullReturn="false"
+    hideExternalErrors="true"
+    allowFileIncludes="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+>
+    <projectFiles>
+        <directory name="src"/>
+        <ignoreFiles>
+            <directory name="vendor" />
+        </ignoreFiles>
+    </projectFiles>
+
+   <issueHandlers>
+        <MixedAssignment errorLevel="suppress" />
+        <MissingClosureParamType errorLevel="suppress" />
+        <MissingClosureReturnType errorLevel="suppress" />
+        <UnresolvableInclude errorLevel="suppress" />
+        <UndefinedConstant errorLevel="suppress" />
+    </issueHandlers>
+</psalm>

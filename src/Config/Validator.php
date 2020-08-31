@@ -55,7 +55,7 @@ class Validator
      * - the word "ask", which means ask the user in case of existing file;
      * - a boolean(-like), which enables or not the overwrite protection.
      *
-     * @param string|bool|array $value
+     * @param string|bool|array|null $value
      * @return Result
      */
     public function validateOverwrite($value): Result
@@ -77,7 +77,7 @@ class Validator
      * It is expected an array of class names implementing step interface.
      * A single class name is accepted and transparently converted to an one item array.
      *
-     * @param string|string[] $value
+     * @param mixed $value
      * @return Result
      */
     public function validateSteps($value): Result
@@ -115,7 +115,7 @@ class Validator
      * "pre-" or "post-" followed by the name of target step and values are either a callback or
      * an array of callbacks.
      *
-     * @param array $value
+     * @param mixed $value
      * @return Result
      */
     public function validateScripts($value): Result
@@ -140,10 +140,8 @@ class Validator
                 continue;
             }
 
-            if (is_array($scripts)) {
-                $scripts = array_filter($scripts, [$this, 'isCallback']);
-                $scripts and $allScripts[$name] = $scripts;
-            }
+            $scripts = array_filter($scripts, [$this, 'isCallback']);
+            $scripts and $allScripts[$name] = $scripts;
         }
 
         if (!$allScripts) {
@@ -158,7 +156,7 @@ class Validator
      *
      * It is expected an array of path or URLs. Even mixed.
      *
-     * @param string|string[] $value
+     * @param mixed $value
      * @return Result
      */
     public function validateDropins($value): Result
@@ -176,9 +174,9 @@ class Validator
         foreach ($value as $name => $dropin) {
             $check = $this->validateUrlOrPath($dropin);
             if ($check->notEmpty()) {
+                /** @var string $dropin */
                 $dropin = $check->unwrap();
-                is_string($name) or $name = $dropin;
-                $dropins[$name] = $dropin;
+                $dropins[is_string($name) ? $name : $dropin] = $dropin;
             }
         }
 
@@ -207,7 +205,7 @@ class Validator
      * - boolean true, which means default operation, i.e. "symlink"
      * - boolean false, which means do nothing
      *
-     * @param string|bool $value
+     * @param string|bool|null $value
      * @return Result
      */
     public function validateContentDevOperation($value): Result
@@ -245,7 +243,7 @@ class Validator
      * - a string, that is a path to a PHP or JSON file. The file must return (if PHP) or contain
      *   (if JSON) an array of WP CLI commands as they would be run in the terminal.
      *
-     * @param string|array $value
+     * @param mixed $value
      * @return Result
      */
     public function validateWpCliCommands($value): Result
@@ -258,10 +256,11 @@ class Validator
             . 'file returning the array, or path to a JSON file containing the array.';
 
         if (is_string($value)) {
-            $path = $this->validatePath($value);
+            /** @var string|null $path */
+            $path = $this->validatePath($value)->unwrapOrFallback();
 
-            return $path->notEmpty()
-                ? $this->validateWpCliCommandsFileList($path->unwrap())
+            return $path
+                ? $this->validateWpCliCommandsFileList($path)
                 : Result::errored($error);
         }
 
@@ -292,7 +291,7 @@ class Validator
      *
      * It is expected a string that is the command as it would be run in the terminal.
      *
-     * @param string $value
+     * @param mixed $value
      * @return Result
      */
     public function validateWpCliCommand($value): Result
@@ -322,7 +321,7 @@ class Validator
      * It is expected an array of file paths, a single path in a string will be transparently
      * converted to an one item array.
      *
-     * @param string|array $value
+     * @param mixed $value
      * @return Result
      */
     public function validateWpCliFiles($value): Result
@@ -363,7 +362,7 @@ class Validator
      * It is expected a string, that is a path to a PHP or JSON file. The file must return (if PHP)
      * or contain (if JSON) an array of WP CLI commands as they would be run in the terminal.
      *
-     * @param string $value
+     * @param string|null $value
      * @return Result
      */
     public function validateWpCliCommandsFileList($value): Result
@@ -380,6 +379,7 @@ class Validator
             return Result::errored($error);
         }
 
+        /** @var string $fullpath */
         $fullpath = $validPath->unwrap();
         if (!is_file($fullpath) || !is_readable($fullpath)) {
             return Result::errored("{$error} {$fullpath} is not a file or is not readable.");
@@ -392,15 +392,19 @@ class Validator
         }
 
         if ($isJson) {
-            $data = @json_decode(file_get_contents($fullpath), true);
+            $data = @json_decode(file_get_contents($fullpath) ?: '', true);
 
             return is_array($data) ? $this->validateWpCliCommands($data) : Result::errored($error);
         }
 
         $provider = function () use ($fullpath, $error): Result {
             $data = @include $fullpath;
+            /** @var Result $result */
+            $result = is_array($data)
+                ? $this->validateWpCliCommands($data)
+                : Result::errored($error);
 
-            return is_array($data) ? $this->validateWpCliCommands($data) : Result::errored($error);
+            return $result;
         };
 
         return Result::promise($provider);
@@ -414,7 +418,7 @@ class Validator
      * Something like "8.5.1.5" will be considered valid, even if that version does not exist (yet).
      * The returned result in case of success wraps a normalized value in the form "x.x.x".
      *
-     * @param string $value
+     * @param mixed $value
      * @return Result
      */
     public function validateWpVersion($value): Result
@@ -449,6 +453,12 @@ class Validator
             return $boolOrAskOrUrl;
         }
 
+        if (!is_string($value)) {
+            return Result::errored(
+                'Given value must be either a valid URL, a valid path, or a boolean, or "ask".'
+            );
+        }
+
         return $this->validatePath($value);
     }
 
@@ -477,7 +487,7 @@ class Validator
     /**
      * Generic validator that checks given value is either: a boolean or the word "ask".
      *
-     * @param string|bool $value
+     * @param mixed $value
      * @return Result
      */
     public function validateBoolOrAsk($value): Result
@@ -492,7 +502,7 @@ class Validator
     /**
      * Generic validator that checks given value is either a valid URL or a valid path.
      *
-     * @param string $value
+     * @param mixed $value
      * @return Result
      */
     public function validateUrlOrPath($value): Result
@@ -508,7 +518,7 @@ class Validator
     /**
      * Validate given value is a valid path, i.e. existing file or folder.
      *
-     * @param string $value
+     * @param mixed $value
      * @return Result
      */
     public function validatePath($value): Result
@@ -518,6 +528,8 @@ class Validator
         if (!$path) {
             return Result::errored('Given value must be the path to an existing file or folder.');
         }
+
+        /** @var string $path */
 
         if (is_file($path) || is_dir($path)) {
             if (!$this->filesystem->isAbsolutePath($path)) {
@@ -544,7 +556,7 @@ class Validator
      *
      * This method tries its best to return error in case of clearly wrong file names.
      *
-     * @param string $value
+     * @param mixed $value
      * @return Result
      */
     public function validateFileName($value): Result
@@ -585,7 +597,7 @@ class Validator
      *
      * This relies on "validateFileName" method, and so its limitations apply here as well.
      *
-     * @param string $value
+     * @param mixed $value
      * @return Result
      * @see Validator::validateFileName()
      */
@@ -642,7 +654,7 @@ class Validator
      * Similar to validateDirName() and validateFileName() (that are used for the check) the method
      * checks if a path looks like a valid path to be used in glob function in PHP.
      *
-     * @param string $value
+     * @param mixed $value
      * @return Result
      * @see Validator::validateFileName()
      * @see Validator::validateDirName()
@@ -684,7 +696,7 @@ class Validator
      *
      * Basically applies validateGlobPath() on each item of given array.
      *
-     * @param string[] $value
+     * @param mixed $value
      * @return Result
      * @see Validator::validateGlobPath()
      */
@@ -716,7 +728,7 @@ class Validator
     /**
      * Validate given value to be a valid URL.
      *
-     * @param string $value
+     * @param mixed $value
      * @return Result
      */
     public function validateUrl($value): Result
@@ -742,7 +754,7 @@ class Validator
      * Besides of actual booleans, strings "true" / "false", "yes" / "no", "on" / "off" and
      * integers 0 / 1 are all valid input and returned result will return a values casted to bool.
      *
-     * @param string|int|bool $value
+     * @param mixed $value
      * @return Result
      */
     public function validateBool($value): Result
@@ -780,7 +792,7 @@ class Validator
      * Because associative array are accepted, and because "raw" values comes form JSON, instances
      * of `stdClass` are accepted and items extracted from there.
      *
-     * @param array|\stdClass $value
+     * @param mixed $value
      * @return Result
      */
     public function validateArray($value): Result
@@ -796,7 +808,7 @@ class Validator
 
     /**
      * @param callable $method
-     * @param $value
+     * @param mixed $value
      * @return Result
      */
     public function validateCustom(callable $method, $value): Result
@@ -804,7 +816,7 @@ class Validator
         try {
             $validated = $method($value);
             ($validated instanceof Result) or $validated = Result::ok($validated);
-        } catch (Error $error) {
+        } catch (\Throwable $error) {
             $validated = Result::error($error);
         }
 
@@ -812,10 +824,8 @@ class Validator
     }
 
     /**
-     * @param $script
+     * @param mixed $script
      * @return bool
-     *
-     * @suppress PhanUnreferencedPrivateMethod
      */
     private function isCallback($script): bool
     {
@@ -827,7 +837,6 @@ class Validator
             return !empty($script[0])
                 && !empty($script[1])
                 && is_string($script[0])
-                && is_string($script[1])
                 && $this->isValidEntityName($script[0])
                 && $this->isValidEntityName($script[1], false);
         }

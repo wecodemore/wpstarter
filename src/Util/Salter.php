@@ -41,7 +41,7 @@ class Salter
     private $max;
 
     /**
-     * @var array<string,string>
+     * @var array<string, string>|null
      */
     private $result;
 
@@ -52,9 +52,9 @@ class Salter
     }
 
     /**
-     * Build random keys.
-     *
      * @return array
+     *
+     * @psalm-assert array<string, string> $this->result
      */
     public function keys(): array
     {

@@ -149,7 +149,7 @@ class WpCliTool implements PhpTool
         }
 
         $pharHash = hash($algorithm, (string)file_get_contents($pharPath));
-        if (!hash_equals($releaseHash, $pharHash)) {
+        if (!$pharHash || !hash_equals($releaseHash, $pharHash)) {
             @unlink($pharPath);
             $io->writeErrorBlock("{$algorithm} hash check failed for downloaded WP CLI phar.");
 

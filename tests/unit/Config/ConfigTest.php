@@ -112,10 +112,10 @@ class ConfigTest extends TestCase
         $config = new Config(['hello' => 'Hello!'], $this->makeValidator());
 
         $config->appendValidator('hello', function () {
-            throw new Error('No hello!');
+            throw new \Error('No hello!');
         });
 
-        $this->expectException(Error::class);
+        $this->expectException(\Error::class);
         $this->expectExceptionMessage('No hello!');
 
         $config['hello']->unwrap();

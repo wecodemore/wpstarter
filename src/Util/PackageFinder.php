@@ -34,7 +34,7 @@ class PackageFinder
     private $filesystem;
 
     /**
-     * @var PackageInterface[]
+     * @var array<PackageInterface>|null
      */
     private $packages;
 
@@ -173,7 +173,9 @@ class PackageFinder
     }
 
     /**
-     * @return PackageInterface[]
+     * @return array<PackageInterface>
+     *
+     * @psalm-assert array<PackageInterface> $this->packages
      */
     private function all(): array
     {

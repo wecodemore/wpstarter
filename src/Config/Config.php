@@ -134,7 +134,7 @@ final class Config implements \ArrayAccess
     private $validator;
 
     /**
-     * @var array
+     * @var array<string, string|callable>
      */
     private $validationMap;
 
@@ -144,10 +144,6 @@ final class Config implements \ArrayAccess
      */
     public function __construct(array $configs, Validator $validator)
     {
-        if (is_array($this->configs)) {
-            return;
-        }
-
         $this->configs = [];
         $this->validator = $validator;
         $this->raw = array_merge(self::DEFAULTS, $configs);
@@ -160,7 +156,8 @@ final class Config implements \ArrayAccess
      */
     public function offsetExists($offset)
     {
-        return array_key_exists($offset, $this->raw) || array_key_exists($offset, $this->configs);
+        return is_string($offset)
+            && (array_key_exists($offset, $this->raw) || array_key_exists($offset, $this->configs));
     }
 
     /**
@@ -211,6 +208,10 @@ final class Config implements \ArrayAccess
      */
     public function offsetSet($offset, $value)
     {
+        if (!is_string($offset)) {
+            return;
+        }
+
         $isNew = !$this->offsetExists($offset);
         $currentValue = $isNew ? null : $this->offsetGet($offset)->unwrapOrFallback();
         $isEmpty = $currentValue === null;
@@ -245,6 +246,7 @@ final class Config implements \ArrayAccess
      * @param $value
      * @return Result
      *
+     * @psalm-suppress MissingParamType
      * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     private function validateValue(string $name, $value): Result
@@ -258,8 +260,13 @@ final class Config implements \ArrayAccess
         }
 
         if (array_key_exists($name, self::VALIDATION_MAP)) {
-            return ([$this->validator, $method])($value);
+            /** @var callable(mixed):Result $factory */
+            $factory = [$this->validator, $method];
+
+            return $factory($value);
         }
+
+        /** @var callable $method */
 
         return $this->validator->validateCustom($method, $value);
     }

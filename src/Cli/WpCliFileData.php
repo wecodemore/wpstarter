@@ -30,7 +30,7 @@ final class WpCliFileData
     private $raw;
 
     /**
-     * @var array{file:string,args:array,skip-wordpress:bool,valid:bool}
+     * @var array{file:string,args:array,skip-wordpress:bool,valid:bool}|null
      */
     private $parsed;
 
@@ -102,6 +102,8 @@ final class WpCliFileData
 
     /**
      * @return void
+     *
+     * @psalm-assert array $this->parsed
      */
     private function setup()
     {
@@ -111,7 +113,6 @@ final class WpCliFileData
 
         $data = array_replace(self::DEFAULTS, $this->raw);
 
-        /** @var string|null $file */
         $file = $data[self::FILE] ?? null;
         if (!$file || !is_string($file) || !is_file($file)) {
             $this->parsed = self::DEFAULTS;
@@ -126,13 +127,12 @@ final class WpCliFileData
             return;
         }
 
-        /** @var array $baseArgs */
         $baseArgs = $data[self::ARGS] ?? [];
         $args = is_array($baseArgs) ? array_filter($baseArgs, 'is_string') : [];
         $skip = (bool)filter_var($data[self::SKIP_WORDPRESS], FILTER_VALIDATE_BOOLEAN);
 
         $this->parsed = [
-            self::FILE => $data[self::FILE],
+            self::FILE => $file,
             self::ARGS => array_filter($args),
             self::SKIP_WORDPRESS => $skip,
             self::VALID => true,

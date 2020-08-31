@@ -51,7 +51,7 @@ final class Paths implements \ArrayAccess
     private $customTemplatesDir = [];
 
     /**
-     * @var array<string,string>
+     * @var array<string,string>|null
      */
     private $paths;
 
@@ -93,6 +93,7 @@ final class Paths implements \ArrayAccess
 
     /**
      * @param string $templatesRootDir
+     * @return void
      */
     public function useCustomTemplatesDir(string $templatesRootDir)
     {
@@ -224,8 +225,10 @@ final class Paths implements \ArrayAccess
     }
 
     /**
-     * @param string $offset
+     * @param mixed $offset
      * @return bool
+     *
+     * @psalm-assert array<string, string> $this->paths
      */
     public function offsetExists($offset)
     {
@@ -288,12 +291,26 @@ final class Paths implements \ArrayAccess
 
     /**
      * @param string|null $root
-     * @return array
-     * @throws \Exception
+     * @return array<string, string>
      */
     private function parse(string $root = null): array
     {
-        $cwd = $root ?? $this->filesystem->normalizePath(getcwd());
+        $vendorDir = (string)$this->config->get('vendor-dir');
+        $binDir = (string)$this->config->get('bin-dir');
+
+        $cwd = $root;
+        if (!$cwd) {
+            $cwd = getcwd();
+            if (!$cwd) {
+                $cwd = strpos($this->filesystem->normalizePath(__DIR__), $vendorDir) === 0
+                    ? dirname($vendorDir)
+                    : dirname(__DIR__, 2);
+            }
+
+            $cwd and $cwd = $this->filesystem->normalizePath($cwd);
+        }
+
+        $cwd or $cwd = '.';
 
         $wpInstallDir = $this->extra['wordpress-install-dir'] ?? 'wordpress';
         $wpContentDir = $this->extra['wordpress-content-dir'] ?? 'wp-content';
@@ -324,8 +341,8 @@ final class Paths implements \ArrayAccess
 
         return [
             self::ROOT => $this->filesystem->normalizePath($cwd),
-            self::VENDOR => $this->filesystem->normalizePath($this->config->get('vendor-dir')),
-            self::BIN => $this->filesystem->normalizePath($this->config->get('bin-dir')),
+            self::VENDOR => $this->filesystem->normalizePath($vendorDir),
+            self::BIN => $this->filesystem->normalizePath($binDir),
             self::WP => $wpFullDir,
             self::WP_PARENT => $wpParentDir,
             self::WP_CONTENT => $wpContentFullDir,

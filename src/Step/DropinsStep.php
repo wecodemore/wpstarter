@@ -69,11 +69,6 @@ final class DropinsStep implements Step
     private $overwriteHelper;
 
     /**
-     * @var string[]
-     */
-    private $customDropins;
-
-    /**
      * @var string
      */
     private $error = '';
@@ -191,16 +186,16 @@ final class DropinsStep implements Step
      */
     private function publishCustomDropins(Config $config, Paths $paths): int
     {
-        $this->customDropins = $config[Config::DROPINS]->unwrapOrFallback([]);
-
-        if (!$this->customDropins || !is_array($this->customDropins)) {
+        /** @var array<string, string> $customDropins */
+        $customDropins = $config[Config::DROPINS]->unwrapOrFallback([]);
+        if (!$customDropins) {
             return Step::NONE;
         }
 
-        foreach ($this->customDropins as $basename => $url) {
+        foreach ($customDropins as $basename => $url) {
             if ($basename === $url) {
                 $basename = filter_var($url, FILTER_VALIDATE_URL)
-                    ? trim(parse_url($url, PHP_URL_PATH), '/') ?: $url
+                    ? trim((parse_url($url, PHP_URL_PATH) ?: ''), '/') ?: $url
                     : basename($url);
             }
 
@@ -261,6 +256,7 @@ final class DropinsStep implements Step
      * @param string $url
      * @param Config $config
      * @param Paths $paths
+     * @return void
      */
     private function runDropinStep(string $basename, string $url, Config $config, Paths $paths)
     {

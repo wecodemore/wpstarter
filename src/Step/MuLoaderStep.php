@@ -46,7 +46,7 @@ final class MuLoaderStep implements FileCreationStepInterface
     private $filesystem;
 
     /**
-     * @var array
+     * @var array<string, string>
      */
     private $muPlugins = [];
 

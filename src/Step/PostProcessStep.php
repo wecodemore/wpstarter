@@ -19,7 +19,8 @@ interface PostProcessStep extends Step
     /**
      * Runs after all steps have been processed. Useful to print some messages or do some cleanup.
      *
-     * @param \WeCodeMore\WpStarter\Io\Io $io
+     * @param Io $io
+     * @return void
      */
     public function postProcess(Io $io);
 }

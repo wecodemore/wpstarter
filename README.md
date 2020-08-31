@@ -6,12 +6,14 @@ WP Starter
 WP Starter is the easiest and fastest way to bootstrap WordPress sites entirely based on
 [Composer](https://getcomposer.org/).
 
+![PHP Quality Assurance](https://github.com/wecodemore/wpstarter/workflows/PHP%20Quality%20Assurance/badge.svg)
+
 ---
 
 # System Requirements
 
  - PHP 7.0+
- - [Composer](https://getcomposer.org/)
+ - [Composer](https://getcomposer.org/) v1
 
 # License
 

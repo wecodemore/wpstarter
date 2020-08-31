@@ -26,8 +26,6 @@ final class WpStarterCommand extends BaseCommand
 {
     /**
      * @return void
-     *
-     * @suppress PhanTypeMismatchArgument
      */
     protected function configure()
     {
@@ -113,6 +111,7 @@ final class WpStarterCommand extends BaseCommand
     /**
      * @param OutputInterface $output
      * @param string $message
+     * @return void
      */
     private function writeError(OutputInterface $output, string $message)
     {

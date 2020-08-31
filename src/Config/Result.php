@@ -28,7 +28,7 @@ final class Result
     private $value;
 
     /**
-     * @var \Error
+     * @var \Throwable|null
      */
     private $error;
 
@@ -57,12 +57,12 @@ final class Result
     }
 
     /**
-     * @param Error|null $error
+     * @param \Throwable|null $error
      * @return Result
      */
-    public static function error(Error $error = null): Result
+    public static function error(\Throwable $error = null): Result
     {
-        return new static(null, $error ?: new Error('Error.'));
+        return new static(null, $error ?: new \Error('Error.'));
     }
 
     /**
@@ -71,7 +71,7 @@ final class Result
      */
     public static function errored(string $message): Result
     {
-        return static::error(new Error($message));
+        return static::error(new \Error($message));
     }
 
     /**
@@ -88,11 +88,11 @@ final class Result
 
     /**
      * @param mixed|null $value
-     * @param Error|null $error
+     * @param \Throwable|null $error
      *
      * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
-    private function __construct($value = null, Error $error = null)
+    private function __construct($value = null, \Throwable $error = null)
     {
         // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
 
@@ -103,7 +103,7 @@ final class Result
             return;
         }
 
-        if ($value instanceof Error && !$error) {
+        if ($value instanceof \Throwable && !$error) {
             $error = $value;
             $value = null;
         }
@@ -220,7 +220,6 @@ final class Result
         $resolver = $this->value;
 
         try {
-            // @phan-suppress-next-line PhanUndeclaredInvokeInCallable, PhanTypePossiblyInvalidCallable
             $value = $resolver();
 
             $resolved = $value;
@@ -239,7 +238,7 @@ final class Result
             }
 
             $this->value = $resolved;
-        } catch (Error $error) {
+        } catch (\Throwable $error) {
             $this->value = null;
             $this->error = $error;
         }

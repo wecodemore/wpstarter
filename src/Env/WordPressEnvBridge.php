@@ -221,17 +221,17 @@ class WordPressEnvBridge
     ];
 
     /**
-     * @var Dotenv
+     * @var Dotenv|null
      */
     private static $defaultDotEnv;
 
     /**
-     * @var array
+     * @var array<string, int|bool>|null
      */
     private static $loadedVars;
 
     /**
-     * @var array
+     * @var array<string, array{string, bool|int|null|string}>
      */
     private static $cache = [];
 
@@ -241,7 +241,7 @@ class WordPressEnvBridge
     private $dotenv;
 
     /**
-     * @var Filters
+     * @var Filters|null
      */
     private $filters;
 
@@ -266,11 +266,6 @@ class WordPressEnvBridge
     private $envType;
 
     /**
-     * @var array<string>|null
-     */
-    private $allowedEnvTypes;
-
-    /**
      * @var bool
      */
     private $wordPressSetup = false;
@@ -286,7 +281,7 @@ class WordPressEnvBridge
             $cached and self::$cache = $cached;
         }
 
-        $instance = new static();
+        $instance = new self();
         $instance->fromCache = !empty($cached);
 
         return $instance;
@@ -376,6 +371,7 @@ class WordPressEnvBridge
     /**
      * @param string $file
      * @param string|null $path
+     * @return void
      */
     public function loadAppended(string $file, string $path = null)
     {
@@ -390,8 +386,9 @@ class WordPressEnvBridge
             return;
         }
 
-        $values = $this->dotenv()->parse(file_get_contents($fullpath), $fullpath);
-
+        $contents = @file_get_contents($fullpath);
+        /** @var array<string, string> $values */
+        $values = $contents ? $this->dotenv()->parse($contents, $fullpath) : [];
         foreach ($values as $name => $value) {
             if ($this->isWritable($name)) {
                 $this->write($name, $value);
@@ -495,6 +492,7 @@ class WordPressEnvBridge
     /**
      * @param string $name
      * @param string $value
+     * @return void
      */
     public function write(string $name, string $value)
     {
@@ -633,6 +631,7 @@ class WordPressEnvBridge
      * @param string $value
      * @return mixed
      *
+     * @psalm-assert Filters $this->filters
      * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
     private function maybeFilterThenCache(string $name, string $value)
@@ -685,7 +684,9 @@ class WordPressEnvBridge
     private function determineWpEnvType(string $envType): string
     {
         $rawWpEnv = $this->read('WP_ENVIRONMENT_TYPE');
-        $rawWpEnv and $envType = strtolower($rawWpEnv);
+        if ($rawWpEnv && is_string($rawWpEnv)) {
+            $envType = strtolower($rawWpEnv);
+        }
 
         $envTypeWp = self::ENV_TYPES[$envType] ?? null;
         if ($envTypeWp) {
@@ -734,7 +735,7 @@ class WordPressEnvBridge
     {
         $dotEnv = $this->dotenv ?? self::$defaultDotEnv;
         if (!$dotEnv) {
-            self::$defaultDotEnv or self::$defaultDotEnv = new Dotenv();
+            self::$defaultDotEnv = new Dotenv();
             $dotEnv = self::$defaultDotEnv;
         }
 

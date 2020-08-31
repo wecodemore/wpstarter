@@ -96,6 +96,7 @@ class Io
 
     /**
      * @param string $line
+     * @return void
      */
     public function writeError(string $line)
     {
@@ -107,6 +108,7 @@ class Io
 
     /**
      * @param string $line
+     * @return void
      */
     public function writeErrorIfVerbose(string $line)
     {
@@ -124,6 +126,7 @@ class Io
 
     /**
      * @param string $line
+     * @return void
      */
     public function write(string $line)
     {
@@ -135,6 +138,7 @@ class Io
 
     /**
      * @param string $line
+     * @return void
      */
     public function writeIfVerbose(string $line)
     {
@@ -145,7 +149,7 @@ class Io
      * Get an array of question lines and a default response and use them to format and ask a
      * confirmation to console.
      *
-     * @param  array $lines
+     * @param array<string> $lines
      * @param  bool $default
      * @return bool
      */
@@ -193,11 +197,15 @@ class Io
                     usleep(250000);
                 }
                 $answer = $this->io->ask($questionText, $question->defaultAnswerKey());
+                /**
+                 * @psalm-suppress DocblockTypeContradiction
+                 * @psalm-suppress RedundantConditionGivenDocblockType
+                 */
                 $answer = is_string($answer) ? strtolower(trim($answer)) : null;
                 $count++;
             }
 
-            return $answer === null ? null : (string)$answer;
+            return $answer;
         } catch (\Exception $exception) {
             if ($exception !== $tooMuchTriesException) {
                 throw $exception;

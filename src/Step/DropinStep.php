@@ -38,12 +38,7 @@ final class DropinStep implements FileCreationStepInterface
     private $url;
 
     /**
-     * @var \stdClass
-     */
-    private $actionAndSource;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Io\Io
+     * @var Io
      */
     private $io;
 
@@ -53,9 +48,14 @@ final class DropinStep implements FileCreationStepInterface
     private $urlDownloader;
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\OverwriteHelper
+     * @var OverwriteHelper
      */
     private $overwrite;
+
+    /**
+     * @var array{string, string}|array{null, null}
+     */
+    private $actionAndSource = [null, null];
 
     /**
      * @var string
@@ -70,9 +70,9 @@ final class DropinStep implements FileCreationStepInterface
     /**
      * @param string $name
      * @param string $url
-     * @param \WeCodeMore\WpStarter\Io\Io $io
+     * @param Io $io
      * @param UrlDownloader $urlDownloader
-     * @param \WeCodeMore\WpStarter\Util\OverwriteHelper $overwrite
+     * @param OverwriteHelper $overwrite
      */
     public function __construct(
         string $name,
@@ -112,7 +112,7 @@ final class DropinStep implements FileCreationStepInterface
             return false;
         }
 
-        $this->actionAndSource = (object)compact('action', 'source');
+        $this->actionAndSource = [$action, $source];
 
         return true;
     }
@@ -124,7 +124,10 @@ final class DropinStep implements FileCreationStepInterface
      */
     public function run(Config $config, Paths $paths): int
     {
-        if (!$this->actionAndSource) {
+        list($action, $source) = $this->actionAndSource;
+
+        $isDownload = $action === self::ACTION_DOWNLOAD;
+        if ((!$isDownload && ($action !== self::ACTION_COPY)) || !$source) {
             return self::NONE;
         }
 
@@ -135,9 +138,9 @@ final class DropinStep implements FileCreationStepInterface
             return self::NONE;
         }
 
-        return $this->actionAndSource->action === self::ACTION_DOWNLOAD
-            ? $this->download($this->actionAndSource->source, $destination)
-            : $this->copy($this->actionAndSource->source, $destination);
+        return $isDownload
+            ? $this->download($source, $destination)
+            : $this->copy($source, $destination);
     }
 
     /**
@@ -215,7 +218,7 @@ final class DropinStep implements FileCreationStepInterface
     /**
      * Check if a string is a valid relative path or an url.
      *
-     * @return array
+     * @return array{string, string}|array{null, null}
      */
     private function determineActionAndSource(): array
     {

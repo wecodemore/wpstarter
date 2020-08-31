@@ -83,7 +83,7 @@ class UrlDownloader
             $this->filesystem->ensureDirectoryExists($directory);
 
             return $this->remoteFilesystem->copy(
-                parse_url($url, PHP_URL_HOST),
+                (string)parse_url($url, PHP_URL_HOST),
                 $url,
                 $filename,
                 $this->isVerbose
@@ -113,7 +113,9 @@ class UrlDownloader
 
         try {
             $host = parse_url($url, PHP_URL_HOST);
-            $contents = $this->remoteFilesystem->getContents($host, $url, $this->isVerbose);
+            $contents = $host
+                ? $this->remoteFilesystem->getContents($host, $url, $this->isVerbose)
+                : null;
             if (!$contents || !is_string($contents)) {
                 return '';
             }

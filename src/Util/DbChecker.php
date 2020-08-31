@@ -86,6 +86,7 @@ class DbChecker
             return;
         }
 
+        /** @var array<string, string> $env */
         $env = $this->env->readMany(
             'DB_HOST',
             'DB_USER',
@@ -118,7 +119,7 @@ class DbChecker
         $wpInstalled = false;
         if ($dbExists) {
             $result = @mysqli_query($db, "SELECT 1 FROM {$env['DB_TABLE_PREFIX']}users");
-            $wpInstalled = $result && $result->field_count;
+            $wpInstalled = ($result instanceof \mysqli_result) && $result->field_count;
         }
         @\mysqli_close($db);
         $this->setupEnv(true, $dbExists, $wpInstalled);

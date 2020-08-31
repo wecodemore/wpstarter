@@ -8,6 +8,7 @@
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
+use Composer\Package\Package;
 use WeCodeMore\WpStarter\ComposerPlugin;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Tests\TestCase;
@@ -102,14 +103,17 @@ class RequirementsTest extends TestCase
             }
         );
 
-        $instance = Requirements::forComposerInstall($composer, $io, $filesystem, ['foo', 'bar']);
+        $p1 = new Package('one', '1.0.0.0', '1.0.0');
+        $p2 = new Package('two', '2.0.0.0', '2.0');
+
+        $instance = Requirements::forComposerInstall($composer, $io, $filesystem, $p1, $p2);
         $config = $instance->config();
 
         static::assertFalse($config[Config::IS_WPSTARTER_COMMAND]->unwrap());
         static::assertFalse($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->unwrap());
         static::assertFalse($config[Config::IS_COMPOSER_UPDATE]->unwrap());
         static::assertTrue($config[Config::IS_COMPOSER_INSTALL]->unwrap());
-        static::assertSame(['foo', 'bar'], $config[Config::COMPOSER_UPDATED_PACKAGES]->unwrap());
+        static::assertSame([$p1, $p2], $config[Config::COMPOSER_UPDATED_PACKAGES]->unwrap());
     }
 
     public function testComposerUpdateInstanceCreation()
@@ -128,7 +132,7 @@ class RequirementsTest extends TestCase
             }
         );
 
-        $instance = Requirements::forComposerUpdate($composer, $io, $filesystem, []);
+        $instance = Requirements::forComposerUpdate($composer, $io, $filesystem);
         $config = $instance->config();
 
         static::assertFalse($config[Config::IS_WPSTARTER_COMMAND]->unwrap());

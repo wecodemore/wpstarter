@@ -14,12 +14,12 @@ namespace WeCodeMore\WpStarter\Io;
 class Question
 {
     /**
-     * @var array<int,string>
+     * @var array<string>
      */
     private $lines = [];
 
     /**
-     * @var array<string,string>
+     * @var array<string, string>
      */
     private $answers = [];
 
@@ -29,13 +29,13 @@ class Question
     private $default = '';
 
     /**
-     * @var string[]
+     * @var array<string>|null
      */
     private $question;
 
     /**
-     * @param string[] $lines
-     * @param array<string,string> $answers
+     * @param array<string> $lines
+     * @param array<string, string> $answers
      * @param string|null $default
      */
     public function __construct(array $lines, array $answers = [], string $default = null)
@@ -66,7 +66,6 @@ class Question
         array_change_key_case($validAnswers, CASE_LOWER);
         $answerKeys = array_map('trim', array_keys($validAnswers));
 
-        // @phan-suppress-next-line PhanTypeMismatchProperty
         $this->answers = array_combine($answerKeys, array_values($validAnswers));
 
         if ($default !== null) {
@@ -103,11 +102,13 @@ class Question
     }
 
     /**
-     * @return string[]
+     * @return array<string>
+     *
+     * @psalm-assert array<string> $this->question
      */
     public function questionLines(): array
     {
-        if ($this->question) {
+        if (is_array($this->question)) {
             return $this->question;
         }
 

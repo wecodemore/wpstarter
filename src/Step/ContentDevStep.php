@@ -42,7 +42,6 @@ use WeCodeMore\WpStarter\Util\Paths;
 final class ContentDevStep implements OptionalStep
 {
     const NAME = 'publish-content-dev';
-
     const OP_COPY = 'copy';
     const OP_SYMLINK = 'symlink';
     const OP_NONE = 'none';
@@ -59,7 +58,7 @@ final class ContentDevStep implements OptionalStep
     private $composerFilesystem;
 
     /**
-     * @var string
+     * @var string|null
      */
     private $operation;
 
@@ -148,6 +147,7 @@ final class ContentDevStep implements OptionalStep
             return Step::NONE;
         }
 
+        /** @var string $srcBase */
         $srcBase = $config[Config::CONTENT_DEV_DIR]->unwrap();
         $this->contentDevDir = $srcBase;
         $targetBase = $paths->wpContent();
@@ -179,7 +179,7 @@ final class ContentDevStep implements OptionalStep
             $this->error = sprintf(
                 "%s occurred while %sing content-dev dir '%s' to '%s'.",
                 $errors > 1 ? "{$errors} errors" : 'One error',
-                $operation,
+                (string)$operation,
                 $srcBase,
                 $targetBase
             );
@@ -227,7 +227,7 @@ final class ContentDevStep implements OptionalStep
     }
 
     /**
-     * @param array $devContentSubfolders
+     * @param array<string> $devContentSubfolders
      * @param string $contentDir
      * @return int
      */
@@ -253,7 +253,7 @@ final class ContentDevStep implements OptionalStep
     }
 
     /**
-     * @param array $devContentSubfolders
+     * @param array<string> $devContentSubfolders
      * @param string $contentDir
      * @return int
      */
@@ -285,7 +285,7 @@ final class ContentDevStep implements OptionalStep
     }
 
     /**
-     * @param array $srcFiles
+     * @param array<string> $srcFiles
      * @param string $contentDir
      * @return int
      */
@@ -309,7 +309,7 @@ final class ContentDevStep implements OptionalStep
     }
 
     /**
-     * @param array $srcFiles
+     * @param array<string> $srcFiles
      * @param string $contentDir
      * @return int
      */
@@ -336,6 +336,7 @@ final class ContentDevStep implements OptionalStep
     /**
      * @param string $source
      * @param string $target
+     * @return void
      */
     private function maybeUnlinkTarget(string $source, string $target)
     {

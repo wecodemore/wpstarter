@@ -181,6 +181,7 @@ final class WpCliCommandsStep implements Step
 
     /**
      * @param string ...$commands
+     * @return void
      */
     private function initMessage(string ...$commands)
     {

@@ -33,7 +33,12 @@ class FileContentBuilder
             throw new \Exception("Can't build file from template {$template}: file not found.");
         }
 
-        return $this->render(file_get_contents($template), $vars);
+        $templateContent = @file_get_contents($template);
+        if (!$templateContent) {
+            throw new \Exception("Can't build file from empty template {$template}.");
+        }
+
+        return $this->render($templateContent, $vars);
     }
 
     /**
@@ -43,10 +48,20 @@ class FileContentBuilder
      */
     public function render(string $content, array $vars): string
     {
+        $patterns = [];
+        $replacements = [];
+
         foreach ($vars as $key => $value) {
-            $content = str_replace('{{{' . $key . '}}}', $value, $content);
+            if (!is_string($key) || !is_scalar($value)) {
+                continue;
+            }
+
+            $patterns[] = "~\{{3}\s*{$key}\s*\}{3}~i";
+            $replacements[] = (string)$value;
         }
 
-        return $content;
+        $content = preg_replace($patterns, $replacements, $content);
+
+        return $content ?? '';
     }
 }
