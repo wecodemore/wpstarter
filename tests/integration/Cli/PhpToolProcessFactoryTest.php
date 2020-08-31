@@ -230,7 +230,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
      */
     private function assertProcessWorks(PhpToolProcess $process)
     {
-        static::assertTrue($process->execute('-r "echo \'Hi!!!\'";'));
+        static::assertTrue($process->execute('-r "echo \'Hi!!!\';"'));
 
         $output = trim($this->collectOutput());
 

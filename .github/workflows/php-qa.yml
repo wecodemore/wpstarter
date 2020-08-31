@@ -6,7 +6,7 @@ jobs:
         if: "!contains(github.event.head_commit.message, 'ci skip')"
         strategy:
             matrix:
-                php-versions: ['7.0', '7.1', '7.2', '7.3', '7.4']
+                php-versions: ['7.1', '7.2', '7.3', '7.4']
         steps:
             -   uses: actions/checkout@v2
 

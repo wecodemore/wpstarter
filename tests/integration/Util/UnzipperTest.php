@@ -8,31 +8,21 @@
 
 namespace WeCodeMore\WpStarter\Tests\Integration\Util;
 
-use org\bovigo\vfs\vfsStream;
 use WeCodeMore\WpStarter\Tests\IntegrationTestCase;
 use WeCodeMore\WpStarter\Util\Unzipper;
 
 class UnzipperTest extends IntegrationTestCase
 {
-    private function createUnzipper(): Unzipper
-    {
-        return new Unzipper($this->createComposerIo(), $this->createComposerConfig());
-    }
-
     /**
      * @covers \WeCodeMore\WpStarter\Util\Unzipper
      */
     public function testUnzipFail()
     {
-        $source = getenv('TESTS_FIXTURES_PATH') . '/faulty-zip.zip';
+        $dir = getenv('TESTS_FIXTURES_PATH');
+        $source = $dir . '/faulty-zip.zip';
+        $unzipper = new Unzipper($this->createComposerIo(), $this->createComposerConfig());
 
-        $dir = vfsStream::setup('directory');
-        $targetDir = $dir->url();
-
-        $unzipper = $this->createUnzipper();
-
-        static::assertFalse($unzipper->unzip($source, $targetDir));
-        static::assertFalse($dir->hasChildren());
+        static::assertFalse($unzipper->unzip($source, $dir));
     }
 
     /**
@@ -40,14 +30,15 @@ class UnzipperTest extends IntegrationTestCase
      */
     public function testUnzipSuccess()
     {
-        $source = getenv('TESTS_FIXTURES_PATH') . '/good-zip.zip';
+        $dir = getenv('TESTS_FIXTURES_PATH');
+        $unzipper = new Unzipper($this->createComposerIo(), $this->createComposerConfig());
 
-        $dir = vfsStream::setup('directory');
-        $targetDir = $dir->url();
-
-        $unzipper = $this->createUnzipper();
-
-        static::assertTrue($unzipper->unzip($source, $targetDir));
-        static::assertTrue($dir->hasChildren());
+        try {
+            static::assertTrue($unzipper->unzip("{$dir}/good-zip.zip", $dir));
+            // this is the file contained in `good-zip.zip` file
+            static::assertTrue(file_exists("{$dir}/some-zip-content.txt"));
+        } finally {
+            @unlink("{$dir}/some-zip-content.txt");
+        }
     }
 }
