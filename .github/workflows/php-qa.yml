@@ -25,7 +25,7 @@ jobs:
                 run: ./vendor/bin/phpunit --testsuite=integration --no-coverage
 
             -   name: Unit tests
-                    run: ./vendor/bin/phpunit --testsuite=unit --no-coverage
+                run: ./vendor/bin/phpunit --testsuite=unit --no-coverage
 
             -   name: Code styles
                 run: ./vendor/bin/phpcs
