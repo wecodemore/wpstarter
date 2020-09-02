@@ -46,7 +46,7 @@
         "symfony/process": "^3.0",
         "wp-cli/wp-cli": "2.*",
         "inpsyde/php-coding-standards": "^1",
-        "vimeo/psalm": "3.14.*",
+        "vimeo/psalm": "^3",
         "phpunit/phpunit": "^7",
         "mockery/mockery": "^1",
         "mikey179/vfsstream": "^1"
