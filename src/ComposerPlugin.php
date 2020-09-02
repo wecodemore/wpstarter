@@ -173,7 +173,7 @@ final class ComposerPlugin implements
         }
 
         if ($package && ($package->getType() !== 'composer-plugin')) {
-            $this->updatedPackages[$package->getName()] = $package;
+            $this->updatedPackages[] = $package;
         }
     }
 
