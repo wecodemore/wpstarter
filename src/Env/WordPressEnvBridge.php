@@ -205,19 +205,21 @@ class WordPressEnvBridge
     ];
 
     const ENV_TYPES = [
-        'development' => 'development',
-        'staging' => 'staging',
-        'production' => 'production',
         'local' => 'local',
-        'dev' => 'development',
-        'develop' => 'development',
-        'stage' => 'staging',
-        'preprod' => 'staging',
-        'pre-prod' => 'staging',
-        'pre-production' => 'staging',
-        'uat' => 'staging',
-        'prod' => 'production',
-        'live' => 'production',
+        'development' =>  'development',
+        'dev' =>  'development',
+        'develop' =>  'development',
+        'staging' =>  'staging',
+        'stage' =>  'staging',
+        'pre' =>  'staging',
+        'preprod' =>  'staging',
+        'pre-prod' =>  'staging',
+        'pre-production' =>  'staging',
+        'test' =>  'staging',
+        'uat' =>  'staging',
+        'production' =>  'production',
+        'prod' =>  'production',
+        'live' =>   'production',
     ];
 
     /**
