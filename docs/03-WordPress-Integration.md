@@ -172,17 +172,19 @@ WP Starter was able to map `"preprod"` to `"staging"` that is a value supported 
 
 The "mapping" happens by looking for alias according to the following table:
 
-| Alias          | WP-supported value |
-| -------------- | ------------------ |
-| dev            | development        |
-| develop        | development        |
-| stage          | staging            |
-| preprod        | staging            |
-| pre-prod       | staging            |
-| pre-production | staging            |
-| uat            | staging            |
-| prod           | production         |
-| live           | production         |
+| `WP_ENVIRONMENT_TYPE `/ `WP_ENV` | WP-supported value |
+| -------------------------------- | ------------------ |
+| dev                              | development        |
+| develop                          | development        |
+| stage                            | staging            |
+| pre                              | staging            |
+| preprod                          | staging            |
+| pre-prod                         | staging            |
+| pre-production                   | staging            |
+| uat                              | staging            |
+| test                             | staging            |
+| prod                             | production         |
+| live                             | production         |
 
 Moreover, if the  `WP_ENVIRONMENT_TYPE` (`WP_ENV` / `WORDPRESS_ENV`) environment variable value _contains_ one of the supported values, it will be mapped to it, for example `"production-1"` will be mapped to `"production"`  or `"uat-us-1"` will be mapped to `"staging"`.
 
