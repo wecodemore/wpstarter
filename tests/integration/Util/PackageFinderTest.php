@@ -85,7 +85,6 @@ class PackageFinderTest extends IntegrationTestCase
             $names[] = $package->getName();
         }
 
-        static::assertCount(1, $names);
         static::assertTrue(in_array('roave/security-advisories', $names, true));
     }
 

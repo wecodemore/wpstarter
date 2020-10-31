@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter;
 
 use Composer\Command\BaseCommand;
+use Composer\Composer;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -68,6 +69,7 @@ final class WpStarterCommand extends BaseCommand
     {
         // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
 
+        /** @var Composer $composer */
         $composer = $this->getComposer(true, false);
         if ($composer->getPackage()->getType() === ComposerPlugin::EXTENSIONS_TYPE) {
             $this->writeError(

@@ -9,12 +9,15 @@
 namespace WeCodeMore\WpStarter\Tests;
 
 use Composer;
+use Composer\Factory;
+use Composer\Util\Filesystem;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
 use WeCodeMore\WpStarter\Util\Paths;
+use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
 {
@@ -127,7 +130,7 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
 
         return Composer\Factory::createConfig(
             $this->createComposerIo($input, $verbosity),
-            $cwd
+            $cwd ?? getenv('PACKAGE_PATH')
         );
     }
 
@@ -136,6 +139,23 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      */
     public function createComposer(): Composer\Composer
     {
-        return Composer\Factory::create($this->createComposerIo(), null, true);
+        $path = getenv('PACKAGE_PATH') . '/composer.json';
+
+        return Composer\Factory::create($this->createComposerIo(), $path, true);
+    }
+
+    /**
+     * @return UrlDownloader
+     */
+    public function createUrlDownloader(): UrlDownloader
+    {
+        return UrlDownloader::newV2(
+            Factory::createHttpDownloader(
+                $this->createComposerIo(),
+                $this->createComposerConfig()
+            ),
+            new Filesystem(),
+            false
+        );
     }
 }

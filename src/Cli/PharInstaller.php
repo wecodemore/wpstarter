@@ -37,20 +37,20 @@ class PharInstaller
     }
 
     /**
-     * @param PhpTool $info
+     * @param PhpTool $tool
      * @param string $path
      * @return string
      */
-    public function install(PhpTool $info, string $path): string
+    public function install(PhpTool $tool, string $path): string
     {
-        $url = $info->pharUrl();
-        $name = $info->niceName();
+        $url = $tool->pharUrl();
+        $name = $tool->niceName();
 
         if (!$url || !$name) {
             $this->io->write(
                 sprintf(
                     "Skipping installation of PHP tool '%s'.\nName: %s, URL: %s.",
-                    get_class($info),
+                    get_class($tool),
                     $name ? "'{$name}'" : '(empty)',
                     $url ? "'{$url}'" : '(empty)'
                 )
@@ -67,7 +67,7 @@ class PharInstaller
             return '';
         }
 
-        if (!$info->checkPhar($path, $this->io)) {
+        if (!$tool->checkPhar($path, $this->io)) {
             @unlink($path);
             $this->io->writeErrorBlock('Phar validation failed. Downloaded phar seems corrupted.');
 

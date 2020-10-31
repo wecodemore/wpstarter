@@ -484,4 +484,24 @@ LOGO;
 
         $this->io->write("\n{$logo}\n");
     }
+
+    /**
+     * @param Composer $composer
+     * @param IOInterface $io
+     * @return void
+     */
+    public function deactivate(Composer $composer, IOInterface $io)
+    {
+        // noop
+    }
+
+    /**
+     * @param Composer $composer
+     * @param IOInterface $io
+     * @return void
+     */
+    public function uninstall(Composer $composer, IOInterface $io)
+    {
+        // noop
+    }
 }

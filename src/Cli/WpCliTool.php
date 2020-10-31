@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Cli;
 
+use Composer\Semver\Semver;
 use Symfony\Component\Finder\Finder;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Io\Io;
@@ -85,32 +86,40 @@ class WpCliTool implements PhpTool
             return $default;
         }
 
-        $candidates = preg_match('~/wp-cli-.+?\.phar$~', $this->pharUrl(), $matches)
-            ? [$paths->root($matches[0])]
-            : [];
+        $candidates = [];
+        if (preg_match('~/wp-cli-(.+?)\.phar$~', $this->pharUrl(), $matches)) {
+            $version = $matches[1];
+            $path = $paths->root($matches[0]);
+            if (file_exists($path)) {
+                $candidates[$version] = $path;
+            }
+        }
 
-        $existingFiles = Finder::create()->name('wp-cli-*.phar')->in($paths->root('/'));
+        $existingFiles = Finder::create()
+            ->in($paths->root('/'))
+            ->depth('== 0')
+            ->name('wp-cli-*.phar');
+
+        $constraint = '>=' . $this->minVersion();
 
         /** @var \SplFileInfo $existingFile */
         foreach ($existingFiles as $existingFile) {
             $fileName = $existingFile->getBasename('.phar');
             $fullPath = $paths->root("/{$fileName}.phar");
-
-            if (
-                !in_array($fullPath, $candidates, true)
-                && version_compare((string)substr($fileName, 7), $this->minVersion(), '>=')
-            ) {
-                $candidates[] = $fullPath;
+            $version = (string)substr($fileName, 7);
+            if (Semver::satisfies($version, $constraint)) {
+                $candidates[$version] = $fullPath;
             }
         }
 
-        foreach ($candidates as $candidate) {
-            if (file_exists($candidate)) {
-                return $candidate;
-            }
+        if (!$candidates) {
+            return $default;
         }
 
-        return $default;
+        /** @var string $version */
+        $version = Semver::rsort(array_keys($candidates))[0];
+
+        return $candidates[$version];
     }
 
     /**
@@ -127,7 +136,7 @@ class WpCliTool implements PhpTool
      */
     public function minVersion(): string
     {
-        return '2.0.1';
+        return '2.4.0';
     }
 
     /**
@@ -150,7 +159,6 @@ class WpCliTool implements PhpTool
 
         $pharHash = hash($algorithm, (string)file_get_contents($pharPath));
         if (!$pharHash || !hash_equals($releaseHash, $pharHash)) {
-            @unlink($pharPath);
             $io->writeErrorBlock("{$algorithm} hash check failed for downloaded WP CLI phar.");
 
             return false;

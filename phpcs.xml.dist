@@ -11,6 +11,7 @@
         <exclude name="WordPress.Security"/>
         <exclude name="WordPress.PHP.NoSilencedErrors"/>
         <exclude name="WordPressVIPMinimum.Constants.ConstantString"/>
+        <exclude name="WordPressVIPMinimum.Functions.StripTags"/>
         <exclude name="WordPress.DB.RestrictedFunctions"/>
         <exclude name="WordPress.PHP.DiscouragedPHPFunctions"/>
         <exclude name="WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler"/>

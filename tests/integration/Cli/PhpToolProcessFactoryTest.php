@@ -8,7 +8,6 @@
 
 namespace WeCodeMore\WpStarter\Tests\Integration\Cli;
 
-use Composer\Factory;
 use Composer\Util\Filesystem;
 use org\bovigo\vfs\vfsStream;
 use WeCodeMore\WpStarter\Cli\PharInstaller;
@@ -39,14 +38,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
         UrlDownloader $urlDownloader = null
     ): PhpToolProcessFactory {
 
-        $urlDownloader or $urlDownloader = new UrlDownloader(
-            new Filesystem(),
-            Factory::createRemoteFilesystem(
-                $this->createComposerIo(),
-                $this->createComposerConfig()
-            ),
-            false
-        );
+        $urlDownloader or $urlDownloader = $this->createUrlDownloader();
 
         $composer = $this->createComposer();
 
@@ -201,18 +193,9 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
             new Validator($this->createPaths(), new Filesystem())
         );
 
-        $urlDownloader = new UrlDownloader(
-            new Filesystem(),
-            Factory::createRemoteFilesystem(
-                $this->createComposerIo(),
-                $this->createComposerConfig()
-            ),
-            false
-        );
-
         $tool = new WpCliTool(
             $config,
-            $urlDownloader,
+            $this->createUrlDownloader(),
             new Io($this->createComposerIo())
         );
 

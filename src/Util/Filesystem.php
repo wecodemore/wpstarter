@@ -48,7 +48,7 @@ class Filesystem
         }
 
         try {
-            return file_put_contents($targetPath, $content) > 0;
+            return $this->filesystem->filePutContentsIfModified($targetPath, $content) > 0;
         } catch (\Throwable $exception) {
             return false;
         }
@@ -63,12 +63,19 @@ class Filesystem
      */
     public function moveFile(string $sourcePath, string $targetPath): bool
     {
+        $sourcePath = $this->filesystem->normalizePath($sourcePath);
+        if (!is_file($sourcePath)) {
+            return false;
+        }
+
+        $targetPath = $this->filesystem->normalizePath($targetPath);
+        if (!$this->createDir(dirname($targetPath))) {
+            return false;
+        }
+
         file_exists($targetPath) and $this->filesystem->unlink($targetPath);
 
-        $this->filesystem->rename(
-            $this->filesystem->normalizePath($sourcePath),
-            $this->filesystem->normalizePath($targetPath)
-        );
+        $this->filesystem->rename($sourcePath, $targetPath);
 
         return file_exists($targetPath);
     }
@@ -139,14 +146,16 @@ class Filesystem
     {
         try {
             $sourcePath = $this->filesystem->normalizePath($sourcePath);
-            if (!realpath($sourcePath)) {
+            if (!realpath($sourcePath) || !is_dir($sourcePath)) {
                 return false;
             }
 
-            $this->filesystem->copyThenRemove(
-                $sourcePath,
-                $this->filesystem->normalizePath($targetPath)
-            );
+            $targetPath = $this->filesystem->normalizePath($targetPath);
+            if (!$this->createDir($targetPath)) {
+                return false;
+            }
+
+            $this->filesystem->copyThenRemove($sourcePath, $targetPath);
         } catch (\Throwable $exception) {
             return false;
         }
@@ -164,35 +173,14 @@ class Filesystem
     public function copyDir(string $sourcePath, string $targetPath): bool
     {
         $sourcePath = $this->filesystem->normalizePath($sourcePath);
-        if (!realpath($sourcePath)) {
+        if (!realpath($sourcePath) || !is_dir($sourcePath)) {
             return false;
         }
 
         $targetPath = $this->filesystem->normalizePath($targetPath);
         $this->createDir($targetPath);
 
-        /** @var \RecursiveDirectoryIterator $iterator */
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($sourcePath, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::SELF_FIRST
-        );
-
-        $done = $total = 0;
-
-        /** @var \SplFileInfo $item */
-        foreach ($iterator as $item) {
-            $total++;
-            $target = "{$targetPath}/" . $iterator->getSubPathName();
-
-            if ($item->isDir()) {
-                $done += (int)$this->createDir($target);
-                continue;
-            }
-
-            $done += $this->copyFile($item->getRealPath(), $target) ? 1 : 0;
-        }
-
-        return $done === $total;
+        return $this->filesystem->copy($sourcePath, $targetPath);
     }
 
     /**
