@@ -73,23 +73,11 @@
     },
     "scripts": {
         "cs": "@php ./vendor/squizlabs/php_codesniffer/bin/phpcs",
+        "phpcompat": "@php ./vendor/squizlabs/php_codesniffer/bin/phpcs -p . --standard=PHPCompatibility --ignore=*/vendor/*,*tests/fixtures/* --extensions=php --basepath=./ --runtime-set testVersion 7.1-",
         "psalm": "@php ./vendor/vimeo/psalm/psalm",
         "tests:unit": "@php ./vendor/phpunit/phpunit/phpunit --testsuite=unit",
         "tests:unit:no-cov": "@php ./vendor/phpunit/phpunit/phpunit --testsuite=unit --no-coverage",
-        "tests:integration": "@php ./vendor/phpunit/phpunit/phpunit --testsuite=integration --no-coverage",
-        "tests": [
-            "@tests:integration",
-            "@tests:unit"
-        ],
-        "tests:no-cov": [
-            "@tests:integration",
-            "@tests:unit:no-cov"
-        ],
-        "qa": [
-            "@tests:no-cov",
-            "@cs",
-            "@psalm"
-        ]
+        "tests:integration": "@php ./vendor/phpunit/phpunit/phpunit --testsuite=integration --no-coverage"
     },
     "extra": {
         "class": "WeCodeMore\\WpStarter\\ComposerPlugin",

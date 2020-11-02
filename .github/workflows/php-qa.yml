@@ -41,12 +41,7 @@ jobs:
                   dependency-versions: ${{ matrix.prefer }}
                   composer-options: ${{ matrix.ignore-platform }}
 
-            - name: Run integration tests (PHPUnit 9)
-              if: ${{ (matrix.php >= 7.3) && (matrix.prefer == 'highest') }}
-              run: ./vendor/bin/phpunit --migrate-configuration  --testsuite=integration --no-coverage
-
-            - name: Run integration tests (PHPUnit 7)
-              if: ${{ (matrix.php < 7.3) || ((matrix.php == 7.3) && (matrix.prefer == 'lowest')) }}
+            - name: Run integration tests
               run: ./vendor/bin/phpunit --testsuite=integration --no-coverage
 
             - name: Run unit tests
