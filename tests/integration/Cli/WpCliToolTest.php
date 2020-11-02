@@ -18,7 +18,10 @@ use WeCodeMore\WpStarter\Io\Io;
 
 class WpCliToolTest extends IntegrationTestCase
 {
-    protected function tearDown()
+    /**
+     * @after
+     */
+    protected function after()
     {
         parent::tearDown();
         \Mockery::close();

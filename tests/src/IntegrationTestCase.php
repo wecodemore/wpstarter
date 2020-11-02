@@ -21,6 +21,8 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
 {
+    use PhpUnitCrossVersion;
+
     /**
      * @var OutputInterface[]
      */

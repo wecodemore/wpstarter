@@ -18,14 +18,21 @@ use WeCodeMore\WpStarter\Util;
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
     use MockeryPHPUnitIntegration;
+    use PhpUnitCrossVersion;
 
-    protected function setUp()
+    /**
+     * @before
+     */
+    protected function before()
     {
         parent::setUp();
         $this->startMockery();
     }
 
-    protected function tearDown()
+    /**
+     * @after
+     */
+    protected function after()
     {
         $this->closeMockery();
         parent::tearDown();

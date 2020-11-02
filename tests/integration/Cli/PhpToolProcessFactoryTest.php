@@ -24,7 +24,10 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class PhpToolProcessFactoryTest extends IntegrationTestCase
 {
-    protected function tearDown()
+    /**
+     * @after
+     */
+    protected function after()
     {
         parent::tearDown();
         \Mockery::close();
@@ -65,7 +68,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
         $factory = $this->createPhpToolProcessFactory();
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessageRegExp('/^Failed installation/');
+        $this->expectExceptionMsgRegex('/^Failed installation/');
 
         $factory->create(new DummyPhpTool());
     }
@@ -178,7 +181,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
         $tool->pharIsValid = false;
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessageRegExp('/Failed phar download/');
+        $this->expectExceptionMsgRegex('/Failed phar download/');
 
         $factory->create($tool);
     }
@@ -205,7 +208,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
 
         $process->execute('cli version');
 
-        static::assertRegExp('/^WP-CLI [0-9\.]+$/', trim($this->collectOutput()));
+        static::assertStringMatchesRegex('/^WP-CLI [0-9\.]+$/', trim($this->collectOutput()));
     }
 
     /**

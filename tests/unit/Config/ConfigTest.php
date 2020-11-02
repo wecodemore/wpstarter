@@ -129,7 +129,7 @@ class ConfigTest extends TestCase
         $config = new Config([], $this->makeValidator());
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageRegExp('/overwrite/');
+        $this->expectExceptionMsgRegex('/overwrite/');
 
         $config->appendValidator(Config::AUTOLOAD, 'strtoupper');
     }
