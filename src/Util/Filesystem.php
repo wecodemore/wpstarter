@@ -48,7 +48,17 @@ class Filesystem
         }
 
         try {
-            return $this->filesystem->filePutContentsIfModified($targetPath, $content) > 0;
+            $exists = file_exists($targetPath);
+            if ($exists && !is_file($exists)) {
+                return false;
+            }
+
+            $currentContent = $exists ? file_get_contents($targetPath) : null;
+            if ($currentContent === $content) {
+                return true;
+            }
+
+            return file_put_contents($targetPath, $content) !== false;
         } catch (\Throwable $exception) {
             return false;
         }
