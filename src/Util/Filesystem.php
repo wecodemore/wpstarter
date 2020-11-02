@@ -49,7 +49,7 @@ class Filesystem
 
         try {
             $exists = file_exists($targetPath);
-            if ($exists && !is_file($exists)) {
+            if ($exists && !is_file($targetPath)) {
                 return false;
             }
 
