@@ -20,11 +20,11 @@ class ValidatorTest extends TestCase
 {
     /**
      * @see Validator::validateOverwrite()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateOverwrite()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         $ask = OptionalStep::ASK;
 
@@ -42,11 +42,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateSteps()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateSteps()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateSteps([])->notEmpty());
         static::assertFalse($validator->validateSteps(2)->notEmpty());
@@ -62,11 +62,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateScripts()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateScripts()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateScripts([])->notEmpty());
         static::assertFalse($validator->validateScripts([])->notEmpty());
@@ -85,11 +85,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateDropins()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateDropins()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateDropins([])->notEmpty());
         static::assertFalse($validator->validateDropins('foo')->notEmpty());
@@ -123,11 +123,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateContentDevOperation()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateContentDevOperation()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateContentDevOperation([])->notEmpty());
         static::assertFalse($validator->validateContentDevOperation(null)->notEmpty());
@@ -154,11 +154,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateWpCliCommands()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateWpCliCommands()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateWpCliCommands(null)->notEmpty());
         static::assertFalse($validator->validateWpCliCommands('foo')->notEmpty());
@@ -180,11 +180,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateWpCliCommand()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateWpCliCommand()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateWpCliCommand(null)->notEmpty());
         static::assertFalse($validator->validateWpCliCommand([])->notEmpty());
@@ -199,11 +199,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateWpCliFiles()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateWpCliFiles()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateWpCliFiles(null)->notEmpty());
         static::assertFalse($validator->validateWpCliFiles([])->notEmpty());
@@ -224,11 +224,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateWpVersion()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateWpVersion()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateWpVersion(null)->notEmpty());
         static::assertFalse($validator->validateWpVersion(true)->notEmpty());
@@ -244,11 +244,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateBoolOrAskOrUrlOrPath()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateBoolOrAskOrUrlOrPath()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         $ask = OptionalStep::ASK;
         $google = 'https://example.com';
@@ -270,11 +270,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateUrlOrPath()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateUrlOrPath()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateUrlOrPath('foo')->notEmpty());
         static::assertFalse($validator->validateUrlOrPath(null)->notEmpty());
@@ -290,11 +290,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateGlobPath()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateGlobPath()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateGlobPath('f!oo')->notEmpty());
         static::assertFalse($validator->validateGlobPath('fo"o/*')->notEmpty());
@@ -310,11 +310,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateFileName()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateFileName()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateFileName(1)->notEmpty());
         static::assertFalse($validator->validateFileName(true)->notEmpty());
@@ -328,11 +328,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateGlobPathArray()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateGlobPathArray()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateGlobPathArray(null)->notEmpty());
         static::assertFalse($validator->validateGlobPathArray('/')->notEmpty());
@@ -348,11 +348,11 @@ class ValidatorTest extends TestCase
 
     /**
      * @see Validator::validateInt()
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateInt()
     {
-        $validator = $this->makeValidator();
+        $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateInt(null)->notEmpty());
         static::assertFalse($validator->validateInt('/')->notEmpty());

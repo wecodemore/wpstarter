@@ -16,7 +16,7 @@ class FileContentBuilderTest extends TestCase
     public function testBuild()
     {
         $templates = $this->packagePath() . '/templates';
-        $paths = $this->makePaths();
+        $paths = $this->factoryPaths();
         $paths->useCustomTemplatesDir($templates);
 
         $builder = new FileContentBuilder();

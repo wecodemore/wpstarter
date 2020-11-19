@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Integration\Cli;
 
@@ -34,10 +37,181 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
     }
 
     /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
+     */
+    public function testCreateFailsIfNoPackageNoPharPathAndNoPharUrl()
+    {
+        $factory = $this->factoryPhpToolProcessFactory();
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMsgRegex('/^Failed installation/');
+
+        $factory->create(new DummyPhpTool());
+    }
+
+    /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
+     */
+    public function testCreateViaPackageFailIfMinVersionTooLow()
+    {
+        $factory = $this->factoryPhpToolProcessFactory();
+
+        $tool = new DummyPhpTool();
+        $tool->packageName = 'symfony/dotenv';
+        $tool->minVersion = '9999.9999';
+
+        $this->expectException(\RuntimeException::class);
+
+        $factory->create($tool);
+
+        static::assertStringContainsString(
+            'lower than minimum required 9999.9999',
+            $this->collectOutput()
+        );
+    }
+
+    /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
+     */
+    public function testCreateViaPackage()
+    {
+        $factory = $this->factoryPhpToolProcessFactory();
+
+        $tool = new DummyPhpTool();
+        $tool->packageName = 'symfony/dotenv';
+        $tool->minVersion = '0.1';
+
+        $this->assertProcessWorks($factory->create($tool));
+    }
+
+    /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
+     */
+    public function testCreateViaPharPath()
+    {
+        $factory = $this->factoryPhpToolProcessFactory();
+
+        $tool = new DummyPhpTool();
+        $tool->pharTarget = __FILE__;
+
+        $this->assertProcessWorks($factory->create($tool));
+    }
+
+    /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
+     */
+    public function testCreateViaPharUrl()
+    {
+        $url = 'https://example.com/downloads?file=some-phar';
+        $dir = vfsStream::setup('directory');
+        $path = $dir->url() . '/some-phar.phar';
+
+        $urlDownloader = \Mockery::mock(UrlDownloader::class);
+        $urlDownloader->makePartial();
+        $urlDownloader->shouldReceive('save')
+            ->once()
+            ->with($url, $path)
+            ->andReturnUsing(function (string $url, string $path): bool {
+                $url and touch($path);
+                return true;
+            });
+
+        $factory = $this->factoryPhpToolProcessFactory($urlDownloader);
+
+        $tool = new DummyPhpTool();
+        $tool->pharTarget = $path;
+        $tool->pharUrl = $url;
+        $tool->pharIsValid = true;
+
+        $process = $factory->create($tool);
+
+        static::assertStringContainsString('Installing ', $this->collectOutput());
+
+        $this->assertProcessWorks($process);
+    }
+
+    /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
+     */
+    public function testCreateViaPharUrlFailsWhenPharCheckFails()
+    {
+        $url = 'https://example.com/downloads?file=some-phar';
+        $dir = vfsStream::setup('directory');
+        $path = $dir->url() . '/some-phar.phar';
+
+        $urlDownloader = \Mockery::mock(UrlDownloader::class);
+        $urlDownloader->makePartial();
+        $urlDownloader->shouldReceive('save')
+            ->once()
+            ->with($url, $path)
+            ->andReturnUsing(function (string $url, string $path): bool {
+                $url and touch($path);
+                return true;
+            });
+
+        $factory = $this->factoryPhpToolProcessFactory($urlDownloader);
+
+        $tool = new DummyPhpTool();
+        $tool->pharTarget = $path;
+        $tool->pharUrl = $url;
+        $tool->pharIsValid = false;
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMsgRegex('/Failed phar download/');
+
+        $factory->create($tool);
+    }
+
+    /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
+     */
+    public function testRunWpCliCommandViaFileSystemBootstrap()
+    {
+        $config = new Config(
+            [Config::INSTALL_WP_CLI => false],
+            new Validator($this->createPaths(), new Filesystem())
+        );
+
+        $tool = new WpCliTool(
+            $config,
+            $this->createUrlDownloader(),
+            new Io($this->createComposerIo())
+        );
+
+        $factory = $this->factoryPhpToolProcessFactory();
+
+        $process = $factory->create($tool);
+
+        $process->execute('cli version');
+
+        static::assertStringMatchesRegex('/^WP-CLI [0-9\.]+$/', trim($this->collectOutput()));
+    }
+
+    /**
+     * @param PhpToolProcess $process
+     */
+    private function assertProcessWorks(PhpToolProcess $process)
+    {
+        static::assertTrue($process->execute('-r "echo \'Hi!!!\';"'));
+
+        $output = trim($this->collectOutput());
+
+        static::assertStringStartsWith('Dummy!', $output);
+        static::assertStringEndsWith('Hi!!!', $output);
+    }
+
+    /**
      * @param UrlDownloader|null $urlDownloader
      * @return PhpToolProcessFactory
      */
-    private function createPhpToolProcessFactory(
+    private function factoryPhpToolProcessFactory(
         UrlDownloader $urlDownloader = null
     ): PhpToolProcessFactory {
 
@@ -58,169 +232,5 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
                 new Filesystem()
             )
         );
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
-     */
-    public function testCreateFailsIfNoPackageNoPharPathAndNoPharUrl()
-    {
-        $factory = $this->createPhpToolProcessFactory();
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMsgRegex('/^Failed installation/');
-
-        $factory->create(new DummyPhpTool());
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
-     */
-    public function testCreateViaPackageFailIfMinVersionTooLow()
-    {
-        $factory = $this->createPhpToolProcessFactory();
-
-        $tool = new DummyPhpTool();
-        $tool->packageName = 'symfony/dotenv';
-        $tool->minVersion = '9999.9999';
-
-        $this->expectException(\RuntimeException::class);
-
-        $factory->create($tool);
-
-        static::assertStringContainsString(
-            'lower than minimum required 9999.9999',
-            $this->collectOutput()
-        );
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
-     */
-    public function testCreateViaPackage()
-    {
-        $factory = $this->createPhpToolProcessFactory();
-
-        $tool = new DummyPhpTool();
-        $tool->packageName = 'symfony/dotenv';
-        $tool->minVersion = '0.1';
-
-        $this->assertProcessWorks($factory->create($tool));
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
-     */
-    public function testCreateViaPharPath()
-    {
-        $factory = $this->createPhpToolProcessFactory();
-
-        $tool = new DummyPhpTool();
-        $tool->pharTarget = __FILE__;
-
-        $this->assertProcessWorks($factory->create($tool));
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
-     */
-    public function testCreateViaPharUrl()
-    {
-        $url = 'https://example.com/downloads?file=some-phar';
-        $dir = vfsStream::setup('directory');
-        $path = $dir->url() . '/some-phar.phar';
-
-        $urlDownloader = \Mockery::mock(UrlDownloader::class);
-        $urlDownloader->makePartial();
-        $urlDownloader->shouldReceive('save')
-            ->once()
-            ->with($url, $path)
-            ->andReturnUsing(function (string $url, string $path): bool {
-                $url and touch($path);
-                return true;
-            });
-
-        $factory = $this->createPhpToolProcessFactory($urlDownloader);
-
-        $tool = new DummyPhpTool();
-        $tool->pharTarget = $path;
-        $tool->pharUrl = $url;
-        $tool->pharIsValid = true;
-
-        $process = $factory->create($tool);
-
-        static::assertStringContainsString('Installing ', $this->collectOutput());
-
-        $this->assertProcessWorks($process);
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
-     */
-    public function testCreateViaPharUrlFailsWhenPharCheckFails()
-    {
-        $url = 'https://example.com/downloads?file=some-phar';
-        $dir = vfsStream::setup('directory');
-        $path = $dir->url() . '/some-phar.phar';
-
-        $urlDownloader = \Mockery::mock(UrlDownloader::class);
-        $urlDownloader->makePartial();
-        $urlDownloader->shouldReceive('save')
-            ->once()
-            ->with($url, $path)
-            ->andReturnUsing(function (string $url, string $path): bool {
-                $url and touch($path);
-                return true;
-            });
-
-        $factory = $this->createPhpToolProcessFactory($urlDownloader);
-
-        $tool = new DummyPhpTool();
-        $tool->pharTarget = $path;
-        $tool->pharUrl = $url;
-        $tool->pharIsValid = false;
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMsgRegex('/Failed phar download/');
-
-        $factory->create($tool);
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
-     */
-    public function testRunWpCliCommandViaFileSystemBootstrap()
-    {
-        $config = new Config(
-            [Config::INSTALL_WP_CLI => false],
-            new Validator($this->createPaths(), new Filesystem())
-        );
-
-        $tool = new WpCliTool(
-            $config,
-            $this->createUrlDownloader(),
-            new Io($this->createComposerIo())
-        );
-
-        $factory = $this->createPhpToolProcessFactory();
-
-        $process = $factory->create($tool);
-
-        $process->execute('cli version');
-
-        static::assertStringMatchesRegex('/^WP-CLI [0-9\.]+$/', trim($this->collectOutput()));
-    }
-
-    /**
-     * @param PhpToolProcess $process
-     */
-    private function assertProcessWorks(PhpToolProcess $process)
-    {
-        static::assertTrue($process->execute('-r "echo \'Hi!!!\';"'));
-
-        $output = trim($this->collectOutput());
-
-        static::assertStringStartsWith('Dummy!', $output);
-        static::assertStringEndsWith('Hi!!!', $output);
     }
 }

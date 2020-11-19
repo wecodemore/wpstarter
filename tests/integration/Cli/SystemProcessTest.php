@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Integration\Cli;
 
@@ -16,22 +19,12 @@ use WeCodeMore\WpStarter\Io\Io;
 class SystemProcessTest extends IntegrationTestCase
 {
     /**
-     * @return SystemProcess
-     */
-    private function createSystemProcess(): SystemProcess
-    {
-        return new SystemProcess(
-            $this->createPaths(),
-            new Io($this->createComposerIo())
-        );
-    }
-
-    /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Cli\SystemProcess
      */
     public function testExecute()
     {
-        $process = $this->createSystemProcess()->withEnvironment(['FOO' => 'I ran with env!']);
+        $process = $this->factorySystemProcess()->withEnvironment(['FOO' => 'I ran with env!']);
 
         $php = (new PhpExecutableFinder())->find();
 
@@ -40,15 +33,27 @@ class SystemProcessTest extends IntegrationTestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Cli\SystemProcess
      */
     public function testExecuteSilently()
     {
-        $process = $this->createSystemProcess();
+        $process = $this->factorySystemProcess();
 
         $php = (new PhpExecutableFinder())->find();
 
         static::assertTrue($process->executeSilently($php . ' -r "echo \'la la la\';"'));
         static::assertSame('', trim($this->collectOutput()));
+    }
+
+    /**
+     * @return SystemProcess
+     */
+    private function factorySystemProcess(): SystemProcess
+    {
+        return new SystemProcess(
+            $this->createPaths(),
+            new Io($this->createComposerIo())
+        );
     }
 }

@@ -61,14 +61,14 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * @param string $binDir
      * @return Config\Config
      */
-    protected function makeConfig(
+    protected function factoryConfig(
         array $configs = [],
         array $extra = [],
         string $vendorDir = __DIR__,
         string $binDir = __DIR__
     ): Config\Config {
 
-        return new Config\Config($configs, $this->makeValidator($extra, $vendorDir, $binDir));
+        return new Config\Config($configs, $this->factoryValidator($extra, $vendorDir, $binDir));
     }
 
     /**
@@ -77,7 +77,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * @param string $binDir
      * @return Config\Validator
      */
-    protected function makeValidator(
+    protected function factoryValidator(
         array $extra = [],
         string $vendorDir = __DIR__,
         string $binDir = __DIR__
@@ -92,7 +92,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
         $filesystem = new Composer\Util\Filesystem();
 
-        return new Config\Validator($this->makePaths(), $filesystem);
+        return new Config\Validator($this->factoryPaths(), $filesystem);
     }
 
     /**
@@ -102,7 +102,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      * phpcs:disable Generic.Metrics.NestingLevel
      */
-    protected function makeLocator(...$objects): Util\Locator
+    protected function factoryLocator(...$objects): Util\Locator
     {
         $reflection = new \ReflectionClass(Util\Locator::class);
         /** @var Util\Locator $locator */
@@ -150,7 +150,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * @param array|null $extra
      * @return Util\Paths
      */
-    protected function makePaths(array $extra = null): Util\Paths
+    protected function factoryPaths(array $extra = null): Util\Paths
     {
         $root = $this->fixturesPath() . '/paths-root';
 
