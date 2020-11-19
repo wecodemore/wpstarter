@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
@@ -6,9 +7,10 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace WeCodeMore\WpStarter\Tests\Integration\Cli;
 
-use Composer\Factory;
 use Composer\Util\Filesystem;
 use org\bovigo\vfs\vfsStream;
 use WeCodeMore\WpStarter\Cli\WpCliTool;
@@ -16,126 +18,20 @@ use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Config\Validator;
 use WeCodeMore\WpStarter\Tests\IntegrationTestCase;
 use WeCodeMore\WpStarter\Io\Io;
-use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class WpCliToolTest extends IntegrationTestCase
 {
-    protected function tearDown()
+    /**
+     * @after
+     */
+    protected function after()
     {
         parent::tearDown();
         \Mockery::close();
     }
 
     /**
-     * @param UrlDownloader|null $urlDownloader
-     * @param string|null $cwd
-     * @return WpCliTool
-     */
-    private function createTool(UrlDownloader $urlDownloader = null, string $cwd = null): WpCliTool
-    {
-        $config = new Config(
-            [Config::INSTALL_WP_CLI => true],
-            new Validator($this->createPaths($cwd), new Filesystem())
-        );
-
-        $urlDownloader or $urlDownloader = new UrlDownloader(
-            new Filesystem(),
-            Factory::createRemoteFilesystem(
-                $this->createComposerIo(),
-                $this->createComposerConfig()
-            ),
-            false
-        );
-
-        return new WpCliTool(
-            $config,
-            $urlDownloader,
-            new Io($this->createComposerIo())
-        );
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
-     */
-    public function testCheckPhar()
-    {
-        $tool = $this->createTool();
-
-        $url = $tool->pharUrl();
-
-        $dir = vfsStream::setup('directory');
-        $targetFile = $dir->url() . '/' . basename($url);
-
-        $this->downloadWpCliPhar($url, $targetFile);
-
-        $checked = $tool->checkPhar($targetFile, new Io($this->createComposerIo()));
-
-        static::assertTrue($checked);
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
-     */
-    public function testPharHashTestFailure()
-    {
-        $urlDownloader = \Mockery::mock(UrlDownloader::class);
-        $urlDownloader->makePartial();
-        $urlDownloader
-            ->shouldReceive('fetch')
-            ->once()
-            ->with(\Mockery::type('string'))
-            ->andReturnUsing(
-                function (string $url): string {
-                    $ext = pathinfo(basename($url), PATHINFO_EXTENSION);
-
-                    static::assertTrue(in_array($ext, ['md5', 'sha512'], true));
-
-                    $len = $ext === 'md5' ? 22 : 96;
-
-                    return base64_encode(random_bytes($len));
-                }
-            );
-
-        $tool = $this->createTool($urlDownloader);
-
-        $url = $tool->pharUrl();
-
-        $dir = vfsStream::setup('directory');
-        $targetFile = $dir->url() . '/' . basename($url);
-
-        $this->downloadWpCliPhar($url, $targetFile);
-
-        static::assertFalse($tool->checkPhar($targetFile, new Io($this->createComposerIo())));
-        static::assertStringContainsString('hash check failed', $this->collectOutput());
-    }
-
-    /**
-     * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
-     */
-    public function testPharHashDownloadFailure()
-    {
-        $urlDownloader = \Mockery::mock(UrlDownloader::class);
-        $urlDownloader->makePartial();
-        $urlDownloader
-            ->shouldReceive('fetch')
-            ->once()
-            ->with(\Mockery::type('string'))
-            ->andReturn('');
-
-        $tool = $this->createTool($urlDownloader);
-
-        $url = $tool->pharUrl();
-
-        $dir = vfsStream::setup('directory');
-        $targetFile = $dir->url() . '/' . basename($url);
-
-        $this->downloadWpCliPhar($url, $targetFile);
-
-        static::assertFalse($tool->checkPhar($targetFile, new Io($this->createComposerIo())));
-        static::assertStringContainsString('Failed to download', $this->collectOutput());
-    }
-
-    /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
      */
     public function testTargetPathsFindsDefault()
@@ -144,12 +40,13 @@ class WpCliToolTest extends IntegrationTestCase
         $root = $dir->url();
         touch("{$root}/wp-cli.phar");
 
-        $tool = $this->createTool(null, $root);
+        $tool = $this->factoryTool($root);
 
         static::assertSame("{$root}/wp-cli.phar", $tool->pharTarget($this->createPaths($root)));
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
      */
     public function testTargetPathsFindsFileNamedAsUrl()
@@ -157,11 +54,11 @@ class WpCliToolTest extends IntegrationTestCase
         $dir = vfsStream::setup('directory');
         $root = $dir->url();
 
-        $tool = $this->createTool(null, $root);
+        $tool = $this->factoryTool($root);
 
         $name = basename($tool->pharUrl());
 
-        touch("{$root}/wp-cli-3.0.phar");
+        touch("{$root}/wp-cli-2.3.phar");
         touch("{$root}/wp-cli-1.0.phar");
         touch("{$root}/{$name}");
 
@@ -169,6 +66,7 @@ class WpCliToolTest extends IntegrationTestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
      */
     public function testFilesIgnoresFilesForOldVersions()
@@ -176,7 +74,7 @@ class WpCliToolTest extends IntegrationTestCase
         $dir = vfsStream::setup('directory');
         $root = $dir->url();
 
-        $tool = $this->createTool(null, $root);
+        $tool = $this->factoryTool($root);
 
         $paths = $this->createPaths($root);
 
@@ -184,25 +82,48 @@ class WpCliToolTest extends IntegrationTestCase
 
         static::assertSame("{$root}/wp-cli.phar", $tool->pharTarget($paths));
 
-        touch("{$root}/wp-cli-2.1.phar");
+        touch("{$root}/wp-cli-2.5.phar");
 
-        static::assertSame("{$root}/wp-cli-2.1.phar", $tool->pharTarget($paths));
+        static::assertSame("{$root}/wp-cli-2.5.phar", $tool->pharTarget($paths));
     }
 
     /**
-     * @param string $url
-     * @param string $targetFile
+     * @test
+     * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
      */
-    private function downloadWpCliPhar(string $url, string $targetFile)
+    public function testCheckPharSuccess()
     {
-        $downloader = Factory::createRemoteFilesystem(
-            $this->createComposerIo(),
-            $this->createComposerConfig()
-        );
+        $path = getenv('TESTS_FIXTURES_PATH') . '/wp-cli-2.4.0.phar';
+        $tool = $this->factoryTool();
 
-        $downloader->copy(parse_url($url, PHP_URL_HOST), $url, $targetFile);
-        if (!file_exists($targetFile)) {
-            $this->markTestSkipped("Cannot complete test because download of {$url} failed.");
-        }
+        static::assertTrue($tool->checkPhar($path, new Io($this->createComposerIo())));
+    }
+
+    /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
+     */
+    public function testCheckPharError()
+    {
+        $path = getenv('TESTS_FIXTURES_PATH') . '/wp-cli-2.0.1.phar';
+        $tool = $this->factoryTool();
+
+        static::assertFalse($tool->checkPhar($path, new Io($this->createComposerIo())));
+    }
+
+    /**
+     * @param string|null $cwd
+     * @return WpCliTool
+     */
+    private function factoryTool(string $cwd = null): WpCliTool
+    {
+        return new WpCliTool(
+            new Config(
+                [Config::INSTALL_WP_CLI => true],
+                new Validator($this->createPaths($cwd), new Filesystem())
+            ),
+            $this->createUrlDownloader(),
+            new Io($this->createComposerIo())
+        );
     }
 }

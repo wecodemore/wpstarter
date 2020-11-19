@@ -15,7 +15,7 @@ class PathsTest extends TestCase
 {
     public function testMockWorks()
     {
-        $paths = $this->makePaths();
+        $paths = $this->factoryPaths();
 
         $base = $this->fixturesPath();
 
@@ -29,7 +29,7 @@ class PathsTest extends TestCase
 
     public function testToParam()
     {
-        $paths = $this->makePaths();
+        $paths = $this->factoryPaths();
 
         $base = $this->fixturesPath();
 
@@ -43,7 +43,7 @@ class PathsTest extends TestCase
 
     public function testRelative()
     {
-        $paths = $this->makePaths();
+        $paths = $this->factoryPaths();
 
         static::assertSame(
             'public/wp-content/uploads/2018/12/25/foo.jpg',
@@ -55,7 +55,7 @@ class PathsTest extends TestCase
 
     public function testTemplates()
     {
-        $paths = $this->makePaths();
+        $paths = $this->factoryPaths();
 
         $custom = $this->packagePath() . '/templates';
         $paths->useCustomTemplatesDir($custom);
@@ -65,7 +65,7 @@ class PathsTest extends TestCase
 
     public function testArrayAccessSet()
     {
-        $paths = $this->makePaths();
+        $paths = $this->factoryPaths();
         $paths['foo'] = $this->packagePath();
 
         static::assertSame($this->packagePath(), $paths['foo']);
@@ -76,7 +76,7 @@ class PathsTest extends TestCase
 
     public function testArrayAccessGet()
     {
-        $paths = $this->makePaths();
+        $paths = $this->factoryPaths();
 
         static::assertSame($this->fixturesPath() . '/paths-root', $paths[Paths::ROOT]);
 
@@ -86,7 +86,7 @@ class PathsTest extends TestCase
 
     public function testArrayAccessUnset()
     {
-        $paths = $this->makePaths();
+        $paths = $this->factoryPaths();
 
         $this->expectException(\BadMethodCallException::class);
         unset($paths[Paths::ROOT]);

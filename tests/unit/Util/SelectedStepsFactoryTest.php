@@ -81,8 +81,8 @@ class SelectedStepsFactoryTest extends TestCase
             FlushEnvCacheStep::NAME
         );
 
-        $locator = $this->makeLocator(
-            $this->makeConfig(),
+        $locator = $this->factoryLocator(
+            $this->factoryConfig(),
             \Mockery::mock(Filesystem::class),
             \Mockery::mock(Io::class)
         );
@@ -105,8 +105,8 @@ class SelectedStepsFactoryTest extends TestCase
             'foo'
         );
 
-        $locator = $this->makeLocator(
-            $this->makeConfig(),
+        $locator = $this->factoryLocator(
+            $this->factoryConfig(),
             \Mockery::mock(Filesystem::class),
             \Mockery::mock(Io::class)
         );
@@ -128,7 +128,7 @@ class SelectedStepsFactoryTest extends TestCase
             'bar'
         );
 
-        $locator = $this->makeLocator($this->makeConfig(), \Mockery::mock(Io::class));
+        $locator = $this->factoryLocator($this->factoryConfig(), \Mockery::mock(Io::class));
 
         $composer = \Mockery::mock(Composer::class);
 
@@ -143,7 +143,7 @@ class SelectedStepsFactoryTest extends TestCase
         $factory = new SelectedStepsFactory(SelectedStepsFactory::MODE_COMMAND, 'dummy');
 
         $config = [Config::COMMAND_STEPS => ['dummy' => DummyStep::class]];
-        $locator = $this->makeLocator($this->makeConfig($config), \Mockery::mock(Io::class));
+        $locator = $this->factoryLocator($this->factoryConfig($config), \Mockery::mock(Io::class));
         $composer = \Mockery::mock(Composer::class);
 
         $steps = $factory->selectAndFactory($locator, $composer);
@@ -158,7 +158,7 @@ class SelectedStepsFactoryTest extends TestCase
         $factory = new SelectedStepsFactory(SelectedStepsFactory::MODE_COMMAND, 'cmd-step');
 
         $config = [Config::COMMAND_STEPS => ['cmd-step' => DummyStep::class]];
-        $locator = $this->makeLocator($this->makeConfig($config), \Mockery::mock(Io::class));
+        $locator = $this->factoryLocator($this->factoryConfig($config), \Mockery::mock(Io::class));
         $composer = \Mockery::mock(Composer::class);
 
         $steps = $factory->selectAndFactory($locator, $composer);
@@ -175,8 +175,8 @@ class SelectedStepsFactoryTest extends TestCase
             FlushEnvCacheStep::NAME
         );
 
-        $locator = $this->makeLocator(
-            $this->makeConfig([Config::SKIP_STEPS => [CheckPathStep::NAME]]),
+        $locator = $this->factoryLocator(
+            $this->factoryConfig([Config::SKIP_STEPS => [CheckPathStep::NAME]]),
             \Mockery::mock(Io::class)
         );
 
@@ -197,8 +197,8 @@ class SelectedStepsFactoryTest extends TestCase
             FlushEnvCacheStep::NAME
         );
 
-        $locator = $this->makeLocator(
-            $this->makeConfig([Config::SKIP_STEPS => CheckPathStep::class]),
+        $locator = $this->factoryLocator(
+            $this->factoryConfig([Config::SKIP_STEPS => CheckPathStep::class]),
             \Mockery::mock(Filesystem::class),
             \Mockery::mock(Io::class)
         );
@@ -229,7 +229,7 @@ class SelectedStepsFactoryTest extends TestCase
             WpCliCommandsStep::NAME
         );
 
-        $locator = $this->makeLocator($this->makeConfig(), \Mockery::mock(Io::class));
+        $locator = $this->factoryLocator($this->factoryConfig(), \Mockery::mock(Io::class));
 
         $composer = \Mockery::mock(Composer::class);
 
@@ -257,7 +257,7 @@ class SelectedStepsFactoryTest extends TestCase
             'foo'
         );
 
-        $locator = $this->makeLocator($this->makeConfig(), \Mockery::mock(Io::class));
+        $locator = $this->factoryLocator($this->factoryConfig(), \Mockery::mock(Io::class));
 
         $composer = \Mockery::mock(Composer::class);
 
@@ -288,7 +288,7 @@ class SelectedStepsFactoryTest extends TestCase
             ],
         ];
 
-        $locator = $this->makeLocator($this->makeConfig($config), \Mockery::mock(Io::class));
+        $locator = $this->factoryLocator($this->factoryConfig($config), \Mockery::mock(Io::class));
 
         $composer = \Mockery::mock(Composer::class);
 
@@ -323,8 +323,8 @@ class SelectedStepsFactoryTest extends TestCase
             ],
         ];
 
-        $locator = $this->makeLocator(
-            $this->makeConfig($config),
+        $locator = $this->factoryLocator(
+            $this->factoryConfig($config),
             \Mockery::mock(Filesystem::class),
             \Mockery::mock(Io::class)
         );
@@ -347,7 +347,7 @@ class SelectedStepsFactoryTest extends TestCase
 
         $factory = new SelectedStepsFactory($flags);
 
-        $locator = $this->makeLocator($this->makeConfig(), \Mockery::mock(Io::class));
+        $locator = $this->factoryLocator($this->factoryConfig(), \Mockery::mock(Io::class));
         $composer = \Mockery::mock(Composer::class);
 
         $steps = $factory->selectAndFactory($locator, $composer);

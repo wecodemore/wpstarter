@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Integration\Util;
 
@@ -16,25 +19,12 @@ use WeCodeMore\WpStarter\Util\PackageFinder;
 class PackageFinderTest extends IntegrationTestCase
 {
     /**
-     * @return PackageFinder
-     */
-    private function createFinder(): PackageFinder
-    {
-        $composer = $this->createComposer();
-
-        return new PackageFinder(
-            $composer->getRepositoryManager()->getLocalRepository(),
-            $composer->getInstallationManager(),
-            new Filesystem()
-        );
-    }
-
-    /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Util\PackageFinder
      */
     public function testFindByType()
     {
-        $finder = $this->createFinder();
+        $finder = $this->factoryFinder();
 
         $plugins = $finder->findByType('composer-plugin');
         $names = [];
@@ -51,11 +41,12 @@ class PackageFinderTest extends IntegrationTestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Util\PackageFinder
      */
     public function testFindPathOf()
     {
-        $finder = $this->createFinder();
+        $finder = $this->factoryFinder();
 
         $phpcsInstaller = $finder->findByName('dealerdirect/phpcodesniffer-composer-installer');
 
@@ -71,11 +62,12 @@ class PackageFinderTest extends IntegrationTestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Util\PackageFinder
      */
     public function testFindByVendor()
     {
-        $finder = $this->createFinder();
+        $finder = $this->factoryFinder();
 
         $roavePackages = $finder->findByVendor('roave');
 
@@ -85,16 +77,16 @@ class PackageFinderTest extends IntegrationTestCase
             $names[] = $package->getName();
         }
 
-        static::assertCount(1, $names);
         static::assertTrue(in_array('roave/security-advisories', $names, true));
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Util\PackageFinder
      */
     public function testFindByName()
     {
-        $finder = $this->createFinder();
+        $finder = $this->factoryFinder();
 
         $phpcs = $finder->findByName('*/*_c*er*');
 
@@ -103,11 +95,12 @@ class PackageFinderTest extends IntegrationTestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Util\PackageFinder
      */
     public function testSearch()
     {
-        $finder = $this->createFinder();
+        $finder = $this->factoryFinder();
 
         $phpcsPackages = $finder->search('*l*/php*c*er*');
         $names = [];
@@ -121,4 +114,18 @@ class PackageFinderTest extends IntegrationTestCase
         static::assertTrue(in_array('dealerdirect/phpcodesniffer-composer-installer', $names, true));
     }
 
+    /**
+     * @test
+     * @return PackageFinder
+     */
+    private function factoryFinder(): PackageFinder
+    {
+        $composer = $this->createComposer();
+
+        return new PackageFinder(
+            $composer->getRepositoryManager()->getLocalRepository(),
+            $composer->getInstallationManager(),
+            new Filesystem()
+        );
+    }
 }

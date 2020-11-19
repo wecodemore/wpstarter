@@ -145,7 +145,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
             array_merge($vars, $this->salter->keys())
         );
 
-        if (!$this->filesystem->save($built, $this->targetPath($paths))) {
+        if (!$this->filesystem->writeContent($built, $this->targetPath($paths))) {
             return self::ERROR;
         }
 

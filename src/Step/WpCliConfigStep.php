@@ -83,7 +83,7 @@ final class WpCliConfigStep implements FileCreationStepInterface
             ['WP_INSTALL_PATH' => $paths->relativeToRoot(Util\Paths::WP)]
         );
 
-        if (!$this->filesystem->save($built, $this->targetPath($paths))) {
+        if (!$this->filesystem->writeContent($built, $this->targetPath($paths))) {
             return self::ERROR;
         }
 

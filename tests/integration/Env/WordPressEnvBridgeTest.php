@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Integration\Env;
 
@@ -18,6 +21,7 @@ use WeCodeMore\WpStarter\Tests\TestCase;
 class WordPressEnvBridgeTest extends TestCase
 {
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadSkippingFile()
@@ -31,6 +35,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadFile()
@@ -48,6 +53,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadFileMoreTimesDoNothing()
@@ -62,6 +68,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testHttpServerVarsAreReturnedOnlyIfLoaded()
@@ -78,6 +85,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testGetEnvIsSkippedForNotLoadedVars()
@@ -92,6 +100,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadAppended()
@@ -105,6 +114,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadAppendedWrongFileDoNothing()
@@ -118,6 +128,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadAppendedAlwaysLoadsIfLoadWasCalledAndEnvLoaded()
@@ -135,6 +146,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadAppendedNotLoadsIfLoadWasNotCalledAndEnvLoaded()
@@ -151,6 +163,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadAppendedDoesNotOverrideActualEnv()
@@ -171,6 +184,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testSetupWordPress()
@@ -207,6 +221,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testArbitraryValuesUnfiltered()
@@ -219,6 +234,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testNewValuesCanBeAppended()
@@ -231,6 +247,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadedValuesCanBeUpdated()
@@ -243,6 +260,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testValuesInActualEnvCanNotBeAppended()
@@ -258,6 +276,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testDumpCacheAndLoadFromDump()
@@ -400,6 +419,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testsSetupConstants()
@@ -453,6 +473,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      * @depends testsSetupConstants
      */
@@ -525,6 +546,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadWpEnvironmentTypeFromWpEnvWithAlias()
@@ -540,6 +562,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testLoadWpEnvironmentTypeFromWpEnvWhenContainingValue()
@@ -555,6 +578,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testCustomWpEnvironmentThatCantBeMapped()
@@ -570,6 +594,7 @@ class WordPressEnvBridgeTest extends TestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
     public function testCustomWpEnvironmentWithCustomMapping()

@@ -19,7 +19,7 @@ class ConfigTest extends TestCase
     {
         $config = new Config(
             ['foo' => 'bar', Config::ENV_EXAMPLE => 'no'],
-            $this->makeValidator()
+            $this->factoryValidator()
         );
 
         static::assertTrue($config['foo']->is('bar'));
@@ -29,7 +29,7 @@ class ConfigTest extends TestCase
 
     public function testSetNewOrDefaultConfig()
     {
-        $config = new Config([], $this->makeValidator());
+        $config = new Config([], $this->factoryValidator());
 
         static::assertFalse($config['foo']->notEmpty());
         static::assertTrue($config[Config::CACHE_ENV]->notEmpty());
@@ -44,7 +44,7 @@ class ConfigTest extends TestCase
 
     public function testSetNewEmptyConfig()
     {
-        $config = new Config([], $this->makeValidator());
+        $config = new Config([], $this->factoryValidator());
 
         $dir = str_replace('\\', '/', __DIR__);
         $config[Config::TEMPLATES_DIR] = $dir;
@@ -56,11 +56,11 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateCustomWithResult()
     {
-        $config = new Config(['a' => 'hello', 'b' => 'goodbye'], $this->makeValidator());
+        $config = new Config(['a' => 'hello', 'b' => 'goodbye'], $this->factoryValidator());
 
         $config->appendValidator('a', function (string $value): Result {
             return $value === 'hello' ? Result::ok($value) : Result::errored('Invalid');
@@ -74,11 +74,11 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateCustomIsWrappedInResult()
     {
-        $config = new Config(['hi' => 'hello!'], $this->makeValidator());
+        $config = new Config(['hi' => 'hello!'], $this->factoryValidator());
 
         $config->appendValidator('hi', function (string $value): string {
             return strtoupper($value);
@@ -88,11 +88,11 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateWithError()
     {
-        $config = new Config(['hello' => 'Hello!'], $this->makeValidator());
+        $config = new Config(['hello' => 'Hello!'], $this->factoryValidator());
 
         $config->appendValidator('hello', function () {
             throw new \Error('No hello!');
@@ -105,11 +105,11 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateWithThrowable()
     {
-        $config = new Config(['hello' => 'Hello!'], $this->makeValidator());
+        $config = new Config(['hello' => 'Hello!'], $this->factoryValidator());
 
         $config->appendValidator('hello', function () {
             throw new \Error('No hello!');
@@ -122,24 +122,24 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateCustomCantOverwriteDefault()
     {
-        $config = new Config([], $this->makeValidator());
+        $config = new Config([], $this->factoryValidator());
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageRegExp('/overwrite/');
+        $this->expectExceptionMsgRegex('/overwrite/');
 
         $config->appendValidator(Config::AUTOLOAD, 'strtoupper');
     }
 
     /**
-     * @see TestCase::makeValidator()
+     * @see TestCase::factoryValidator()
      */
     public function testValidateCustomCantWarningMeansError()
     {
-        $config = new Config(['hi' => 'hello', 'bye' => 'goodbye'], $this->makeValidator());
+        $config = new Config(['hi' => 'hello', 'bye' => 'goodbye'], $this->factoryValidator());
 
         $config->appendValidator('hello', function (): Result {
             $warning = 1/0;

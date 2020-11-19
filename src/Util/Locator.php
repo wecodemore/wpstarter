@@ -12,10 +12,11 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Util;
 
 use Composer\Composer;
-use Composer\Factory;
 use Composer\IO\IOInterface as ComposerIo;
 use Composer\Util\Filesystem as ComposerFilesystem;
 use Composer\Config as ComposerConfig;
+use Composer\Util\HttpDownloader;
+use Composer\Util\RemoteFilesystem;
 use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 use WeCodeMore\WpStarter\Cli;
@@ -161,12 +162,30 @@ final class Locator
     public function urlDownloader(): UrlDownloader
     {
         if (empty($this->objects[__FUNCTION__])) {
+            $factory = null;
+            if (method_exists(\Composer\Factory::class, 'createHttpDownloader')) {
+                $factory = [\Composer\Factory::class, 'createHttpDownloader'];
+            } elseif (method_exists(\Composer\Factory::class, 'createRemoteFilesystem')) {
+                $factory = [\Composer\Factory::class, 'createRemoteFilesystem'];
+            }
+
+            if (!$factory) {
+                throw new \Exception('Could not instantiate HttpDownloader');
+            }
+
             $composerIo = $this->composerIo();
-            $this->objects[__FUNCTION__] = new UrlDownloader(
-                $this->composerFilesystem(),
-                Factory::createRemoteFilesystem($composerIo, $this->composerConfig()),
-                $composerIo->isVerbose()
-            );
+
+            /**
+             * @var callable(ComposerIo,ComposerConfig) $factory
+             * @var HttpDownloader|RemoteFilesystem $client
+             */
+            $client = $factory($composerIo, $this->composerConfig());
+
+            $filesystem = $this->composerFilesystem();
+
+            $this->objects[__FUNCTION__] = ($client instanceof HttpDownloader)
+                ? UrlDownloader::newV2($client, $filesystem, $composerIo->isVerbose())
+                : UrlDownloader::newV1($client, $filesystem, $composerIo->isVerbose());
         }
 
         return $this->objects[__FUNCTION__];
@@ -217,24 +236,6 @@ final class Locator
     {
         if (empty($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new Salter();
-        }
-
-        return $this->objects[__FUNCTION__];
-    }
-
-    /**
-     * @return Unzipper
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
-     */
-    public function unzipper(): Unzipper
-    {
-        if (empty($this->objects[__FUNCTION__])) {
-            $this->objects[__FUNCTION__] = new Unzipper(
-                $this->composerIo(),
-                $this->composerConfig()
-            );
         }
 
         return $this->objects[__FUNCTION__];

@@ -40,12 +40,12 @@ final class Steps implements PostProcessStep, \Countable
     private $scripts;
 
     /**
-     * @var \SplObjectStorage<Step, null>
+     * @var \SplObjectStorage<Step,null>
      */
     private $steps;
 
     /**
-     * @var \SplObjectStorage<PostProcessStep, null>|null
+     * @var \SplObjectStorage<PostProcessStep,null>|null
      */
     private $postProcessSteps;
 

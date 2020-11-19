@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
@@ -6,32 +7,16 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace WeCodeMore\WpStarter\Tests\Integration\Util;
 
-use Composer\Factory;
-use Composer\Util\Filesystem;
-use org\bovigo\vfs\vfsStream;
 use WeCodeMore\WpStarter\Tests\IntegrationTestCase;
-use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class UrlDownloaderTest extends IntegrationTestCase
 {
     /**
-     * @covers \WeCodeMore\WpStarter\Util\UrlDownloader
-     */
-    private function createUrlDownloader(): UrlDownloader
-    {
-        return new UrlDownloader(
-            new Filesystem(),
-            Factory::createRemoteFilesystem(
-                $this->createComposerIo(),
-                $this->createComposerConfig()
-            ),
-            false
-        );
-    }
-
-    /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Util\UrlDownloader
      */
     public function testFetchFailsForWrongUrl()
@@ -42,6 +27,7 @@ class UrlDownloaderTest extends IntegrationTestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Util\UrlDownloader
      */
     public function testFetch()
@@ -55,19 +41,26 @@ class UrlDownloaderTest extends IntegrationTestCase
     }
 
     /**
+     * @test
      * @covers \WeCodeMore\WpStarter\Util\UrlDownloader
      */
     public function testSave()
     {
         $downloader = $this->createUrlDownloader();
 
-        $dir = vfsStream::setup('directory');
-        $targetFile = $dir->url() . '/w3c.html';
+        $targetFile = getenv('TESTS_FIXTURES_PATH') . '/w3c.html';
+        if (file_exists($targetFile)) {
+            @unlink($targetFile);
+            if (file_exists($targetFile)) {
+                $this->markTestSkipped("Could not delete {$targetFile}.");
+            }
+        }
 
         static::assertTrue($downloader->save('https://www.w3.org/', $targetFile));
-        static::assertTrue($dir->hasChild('w3c.html'));
+        static::assertTrue(file_exists($targetFile));
 
         $html = file_get_contents($targetFile);
+        @unlink($targetFile);
 
         static::assertStringContainsString('<html', $html);
         static::assertStringContainsString('World Wide Web', $html);

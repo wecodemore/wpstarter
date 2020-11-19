@@ -49,7 +49,7 @@ class MuPluginListTest extends TestCase
             'test/mu-plugin-2_b-mu-plugin' => "{$muPluginsPath}/dir2/b-mu-plugin.php",
         ];
 
-        $muPluginsList = new MuPluginList($finder, $this->makePaths());
+        $muPluginsList = new MuPluginList($finder, $this->factoryPaths());
 
         static::assertSame($expected, $muPluginsList->pluginsList());
     }

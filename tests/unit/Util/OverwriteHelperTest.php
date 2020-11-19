@@ -29,7 +29,7 @@ class OverwriteHelperTest extends TestCase
         string $file = ''
     ): OverwriteHelper {
 
-        $config = new Config($configs, $this->makeValidator());
+        $config = new Config($configs, $this->factoryValidator());
         $io = \Mockery::mock(Io::class);
         $io->shouldReceive('askConfirm')
             ->with(\Mockery::type('array'), basename($file))
