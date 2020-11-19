@@ -114,7 +114,7 @@ final class MuLoaderStep implements FileCreationStepInterface
             ['MU_PLUGINS_LIST' => implode(', ', $muPluginsPaths)]
         );
 
-        if (!$this->filesystem->save($built, $this->targetPath($paths))) {
+        if (!$this->filesystem->writeContent($built, $this->targetPath($paths))) {
             return self::ERROR;
         }
 

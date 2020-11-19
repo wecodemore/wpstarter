@@ -91,7 +91,7 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
 
         $built = $this->builder->build($paths, 'index.php', ['BOOTSTRAP_PATH' => "/{$indexPath}"]);
 
-        if (!$this->filesystem->save($built, $this->targetPath($paths))) {
+        if (!$this->filesystem->writeContent($built, $this->targetPath($paths))) {
             return Step::ERROR;
         }
 

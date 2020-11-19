@@ -39,15 +39,15 @@ class Filesystem
      * @param string $targetPath
      * @return bool
      */
-    public function save(string $content, string $targetPath): bool
+    public function writeContent(string $content, string $targetPath): bool
     {
-        $parent = dirname($this->filesystem->normalizePath($targetPath));
-
-        if (!$this->createDir($parent)) {
-            return false;
-        }
-
         try {
+            $parent = dirname($this->filesystem->normalizePath($targetPath));
+
+            if (!$this->createDir($parent)) {
+                return false;
+            }
+
             $exists = file_exists($targetPath);
             if ($exists && !is_file($targetPath)) {
                 return false;
@@ -65,6 +65,18 @@ class Filesystem
     }
 
     /**
+     * @param string $content
+     * @param string $targetPath
+     * @return bool
+     *
+     * @deprecated
+     */
+    public function save(string $content, string $targetPath): bool
+    {
+        return $this->writeContent($content, $targetPath);
+    }
+
+    /**
      * Move a single file from a source to a destination.
      *
      * @param string $sourcePath
@@ -73,21 +85,7 @@ class Filesystem
      */
     public function moveFile(string $sourcePath, string $targetPath): bool
     {
-        $sourcePath = $this->filesystem->normalizePath($sourcePath);
-        if (!is_file($sourcePath)) {
-            return false;
-        }
-
-        $targetPath = $this->filesystem->normalizePath($targetPath);
-        if (!$this->createDir(dirname($targetPath))) {
-            return false;
-        }
-
-        file_exists($targetPath) and $this->filesystem->unlink($targetPath);
-
-        $this->filesystem->rename($sourcePath, $targetPath);
-
-        return file_exists($targetPath);
+        return $this->copyOrMoveFile($sourcePath, $targetPath, false);
     }
 
     /**
@@ -99,17 +97,31 @@ class Filesystem
      */
     public function copyFile(string $sourcePath, string $targetPath): bool
     {
-        $sourcePath = realpath($sourcePath);
+        return $this->copyOrMoveFile($sourcePath, $targetPath, true);
+    }
 
-        if (!is_file($sourcePath) || !$this->createDir(dirname($targetPath))) {
-            return false;
-        }
+    /**
+     * Recursively copy all files from a directory to another.
+     *
+     * @param string $sourcePath
+     * @param string $targetPath
+     * @return bool
+     */
+    public function moveDir(string $sourcePath, string $targetPath): bool
+    {
+        return $this->copyOrMoveDir($sourcePath, $targetPath, false);
+    }
 
-        try {
-            return copy($sourcePath, $targetPath);
-        } catch (\Throwable $exception) {
-            return false;
-        }
+    /**
+     * Recursively copy all files from a directory to another.
+     *
+     * @param string $sourcePath
+     * @param string $targetPath
+     * @return bool
+     */
+    public function copyDir(string $sourcePath, string $targetPath): bool
+    {
+        return $this->copyOrMoveDir($sourcePath, $targetPath, true);
     }
 
     /**
@@ -121,10 +133,18 @@ class Filesystem
      */
     public function symlink(string $targetPath, string $linkPath): bool
     {
-        $isWindows = Platform::isWindows();
-        $directories = is_dir($targetPath);
-
         try {
+            if (!file_exists($targetPath)) {
+                return false;
+            }
+
+            if (file_exists($linkPath) || $this->isLink($linkPath)) {
+                $this->filesystem->unlink($linkPath);
+            }
+
+            $isWindows = Platform::isWindows();
+            $directories = is_dir($targetPath);
+
             if ($isWindows && $directories) {
                 $this->filesystem->junction($targetPath, $linkPath);
 
@@ -146,54 +166,6 @@ class Filesystem
     }
 
     /**
-     * Recursively copy all files from a directory to another.
-     *
-     * @param string $sourcePath
-     * @param string $targetPath
-     * @return bool
-     */
-    public function moveDir(string $sourcePath, string $targetPath): bool
-    {
-        try {
-            $sourcePath = $this->filesystem->normalizePath($sourcePath);
-            if (!realpath($sourcePath) || !is_dir($sourcePath)) {
-                return false;
-            }
-
-            $targetPath = $this->filesystem->normalizePath($targetPath);
-            if (!$this->createDir($targetPath)) {
-                return false;
-            }
-
-            $this->filesystem->copyThenRemove($sourcePath, $targetPath);
-        } catch (\Throwable $exception) {
-            return false;
-        }
-
-        return is_dir($targetPath) && !is_dir($sourcePath);
-    }
-
-    /**
-     * Recursively copy all files from a directory to another.
-     *
-     * @param string $sourcePath
-     * @param string $targetPath
-     * @return bool
-     */
-    public function copyDir(string $sourcePath, string $targetPath): bool
-    {
-        $sourcePath = $this->filesystem->normalizePath($sourcePath);
-        if (!realpath($sourcePath) || !is_dir($sourcePath)) {
-            return false;
-        }
-
-        $targetPath = $this->filesystem->normalizePath($targetPath);
-        $this->createDir($targetPath);
-
-        return $this->filesystem->copy($sourcePath, $targetPath);
-    }
-
-    /**
      * Create a directory recursively, derived from wp_makedir_p.
      *
      * @param string $targetPath
@@ -201,52 +173,60 @@ class Filesystem
      */
     public function createDir(string $targetPath): bool
     {
-        $targetPath = $this->filesystem->normalizePath($targetPath);
+        try {
+            $targetPath = $this->filesystem->normalizePath($targetPath);
 
-        if (file_exists($targetPath)) {
-            return @is_dir($targetPath);
-        }
+            if (file_exists($targetPath)) {
+                return @is_dir($targetPath);
+            }
 
-        $parentDir = dirname($targetPath);
-        while ('.' !== $parentDir && !is_dir($parentDir)) {
-            $parentDir = dirname($parentDir);
-        }
+            $parentDir = dirname($targetPath);
+            while ('.' !== $parentDir && !is_dir($parentDir)) {
+                $parentDir = dirname($parentDir);
+            }
 
-        $stat = @stat($parentDir);
-        $permissions = $stat ? ((int)$stat['mode']) & 0007777 : 0755;
+            $stat = @stat($parentDir);
+            $permissions = $stat ? ((int)$stat['mode']) & 0007777 : 0755;
 
-        if (!@mkdir($targetPath, $permissions, true) && !is_dir($targetPath)) {
+            if (!@mkdir($targetPath, $permissions, true) && !is_dir($targetPath)) {
+                return false;
+            }
+
+            if ($permissions !== ($permissions & ~umask())) {
+                $nameParts = explode('/', substr($targetPath, strlen($parentDir) + 1));
+                for ($i = 1, $count = count($nameParts); $i <= $count; $i++) {
+                    $dirname = $parentDir . '/' . implode('/', array_slice($nameParts, 0, $i));
+                    @chmod($dirname, $permissions);
+                }
+            }
+
+            return true;
+        } catch (\Throwable $throwable) {
             return false;
         }
-
-        if ($permissions !== ($permissions & ~umask())) {
-            $nameParts = explode('/', substr($targetPath, strlen($parentDir) + 1));
-            for ($i = 1, $count = count($nameParts); $i <= $count; $i++) {
-                $dirname = $parentDir . '/' . implode('/', array_slice($nameParts, 0, $i));
-                @chmod($dirname, $permissions);
-            }
-        }
-
-        return true;
     }
 
     /**
-     * Remove a directory.
+     * Remove a directory only if "real".
      *
      * @param string $directory
      * @return bool
      */
     public function removeRealDir(string $directory): bool
     {
-        if ($this->isLink($directory)) {
+        try {
+            if ($this->isLink($directory)) {
+                return false;
+            }
+
+            if (is_dir($directory)) {
+                return $this->filesystem->removeDirectory($directory);
+            }
+
+            return !file_exists($directory);
+        } catch (\Throwable $throwable) {
             return false;
         }
-
-        if (is_dir($directory)) {
-            return $this->filesystem->removeDirectory($directory);
-        }
-
-        return !file_exists($directory);
     }
 
     /**
@@ -258,5 +238,74 @@ class Filesystem
         return $this->filesystem->isSymlinkedDirectory($path)
             || $this->filesystem->isJunction($path)
             || is_link($path);
+    }
+
+    /**
+     * @param string $sourcePath
+     * @param string $targetPath
+     * @param bool $copy
+     * @return bool
+     */
+    private function copyOrMoveFile(string $sourcePath, string $targetPath, bool $copy): bool
+    {
+        try {
+            $sourcePath = realpath($sourcePath);
+            if (!$sourcePath || !is_file($sourcePath)) {
+                return false;
+            }
+
+            $targetPath = $this->filesystem->normalizePath($targetPath);
+            if (!$this->createDir(dirname($targetPath))) {
+                return false;
+            }
+
+            file_exists($targetPath) and $this->filesystem->unlink($targetPath);
+
+            $copy
+                ? copy($sourcePath, $targetPath)
+                : $this->filesystem->rename($sourcePath, $targetPath);
+
+            return file_exists($targetPath);
+        } catch (\Throwable $throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * @param string $sourcePath
+     * @param string $targetPath
+     * @param bool $copy
+     * @return bool
+     */
+    private function copyOrMoveDir(string $sourcePath, string $targetPath, bool $copy): bool
+    {
+        try {
+            $sourcePath = realpath($sourcePath);
+            if (!$sourcePath || !is_dir($sourcePath)) {
+                return false;
+            }
+
+            $targetPath = $this->filesystem->normalizePath($targetPath);
+            $exists = file_exists($targetPath);
+            if ($exists && !is_dir($targetPath)) {
+                return false;
+            }
+
+            if (!$exists && !$this->createDir($targetPath)) {
+                return false;
+            }
+
+            $copy
+                ? $this->filesystem->copy($sourcePath, $targetPath)
+                : $this->filesystem->copyThenRemove($sourcePath, $targetPath);
+
+            if (!is_dir($targetPath)) {
+                return false;
+            }
+
+            return $copy || !file_exists($sourcePath);
+        } catch (\Throwable $exception) {
+            return false;
+        }
     }
 }
