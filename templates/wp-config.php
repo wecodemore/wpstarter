@@ -11,7 +11,18 @@ use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 
 DEBUG_INFO_INIT: {
     $debugInfo = [];
-}
+} #@@/DEBUG_INFO_INIT
+
+ABSPATH: {
+    /** Absolute path to the WordPress directory. */
+    defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
+
+    /**
+     * Load plugin.php early, so we can call hooks from here on.
+     * E.g. in Composer-autoloaded "files".
+     */
+    require_once ABSPATH . 'wp-includes/plugin.php';
+} #@@/ABSPATH
 
 AUTOLOAD: {
     /** Composer autoload. */
@@ -130,13 +141,7 @@ DB_SETUP : {
     $table_prefix = $envLoader->read('DB_TABLE_PREFIX') ?: 'wp_';
 } #@@/DB_SETUP
 
-/** Absolute path to the WordPress directory. */
-defined('ABSPATH') or define('ABSPATH', realpath(__DIR__ . '{{{WP_INSTALL_PATH}}}') . '/');
-
 EARLY_HOOKS : {
-    /** Load plugin.php early, so we can call hooks from here on. */
-    require_once ABSPATH . 'wp-includes/plugin.php';
-
     /**
      * Load early hooks file if any.
      * Early hooks file allows to add hooks that are triggered before plugins are loaded, e.g.
