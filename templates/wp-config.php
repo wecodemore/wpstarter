@@ -163,8 +163,8 @@ EARLY_HOOKS : {
 
 DEFAULT_ENV : {
     /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
-    $defaultEnv = defined('WP_ENVIRONMENT_TYPE') ? WP_ENVIRONMENT_TYPE : WP_ENV;
-    switch ($defaultEnv) {
+    defined('WP_ENVIRONMENT_TYPE') or define('WP_ENVIRONMENT_TYPE', 'production');
+    switch (WP_ENVIRONMENT_TYPE) {
         case 'local':
             defined('WP_LOCAL_DEV') or define('WP_LOCAL_DEV', true);
         case 'development':
@@ -191,10 +191,10 @@ DEFAULT_ENV : {
             defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', false);
             break;
     }
-    $debugInfo['default-env-type'] = [
-        'label' => 'Env type for defaults',
-        'value' => $defaultEnv,
-        'debug' => $defaultEnv,
+    $debugInfo['wp-env-type'] = [
+        'label' => 'WordPress env type (used for defaults)',
+        'value' => WP_ENVIRONMENT_TYPE,
+        'debug' => WP_ENVIRONMENT_TYPE,
     ];
 } #@@/DEFAULT_ENV
 
@@ -296,7 +296,7 @@ BEFORE_BOOTSTRAP : {
 } #@@/BEFORE_BOOTSTRAP
 
 CLEAN_UP : {
-    unset($debugInfo, $envType, $envLoader, $cacheEnv, $defaultEnv);
+    unset($debugInfo, $envType, $envLoader);
 } #@@/CLEAN_UP
 
 ###################################################################################################

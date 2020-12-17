@@ -587,6 +587,10 @@ class WordPressEnvBridge
         }
 
         $envType = $this->determineEnvType();
+        if (!defined('WP_ENV')) {
+            define('WP_ENV', $envType);
+            $names[] = 'WP_ENV';
+        }
         if (!defined('WP_ENVIRONMENT_TYPE')) {
             define('WP_ENVIRONMENT_TYPE', $this->determineWpEnvType($envType));
             $names[] = 'WP_ENVIRONMENT_TYPE';
@@ -696,12 +700,12 @@ class WordPressEnvBridge
         }
 
         foreach (self::ENV_TYPES as $envTypeName => $envTypeMapped) {
-            if (strpos($envType, $envTypeName) !== false) {
+            if (preg_match("~(?:^|[^a-z]+){$envTypeName}(?:[^a-z]+|$)~", $envType)) {
                 return $envTypeMapped;
             }
         }
 
-        return $envType;
+        return 'production';
     }
 
     /**
