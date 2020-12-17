@@ -117,6 +117,9 @@ final class WpStarterCommand extends BaseCommand
      */
     private function writeError(OutputInterface $output, string $message)
     {
+        if (!$message) {
+            return;
+        }
         $words = explode(' ', $message);
         $lines = [];
         $line = '';
@@ -130,8 +133,8 @@ final class WpStarterCommand extends BaseCommand
             $line = $word;
         }
 
+        /** @var non-empty-list<string> $lines */
         $line and $lines[] = "  {$line}  ";
-
         $lenMax = max(array_map('strlen', $lines));
         $empty = '<error>' . str_repeat(' ', $lenMax) . '</error>';
         $errors = ['', $empty];

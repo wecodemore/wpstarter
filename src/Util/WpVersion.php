@@ -87,7 +87,7 @@ class WpVersion
         $versions = [];
         $packages = $this->packageFinder->findByType(self::WP_PACKAGE_TYPE);
         foreach ($packages as $package) {
-            $versions[] = (string)$package->getVersion();
+            $versions[] = $package->getVersion();
             if (count($versions) > 1) {
                 break;
             }

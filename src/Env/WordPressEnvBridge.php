@@ -206,20 +206,20 @@ class WordPressEnvBridge
 
     const ENV_TYPES = [
         'local' => 'local',
-        'development' =>  'development',
-        'dev' =>  'development',
-        'develop' =>  'development',
-        'staging' =>  'staging',
-        'stage' =>  'staging',
-        'pre' =>  'staging',
-        'preprod' =>  'staging',
-        'pre-prod' =>  'staging',
-        'pre-production' =>  'staging',
-        'test' =>  'staging',
-        'uat' =>  'staging',
-        'production' =>  'production',
-        'prod' =>  'production',
-        'live' =>   'production',
+        'development' => 'development',
+        'dev' => 'development',
+        'develop' => 'development',
+        'staging' => 'staging',
+        'stage' => 'staging',
+        'pre' => 'staging',
+        'preprod' => 'staging',
+        'pre-prod' => 'staging',
+        'pre-production' => 'staging',
+        'test' => 'staging',
+        'uat' => 'staging',
+        'production' => 'production',
+        'prod' => 'production',
+        'live' => 'production',
     ];
 
     /**
@@ -455,11 +455,11 @@ class WordPressEnvBridge
                 $value = $_ENV[$name] ?? null;
                 $readGetEnv = true;
                 break;
-            case (!$loadedVar && $serverSafe):
+            case ($serverSafe):
                 // $_SERVER is ok, getenv() is not.
                 $value = $_ENV[$name] ?? $_SERVER[$name] ?? null;
                 break;
-            case (!$loadedVar && !$serverSafe):
+            default:
                 // Neither $_SERVER nor getenv() are ok.
                 $value = $_ENV[$name] ?? null;
                 break;
