@@ -5,8 +5,6 @@
     useDocblockPropertyTypes="true"
     usePhpDocMethodsWithoutMagicCall="true"
     strictBinaryOperands="true"
-    requireVoidReturnType="true"
-    useAssertForType="true"
     rememberPropertyAssignmentsAfterCall="true"
     allowPhpStormGenerics="true"
     allowStringToStandInForClass="false"
