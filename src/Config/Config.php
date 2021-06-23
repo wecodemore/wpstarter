@@ -157,7 +157,7 @@ final class Config implements \ArrayAccess
     }
 
     /**
-     * @param $offset
+     * @param mixed $offset
      * @return bool
      */
     public function offsetExists($offset)

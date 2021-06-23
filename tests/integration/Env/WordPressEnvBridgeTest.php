@@ -565,16 +565,68 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadWpEnvironmentTypeFromWpEnvWhenContainingValue()
+    public function testSetDifferentEnvForWpAndWpStarter()
     {
-        $_ENV['WP_ENVIRONMENT_TYPE'] = 'PREPROD-US';
+        $_ENV['WP_ENV'] = 'something_very_custom';
+        $_ENV['WP_ENVIRONMENT_TYPE'] = 'development';
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
         $bridge->setupConstants();
 
-        static::assertSame('preprod-us', $bridge->determineEnvType());
+        static::assertTrue(defined('WP_ENV'));
         static::assertTrue(defined('WP_ENVIRONMENT_TYPE'));
+        static::assertSame('something_very_custom', WP_ENV);
+        static::assertSame('development', WP_ENVIRONMENT_TYPE);
+    }
+
+    /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testLoadWpEnvironmentTypeFromWpEnvWhenStartingWithValue()
+    {
+        $_ENV['WP_ENVIRONMENT_TYPE'] = 'PREPROD-US-1';
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge->setupConstants();
+
+        static::assertTrue(defined('WP_ENVIRONMENT_TYPE'));
+        static::assertTrue(defined('WP_ENV'));
+        static::assertSame('preprod-us-1', WP_ENV);
+        static::assertSame('preprod-us-1', $bridge->determineEnvType());
         static::assertSame('staging', WP_ENVIRONMENT_TYPE);
+    }
+
+    /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testLoadWpEnvironmentTypeFromWpEnvWhenEndingWithValue()
+    {
+        $_ENV['WP_ENVIRONMENT_TYPE'] = 'My.Production';
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge->setupConstants();
+
+        static::assertSame('my.production', $bridge->determineEnvType());
+        static::assertTrue(defined('WP_ENVIRONMENT_TYPE'));
+        static::assertSame('production', WP_ENVIRONMENT_TYPE);
+    }
+
+    /**
+     * @test
+     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     */
+    public function testLoadWpEnvironmentTypeFromWpEnvWhenValueInTheMiddle()
+    {
+        $_ENV['WP_ENVIRONMENT_TYPE'] = 'my_dev_one';
+        $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
+        $bridge->setupConstants();
+
+        static::assertSame('my_dev_one', $bridge->determineEnvType());
+        static::assertTrue(defined('WP_ENVIRONMENT_TYPE'));
+        static::assertSame('development', WP_ENVIRONMENT_TYPE);
     }
 
     /**
@@ -583,14 +635,14 @@ class WordPressEnvBridgeTest extends TestCase
      */
     public function testCustomWpEnvironmentThatCantBeMapped()
     {
-        $_ENV['WP_ENVIRONMENT_TYPE'] = 'THIS_CANT_BE_MAPPED';
+        $_ENV['WP_ENVIRONMENT_TYPE'] = 'my_devone';
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
         $bridge->setupConstants();
 
-        static::assertSame('this_cant_be_mapped', $bridge->determineEnvType());
+        static::assertSame('my_devone', $bridge->determineEnvType());
         static::assertTrue(defined('WP_ENVIRONMENT_TYPE'));
-        static::assertSame('this_cant_be_mapped', WP_ENVIRONMENT_TYPE);
+        static::assertSame('production', WP_ENVIRONMENT_TYPE);
     }
 
     /**

@@ -219,7 +219,7 @@ final class Requirements
 
         is_array($configs) or $configs = [];
 
-        $fileConfigs and $configs = array_merge((array)$configs, (array)$fileConfigs);
+        $fileConfigs and $configs = array_merge($configs, (array)$fileConfigs);
         $overrideConfigs and $configs = array_merge($configs, (array)$overrideConfigs);
 
         return $configs;
