@@ -68,11 +68,11 @@ class SystemProcess
         try {
             is_string($cwd) or $cwd = $this->paths->root();
 
-            $process = new Process($command, $cwd, $this->environment ?: null);
+            $process = new Process([$command], $cwd, $this->environment ?: null);
 
             $this->printer or $this->printer = function (string $type, string $buffer) {
                 $lines = array_filter(array_map('rtrim', explode("\n", $buffer)));
-                Process::ERR === $type
+                Process:f:ERR === $type
                     ? array_walk($lines, [$this->io, 'writeError'])
                     : array_walk($lines, [$this->io, 'write']);
             };
@@ -97,7 +97,7 @@ class SystemProcess
     {
         try {
             is_string($cwd) or $cwd = $this->paths->root();
-            $process = new Process($command, $cwd, $this->environment ?: null);
+            $process = new Process([$command], $cwd, $this->environment ?: null);
             $process->disableOutput()->mustRun();
 
             return $process->isSuccessful();

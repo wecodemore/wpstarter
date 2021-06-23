@@ -399,12 +399,9 @@ class Validator
 
         $provider = function () use ($fullpath, $error): Result {
             $data = @include $fullpath;
-            /** @var Result $result */
-            $result = is_array($data)
+            return is_array($data)
                 ? $this->validateWpCliCommands($data)
                 : Result::errored($error);
-
-            return $result;
         };
 
         return Result::promise($provider);

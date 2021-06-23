@@ -164,11 +164,12 @@ final class Filters
     /**
      * @param mixed $value
      * @return int
+     * @throws \Exception
      */
     private function filterOctalMod($value): int
     {
         if (is_int($value) && ($value >= 0) && ($value <= 0777)) {
-            return $value;
+            return (int)$value;
         }
 
         if (!is_string($value) || !is_numeric($value)) {

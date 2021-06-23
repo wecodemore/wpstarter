@@ -442,7 +442,6 @@ class WordPressEnvBridge
         // of thread safety issues, we don't use getenv() for those "actual" environment variables.
         $loadedVar = self::$loadedVars && $this->isLoadedVar($name);
 
-        $value = null;
         $readGetEnv = false;
         switch (true) {
             case ($loadedVar && $serverSafe):
@@ -522,7 +521,7 @@ class WordPressEnvBridge
         // Make sure cached env contains all loaded vars.
         $symfonyLoaded = '';
         if (self::$loadedVars) {
-            foreach (self::$loadedVars as $key => $i) {
+            foreach (self::$loadedVars as $key => $_i) {
                 $symfonyLoaded .= $symfonyLoaded ? ",{$key}" : $key;
                 $this->read($key);
             }
@@ -582,7 +581,7 @@ class WordPressEnvBridge
 
         $done = true;
         $names = [];
-        foreach (self::WP_CONSTANTS as $key => $filter) {
+        foreach (self::WP_CONSTANTS as $key => $_filter) {
             $this->defineConstantFromVar($key) and $names[] = $key;
         }
 
@@ -646,7 +645,6 @@ class WordPressEnvBridge
 
         $filter = in_array($name, self::WP_STARTER_ENV_VARS, true) ? Filters::FILTER_STRING : null;
 
-        /** @var string|null $filter */
         $filter = $filter
             ?? self::WP_CONSTANTS[$name]
             ?? self::WP_STARTER_VARS[$name]

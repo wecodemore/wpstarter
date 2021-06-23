@@ -189,7 +189,6 @@ final class Steps implements PostProcessStep, \Countable
 
         $this->steps->rewind();
         while ($this->steps->valid()) {
-            /** @var Step $step */
             $step = $this->steps->current();
 
             if (!$this->runStep($step, $config, $io, $paths)) {
@@ -242,7 +241,6 @@ final class Steps implements PostProcessStep, \Countable
 
         $this->postProcessSteps->rewind();
         while ($this->postProcessSteps->valid()) {
-            /** @var PostProcessStep $step */
             $step = $this->postProcessSteps->current();
             $io->writeIfVerbose('Running post-processing for step "' . $step->name() . '"...');
             $step->postProcess($io);
@@ -301,14 +299,12 @@ final class Steps implements PostProcessStep, \Countable
         $process = $step->allowed($this->locator->config(), $paths);
 
         if ($process && $step instanceof FileCreationStepInterface) {
-            /** @var \WeCodeMore\WpStarter\Step\FileCreationStepInterface $step */
             $path = $step->targetPath($paths);
             $process = $this->locator->overwriteHelper()->shouldOverwrite($path);
             $comment = $process ? '' : '- ' . basename($path) . ' exists and will be preserved.';
         }
 
         if ($process && $step instanceof OptionalStep) {
-            /** @var \WeCodeMore\WpStarter\Step\OptionalStep $step */
             $process = $step->askConfirm($this->locator->config(), $this->locator->io());
             $comment = $process ? '' : $step->skipped();
         }
@@ -364,7 +360,6 @@ final class Steps implements PostProcessStep, \Countable
             return;
         }
 
-        /** @var array<callable> $validStepScripts */
         $validStepScripts = array_filter($allStepScripts, 'is_callable');
 
         $invalidScriptsCount = count($allStepScripts) - count($validStepScripts);

@@ -179,7 +179,6 @@ class SelectedStepsFactory
             $targetSteps = array_merge($targetSteps, $commandSteps);
         }
 
-        /** @var array<string, string> $targetSteps */
         $targetSteps = $this->filterOutSkippedSteps($config, $targetSteps, $io);
         $availableStepClassesMap = $this->filterOutInvalidSteps($targetSteps);
 
