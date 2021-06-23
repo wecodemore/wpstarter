@@ -27,7 +27,7 @@
         "source": "https://github.com/wecodemore/wpstarter"
     },
     "require": {
-        "php": ">=7.2",
+        "php": ">=7.1",
         "ext-curl": "*",
         "ext-dom": "*",
         "ext-filter": "*",
@@ -38,7 +38,7 @@
         "ext-SPL": "*",
         "composer-plugin-api": "^1.1 || ^2",
         "composer/installers": "^1.6",
-        "symfony/dotenv": "^5.3"
+        "symfony/dotenv": "^3.4"
     },
     "require-dev": {
         "roave/security-advisories": "*",

@@ -112,7 +112,7 @@ final class Filters
             throw new \Exception('Invalid bool.');
         }
 
-        return (bool)$bool;
+        return $bool;
     }
 
     /**

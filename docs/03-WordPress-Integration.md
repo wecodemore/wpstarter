@@ -147,11 +147,11 @@ WordPress does not allow arbitrary values for `WP_ENVIRONMENT_TYPE`, in fact it 
 - `"staging"`
 - `"production"`
 
-Unlike WordPress, WP Starter does not limit `WP_ENVIRONMENT_TYPE` (`WP_ENV` / `WORDPRESS_ENV`) to specific values, and in the case a valuenon supported by WordPress is used, to maximize compatibility, WP Starter will try to "map" different values to one of those supported by WP.
+Unlike WordPress, WP Starter does not limit environment to specific values, and in the case a value not supported by WordPress is used, to maximize compatibility, WP Starter will try to "map" different values to one of those supported by WP.
 
-For example, setting `WP_ENVIRONMENT_TYPE` to `"develop"` WP Starter will define a `WP_ENVIRONMENT_TYPE` constant having `"development"` as value.
+For example, setting `WP_ENVIRONMENT_TYPE` env variable to `"develop"` WP Starter will define a `WP_ENVIRONMENT_TYPE` constant having `"development"` as value.
 
-The original `"develop"` value will be available in a constant named `WP_ENV`.
+The original `"develop"` value will be available in the `WP_ENV` constant.
 
 In the case WP Starter is not able to map an environment to a value supported by WordPress, the original value will be available in both `WP_ENVIRONMENT_TYPE` and `WP_ENV`, but the WordPress [`wp_get_environment_type`](https://developer.wordpress.org/reference/functions/wp_get_environment_type/)  function will return `"production"` because that is te default value used by WordPress.
 
@@ -199,15 +199,13 @@ WP_ENV=something_very_custom
 WP Starter will declare:
 
 ```php
-define('WP_ENVIRONMENT_TYPE', 'something_very_custom');
+define('WP_ENVIRONMENT_TYPE', 'production');
 define('WP_ENV', 'something_very_custom');
 ```
 
-WP Starter was not able to map `"something_very_custom"` to any of the four environment types supported by WordPress, so stored it as-is in `WP_ENVIRONMENT_TYPE` constant.
+WP Starter was not able to map `"something_very_custom"` to any of the four environment types supported by WordPress, so stored "production" in `WP_ENVIRONMENT_TYPE` constant, because in any case WordPress would have defaulted to that value when calling `wp_get_environment_type()`.
 
-However, because `"something_very_custom"` is not a value supported by WordPress `wp_get_environment_type()` will return `"production"`.
-
-This is why we suggest referring to the constant `WP_ENVIRONMENT_TYPE` instead to the function `wp_get_environment_type()` when there's the desire (or the need) to use environment types that are not one the four supported by WordPress.
+This is why we suggest referring to the constant `WP_ENV` instead to the `WP_ENVIRONMENT_TYPE` constant or the function `wp_get_environment_type()` when there's the desire (or the need) to use environment types that are not one the four supported by WordPress.
 
 Finally, it must be noted that is possible to use a custom WP Starter-specific environment and a WordPress compatible environment by setting _both_ `WP_ENV` and `WP_ENVIRONMENT_TYPE`. 
 
