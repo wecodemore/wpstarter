@@ -116,7 +116,6 @@ class WpCliTool implements PhpTool
             return $default;
         }
 
-        /** @var string $version */
         $version = Semver::rsort(array_keys($candidates))[0];
 
         return $candidates[$version];
