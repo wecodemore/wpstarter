@@ -41,7 +41,6 @@
         "symfony/dotenv": "^3.4"
     },
     "require-dev": {
-        "roave/security-advisories": "*",
         "composer/package-versions-deprecated": "^1",
         "composer/composer": "^2",
         "symfony/process": "^3.4",
