@@ -40,10 +40,13 @@ jobs:
         strategy:
             fail-fast: true
             matrix:
-                php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0', '8.1' ]
+                php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0' ]
                 deps-mode: [ 'prefer-lowest', 'prefer-highest' ]
                 composer-ver: [ 'Composer 1', 'Composer 2' ]
                 include:
+                    -   php-ver: '8.1'
+                        deps-mode: 'prefer-highest'
+                        composer-ver: 'Composer 2'
                     -   php-ver: '8.2'
                         deps-mode: 'prefer-highest'
                         composer-options: ' --ignore-platform-reqs'
