@@ -16,7 +16,7 @@ class Question
     /**
      * @var array<string>
      */
-    private $lines = [];
+    private $lines;
 
     /**
      * @var array<string, string>

@@ -21,7 +21,7 @@ use WeCodeMore\WpStarter\Cli;
  * A step that runs WP CLI commands set in WP Starter configuration.
  *
  * WP Starter accepts a configuration with a series of WP CLI commands to be run.
- * The benefit of using WP Starter for this tasks is that WP Starter will download WP CLI phar if
+ * The benefit of using WP Starter for this task is that WP Starter will download WP CLI phar if
  * necessary (only if WP CLI is not installed via Composer as package, by also verifying its
  * integrity via hash) and will direct the commands to the phar or to the binary without having
  * to worry about it.

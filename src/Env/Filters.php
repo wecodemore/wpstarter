@@ -15,7 +15,7 @@ namespace WeCodeMore\WpStarter\Env;
  * Filters to set assign proper types to env variables.
  *
  * Env variables are always strings. WP Starter uses env variables to store WordPress configuration
- * constants, but those might need to be set with different types. E.g an env var "false" needs to
+ * constants, but those might need to be set with different types. E.g. an env var "false" needs to
  * be set as _boolean_ `false`, even because PHP evaluates "false" string as true.
  *
  * This class provides a way to filter variable and assign proper type. This class is not aware of

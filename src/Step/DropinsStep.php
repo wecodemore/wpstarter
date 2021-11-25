@@ -22,7 +22,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  * Even if dropins are supported by Composer installers, often the only way to place them *directly*
  * in WP content folder (where WordPress recognize them), is to put them there before Composer is
  * even ran, so basically make them part of the project, which makes hard to reuse them.
- * WP Starter, via this step, allows to take dropins from an arbitrary source (local paths or URLs)
+ * WP Starter, via this step, allows taking dropins from an arbitrary source (local paths or URLs)
  * and put in WP content folder. Moreover, if dropins are placed in subfolders of wp-content by
  * Composer (thanks to Composer installers) then this step moves them up to content folder.
  */
@@ -286,7 +286,7 @@ final class DropinsStep implements Step
     /**
      * Besides dropins stored in DROPINS class constant, locales files are valid dropins as well.
      * This method checks that required dropin is one of the default or one of supported locales,
-     * retrieved from wordpress.org API.
+     * retrieved from wp.org API.
      * Via "unknown-dropins" config is possible to change how this method acts in case of unknown
      * dropins.
      *

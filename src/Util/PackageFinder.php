@@ -108,7 +108,6 @@ class PackageFinder
                 || stripos($package->getName(), $vendor) === 0
             ) {
                 $list[] = $package;
-                continue;
             }
         }
 

@@ -12,12 +12,11 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Util;
 
 use Composer\Util\Filesystem;
-use Composer\Util\Http\Response;
 use Composer\Util\HttpDownloader;
 use Composer\Util\RemoteFilesystem;
 
 /**
- * Helper around Composer remote filesystem to download files from arbitrary URL an either place
+ * Helper around Composer remote filesystem to download files from arbitrary URL and either place
  * them in a given path or simply get the content.
  */
 class UrlDownloader
@@ -94,7 +93,7 @@ class UrlDownloader
     }
 
     /**
-     * Download an URL and save content to a file.
+     * Download a URL and save content to a file.
      *
      * @param string $url
      * @param string $filename

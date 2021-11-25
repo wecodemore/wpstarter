@@ -22,7 +22,7 @@ interface Step
     public const NONE = 4;
 
     /**
-     * Return an unique name for the step.
+     * Return a unique name for the step.
      *
      * @return string
      */

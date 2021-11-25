@@ -24,7 +24,7 @@ use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Io\Io;
 
 /**
- * Service locator for WP Starter objects that is passed to Steps so the can do what they need.
+ * Service locator for WP Starter objects that is passed to Steps for their convenience.
  */
 final class Locator
 {

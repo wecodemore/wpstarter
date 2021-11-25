@@ -17,7 +17,7 @@ namespace WeCodeMore\WpStarter\Config;
  * Using this object instead of plain values or just throw exception allows a better error handling,
  * easy and clean "fallback" in case of error and type uniformity in return type.
  *
- * Unfortunately, PHP has no generics at this time so it isn't possible to have type safety for the
+ * Unfortunately, PHP has no generics at this time, so it isn't possible to have type safety for the
  * wrapped value.
  */
 final class Result
@@ -119,7 +119,7 @@ final class Result
     {
         $this->maybeResolve();
 
-        return $this->error ? false : $this->value !== null;
+        return !$this->error && ($this->value !== null);
     }
 
     /**
@@ -134,7 +134,7 @@ final class Result
 
         // phpcs:enable
 
-        return $this->error ? false : $this->value === $compare;
+        return !$this->error && ($this->value === $compare);
     }
 
     /**
@@ -167,7 +167,7 @@ final class Result
 
         array_unshift($things, $thing);
 
-        return $this->error ? false : in_array($this->value, $things, true);
+        return !$this->error && in_array($this->value, $things, true);
     }
 
     /**

@@ -86,15 +86,15 @@ class SelectedStepsFactory
     {
         $this->commandMode = $this->checkFlag($flags, self::MODE_COMMAND);
         $this->commandStepNames = $this->commandMode ? $stepNames : [];
+
         $this->optOutMode = $this->commandMode
-            ? $this->checkFlag($flags, self::MODE_OPT_OUT)
-            : false;
+            && $this->checkFlag($flags, self::MODE_OPT_OUT);
+
         $this->skipCustomSteps = $this->commandMode
-            ? $this->checkFlag($flags, self::SKIP_CUSTOM_STEPS)
-            : false;
+            && $this->checkFlag($flags, self::SKIP_CUSTOM_STEPS);
+
         $this->ignoreSkipConfig = $this->commandMode
-            ? $this->checkFlag($flags, self::IGNORE_SKIP_STEPS_CONFIG)
-            : false;
+            && $this->checkFlag($flags, self::IGNORE_SKIP_STEPS_CONFIG);
     }
 
     /**

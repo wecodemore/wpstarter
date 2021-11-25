@@ -144,7 +144,7 @@ DB_SETUP : {
 EARLY_HOOKS : {
     /**
      * Load early hooks file if any.
-     * Early hooks file allows to add hooks that are triggered before plugins are loaded, e.g.
+     * Early hooks file allows adding hooks that are triggered before plugins are loaded, e.g.
      * "enable_loading_advanced_cache_dropin" or to just-in-time define configuration constants.
      */
     $earlyHookFile = '{{{EARLY_HOOKS_FILE}}}'
@@ -253,7 +253,7 @@ ADMIN_COLOR : {
 } #@@/ADMIN_COLOR
 
 ENV_CACHE : {
-    /** On shutdown we dump environment so that on subsequent requests we can load it faster */
+    /** On shutdown, we dump environment so that on subsequent requests we can load it faster */
     if ('{{{CACHE_ENV}}}' && $envLoader->isWpSetup()) {
         register_shutdown_function(
             static function () use ($envLoader, $envType) {

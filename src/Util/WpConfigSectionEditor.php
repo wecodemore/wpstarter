@@ -21,11 +21,6 @@ class WpConfigSectionEditor
     private $wpPath;
 
     /**
-     * @var string|null
-     */
-    private $content = null;
-
-    /**
      * @param \Composer\Util\Filesystem $filesystem
      * @param Paths $paths
      */
@@ -128,8 +123,6 @@ class WpConfigSectionEditor
         if (!file_put_contents($pathToFile, $replaced)) {
             throw new \Exception("Error writing {$pathToFile} with edited {$section} section.");
         }
-
-        $this->content = $replaced;
     }
 
     /**
@@ -161,8 +154,6 @@ class WpConfigSectionEditor
         if (!$content) {
             throw new \Exception("Could not read {$pathToFile} content.");
         }
-
-        $this->content = $content;
 
         return $content;
     }

@@ -20,8 +20,8 @@ use WeCodeMore\WpStarter\Util\WpVersion;
 use WeCodeMore\WpStarter\Cli;
 
 /**
- * The "$value" that get passed to all the methods comes from JSON, so there's no way to have type
- * safety. Methods will check the type and act accordingly.
+ * All this class methods receive a "$value" coming from JSON, so we don't have type safety.
+ * Methods will check the type and act accordingly.
  *
  * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
  */
@@ -51,9 +51,9 @@ class Validator
      * Validate the "prevent overwrite" setting.
      *
      * It is expected either:
-     * - the word "hard", which means always prevent the overwrite of anything;
+     * - the word "hard", which means always prevent overwrite of anything;
      * - the word "ask", which means ask the user in case of existing file;
-     * - a boolean(-like), which enables or not the overwrite protection.
+     * - a boolean(-like), which enables or not overwrite protection.
      *
      * @param string|bool|array|null $value
      * @return Result
@@ -75,7 +75,7 @@ class Validator
      * Validate an array of custom steps to process.
      *
      * It is expected an array of class names implementing step interface.
-     * A single class name is accepted and transparently converted to an one item array.
+     * A single class name is accepted and transparently converted to a one-item array.
      *
      * @param mixed $value
      * @return Result
@@ -319,7 +319,7 @@ class Validator
      * Validate an array of files to be evaluated by WP CLI commands via `eval_file` command.
      *
      * It is expected an array of file paths, a single path in a string will be transparently
-     * converted to an one item array.
+     * converted to a one-item array.
      *
      * @param mixed $value
      * @return Result
@@ -743,8 +743,8 @@ class Validator
     /**
      * Validate given value to be a boolean-like value.
      *
-     * Besides of actual booleans, strings "true" / "false", "yes" / "no", "on" / "off" and
-     * integers 0 / 1 are all valid input and returned result will return a values casted to bool.
+     * Beside of actual booleans, strings "true" / "false", "yes" / "no", "on" / "off" and
+     * integers 0 / 1 are all valid input and returned result will return a values cast to bool.
      *
      * @param mixed $value
      * @return Result
@@ -766,7 +766,7 @@ class Validator
     /**
      * Validate given value to be either and integer, a float or a string representing them.
      *
-     * In case of success the returned result will return a values casted to int.
+     * In case of success the returned result will return a values cast to int.
      *
      * @param int|string|float $value
      * @return Result
