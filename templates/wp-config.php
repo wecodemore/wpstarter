@@ -215,6 +215,8 @@ URL_CONSTANTS : {
     if (!defined('WP_HOME')) {
         $home = filter_var($_SERVER['HTTPS'] ?? '', FILTER_VALIDATE_BOOLEAN) ? 'https://' : 'http://';
         $home .= $_SERVER['SERVER_NAME'] ?? 'localhost';
+        $port =  $_SERVER['SERVER_PORT'] ?? '';
+        (is_numeric($port) && (int)$port > 0) and $home .= sprintf(':%d', $port);
         define('WP_HOME', $home);
         unset($home);
     }
