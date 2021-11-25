@@ -42,10 +42,12 @@ jobs:
             matrix:
                 php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0', '8.1' ]
                 deps-mode: [ 'lowest', 'highest' ]
+                composer-ver: [ '1', '2' ]
                 include:
                     -   php-ver: '8.2'
                         deps-mode: 'highest'
-                        composer-options: "--ignore-platform-reqs"
+                        composer-options: '--ignore-platform-reqs'
+                        composer-ver: '2'
         steps:
             -   name: Update "USE_COVERAGE" env var based on matrix
                 if: ${{ matrix.php-ver == '7.4' && matrix.deps-mode == 'highest' }}
@@ -58,8 +60,6 @@ jobs:
                 uses: shivammathur/setup-php@v2
                 with:
                     php-version: ${{ matrix.php-ver }}
-                    deps-mode: ${{ matrix.deps-mode }}
-                    composer-options: ${{ matrix.composer-options }}
                     ini-values: zend.assertions=1, error_reporting=-1, display_errors=On
                     coverage: ${{ ((env.USE_COVERAGE == 'yes') && 'xdebug') || 'none' }}
                     tools: cs2pr, parallel-lint
@@ -72,6 +72,10 @@ jobs:
                 uses: ramsey/composer-install@v1
                 with:
                     dependency-versions: ${{ matrix.deps-mode }}
+                    composer-options: ${{ matrix.composer-options }}
+
+            -   name: Update Composer
+                run: composer require --dev -W "composer/composer:^${{ matrix.composer-ver }}"
 
             -   name: Migrate test configuration (PHP >= 7.3)
                 if: ${{ (matrix.php-ver >= 7.3) && (matrix.deps-mode == 'highest') }}

@@ -151,6 +151,18 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      */
     public function createUrlDownloader(): UrlDownloader
     {
+        $ver = Composer\Composer::RUNTIME_API_VERSION;
+        if (version_compare($ver, '2', '<')) {
+            return UrlDownloader::newV1(
+                Factory::createRemoteFilesystem(
+                    $this->createComposerIo(),
+                    $this->createComposerConfig()
+                ),
+                new Filesystem(),
+                false
+            );
+        }
+
         return UrlDownloader::newV2(
             Factory::createHttpDownloader(
                 $this->createComposerIo(),
