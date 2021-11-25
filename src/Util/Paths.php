@@ -17,7 +17,7 @@ use Composer\Util\Filesystem;
 /**
  * Data storage for all relevant paths in a project.
  *
- * Many paths can be configured, this helpers provide a way to do the configuration parsing only
+ * Many paths can be configured, this helper provides a way to do the configuration parsing only
  * once that use helper methods to obtain relative or absolute paths to specific folders.
  */
 final class Paths implements \ArrayAccess
@@ -230,6 +230,7 @@ final class Paths implements \ArrayAccess
      *
      * @psalm-assert array<string, string> $this->paths
      */
+    #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         if (!is_array($this->paths)) {
@@ -249,6 +250,7 @@ final class Paths implements \ArrayAccess
      * @param string $offset
      * @return string
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         if (!$this->offsetExists($offset)) {
@@ -264,6 +266,7 @@ final class Paths implements \ArrayAccess
      * @param string $offset
      * @param string $value
      */
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         if ($this->offsetExists($offset)) {
@@ -284,6 +287,7 @@ final class Paths implements \ArrayAccess
      *
      * @param string $offset
      */
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         throw new \BadMethodCallException(sprintf('%s class does not support unset.', __CLASS__));
