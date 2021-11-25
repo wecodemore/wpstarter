@@ -41,16 +41,16 @@ jobs:
             fail-fast: true
             matrix:
                 php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0', '8.1' ]
-                deps-mode: [ 'lowest', 'highest' ]
-                composer-ver: [ '1', '2' ]
+                deps-mode: [ 'prefer-lowest', 'prefer-highest' ]
+                composer-ver: [ 'Composer 1', 'Composer 2' ]
                 include:
                     -   php-ver: '8.2'
-                        deps-mode: 'highest'
-                        composer-options: '--ignore-platform-reqs'
-                        composer-ver: '2'
+                        deps-mode: 'prefer-highest'
+                        composer-options: ' --ignore-platform-reqs'
+                        composer-ver: 'Composer 2'
         steps:
             -   name: Update "USE_COVERAGE" env var based on matrix
-                if: ${{ matrix.php-ver == '7.4' && matrix.deps-mode == 'highest' }}
+                if: ${{ matrix.php-ver == '7.4' && matrix.deps-mode == 'prefer-highest' }}
                 run: echo "USE_COVERAGE=yes" >> $GITHUB_ENV
 
             -   name: Checkout
@@ -65,20 +65,17 @@ jobs:
                     tools: cs2pr, parallel-lint
 
             -   name: Check syntax error in sources
-                if: ${{ (matrix.deps-mode == 'highest') }}
+                if: ${{ (matrix.deps-mode == 'prefer-highest') }}
                 run: parallel-lint ./src/
 
-            -   name: Install dependencies
-                uses: ramsey/composer-install@v1
-                with:
-                    dependency-versions: ${{ matrix.deps-mode }}
-                    composer-options: ${{ matrix.composer-options }}
+            -   name: Setup Composer version
+                run: composer require --dev --no-update "composer/composer:^${{ ((matrix.composer-ver == 'Composer 1') && '1') || '2' }}"
 
-            -   name: Update Composer
-                run: composer require --dev -W "composer/composer:^${{ matrix.composer-ver }}"
+            -   name: Install dependencies
+                run: composer update${{ ((matrix.deps-mode == 'prefer-lowest') && ' --prefer-lowest') || '' }}${{ matrix.composer-options }}
 
             -   name: Migrate test configuration (PHP >= 7.3)
-                if: ${{ (matrix.php-ver >= 7.3) && (matrix.deps-mode == 'highest') }}
+                if: ${{ (matrix.php-ver >= 7.3) && (matrix.deps-mode == 'prefer-highest') }}
                 run: ./vendor/bin/phpunit --migrate-configuration
 
             -   name: Run unit tests
