@@ -130,7 +130,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
         $isAsk = $source === OptionalStep::ASK;
 
         if (!$isAsk && is_string($source)) {
-            $realpath = realpath($paths->root($source));
+            $realpath = realpath($source);
             if (!$realpath) {
                 $this->error = "{$source} is not a valid valid relative path to env-example file.";
 
