@@ -193,7 +193,7 @@ class Filesystem
             }
 
             if ($permissions !== ($permissions & ~umask())) {
-                $nameParts = explode('/', substr($targetPath, strlen($parentDir) + 1));
+                $nameParts = explode('/', substr($targetPath, strlen($parentDir) + 1) ?: '');
                 for ($i = 1, $count = count($nameParts); $i <= $count; $i++) {
                     $dirname = $parentDir . '/' . implode('/', array_slice($nameParts, 0, $i));
                     @chmod($dirname, $permissions);

@@ -179,7 +179,6 @@ class SelectedStepsFactory
             $targetSteps = array_merge($targetSteps, $commandSteps);
         }
 
-        /** @var array<string, string> $targetSteps */
         $targetSteps = $this->filterOutSkippedSteps($config, $targetSteps, $io);
         $availableStepClassesMap = $this->filterOutInvalidSteps($targetSteps);
 
@@ -206,7 +205,7 @@ class SelectedStepsFactory
             $allSteps,
             static function (string $step) use (&$errors): bool {
                 if (!is_a($step, Step::class, true)) {
-                    /** @var int $errors */
+                    /** @psalm-suppress MixedOperand */
                     $errors++;
 
                     return false;
@@ -216,7 +215,7 @@ class SelectedStepsFactory
             }
         );
 
-        /** @var int $errors */
+        /** @psalm-suppress MixedOperand */
         $this->configErrors += $errors;
 
         return $stepClassesMap;

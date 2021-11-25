@@ -98,6 +98,7 @@ final class WpStarterCommand extends BaseCommand
             $skipCustom and $flags |= SelectedStepsFactory::SKIP_CUSTOM_STEPS;
             $ignoreSkipConfig and $flags |= SelectedStepsFactory::IGNORE_SKIP_STEPS_CONFIG;
 
+            /** @var list<string> $selected */
             $selected = (array)($input->getArgument('steps') ?: []);
 
             $plugin->run(new SelectedStepsFactory($flags, ...$selected));

@@ -37,21 +37,21 @@
         "ext-mysqli": "*",
         "ext-SPL": "*",
         "composer-plugin-api": "^1.1 || ^2",
-        "composer/installers": "^1.6",
+        "composer/installers": "^1.9 || ^2",
         "symfony/dotenv": "^3.4"
     },
     "require-dev": {
-        "roave/security-advisories": "*",
+        "roave/security-advisories": "dev-latest",
         "composer/package-versions-deprecated": "^1",
         "composer/composer": "^2",
-        "symfony/process": "^3.4",
-        "wp-cli/wp-cli": "2.4.*",
+        "symfony/process": "^v3.4",
+        "wp-cli/wp-cli": "v2.5.0",
         "inpsyde/php-coding-standards": "^1",
         "phpcompatibility/php-compatibility": "^9.3.5",
-        "vimeo/psalm": "dev-master",
-        "phpunit/phpunit": "~7.5.2 || ^9",
-        "mockery/mockery": "^1.3.3",
-        "mikey179/vfsstream": "^1.6.8"
+        "vimeo/psalm": "^4.13.1",
+        "phpunit/phpunit": "~7.5.20 || ^9",
+        "mockery/mockery": "^1.3.5",
+        "mikey179/vfsstream": "^v1.6.10"
     },
     "autoload": {
         "classmap": [
@@ -69,7 +69,10 @@
         }
     },
     "config": {
-        "optimize-autoloader": true
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.1"
+        }
     },
     "scripts": {
         "cs": "@php ./vendor/squizlabs/php_codesniffer/bin/phpcs",

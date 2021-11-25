@@ -168,6 +168,7 @@ final class Filters
     private function filterOctalMod($value): int
     {
         if (is_int($value) && ($value >= 0) && ($value <= 0777)) {
+            /** @var int $value */
             return $value;
         }
 

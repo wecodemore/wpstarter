@@ -63,10 +63,10 @@ class Question
             return;
         }
 
-        array_change_key_case($validAnswers, CASE_LOWER);
+        $validAnswers = array_change_key_case($validAnswers, CASE_LOWER);
         $answerKeys = array_map('trim', array_keys($validAnswers));
 
-        $this->answers = array_combine($answerKeys, array_values($validAnswers));
+        $this->answers = array_combine($answerKeys, array_values($validAnswers)) ?: [];
 
         if ($default !== null) {
             $default = strtolower(trim($default));

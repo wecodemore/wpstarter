@@ -203,7 +203,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
     private function stripDot(string $path): string
     {
         $path = ltrim($path, '/');
-        strpos($path, './') === 0 and $path = substr($path, 2);
+        strpos($path, './') === 0 and $path = (substr($path, 2) ?: '');
         strpos($path, '../') === 0 and $path = dirname($path);
 
         return $path;

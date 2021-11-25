@@ -282,7 +282,7 @@ class ValidatorTest extends TestCase
         static::assertFalse($validator->validateUrlOrPath([])->notEmpty());
 
         $dir = str_replace('\\', '/', __DIR__);
-        $url = 'http://example.com';
+        $url = 'https://example.com';
 
         static::assertTrue($validator->validateUrlOrPath($dir)->is($dir));
         static::assertTrue($validator->validateUrlOrPath($url)->is($url));

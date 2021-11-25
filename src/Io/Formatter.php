@@ -57,7 +57,7 @@ class Formatter
      * @param string $before
      * @param string $after
      * @param string ...$lines
-     * @return array
+     * @return list<string>
      */
     public function createCenteredBlock(
         string $before = '',
@@ -72,7 +72,7 @@ class Formatter
      * @param string $before
      * @param string $after
      * @param string ...$lines
-     * @return array
+     * @return list<string>
      */
     public function createFilledBlock(
         string $before = '',
@@ -160,7 +160,7 @@ class Formatter
      * @param string $after
      * @param bool $centered
      * @param string ...$lines
-     * @return array
+     * @return list<string>
      */
     private function createBlock(
         string $before = '',

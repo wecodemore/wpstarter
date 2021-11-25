@@ -308,7 +308,7 @@ class Validator
             return Result::errored('A WP CLI command must start with "wp ".');
         }
 
-        $value = substr($value, 3);
+        $value = substr($value, 3) ?: '';
         $hasPath = preg_match('~^(.+)(\-\-path=[^ ]+)(.+)?$~', $value, $matches);
         $hasPath and $value = trim($matches[1] . $matches[3]);
 
@@ -399,12 +399,9 @@ class Validator
 
         $provider = function () use ($fullpath, $error): Result {
             $data = @include $fullpath;
-            /** @var Result $result */
-            $result = is_array($data)
+            return is_array($data)
                 ? $this->validateWpCliCommands($data)
                 : Result::errored($error);
-
-            return $result;
         };
 
         return Result::promise($provider);
@@ -618,7 +615,7 @@ class Validator
 
         $trimmed = $normalized;
         $startWithSlash = $trimmed[0] === '/';
-        $startWithSlash and $trimmed = substr($trimmed, 1);
+        $startWithSlash and $trimmed = (substr($trimmed, 1) ?: '');
 
         $relStartMatch = [];
         while (!$startWithSlash && preg_match('~^\.{1,2}/(.+)?~', $trimmed, $relStartMatch)) {
@@ -674,17 +671,12 @@ class Validator
         }
 
         $path1 = str_replace(['*', '?', '[', ']'], ['aa', 'a', '', ''], $value);
-        $path2 = str_replace(['*', '?', '[', ']'], ['', 'a', '', ''], $value);
 
-        $valid1 = substr_count($path1, '/') || substr_count($path1, '\\')
+        $valid = substr_count($path1, '/') || substr_count($path1, '\\')
             ? $this->validateDirName($path1)
             : $this->validateFileName($path1);
 
-        $valid2 = substr_count($path2, '/') || substr_count($path2, '\\')
-            ? $this->validateDirName($path2)
-            : $this->validateFileName($path2);
-
-        if ($valid1->notEmpty() && $valid2->notEmpty()) {
+        if ($valid->notEmpty()) {
             return Result::ok($value);
         }
 

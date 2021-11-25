@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 /*
  * This file is part of the WP Starter package.
  *
@@ -6,15 +6,27 @@
  * file that was distributed with this source code.
  */
 
-$vendor = dirname(__FILE__, 2).'/vendor/';
+declare(strict_types=1);
 
-if (!realpath($vendor)) {
+$testsDir = str_replace('\\', '/', __DIR__);
+$libDir = dirname($testsDir);
+$vendorDir = "{$libDir}/vendor";
+$autoload = "{$vendorDir}/autoload.php";
+
+if (!is_file($autoload)) {
     die('Please install via Composer before running tests.');
 }
 
-require_once $vendor.'autoload.php';
-unset($vendor);
+putenv('TESTS_PATH=' . $testsDir);
+putenv('PACKAGE_PATH=' . $libDir);
+putenv('VENDOR_DIR=' . $vendorDir);
+putenv('TESTS_FIXTURES_PATH=' . "{$testsDir}/fixtures");
 
-putenv('PACKAGE_PATH='.dirname(__DIR__));
-putenv('TESTS_PATH='.__DIR__);
-putenv('TESTS_FIXTURES_PATH='.__DIR__.'/fixtures');
+error_reporting(E_ALL); // phpcs:ignore
+
+if (!defined('PHPUNIT_COMPOSER_INSTALL')) {
+    define('PHPUNIT_COMPOSER_INSTALL', $autoload);
+    require_once $autoload;
+}
+
+unset($testsDir, $libDir, $vendorDir, $autoload);

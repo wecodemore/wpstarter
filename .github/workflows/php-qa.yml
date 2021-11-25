@@ -1,72 +1,88 @@
 name: PHP Quality Assurance
-on: [push, pull_request]
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 jobs:
-
-    Unit_Tests:
+    static-qa:
         runs-on: ubuntu-latest
-        if: ${{ !contains(github.event.head_commit.message, 'ci skip') }}
+        if: ${{ !contains(github.event.head_commit.message, 'skip qa') }}
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v2
 
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: 7.4
+                    coverage: none
+                    tools: cs2pr
+
+            -   name: Install dependencies
+                uses: ramsey/composer-install@v1
+
+            -   name: Check code styles
+                run: |
+                    ./vendor/bin/phpcs -q --report-full --report-checkstyle="phpcs-report.xml"  --runtime-set testVersion 7.1- --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1
+                    cs2pr --graceful-warnings phpcs-report.xml
+
+            -   name: Check Psalm
+                run: ./vendor/bin/psalm --output-format=github --no-cache
+
+    unit-tests:
+        runs-on: ubuntu-latest
+        if: ${{ !contains(github.event.head_commit.message, 'skip tests') }}
+        env:
+            USE_COVERAGE: no
         strategy:
+            fail-fast: true
             matrix:
-                php: ['7.1', '7.2', '7.3', '7.4']
-                prefer:
-                    - "lowest"
-                    - "highest"
-                ignore-platform:
-                    - ""
-                experimental:
-                    - false
+                php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0', '8.1' ]
+                deps-mode: [ 'lowest', 'highest' ]
                 include:
-                    - php: "8.0"
-                      prefer: "highest"
-                      ignore-platform: "--ignore-platform-reqs"
-                      experimental: true
-
-        continue-on-error: ${{ matrix.experimental }}
-
+                    -   php-ver: '8.2'
+                        deps-mode: 'highest'
+                        composer-options: "--ignore-platform-reqs"
         steps:
-            - uses: actions/checkout@v2
+            -   name: Update "USE_COVERAGE" env var based on matrix
+                if: ${{ matrix.php-ver == '7.4' && matrix.deps-mode == 'highest' }}
+                run: echo "USE_COVERAGE=yes" >> $GITHUB_ENV
 
-            - name: Setup PHP version
-              uses: shivammathur/setup-php@v2
-              with:
-                  php-version: ${{ matrix.php }}
+            -   name: Checkout
+                uses: actions/checkout@v2
 
-            - name: Check syntax error in sources
-              run: find ./src/ ./tests/src/ ./tests/cases/ -type f -name '*.php' -print0 | xargs -0 -L 1 -P 4 -- php -l
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.php-ver }}
+                    deps-mode: ${{ matrix.deps-mode }}
+                    composer-options: ${{ matrix.composer-options }}
+                    ini-values: zend.assertions=1, error_reporting=-1, display_errors=On
+                    coverage: ${{ ((env.USE_COVERAGE == 'yes') && 'xdebug') || 'none' }}
+                    tools: cs2pr, parallel-lint
 
-            - name: Install dependencies
-              uses: "ramsey/composer-install@v1"
-              with:
-                  dependency-versions: ${{ matrix.prefer }}
-                  composer-options: ${{ matrix.ignore-platform }}
+            -   name: Check syntax error in sources
+                if: ${{ (matrix.deps-mode == 'highest') }}
+                run: parallel-lint ./src/
 
-            - name: Run integration tests
-              run: ./vendor/bin/phpunit --testsuite=integration --no-coverage
+            -   name: Install dependencies
+                uses: ramsey/composer-install@v1
+                with:
+                    dependency-versions: ${{ matrix.deps-mode }}
 
-            - name: Run unit tests
-              run: ./vendor/bin/phpunit --testsuite=unit --no-coverage
+            -   name: Migrate test configuration (PHP >= 7.3)
+                if: ${{ (matrix.php-ver >= 7.3) && (matrix.deps-mode == 'highest') }}
+                run: ./vendor/bin/phpunit --migrate-configuration
 
-    Static_Analisys:
-        runs-on: ubuntu-latest
-        if: ${{ !contains(github.event.head_commit.message, 'ci skip') }}
+            -   name: Run unit tests
+                run: ./vendor/bin/phpunit ${{ ((env.USE_COVERAGE == 'yes') && '--coverage-html=coverage-report') || '--no-coverage' }}
 
-        steps:
-            - uses: actions/checkout@v2
-
-            - name: Setup PHP version
-              uses: shivammathur/setup-php@v2
-              with:
-                  php-version: '7.4'
-
-            - name: Install dependencies
-              uses: "ramsey/composer-install@v1"
-
-            - name: Check code styles
-              run: ./vendor/bin/phpcs
-
-            - name: Check cross-version PHP compatibility
-              run: composer phpcompat
-
-            - name: Check Psalm
-              run: ./vendor/bin/psalm --show-info=false --no-progress --output-format=compact
+            -   name: Upload coverage report
+                uses: actions/upload-artifact@v2
+                if: ${{ env.USE_COVERAGE == 'yes' }}
+                with:
+                    name: coverage-report
+                    path: coverage-report/

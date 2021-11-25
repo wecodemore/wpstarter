@@ -78,7 +78,7 @@ final class ComposerPlugin implements
     private $updatedPackages = [];
 
     /**
-     * @return array
+     * @return array<string, string>
      */
     public static function getSubscribedEvents(): array
     {
@@ -462,8 +462,9 @@ final class ComposerPlugin implements
     {
         return static function (string $class) use ($namespace, $dir) {
             if (stripos($class, $namespace) === 0) {
-                $file = substr(str_replace('\\', '/', $class), strlen($namespace)) . '.php';
-                require_once $dir . $file;
+                /** @psalm-ignore-falsable-return */
+                $file = substr(str_replace('\\', '/', $class), strlen($namespace));
+                require_once $dir . "{$file}.php";
             }
         };
     }

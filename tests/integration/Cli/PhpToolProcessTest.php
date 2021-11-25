@@ -50,7 +50,6 @@ class PhpToolProcessTest extends IntegrationTestCase
     }
 
     /**
-     * @test
      * @return PhpToolProcess
      */
     private function factoryPhpToolProcess(): PhpToolProcess

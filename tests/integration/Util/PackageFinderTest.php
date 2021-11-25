@@ -115,7 +115,6 @@ class PackageFinderTest extends IntegrationTestCase
     }
 
     /**
-     * @test
      * @return PackageFinder
      */
     private function factoryFinder(): PackageFinder

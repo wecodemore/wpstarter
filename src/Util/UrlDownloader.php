@@ -178,7 +178,6 @@ class UrlDownloader
             /** @psalm-suppress InternalMethod */
             $result = $this->remoteFilesystem->getContents($origin, $url, $this->isVerbose);
         } elseif ($this->httpDownloader) {
-            /** @var Response $response */
             $response = $this->httpDownloader->get($url);
             $statusCode = $response->getStatusCode();
             if ($statusCode > 199 && $statusCode < 300) {
@@ -213,7 +212,6 @@ class UrlDownloader
                 $this->isVerbose
             );
         } elseif ($this->httpDownloader) {
-            /** @var Response $response */
             $response = $this->httpDownloader->copy($url, $filename);
             $statusCode = $response->getStatusCode();
 

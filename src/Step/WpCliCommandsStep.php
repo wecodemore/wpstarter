@@ -173,7 +173,9 @@ final class WpCliCommandsStep implements Step
         }
 
         $command = "eval-file {$fullpath}";
-        $fileData->args() and $command .= ' ' . implode(' ', $fileData->args());
+        /** @var array<string> $args */
+        $args = $fileData->args();
+        $args and $command .= ' ' . implode(' ', $args);
         $fileData->skipWordpress() and $command .= ' --skip-wordpress';
 
         return $command;
@@ -210,6 +212,6 @@ final class WpCliCommandsStep implements Step
             return $command;
         }
 
-        return substr($command, 0, 48) . '...';
+        return (substr($command, 0, 48) ?: '') . '...';
     }
 }
