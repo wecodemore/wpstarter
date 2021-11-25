@@ -74,8 +74,8 @@ jobs:
                     composer require --dev --no-update "composer/composer:^${{ ((matrix.composer-ver == 'Composer 1') && '1') || '2' }}"
                     composer update${{ ((matrix.deps-mode == 'prefer-lowest') && ' --prefer-lowest') || '' }}${{ matrix.composer-options }}
 
-            -   name: Migrate test configuration (PHP >= 7.3)
-                if: ${{ (matrix.php-ver >= 7.3) && (matrix.deps-mode == 'prefer-highest') }}
+            -   name: Migrate test configuration (PHPUnit 9.0)
+                if: ${{( (matrix.php-ver >= 7.3) && (matrix.deps-mode == 'prefer-highest')) || (matrix.php-ver >= 8.0) }}
                 run: ./vendor/bin/phpunit --migrate-configuration
 
             -   name: Run unit tests
