@@ -76,7 +76,7 @@ class FiltersTest extends TestCase
             [Filters::FILTER_INT, [], null],
             [Filters::FILTER_INT, new \ArrayObject(), null],
             [Filters::FILTER_STRING, 'hello!', 'hello!'],
-            [Filters::FILTER_STRING, '<script>alert(\'hi!\')</script>', 'alert(&#39;hi!&#39;)'],
+            [Filters::FILTER_STRING, '<script>alert(\'hi!\')</script>', 'alert(&#039;hi!&#039;)'],
             [Filters::FILTER_STRING, 1, '1'],
             [Filters::FILTER_STRING, 123.456, '123.456'],
             [Filters::FILTER_STRING, 0, '0'],

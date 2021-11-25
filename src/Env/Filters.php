@@ -138,7 +138,7 @@ final class Filters
             throw new \Exception('Invalid scalar.');
         }
 
-        return (string)filter_var($value, FILTER_SANITIZE_STRING);
+        return htmlspecialchars(strip_tags((string)$value), ENT_QUOTES, 'UTF-8', false);
     }
 
     /**
