@@ -18,7 +18,7 @@ use Symfony\Component\Dotenv\Dotenv;
  */
 class WordPressEnvBridge
 {
-    const WP_CONSTANTS = [
+    public const WP_CONSTANTS = [
         'ABSPATH' => Filters::FILTER_STRING,
         'ADMIN_COOKIE_PATH' => Filters::FILTER_STRING,
         'ALLOW_SUBDIRECTORY_INSTALL' => Filters::FILTER_BOOL,
@@ -179,16 +179,16 @@ class WordPressEnvBridge
         'WP_USE_EXT_MYSQL' => Filters::FILTER_BOOL,
     ];
 
-    const CACHE_DUMP_FILE = '/.env.cached.php';
-    const CUSTOM_ENV_TO_CONST_VAR_NAME = 'WP_STARTER_ENV_TO_CONST';
-    const DB_TABLE_PREFIX_VAR_NAME = 'DB_TABLE_PREFIX';
-    const WP_ADMIN_COLOR_VAR_NAME = 'WP_ADMIN_COLOR';
-    const WP_FORCE_SSL_FORWARDED_PROTO_VAR_NAME = 'WP_FORCE_SSL_FORWARDED_PROTO';
-    const WP_INSTALLED_VAR_NAME = 'WP_INSTALLED';
-    const WPDB_ENV_VALID_VAR_NAME = 'WPDB_ENV_VALID';
-    const WPDB_EXISTS_VAR_NAME = 'WPDB_EXISTS';
+    public const CACHE_DUMP_FILE = '/.env.cached.php';
+    public const CUSTOM_ENV_TO_CONST_VAR_NAME = 'WP_STARTER_ENV_TO_CONST';
+    public const DB_TABLE_PREFIX_VAR_NAME = 'DB_TABLE_PREFIX';
+    public const WP_ADMIN_COLOR_VAR_NAME = 'WP_ADMIN_COLOR';
+    public const WP_FORCE_SSL_FORWARDED_PROTO_VAR_NAME = 'WP_FORCE_SSL_FORWARDED_PROTO';
+    public const WP_INSTALLED_VAR_NAME = 'WP_INSTALLED';
+    public const WPDB_ENV_VALID_VAR_NAME = 'WPDB_ENV_VALID';
+    public const WPDB_EXISTS_VAR_NAME = 'WPDB_EXISTS';
 
-    const WP_STARTER_VARS = [
+    public const WP_STARTER_VARS = [
         self::CUSTOM_ENV_TO_CONST_VAR_NAME => Filters::FILTER_STRING,
         self::DB_TABLE_PREFIX_VAR_NAME => Filters::FILTER_TABLE_PREFIX,
         self::WP_ADMIN_COLOR_VAR_NAME => Filters::FILTER_STRING,
@@ -198,13 +198,13 @@ class WordPressEnvBridge
         self::WPDB_EXISTS_VAR_NAME => Filters::FILTER_BOOL,
     ];
 
-    const WP_STARTER_ENV_VARS = [
+    public const WP_STARTER_ENV_VARS = [
         'WP_ENV',
         'WORDPRESS_ENV',
         'WP_ENVIRONMENT_TYPE',
     ];
 
-    const ENV_TYPES = [
+    public const ENV_TYPES = [
         'local' => 'local',
         'development' => 'development',
         'dev' => 'development',

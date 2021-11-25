@@ -28,9 +28,9 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class DropinsStep implements Step
 {
-    const NAME = 'dropins';
+    public const NAME = 'dropins';
 
-    const DROPINS = [
+    public const DROPINS = [
         'advanced-cache.php',
         'db.php',
         'db-error.php',

@@ -21,38 +21,38 @@ use WeCodeMore\WpStarter\Step\ContentDevStep;
  */
 final class Config implements \ArrayAccess
 {
-    const AUTOLOAD = 'autoload';
-    const CACHE_ENV = 'cache-env';
-    const COMMAND_STEPS = 'command-steps';
-    const COMPOSER_UPDATED_PACKAGES = 'composer-updated-packages';
-    const CONTENT_DEV_DIR = 'content-dev-dir';
-    const CONTENT_DEV_OPERATION = 'content-dev-op';
-    const CUSTOM_STEPS = 'custom-steps';
-    const DROPINS = 'dropins';
-    const EARLY_HOOKS_FILE = 'early-hook-file';
-    const ENV_BOOTSTRAP_DIR = 'env-bootstrap-dir';
-    const ENV_DIR = 'env-dir';
-    const ENV_EXAMPLE = 'env-example';
-    const ENV_FILE = 'env-file';
-    const INSTALL_WP_CLI = 'install-wp-cli';
-    const IS_COMPOSER_UPDATE = 'is-composer-update';
-    const IS_COMPOSER_INSTALL = 'is-composer-install';
-    const IS_WPSTARTER_COMMAND = 'is-wpstarter-command';
-    const IS_WPSTARTER_SELECTED_COMMAND = 'is-wpstarter-selected-command';
-    const MOVE_CONTENT = 'move-content';
-    const PREVENT_OVERWRITE = 'prevent-overwrite';
-    const REGISTER_THEME_FOLDER = 'register-theme-folder';
-    const REQUIRE_WP = 'require-wp';
-    const SCRIPTS = 'scripts';
-    const SKIP_DB_CHECK = 'skip-db-check';
-    const SKIP_STEPS = 'skip-steps';
-    const TEMPLATES_DIR = 'templates-dir';
-    const UNKNOWN_DROPINS = 'unknown-dropins';
-    const WP_CLI_COMMANDS = 'wp-cli-commands';
-    const WP_CLI_FILES = 'wp-cli-files';
-    const WP_VERSION = 'wp-version';
+    public const AUTOLOAD = 'autoload';
+    public const CACHE_ENV = 'cache-env';
+    public const COMMAND_STEPS = 'command-steps';
+    public const COMPOSER_UPDATED_PACKAGES = 'composer-updated-packages';
+    public const CONTENT_DEV_DIR = 'content-dev-dir';
+    public const CONTENT_DEV_OPERATION = 'content-dev-op';
+    public const CUSTOM_STEPS = 'custom-steps';
+    public const DROPINS = 'dropins';
+    public const EARLY_HOOKS_FILE = 'early-hook-file';
+    public const ENV_BOOTSTRAP_DIR = 'env-bootstrap-dir';
+    public const ENV_DIR = 'env-dir';
+    public const ENV_EXAMPLE = 'env-example';
+    public const ENV_FILE = 'env-file';
+    public const INSTALL_WP_CLI = 'install-wp-cli';
+    public const IS_COMPOSER_UPDATE = 'is-composer-update';
+    public const IS_COMPOSER_INSTALL = 'is-composer-install';
+    public const IS_WPSTARTER_COMMAND = 'is-wpstarter-command';
+    public const IS_WPSTARTER_SELECTED_COMMAND = 'is-wpstarter-selected-command';
+    public const MOVE_CONTENT = 'move-content';
+    public const PREVENT_OVERWRITE = 'prevent-overwrite';
+    public const REGISTER_THEME_FOLDER = 'register-theme-folder';
+    public const REQUIRE_WP = 'require-wp';
+    public const SCRIPTS = 'scripts';
+    public const SKIP_DB_CHECK = 'skip-db-check';
+    public const SKIP_STEPS = 'skip-steps';
+    public const TEMPLATES_DIR = 'templates-dir';
+    public const UNKNOWN_DROPINS = 'unknown-dropins';
+    public const WP_CLI_COMMANDS = 'wp-cli-commands';
+    public const WP_CLI_FILES = 'wp-cli-files';
+    public const WP_VERSION = 'wp-version';
 
-    const DEFAULTS = [
+    public const DEFAULTS = [
         self::AUTOLOAD => 'wpstarter-autoload.php',
         self::CACHE_ENV => true,
         self::COMMAND_STEPS => null,
@@ -85,7 +85,7 @@ final class Config implements \ArrayAccess
         self::WP_VERSION => null,
     ];
 
-    const VALIDATION_MAP = [
+    public const VALIDATION_MAP = [
         self::AUTOLOAD => 'validatePath',
         self::CACHE_ENV => 'validateBool',
         self::COMMAND_STEPS => 'validateSteps',

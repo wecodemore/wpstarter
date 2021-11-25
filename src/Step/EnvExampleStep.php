@@ -27,7 +27,7 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
  */
 final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
 {
-    const NAME = 'build-env-example';
+    public const NAME = 'build-env-example';
 
     /**
      * @var Config

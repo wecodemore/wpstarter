@@ -21,8 +21,8 @@ use WeCodeMore\WpStarter\Io\Io;
  */
 class WpVersion
 {
-    const WP_PACKAGE_TYPE = 'wordpress-core';
-    const MIN_WP_VERSION = '4.8';
+    public const WP_PACKAGE_TYPE = 'wordpress-core';
+    public const MIN_WP_VERSION = '4.8';
 
     /**
      * @var PackageFinder

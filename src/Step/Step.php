@@ -17,9 +17,9 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 interface Step
 {
-    const ERROR = 1;
-    const SUCCESS = 2;
-    const NONE = 4;
+    public const ERROR = 1;
+    public const SUCCESS = 2;
+    public const NONE = 4;
 
     /**
      * Return an unique name for the step.

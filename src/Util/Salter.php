@@ -16,10 +16,10 @@ namespace WeCodeMore\WpStarter\Util;
  */
 class Salter
 {
-    const CHARS_1 = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const CHARS_2 = ' =,.;:/?!|@#$%^&*()-_[]{}<>~`+';
+    public const CHARS_1 = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    public const CHARS_2 = ' =,.;:/?!|@#$%^&*()-_[]{}<>~`+';
 
-    const KEYS = [
+    public const KEYS = [
         'AUTH_KEY',
         'SECURE_AUTH_KEY',
         'LOGGED_IN_KEY',

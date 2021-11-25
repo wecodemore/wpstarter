@@ -13,7 +13,7 @@ namespace WeCodeMore\WpStarter\Io;
 
 class Formatter
 {
-    const DEFAULT_LINE_LENGTH = 58;
+    public const DEFAULT_LINE_LENGTH = 58;
 
     /**
      * @param int $lineLength

@@ -41,11 +41,11 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class ContentDevStep implements OptionalStep
 {
-    const NAME = 'publish-content-dev';
-    const OP_COPY = 'copy';
-    const OP_SYMLINK = 'symlink';
-    const OP_NONE = 'none';
-    const OPERATIONS = [self::OP_COPY, self::OP_SYMLINK, self::OP_NONE];
+    public const NAME = 'publish-content-dev';
+    public const OP_COPY = 'copy';
+    public const OP_SYMLINK = 'symlink';
+    public const OP_NONE = 'none';
+    public const OPERATIONS = [self::OP_COPY, self::OP_SYMLINK, self::OP_NONE];
 
     /**
      * @var \WeCodeMore\WpStarter\Util\Filesystem

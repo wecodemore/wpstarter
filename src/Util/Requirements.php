@@ -26,7 +26,7 @@ use WeCodeMore\WpStarter\Io\Io;
  */
 final class Requirements
 {
-    const CONFIG_FILE = 'wpstarter.json';
+    public const CONFIG_FILE = 'wpstarter.json';
 
     /**
      * @var Filesystem

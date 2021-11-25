@@ -20,7 +20,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class FlushEnvCacheStep implements Step
 {
-    const NAME = 'flush-env-cache';
+    public const NAME = 'flush-env-cache';
 
     /**
      * @return string

@@ -27,8 +27,8 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class MuLoaderStep implements FileCreationStepInterface
 {
-    const NAME = 'build-mu-loader';
-    const TARGET_FILE_NAME = 'wpstarter-mu-loader.php';
+    public const NAME = 'build-mu-loader';
+    public const TARGET_FILE_NAME = 'wpstarter-mu-loader.php';
 
     /**
      * @var \WeCodeMore\WpStarter\Util\MuPluginList

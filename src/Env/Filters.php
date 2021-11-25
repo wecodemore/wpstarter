@@ -27,13 +27,13 @@ namespace WeCodeMore\WpStarter\Env;
  */
 final class Filters
 {
-    const FILTER_BOOL = 'bool';
-    const FILTER_INT = 'int';
-    const FILTER_INT_OR_BOOL = 'int|bool';
-    const FILTER_STRING_OR_BOOL = 'string|bool';
-    const FILTER_STRING = 'string';
-    const FILTER_OCTAL_MOD = 'mod';
-    const FILTER_TABLE_PREFIX = 'table-prefix';
+    public const FILTER_BOOL = 'bool';
+    public const FILTER_INT = 'int';
+    public const FILTER_INT_OR_BOOL = 'int|bool';
+    public const FILTER_STRING_OR_BOOL = 'string|bool';
+    public const FILTER_STRING = 'string';
+    public const FILTER_OCTAL_MOD = 'mod';
+    public const FILTER_TABLE_PREFIX = 'table-prefix';
 
     /**
      * @param string $name

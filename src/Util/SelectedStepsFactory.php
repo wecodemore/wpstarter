@@ -20,10 +20,10 @@ use WeCodeMore\WpStarter\Step\WpCliCommandsStep;
 
 class SelectedStepsFactory
 {
-    const MODE_COMMAND = 16;
-    const MODE_OPT_OUT = 1;
-    const SKIP_CUSTOM_STEPS = 2;
-    const IGNORE_SKIP_STEPS_CONFIG = 4;
+    public const MODE_COMMAND = 16;
+    public const MODE_OPT_OUT = 1;
+    public const SKIP_CUSTOM_STEPS = 2;
+    public const IGNORE_SKIP_STEPS_CONFIG = 4;
 
     /**
      * @var bool

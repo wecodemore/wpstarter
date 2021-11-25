@@ -38,14 +38,14 @@ final class ComposerPlugin implements
     CommandProvider
 {
 
-    const EXTRA_KEY = 'wpstarter';
-    const EXTENSIONS_TYPE = 'wpstarter-extension';
+    public const EXTRA_KEY = 'wpstarter';
+    public const EXTENSIONS_TYPE = 'wpstarter-extension';
 
-    const MODE = 'mode';
-    const MODE_NONE = 0;
-    const MODE_COMMAND = 1;
-    const MODE_COMPOSER_INSTALL = 4;
-    const MODE_COMPOSER_UPDATE = 8;
+    public const MODE = 'mode';
+    public const MODE_NONE = 0;
+    public const MODE_COMMAND = 1;
+    public const MODE_COMPOSER_INSTALL = 4;
+    public const MODE_COMPOSER_UPDATE = 8;
 
     /**
      * @var bool

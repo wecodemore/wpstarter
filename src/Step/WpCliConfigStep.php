@@ -22,7 +22,7 @@ use WeCodeMore\WpStarter\Util;
  */
 final class WpCliConfigStep implements FileCreationStepInterface
 {
-    const NAME = 'build-wp-cli-yml';
+    public const NAME = 'build-wp-cli-yml';
 
     /**
      * @var Util\FileContentBuilder

@@ -24,8 +24,8 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
  */
 final class DropinStep implements FileCreationStepInterface
 {
-    const ACTION_COPY = 'copy';
-    const ACTION_DOWNLOAD = 'download';
+    public const ACTION_COPY = 'copy';
+    public const ACTION_DOWNLOAD = 'download';
 
     /**
      * @var string

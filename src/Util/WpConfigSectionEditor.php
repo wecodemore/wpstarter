@@ -6,9 +6,9 @@ namespace WeCodeMore\WpStarter\Util;
 
 class WpConfigSectionEditor
 {
-    const APPEND = 1;
-    const PREPEND = -1;
-    const REPLACE = 0;
+    public const APPEND = 1;
+    public const PREPEND = -1;
+    public const REPLACE = 0;
 
     /**
      * @var Paths

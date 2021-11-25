@@ -19,9 +19,9 @@ use WeCodeMore\WpStarter\Io\Io;
  */
 class DbChecker
 {
-    const WP_INSTALLED = 'WP_INSTALLED';
-    const WPDB_EXISTS = 'WPDB_EXISTS';
-    const WPDB_ENV_VALID = 'WPDB_ENV_VALID';
+    public const WP_INSTALLED = 'WP_INSTALLED';
+    public const WPDB_EXISTS = 'WPDB_EXISTS';
+    public const WPDB_ENV_VALID = 'WPDB_ENV_VALID';
 
     /**
      * @var WordPressEnvBridge

@@ -13,11 +13,11 @@ namespace WeCodeMore\WpStarter\Cli;
 
 final class WpCliFileData
 {
-    const FILE = 'file';
-    const ARGS = 'args';
-    const SKIP_WORDPRESS = 'skip-wordpress';
-    const VALID = 'valid';
-    const DEFAULTS = [
+    public const FILE = 'file';
+    public const ARGS = 'args';
+    public const SKIP_WORDPRESS = 'skip-wordpress';
+    public const VALID = 'valid';
+    public const DEFAULTS = [
         self::FILE => '',
         self::ARGS => [],
         self::SKIP_WORDPRESS => false,

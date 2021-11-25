@@ -22,13 +22,13 @@ use Composer\Util\Filesystem;
  */
 final class Paths implements \ArrayAccess
 {
-    const ROOT = 'root';
-    const VENDOR = 'vendor';
-    const BIN = 'bin';
-    const WP = 'wp';
-    const WP_PARENT = 'wp-parent';
-    const WP_CONTENT = 'wp-content';
-    const WP_STARTER = 'wp-starter';
+    public const ROOT = 'root';
+    public const VENDOR = 'vendor';
+    public const BIN = 'bin';
+    public const WP = 'wp';
+    public const WP_PARENT = 'wp-parent';
+    public const WP_CONTENT = 'wp-content';
+    public const WP_STARTER = 'wp-starter';
 
     /**
      * @var Config

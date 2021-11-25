@@ -17,7 +17,7 @@ use WeCodeMore\WpStarter\Io\Io;
  */
 interface OptionalStep extends Step
 {
-    const ASK = 'ask';
+    public const ASK = 'ask';
 
     /**
      * Ask a confirmation and return result.
