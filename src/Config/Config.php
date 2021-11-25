@@ -129,11 +129,6 @@ final class Config implements \ArrayAccess
     private $raw;
 
     /**
-     * @var Validator
-     */
-    private $validator;
-
-    /**
      * @var array<string, callable(mixed):Result>
      */
     private $validationMap = [];
@@ -145,7 +140,6 @@ final class Config implements \ArrayAccess
     public function __construct(array $configs, Validator $validator)
     {
         $this->configs = [];
-        $this->validator = $validator;
         $this->raw = array_merge(self::DEFAULTS, $configs);
 
         /** @var string $key */
@@ -154,16 +148,6 @@ final class Config implements \ArrayAccess
             $callback = [$validator, $method];
             $this->validationMap[$key] = $callback;
         }
-    }
-
-    /**
-     * @param mixed $offset
-     * @return bool
-     */
-    public function offsetExists($offset)
-    {
-        return is_string($offset)
-            && (array_key_exists($offset, $this->raw) || array_key_exists($offset, $this->configs));
     }
 
     /**
@@ -195,9 +179,21 @@ final class Config implements \ArrayAccess
     }
 
     /**
+     * @param mixed $offset
+     * @return bool
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetExists($offset)
+    {
+        return is_string($offset)
+            && (array_key_exists($offset, $this->raw) || array_key_exists($offset, $this->configs));
+    }
+
+    /**
      * @param string $offset
      * @return Result
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         if (!$this->offsetExists($offset)) {
@@ -222,6 +218,7 @@ final class Config implements \ArrayAccess
      * @param mixed $value
      * @return void
      */
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         if (!is_string($offset)) {
@@ -252,6 +249,7 @@ final class Config implements \ArrayAccess
      *
      * @param string $offset
      */
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         throw new \LogicException('Configs can\'t be unset on the fly.');
