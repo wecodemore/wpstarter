@@ -740,6 +740,10 @@ class WordPressEnvBridge
         $dotEnv = $this->dotenv ?? self::$defaultDotEnv;
         if (!$dotEnv) {
             self::$defaultDotEnv = new Dotenv();
+            /** @psalm-suppress RedundantCondition */
+            if (is_callable([self::$defaultDotEnv, 'usePutenv'])) {
+                self::$defaultDotEnv->usePutenv(true);
+            }
             $dotEnv = self::$defaultDotEnv;
         }
 

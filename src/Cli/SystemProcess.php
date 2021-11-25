@@ -68,7 +68,7 @@ class SystemProcess
         try {
             is_string($cwd) or $cwd = $this->paths->root();
 
-            $process = new Process($command, $cwd, $this->environment ?: null);
+            $process = $this->factoryProcess($command, $cwd);
 
             $this->printer or $this->printer = function (string $type, string $buffer) {
                 $lines = array_filter(array_map('rtrim', explode("\n", $buffer)));
@@ -97,7 +97,7 @@ class SystemProcess
     {
         try {
             is_string($cwd) or $cwd = $this->paths->root();
-            $process = new Process($command, $cwd, $this->environment ?: null);
+            $process = $this->factoryProcess($command, $cwd);
             $process->disableOutput()->mustRun();
 
             return $process->isSuccessful();
@@ -106,5 +106,20 @@ class SystemProcess
 
             return false;
         }
+    }
+
+    /**
+     * @param string $command
+     * @param string|null $cwd
+     * @return Process
+     */
+    private function factoryProcess(string $command, string $cwd = null): Process
+    {
+        if (method_exists(Process::class, 'fromShellCommandline')) {
+            return Process::fromShellCommandline($command, $cwd, $this->environment ?: null);
+        }
+
+        /** @psalm-suppress InvalidArgument */
+        return new Process($command, $cwd, $this->environment ?: null);
     }
 }

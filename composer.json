@@ -38,13 +38,13 @@
         "ext-SPL": "*",
         "composer-plugin-api": "^1.1 || ^2",
         "composer/installers": "^1.9 || ^2",
-        "symfony/dotenv": "^3.4"
+        "symfony/dotenv": "^3.4 || ^5"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",
         "composer/package-versions-deprecated": "^1",
         "composer/composer": "^2",
-        "symfony/process": "^v3.4",
+        "symfony/process": "^3.4 || ^5",
         "wp-cli/wp-cli": "v2.5.0",
         "inpsyde/php-coding-standards": "^1",
         "phpcompatibility/php-compatibility": "^9.3.5",
