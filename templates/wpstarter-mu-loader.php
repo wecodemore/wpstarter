@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 /**
- * Plugin Name: WP Starter MU plugins loader.
+ * Plugin Name: WP Starter MU plugins loader
  * Description: MU plugins loaded: {{{MU_PLUGINS_LIST}}}.
  */
 
