@@ -106,7 +106,7 @@ final class Steps implements PostProcessStep, \Countable
     /**
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         return $this->steps->count();
     }
