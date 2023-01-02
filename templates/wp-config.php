@@ -63,9 +63,15 @@ ENV_VARIABLES: {
         if ($envType !== 'example') {
             $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$envType}", WPSTARTER_PATH);
         }
-        $envLoader->setupConstants();
     }
-
+    /**
+     * Core wp_get_environment_type() only supports a pre-defined list of environments types.
+     * WP Starter tries to map different environments to values supported by core, for example
+     * "dev" (or "develop", or even "develop-1") will be mapped to "development" accepted by WP.
+     * In that case, `wp_get_environment_type()` will return "development", but `WP_ENV` will still
+     * be "dev" (or "develop", or "develop-1").
+     */
+    $envIsCached ? $envLoader->setupEnvConstants() : $envLoader->setupConstants();
     isset($envType) or $envType = $envLoader->determineEnvType();
 
     $debugInfo['env-cache-file'] = [
@@ -90,15 +96,6 @@ ENV_VARIABLES: {
     ];
 
     unset($envCacheEnabled, $envIsCached);
-
-    /**
-     * Core wp_get_environment_type() only supports a pre-defined list of environments types.
-     * WP Starter tries to map different environments to values supported by core, for example
-     * "dev" (or "develop", or even "develop-1") will be mapped to "development" accepted by WP.
-     * In that case, `wp_get_environment_type()` will return "development", but `WP_ENV` will still
-     * be "dev" (or "develop", or "develop-1").
-     */
-    defined('WP_ENV') or define('WP_ENV', $envType);
 
     $phpEnvFilePath = WPSTARTER_PATH . "/{$envType}.php";
     $hasPhpEnvFile = file_exists($phpEnvFilePath) && is_readable($phpEnvFilePath);

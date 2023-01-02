@@ -580,19 +580,9 @@ class WordPressEnvBridge
         }
 
         $done = true;
-        $names = [];
+        $names = $this->setupEnvConstants();
         foreach (array_keys(self::WP_CONSTANTS) as $key) {
             $this->defineConstantFromVar($key) and $names[] = $key;
-        }
-
-        $envType = $this->determineEnvType();
-        if (!defined('WP_ENV')) {
-            define('WP_ENV', $envType);
-            $names[] = 'WP_ENV';
-        }
-        if (!defined('WP_ENVIRONMENT_TYPE')) {
-            define('WP_ENVIRONMENT_TYPE', $this->determineWpEnvType($envType));
-            $names[] = 'WP_ENVIRONMENT_TYPE';
         }
 
         $customVarsToSetStr = (string)$this->read(self::CUSTOM_ENV_TO_CONST_VAR_NAME);
@@ -612,6 +602,25 @@ class WordPressEnvBridge
         $this->definedConstants = $names;
         $this->customFiltersConfig = [];
         $this->wordPressSetup = count(array_intersect($names, ['DB_NAME', 'DB_USER'])) === 2;
+    }
+
+    /**
+     * @return array
+     */
+    public function setupEnvConstants(): array
+    {
+        $names = [];
+        $envType = $this->determineEnvType();
+        if (!defined('WP_ENV')) {
+            define('WP_ENV', $envType);
+            $names[] = 'WP_ENV';
+        }
+        if (!defined('WP_ENVIRONMENT_TYPE')) {
+            define('WP_ENVIRONMENT_TYPE', $this->determineWpEnvType($envType));
+            $names[] = 'WP_ENVIRONMENT_TYPE';
+        }
+
+        return $names;
     }
 
     /**
