@@ -29,7 +29,7 @@ The (current) list of default WP Starter steps is (in order of execution):
 ### Clarification on "Notes" above
 
 - "*blocking*" indicates a step that in case of failure will prevent WP Starter to proceed with subsequent steps.
-- "*create file*"  indicates a file will create a file from a template.
+- "*create file*" indicates a step will create a file from a template.
 - "*optional*" indicates a step that (might) ask the user a confirmation before running
 
 
@@ -158,7 +158,7 @@ WP Starter, via this step, allows to do that.
 
 The main configuration involved is `dropins` which is an array of files to copy.
 
-Besides local paths (which includes files pulled as part of Composer packages in vendor dir) the step is also capable to use arbitrary URLs as source. This latter is not recommended, because no security check is done on the downloaded file, so make sure at least to point a trusted server and use an HTTPS instead of plain HTTP.
+Besides local paths (which includes files pulled as part of Composer packages in vendor dir) the step is also capable to use arbitrary URLs as source. This latter is not recommended, because no security check is done on the downloaded file, so make sure at least to point to a trusted server and use HTTPS instead of plain HTTP.
 
 An additional configuration that affects the step is `unknown-dropins`. By setting this to `true` WP Starter will ignore the list of supported dropins from WordPress and just copy every file provided in the `dropins` setting to WP content folder. The default is `false`, because setting this to true, in combination of usage of URLs as source might be a security issue. The setting could also have the value of "ask" and in that case WP Starter will ask confirmation to the user before copying a file not recognized as a dropin.
 
@@ -190,11 +190,11 @@ Plugins and themes that are developed in the project repository, can be placed i
 
 `ContentDevStep` step is responsible to do exactly that.
 
-There are two settings that affects how the step works: `content-dev-op` and `content-dev-dir`.
+There are two settings that affect how the step works: `content-dev-op` and `content-dev-dir`.
 
 `content-dev-op`  can be one of *"symlink"* (default), *"copy"* or *"none"* and it tells WP Starter what to do with the "development content" (that is plugin and themes developed in the project repository).
 
-`content-dev-dir` tells WP Starter where to look for development content folders. By default it is `/content-dev` folder under project root.
+`content-dev-dir` tells WP Starter where to look for development content folders. By default it is the `/content-dev` folder under the project root.
 
 So by default, this step will symlink:
 

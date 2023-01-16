@@ -295,9 +295,9 @@ On top of that, if WP Starter environment is `local`, and `WP_LOCAL_DEV` is not 
 
 #### Cached Environment
 
-Parsing the environment and define constants for it can be quite expensive process. Thanks to code placed in `wp-config.php` that runs on "shutdown" the environment is cached in a file named `.env.cached.php` that contains PHP code that declares env variables and define constants.
+Parsing the environment and define constants for it can be quite expensive process. Thanks to code placed in `wp-config.php` that runs on "shutdown" the environment is cached in a file named `.env.cached.php` that contains PHP code that declares env variables and defines constants.
 
-Details about this process and way to prevent this are described in the ["Environment-Variables"](02-Environment-Variables.md) section.
+Details about this process and a way to prevent this are described in the ["Environment-Variables"](02-Environment-Variables.md) section.
 
 
 
@@ -333,7 +333,7 @@ Changing admin color per environment helps to recognize visually which is the cu
 
 ### Early loading of `plugin.php`
 
-The file `wp-includes/plugin.php` contains WordPress function for [plugin API](https://developer.wordpress.org/plugins/hooks/).
+The file `wp-includes/plugin.php` contains WordPress functions for the [plugin API](https://developer.wordpress.org/plugins/hooks/).
 
 In recent WordPress versions this file has been made "independent" from the rest of WordPress, which means that it can be loaded very early allowing to add hooks very early, before the rest of WordPress is loaded.
 
@@ -347,9 +347,9 @@ In WP Starter configuration it is possible to set an "early hooks file" loaded v
 
 
 
-### HTTPs behind load-balancers
+### HTTPS behind load-balancers
 
-When websites are behind load-balancers the server variable `$_SERVER['HTTPS']` is sometimes not set, even if the website is implementing HTTPs, and because WordPress function [`is_ssl()`](https://developer.wordpress.org/reference/functions/is_ssl/) relies on that server variable it returns `false` in that case, with many side effects.
+When websites are behind load-balancers the server variable `$_SERVER['HTTPS']` is sometimes not set, even if the website is implementing HTTPS, and because WordPress function [`is_ssl()`](https://developer.wordpress.org/reference/functions/is_ssl/) relies on that server variable it returns `false` in that case, with many side effects.
 
 As quite standard practice, in the above situations, load balancers set the server variable `$_SERVER['HTTP_X_FORWARDED_PROTO']` to `'https'` . So by looking at that value the result of `is_ssl()` could be forced to `true` by forcing  `$_SERVER['HTTPS']` to `'on'`.
 
@@ -365,9 +365,9 @@ The gist of it is that `HTTP_X_FORWARDED_PROTO` is a server variable filled from
 
 All the features described above are applied via using a `wp-config.php` template that comes with WP Starter.
 
-It is possible to have a completely custom template, but sometimes what it is desired is just a small customization, like adding a line of code, and use a custom template for that is not a good approach, because to have same functionalities would be necessary to copy original template code, but loosing all the improvements and fixes that a newer versions of WP Starter could bring to the template.
+It is possible to have a completely custom template, but sometimes what it is desired is just a small customization, like adding a line of code. Using a custom template for that is not a good approach, because to have the same functionalities it would be necessary to copy the original template code, hence loosing all the improvements and fixes that newer versions of WP Starter could bring to the template.
 
-This is why WP Started default  `wp-config.php` template supports the concept of "sections".
+This is why the WP Starter default `wp-config.php` template supports the concept of "sections".
 
 A section is a portion of the config file delimited with "labels" with braces, for example:
 
@@ -397,7 +397,7 @@ CLEAN_UP : {
 } #@@/CLEAN_UP
 ```
 
-Besides `WpConfigSectionEditor::append()`, the object also have the `prepend`, `replace`, and `delete` methods, to, respectively, pre-pend, replace and delete the code in the given section.
+Besides `WpConfigSectionEditor::append()`, the object also has the `prepend`, `replace`, and `delete` methods, to, respectively, pre-pend, replace and delete the code in the given section.
 
 Please note that the PHP code to append/prepend/replace is not checked at all, so be sure that it is valid PHP code.
 
