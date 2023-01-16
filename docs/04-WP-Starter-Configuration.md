@@ -67,7 +67,7 @@ This also enables to have the configuration file available in a custom Composer 
 ## Configuration precedence
 
 
-The values in `wpstarter.json` takes precedence when  composer.json contains an `extra.wpstarter` section  (regardless if as an object or as a path to a custom file) with duplicate values to the `wpstarter.json`.
+The values in `wpstarter.json` takes precedence when `composer.json` contains an `extra.wpstarter` section  (regardless if as an object or as a path to a custom file) with duplicate values to the `wpstarter.json`.
 
 
 

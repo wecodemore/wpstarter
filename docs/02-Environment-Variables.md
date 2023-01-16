@@ -209,7 +209,7 @@ add_filter('wpstarter.skip-cache-env', '__return_true');
 
 The filter is executed very late (so could be added in MU plugins, plugins and even themes) and also passes the environment name as second parameter.
 
-For example, to only allow cache in production there a code lie the following can be used:
+For example, to only allow cache in production a code like the following can be used:
 
 ```php
 add_filter('wpstarter.skip-cache-env', function ($skip, $envName) {
