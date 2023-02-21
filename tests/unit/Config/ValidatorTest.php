@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
@@ -6,9 +7,10 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace WeCodeMore\WpStarter\Tests\Unit\Config;
 
-use WeCodeMore\WpStarter\Config\Validator;
 use WeCodeMore\WpStarter\Step\CheckPathStep;
 use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Step\OptionalStep;
@@ -19,10 +21,9 @@ use WeCodeMore\WpStarter\Cli\WpCliFileData;
 class ValidatorTest extends TestCase
 {
     /**
-     * @see Validator::validateOverwrite()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateOverwrite()
+    public function testValidateOverwrite(): void
     {
         $validator = $this->factoryValidator();
 
@@ -41,10 +42,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateSteps()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateSteps()
+    public function testValidateSteps(): void
     {
         $validator = $this->factoryValidator();
 
@@ -61,10 +61,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateScripts()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateScripts()
+    public function testValidateScripts(): void
     {
         $validator = $this->factoryValidator();
 
@@ -84,10 +83,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateDropins()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateDropins()
+    public function testValidateDropins(): void
     {
         $validator = $this->factoryValidator();
 
@@ -122,10 +120,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateContentDevOperation()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateContentDevOperation()
+    public function testValidateContentDevOperation(): void
     {
         $validator = $this->factoryValidator();
 
@@ -153,10 +150,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateWpCliCommands()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateWpCliCommands()
+    public function testValidateWpCliCommands(): void
     {
         $validator = $this->factoryValidator();
 
@@ -179,10 +175,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateWpCliCommand()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateWpCliCommand()
+    public function testValidateWpCliCommand(): void
     {
         $validator = $this->factoryValidator();
 
@@ -198,10 +193,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateWpCliFiles()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateWpCliFiles()
+    public function testValidateWpCliFiles(): void
     {
         $validator = $this->factoryValidator();
 
@@ -223,10 +217,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateWpVersion()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateWpVersion()
+    public function testValidateWpVersion(): void
     {
         $validator = $this->factoryValidator();
 
@@ -243,10 +236,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateBoolOrAskOrUrlOrPath()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateBoolOrAskOrUrlOrPath()
+    public function testValidateBoolOrAskOrUrlOrPath(): void
     {
         $validator = $this->factoryValidator();
 
@@ -269,10 +261,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateUrlOrPath()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateUrlOrPath()
+    public function testValidateUrlOrPath(): void
     {
         $validator = $this->factoryValidator();
 
@@ -289,10 +280,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateGlobPath()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateGlobPath()
+    public function testValidateGlobPath(): void
     {
         $validator = $this->factoryValidator();
 
@@ -309,10 +299,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateFileName()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateFileName()
+    public function testValidateFileName(): void
     {
         $validator = $this->factoryValidator();
 
@@ -327,10 +316,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateGlobPathArray()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateGlobPathArray()
+    public function testValidateGlobPathArray(): void
     {
         $validator = $this->factoryValidator();
 
@@ -347,10 +335,9 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * @see Validator::validateInt()
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateInt()
+    public function testValidateInt(): void
     {
         $validator = $this->factoryValidator();
 

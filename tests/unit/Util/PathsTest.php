@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
@@ -13,7 +16,10 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 class PathsTest extends TestCase
 {
-    public function testMockWorks()
+    /**
+     * @test
+     */
+    public function testMockWorks(): void
     {
         $paths = $this->factoryPaths();
 
@@ -27,7 +33,10 @@ class PathsTest extends TestCase
         static::assertSame("{$base}/paths-root/public", $paths->wpParent());
     }
 
-    public function testToParam()
+    /**
+     * @test
+     */
+    public function testToParam(): void
     {
         $paths = $this->factoryPaths();
 
@@ -41,7 +50,10 @@ class PathsTest extends TestCase
         static::assertSame("{$base}/paths-root/public/x/", $paths->wpParent('/x/'));
     }
 
-    public function testRelative()
+    /**
+     * @test
+     */
+    public function testRelative(): void
     {
         $paths = $this->factoryPaths();
 
@@ -53,7 +65,10 @@ class PathsTest extends TestCase
         static::assertSame('public', $paths->relativeToRoot(Paths::WP_PARENT));
     }
 
-    public function testTemplates()
+    /**
+     * @test
+     */
+    public function testTemplates(): void
     {
         $paths = $this->factoryPaths();
 
@@ -63,7 +78,10 @@ class PathsTest extends TestCase
         static::assertSame("{$custom}/index.php", $paths->template('index.php'));
     }
 
-    public function testArrayAccessSet()
+    /**
+     * @test
+     */
+    public function testArrayAccessSet(): void
     {
         $paths = $this->factoryPaths();
         $paths['foo'] = $this->packagePath();
@@ -74,7 +92,10 @@ class PathsTest extends TestCase
         $paths[Paths::ROOT] = $this->packagePath();
     }
 
-    public function testArrayAccessGet()
+    /**
+     * @test
+     */
+    public function testArrayAccessGet(): void
     {
         $paths = $this->factoryPaths();
 
@@ -84,7 +105,10 @@ class PathsTest extends TestCase
         $paths['not set'];
     }
 
-    public function testArrayAccessUnset()
+    /**
+     * @test
+     */
+    public function testArrayAccessUnset(): void
     {
         $paths = $this->factoryPaths();
 

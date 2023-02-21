@@ -24,7 +24,7 @@ class WpCliToolTest extends IntegrationTestCase
     /**
      * @after
      */
-    protected function after()
+    protected function after(): void
     {
         parent::tearDown();
         \Mockery::close();
@@ -34,7 +34,7 @@ class WpCliToolTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
      */
-    public function testTargetPathsFindsDefault()
+    public function testTargetPathsFindsDefault(): void
     {
         $dir = vfsStream::setup('directory');
         $root = $dir->url();
@@ -49,7 +49,7 @@ class WpCliToolTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
      */
-    public function testTargetPathsFindsFileNamedAsUrl()
+    public function testTargetPathsFindsFileNamedAsUrl(): void
     {
         $dir = vfsStream::setup('directory');
         $root = $dir->url();
@@ -69,7 +69,7 @@ class WpCliToolTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
      */
-    public function testFilesIgnoresFilesForOldVersions()
+    public function testFilesIgnoresFilesForOldVersions(): void
     {
         $dir = vfsStream::setup('directory');
         $root = $dir->url();
@@ -91,7 +91,7 @@ class WpCliToolTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
      */
-    public function testCheckPharSuccess()
+    public function testCheckPharSuccess(): void
     {
         $path = getenv('TESTS_FIXTURES_PATH') . '/wp-cli-2.4.0.phar';
         $tool = $this->factoryTool();
@@ -103,7 +103,7 @@ class WpCliToolTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\WpCliTool
      */
-    public function testCheckPharError()
+    public function testCheckPharError(): void
     {
         $path = getenv('TESTS_FIXTURES_PATH') . '/wp-cli-2.0.1.phar';
         $tool = $this->factoryTool();

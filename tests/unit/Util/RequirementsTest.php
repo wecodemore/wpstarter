@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
@@ -6,8 +7,11 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
+use Composer\IO\NullIO;
 use Composer\Package\Package;
 use WeCodeMore\WpStarter\ComposerPlugin;
 use WeCodeMore\WpStarter\Config\Config;
@@ -16,43 +20,16 @@ use WeCodeMore\WpStarter\Util\Requirements;
 
 class RequirementsTest extends TestCase
 {
-    /**
-     * For unit tests only makes sense to test the extractConfig() method, which is private.
-     *
-     * @param array $extra
-     * @param string $customRoot
-     * @return mixed
-     */
-    private function executeExtractConfig(array $extra, string $customRoot = null): array
-    {
-        $tester = \Closure::bind(
-            function (string $rootPath) use ($extra): array {
-                /** @noinspection PhpUndefinedMethodInspection */
-                return $this->extractConfig($rootPath, $extra);
-            },
-            (new \ReflectionClass(Requirements::class))->newInstanceWithoutConstructor(),
-            Requirements::class
-        );
-
-        return $tester($customRoot ?: $this->fixturesPath() . '/paths-root', $extra);
-    }
-
     public function testGenericCommandInstanceCreation()
     {
         $composer = \Mockery::mock(\Composer\Composer::class);
         $composerConfig = \Mockery::mock(\Composer\Config::class);
-        $composerConfig->shouldReceive('get')->andReturn('');
-        $composer->shouldReceive('getPackage->getExtra')->andReturn([]);
-        $composer->shouldReceive('getConfig')->andReturn($composerConfig);
+        $composerConfig->allows('get')->andReturn('');
+        $composer->allows('getPackage->getExtra')->andReturn([]);
+        $composer->allows('getConfig')->andReturn($composerConfig);
 
-        $io = \Mockery::mock(\Composer\IO\IOInterface::class);
-        $filesystem = \Mockery::mock(\Composer\Util\Filesystem::class);
-        $filesystem->shouldReceive('normalizePath')->andReturnUsing(
-            function (string $path): string {
-                return rtrim(str_replace('\\', '/', $path), '/');
-            }
-        );
-
+        $io = new NullIO();
+        $filesystem = new \Composer\Util\Filesystem();
         $instance = Requirements::forGenericCommand($composer, $io, $filesystem);
         $config = $instance->config();
 
@@ -66,18 +43,12 @@ class RequirementsTest extends TestCase
     {
         $composer = \Mockery::mock(\Composer\Composer::class);
         $composerConfig = \Mockery::mock(\Composer\Config::class);
-        $composerConfig->shouldReceive('get')->andReturn('');
-        $composer->shouldReceive('getPackage->getExtra')->andReturn([]);
-        $composer->shouldReceive('getConfig')->andReturn($composerConfig);
+        $composerConfig->allows('get')->andReturn('');
+        $composer->allows('getPackage->getExtra')->andReturn([]);
+        $composer->allows('getConfig')->andReturn($composerConfig);
 
-        $io = \Mockery::mock(\Composer\IO\IOInterface::class);
-        $filesystem = \Mockery::mock(\Composer\Util\Filesystem::class);
-        $filesystem->shouldReceive('normalizePath')->andReturnUsing(
-            function (string $path): string {
-                return rtrim(str_replace('\\', '/', $path), '/');
-            }
-        );
-
+        $io = new NullIO();
+        $filesystem = new \Composer\Util\Filesystem();
         $instance = Requirements::forSelectedStepsCommand($composer, $io, $filesystem);
         $config = $instance->config();
 
@@ -91,47 +62,34 @@ class RequirementsTest extends TestCase
     {
         $composer = \Mockery::mock(\Composer\Composer::class);
         $composerConfig = \Mockery::mock(\Composer\Config::class);
-        $composerConfig->shouldReceive('get')->andReturn('');
-        $composer->shouldReceive('getPackage->getExtra')->andReturn([]);
-        $composer->shouldReceive('getConfig')->andReturn($composerConfig);
+        $composerConfig->allows('get')->andReturn('');
+        $composer->allows('getPackage->getExtra')->andReturn([]);
+        $composer->allows('getConfig')->andReturn($composerConfig);
 
-        $io = \Mockery::mock(\Composer\IO\IOInterface::class);
-        $filesystem = \Mockery::mock(\Composer\Util\Filesystem::class);
-        $filesystem->shouldReceive('normalizePath')->andReturnUsing(
-            function (string $path): string {
-                return rtrim(str_replace('\\', '/', $path), '/');
-            }
-        );
-
-        $p1 = new Package('one', '1.0.0.0', '1.0.0');
-        $p2 = new Package('two', '2.0.0.0', '2.0');
-
-        $instance = Requirements::forComposerInstall($composer, $io, $filesystem, $p1, $p2);
+        $io = new NullIO();
+        $filesystem = new \Composer\Util\Filesystem();
+        $pkg1 = new Package('one', '1.0.0.0', '1.0.0');
+        $pkg2 = new Package('two', '2.0.0.0', '2.0');
+        $instance = Requirements::forComposerInstall($composer, $io, $filesystem, $pkg1, $pkg2);
         $config = $instance->config();
 
         static::assertFalse($config[Config::IS_WPSTARTER_COMMAND]->unwrap());
         static::assertFalse($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->unwrap());
         static::assertFalse($config[Config::IS_COMPOSER_UPDATE]->unwrap());
         static::assertTrue($config[Config::IS_COMPOSER_INSTALL]->unwrap());
-        static::assertSame([$p1, $p2], $config[Config::COMPOSER_UPDATED_PACKAGES]->unwrap());
+        static::assertSame([$pkg1, $pkg2], $config[Config::COMPOSER_UPDATED_PACKAGES]->unwrap());
     }
 
     public function testComposerUpdateInstanceCreation()
     {
         $composer = \Mockery::mock(\Composer\Composer::class);
         $composerConfig = \Mockery::mock(\Composer\Config::class);
-        $composerConfig->shouldReceive('get')->andReturn('');
-        $composer->shouldReceive('getPackage->getExtra')->andReturn([]);
-        $composer->shouldReceive('getConfig')->andReturn($composerConfig);
+        $composerConfig->allows('get')->andReturn('');
+        $composer->allows('getPackage->getExtra')->andReturn([]);
+        $composer->allows('getConfig')->andReturn($composerConfig);
 
-        $io = \Mockery::mock(\Composer\IO\IOInterface::class);
-        $filesystem = \Mockery::mock(\Composer\Util\Filesystem::class);
-        $filesystem->shouldReceive('normalizePath')->andReturnUsing(
-            function (string $path): string {
-                return rtrim(str_replace('\\', '/', $path), '/');
-            }
-        );
-
+        $io = new NullIO();
+        $filesystem = new \Composer\Util\Filesystem();
         $instance = Requirements::forComposerUpdate($composer, $io, $filesystem);
         $config = $instance->config();
 
@@ -208,5 +166,25 @@ class RequirementsTest extends TestCase
         static::assertSame(false, $config['unknown-dropins'], 'File wins over extra');
         static::assertSame('bar', $config['foo']);
         static::assertSame('4.5.1', $config['wp-version']);
+    }
+
+    /**
+     * For unit tests only makes sense to test the extractConfig() method, which is private.
+     *
+     * @param array $extra
+     * @param string $customRoot
+     * @return mixed
+     */
+    private function executeExtractConfig(array $extra, string $customRoot = null): array
+    {
+        $tester = \Closure::bind(
+            function (string $rootPath) use ($extra): array {
+                return $this->extractConfig($rootPath, $extra);
+            },
+            (new \ReflectionClass(Requirements::class))->newInstanceWithoutConstructor(),
+            Requirements::class
+        );
+
+        return $tester($customRoot ?: $this->fixturesPath() . '/paths-root', $extra);
     }
 }

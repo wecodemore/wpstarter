@@ -32,7 +32,7 @@ class Io
      * @param IOInterface $io
      * @param Formatter|null $formatter
      */
-    public function __construct(IOInterface $io, Formatter $formatter = null)
+    public function __construct(IOInterface $io, ?Formatter $formatter = null)
     {
         $this->io = $io;
         $this->formatter = $formatter ?: new Formatter();
@@ -197,10 +197,6 @@ class Io
                     usleep(250000);
                 }
                 $answer = $this->io->ask($questionText, $question->defaultAnswerKey());
-                /**
-                 * @psalm-suppress DocblockTypeContradiction
-                 * @psalm-suppress RedundantConditionGivenDocblockType
-                 */
                 $answer = is_string($answer) ? strtolower(trim($answer)) : null;
                 $count++;
             }

@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
@@ -6,15 +7,19 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace WeCodeMore\WpStarter\Tests\Unit\Config;
 
-use WeCodeMore\WpStarter\Config\Error;
 use WeCodeMore\WpStarter\Config\Result;
 use WeCodeMore\WpStarter\Tests\TestCase;
 
 class ResultTest extends TestCase
 {
-    public function testIdentityInConstructor()
+    /**
+     * @test
+     */
+    public function testIdentityInConstructor(): void
     {
         $result = Result::ok('ok!');
         $result2 = Result::ok($result);
@@ -28,7 +33,10 @@ class ResultTest extends TestCase
         $error2->unwrap();
     }
 
-    public function testOk()
+    /**
+     * @test
+     */
+    public function testOk(): void
     {
         $result = Result::ok('ok!');
 
@@ -43,7 +51,10 @@ class ResultTest extends TestCase
         static::assertFalse($result->either('no!', 'no!'));
     }
 
-    public function testNone()
+    /**
+     * @test
+     */
+    public function testNone(): void
     {
         $result = Result::none();
 
@@ -54,7 +65,10 @@ class ResultTest extends TestCase
         static::assertFalse($result->either('no!', 'ok!'));
     }
 
-    public function testError()
+    /**
+     * @test
+     */
+    public function testError(): void
     {
         $result = Result::error();
 
@@ -66,7 +80,10 @@ class ResultTest extends TestCase
         static::assertFalse($result->either('no!', 'ok!'));
     }
 
-    public function testErrorBail()
+    /**
+     * @test
+     */
+    public function testErrorBail(): void
     {
         $result = Result::error();
 
@@ -74,7 +91,10 @@ class ResultTest extends TestCase
         $result->unwrap();
     }
 
-    public function testErroredBail()
+    /**
+     * @test
+     */
+    public function testErroredBail(): void
     {
         $result = Result::errored('Meh!');
 

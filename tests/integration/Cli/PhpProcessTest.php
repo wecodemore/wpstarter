@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the WP Starter package.
  *
@@ -21,7 +22,7 @@ class PhpProcessTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpProcess
      */
-    public function testExecuteSimple()
+    public function testExecuteSimple(): void
     {
         $process = $this->factoryPhpProcess();
 
@@ -33,7 +34,7 @@ class PhpProcessTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpProcess
      */
-    public function testExecuteWithEnvironment()
+    public function testExecuteWithEnvironment(): void
     {
         $process = $this->factoryPhpProcess()->withEnvironment(['FOO' => 'I ran with env!']);
 
@@ -45,7 +46,7 @@ class PhpProcessTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpProcess
      */
-    public function testExecuteSilently()
+    public function testExecuteSilently(): void
     {
         $process = $this->factoryPhpProcess();
 
@@ -57,7 +58,7 @@ class PhpProcessTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpProcess
      */
-    public function testExecuteAndFail()
+    public function testExecuteAndFail(): void
     {
         $process = $this->factoryPhpProcess();
 

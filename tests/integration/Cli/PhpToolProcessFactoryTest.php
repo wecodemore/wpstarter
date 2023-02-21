@@ -30,7 +30,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
     /**
      * @after
      */
-    protected function after()
+    protected function after(): void
     {
         parent::tearDown();
         \Mockery::close();
@@ -40,7 +40,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
      */
-    public function testCreateFailsIfNoPackageNoPharPathAndNoPharUrl()
+    public function testCreateFailsIfNoPackageNoPharPathAndNoPharUrl(): void
     {
         $factory = $this->factoryPhpToolProcessFactory();
 
@@ -54,7 +54,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
      */
-    public function testCreateViaPackageFailIfMinVersionTooLow()
+    public function testCreateViaPackageFailIfMinVersionTooLow(): void
     {
         $factory = $this->factoryPhpToolProcessFactory();
 
@@ -76,7 +76,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
      */
-    public function testCreateViaPackage()
+    public function testCreateViaPackage(): void
     {
         $factory = $this->factoryPhpToolProcessFactory();
 
@@ -91,7 +91,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
      */
-    public function testCreateViaPharPath()
+    public function testCreateViaPharPath(): void
     {
         $factory = $this->factoryPhpToolProcessFactory();
 
@@ -105,7 +105,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
      */
-    public function testCreateViaPharUrl()
+    public function testCreateViaPharUrl(): void
     {
         $url = 'https://example.com/downloads?file=some-phar';
         $dir = vfsStream::setup('directory');
@@ -116,7 +116,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
         $urlDownloader->shouldReceive('save')
             ->once()
             ->with($url, $path)
-            ->andReturnUsing(function (string $url, string $path): bool {
+            ->andReturnUsing(static function (string $url, string $path): bool {
                 $url and touch($path);
                 return true;
             });
@@ -139,7 +139,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
      */
-    public function testCreateViaPharUrlFailsWhenPharCheckFails()
+    public function testCreateViaPharUrlFailsWhenPharCheckFails(): void
     {
         $url = 'https://example.com/downloads?file=some-phar';
         $dir = vfsStream::setup('directory');
@@ -150,7 +150,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
         $urlDownloader->shouldReceive('save')
             ->once()
             ->with($url, $path)
-            ->andReturnUsing(function (string $url, string $path): bool {
+            ->andReturnUsing(static function (string $url, string $path): bool {
                 $url and touch($path);
                 return true;
             });
@@ -172,7 +172,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcessFactory
      */
-    public function testRunWpCliCommandViaFileSystemBootstrap()
+    public function testRunWpCliCommandViaFileSystemBootstrap(): void
     {
         $config = new Config(
             [Config::INSTALL_WP_CLI => false],
@@ -197,7 +197,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
     /**
      * @param PhpToolProcess $process
      */
-    private function assertProcessWorks(PhpToolProcess $process)
+    private function assertProcessWorks(PhpToolProcess $process): void
     {
         static::assertTrue($process->execute('-r "echo \'Hi!!!\';"'));
 

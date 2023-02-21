@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
@@ -15,7 +18,10 @@ use WeCodeMore\WpStarter\Util\PackageFinder;
 
 class MuPluginListTest extends TestCase
 {
-    public function testPluginList()
+    /**
+     * @test
+     */
+    public function testPluginList(): void
     {
         $package1 = new CompletePackage('test/mu-plugin-1', '1.0.0.0', '1');
         $package1->setType('wordpress-muplugin');
@@ -23,22 +29,22 @@ class MuPluginListTest extends TestCase
         $package2 = new CompletePackage('test/mu-plugin-2', '2.0.0.0', '2');
         $package2->setType('wordpress-muplugin');
 
-        $muPluginsPath = $this->fixturesPath().'/paths-root/public/wp-content/mu-plugins';
+        $muPluginsPath = $this->fixturesPath() . '/paths-root/public/wp-content/mu-plugins';
 
         $finder = \Mockery::mock(PackageFinder::class);
         $finder
-            ->shouldReceive('findByType')
+            ->expects('findByType')
             ->once()
             ->with('wordpress-muplugin')
             ->andReturn([$package1, $package2]);
 
         $finder
-            ->shouldReceive('findPathOf')
+            ->expects('findPathOf')
             ->once()
             ->with($package1)
             ->andReturn("{$muPluginsPath}/dir1");
         $finder
-            ->shouldReceive('findPathOf')
+            ->expects('findPathOf')
             ->once()
             ->with($package2)
             ->andReturn("{$muPluginsPath}/dir2");

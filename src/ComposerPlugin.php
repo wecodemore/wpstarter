@@ -37,7 +37,6 @@ final class ComposerPlugin implements
     Capable,
     CommandProvider
 {
-
     public const EXTRA_KEY = 'wpstarter';
     public const EXTENSIONS_TYPE = 'wpstarter-extension';
 
@@ -334,7 +333,6 @@ final class ComposerPlugin implements
      */
     private function convertErrorsToExceptions()
     {
-        /** @psalm-suppress InvalidArgument */
         set_error_handler(
             static function (int $code, string $msg, string $file = '', int $line = 0) {
                 if ($file && $line) {

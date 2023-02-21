@@ -2,10 +2,12 @@
 <ruleset>
 
     <file>./src</file>
+    <file>./tests/integration</file>
+    <file>./tests/unit</file>
 
     <arg value="sp"/>
     <arg name="colors"/>
-    <config name="testVersion" value="7.0-"/>
+    <config name="testVersion" value="7.1-"/>
 
     <rule ref="Inpsyde">
         <exclude name="WordPress.Security"/>
@@ -25,6 +27,10 @@
                 type="array"
                 value="WeCodeMore\WpStarter=>src,WeCodeMore\WpStarter\Tests=>tests\src,WeCodeMore\WpStarter\Tests\Unit=>tests\unit,WeCodeMore\WpStarter\Tests\Integration=>tests\integration"/>
         </properties>
+    </rule>
+
+    <rule ref="Inpsyde.CodeQuality.FunctionLength">
+        <exclude-pattern>./tests/</exclude-pattern>
     </rule>
 
 </ruleset>

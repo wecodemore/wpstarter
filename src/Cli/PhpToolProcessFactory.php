@@ -62,7 +62,7 @@ class PhpToolProcessFactory
      * @param string|null $phpPath
      * @return PhpToolProcess
      */
-    public function create(PhpTool $command, string $phpPath = null): PhpToolProcess
+    public function create(PhpTool $command, ?string $phpPath = null): PhpToolProcess
     {
         ($phpPath === null) and $phpPath = (new PhpExecutableFinder())->find();
         if (!$phpPath) {

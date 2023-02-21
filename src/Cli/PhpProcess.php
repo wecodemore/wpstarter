@@ -53,7 +53,7 @@ class PhpProcess
      * @param string|null $cwd
      * @return bool
      */
-    public function execute(string $command, string $cwd = null): bool
+    public function execute(string $command, ?string $cwd = null): bool
     {
         return $this->process->execute("{$this->phpPath} {$command}", $cwd);
     }
@@ -63,7 +63,7 @@ class PhpProcess
      * @param string|null $cwd
      * @return bool
      */
-    public function executeSilently(string $command, string $cwd = null): bool
+    public function executeSilently(string $command, ?string $cwd = null): bool
     {
         return $this->process->executeSilently("{$this->phpPath} {$command}", $cwd);
     }

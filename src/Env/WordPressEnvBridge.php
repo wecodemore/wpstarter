@@ -215,11 +215,18 @@ class WordPressEnvBridge
         'preprod' => 'staging',
         'pre-prod' => 'staging',
         'pre-production' => 'staging',
+        'preproduction' => 'staging',
         'test' => 'staging',
+        'tests' => 'staging',
+        'testing' => 'staging',
         'uat' => 'staging',
+        'qa' => 'staging',
+        'acceptance' => 'staging',
+        'accept' => 'staging',
         'production' => 'production',
         'prod' => 'production',
         'live' => 'production',
+        'public' => 'production',
     ];
 
     /**
@@ -258,7 +265,7 @@ class WordPressEnvBridge
     private $customFiltersConfig = [];
 
     /**
-     * @var array<string>
+     * @var list<string>
      */
     private $definedConstants = [];
 
@@ -317,7 +324,7 @@ class WordPressEnvBridge
      * @param string|null $path Environment file path
      * @return void
      */
-    public function load(string $file = '.env', string $path = null)
+    public function load(string $file = '.env', ?string $path = null)
     {
         $this->loadFile($this->fullpathFor($file, $path));
     }
@@ -375,7 +382,7 @@ class WordPressEnvBridge
      * @param string|null $path
      * @return void
      */
-    public function loadAppended(string $file, string $path = null)
+    public function loadAppended(string $file, ?string $path = null)
     {
         if (self::$loadedVars === null) {
             $this->load($file, $path);
@@ -420,10 +427,12 @@ class WordPressEnvBridge
      * @param string $name
      * @return mixed
      *
+     * phpcs:disable Generic.Metrics.CyclomaticComplexity
      * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
     public function read(string $name)
     {
+        // phpcs:enable Generic.Metrics.CyclomaticComplexity
         // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
 
         $cached = self::$cache[$name] ?? null;
@@ -464,16 +473,17 @@ class WordPressEnvBridge
                 break;
         }
 
-        if ($value === null && $readGetEnv) {
+        if (($value === null) && $readGetEnv) {
             $value = getenv($name);
-            $value === false and $value = null;
+            ($value === false) and $value = null;
         }
 
-        if ($value === null) {
-            return null;
-        }
+        // Superglobals can contain anything, but environment variables must be strings.
+        // We can cast later scalar values.
+        // `is_scalar()` also discards null, and that is fine because we want to return null if
+        // that's the value we got here.
 
-        return $this->maybeFilterThenCache($name, (string)$value);
+        return is_scalar($value) ? $this->maybeFilterThenCache($name, (string)$value) : null;
     }
 
     /**
@@ -605,7 +615,7 @@ class WordPressEnvBridge
     }
 
     /**
-     * @return array
+     * @return list<string>
      */
     public function setupEnvConstants(): array
     {
@@ -643,7 +653,7 @@ class WordPressEnvBridge
     /**
      * @param string $name
      * @param string $value
-     * @return mixed
+     * @return int|bool|string|null
      *
      * @psalm-assert Filters $this->filters
      * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
@@ -729,7 +739,7 @@ class WordPressEnvBridge
      * @param string|null $basePath
      * @return string
      */
-    private function fullpathFor(string $filename, string $basePath = null): string
+    private function fullpathFor(string $filename, ?string $basePath = null): string
     {
         $basePath === null and $basePath = getcwd();
 

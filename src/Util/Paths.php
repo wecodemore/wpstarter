@@ -297,30 +297,17 @@ final class Paths implements \ArrayAccess
      * @param string|null $root
      * @return array<string, string>
      */
-    private function parse(string $root = null): array
+    private function parse(?string $root = null): array
     {
         $vendorDir = (string)$this->config->get('vendor-dir');
         $binDir = (string)$this->config->get('bin-dir');
-
-        $cwd = $root;
-        if (!$cwd) {
-            $cwd = getcwd();
-            if (!$cwd) {
-                $cwd = strpos($this->filesystem->normalizePath(__DIR__), $vendorDir) === 0
-                    ? dirname($vendorDir)
-                    : dirname(__DIR__, 2);
-            }
-
-            $cwd and $cwd = $this->filesystem->normalizePath($cwd);
-        }
-
-        $cwd or $cwd = '.';
+        $cwd = $this->cwd($root, $vendorDir);
 
         $wpInstallDir = $this->extra['wordpress-install-dir'] ?? 'wordpress';
         $wpContentDir = $this->extra['wordpress-content-dir'] ?? 'wp-content';
         $wpFullDir = $this->filesystem->normalizePath("{$cwd}/{$wpInstallDir}");
         $wpContentFullDir = $this->filesystem->normalizePath("{$cwd}/{$wpContentDir}");
-        $wpParentDir = $wpFullDir === $cwd ? $wpFullDir : dirname($wpFullDir);
+        $wpParentDir = ($wpFullDir === $cwd) ? $wpFullDir : dirname($wpFullDir);
 
         if (strpos($wpFullDir, $cwd) !== 0) {
             throw new \Exception(
@@ -329,8 +316,8 @@ final class Paths implements \ArrayAccess
             );
         }
 
-        if (strpos($wpContentFullDir, $cwd) !== 0 || $cwd === $wpContentFullDir) {
-            $to = $cwd === $wpContentFullDir ? 'root dir' : 'a dir outside root';
+        if (strpos($wpContentFullDir, $cwd) !== 0 || ($cwd === $wpContentFullDir)) {
+            $to = ($cwd === $wpContentFullDir) ? 'root dir' : 'a dir outside root';
             throw new \Exception(
                 "Config for WP config dir is pointing to {$to}, WP Starter does not support that."
             );
@@ -370,5 +357,25 @@ final class Paths implements \ArrayAccess
         }
 
         return $path;
+    }
+
+    /**
+     * @param string|null $root
+     * @param string $vendorDir
+     * @return string
+     */
+    private function cwd(?string $root, string $vendorDir): string
+    {
+        $cwd = $root ?: getcwd();
+        if (!$cwd) {
+            // if the directory containing this file is inside vendor, WP Starter is required as a
+            // dependency, otherwise is the root. In the first case the CWD can be determined as
+            // the dir containing the vendor, in the second case as the root of the package.
+            $cwd = strpos($this->filesystem->normalizePath(__DIR__), $vendorDir) === 0
+                ? dirname($vendorDir)
+                : dirname(__DIR__, 2);
+        }
+
+        return $this->filesystem->normalizePath($cwd);
     }
 }

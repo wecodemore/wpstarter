@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
@@ -13,7 +16,10 @@ use WeCodeMore\WpStarter\Util\FileContentBuilder;
 
 class FileContentBuilderTest extends TestCase
 {
-    public function testBuild()
+    /**
+     * @test
+     */
+    public function testBuild(): void
     {
         $templates = $this->packagePath() . '/templates';
         $paths = $this->factoryPaths();

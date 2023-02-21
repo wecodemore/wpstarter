@@ -186,7 +186,7 @@ class Filesystem
             }
 
             $stat = @stat($parentDir);
-            $permissions = $stat ? ((int)$stat['mode']) & 0007777 : 0755;
+            $permissions = $stat ? $stat['mode'] & 0007777 : 0755;
 
             if (!@mkdir($targetPath, $permissions, true) && !is_dir($targetPath)) {
                 return false;

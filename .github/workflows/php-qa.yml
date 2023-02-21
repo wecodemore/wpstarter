@@ -1,18 +1,23 @@
 name: PHP Quality Assurance
+
 on:
     push:
     pull_request:
     workflow_dispatch:
+
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
+
 jobs:
+
     static-qa:
         runs-on: ubuntu-latest
         if: ${{ !contains(github.event.head_commit.message, 'skip qa') }}
+
         steps:
             -   name: Checkout
-                uses: actions/checkout@v2
+                uses: actions/checkout@v3
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
@@ -22,15 +27,17 @@ jobs:
                     tools: cs2pr
 
             -   name: Install dependencies
-                uses: ramsey/composer-install@v1
+                uses: ramsey/composer-install@v2
 
             -   name: Check code styles
-                run: |
-                    ./vendor/bin/phpcs -q --report-full --report-checkstyle="phpcs-report.xml"  --runtime-set testVersion 7.1- --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1
-                    cs2pr --graceful-warnings phpcs-report.xml
+                run: ./vendor/bin/phpcs -q ${{ ((github.event_name == 'pull_request') && '--report-checkstyle="phpcs-report.xml" ') || '' }}--report-full --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1
+
+            -   name: Annotate code styles for PRs
+                if: ${{ github.event_name == 'pull_request' }}
+                run: cs2pr --graceful-warnings phpcs-report.xml
 
             -   name: Check Psalm
-                run: ./vendor/bin/psalm --output-format=github --no-cache
+                run: ./vendor/bin/psalm ${{ ((github.event_name == 'pull_request') && '--output-format=github ') || '' }} --no-suggestions --find-unused-psalm-suppress --no-diff --no-cache --no-file-cache
 
     unit-tests:
         runs-on: ubuntu-latest
@@ -38,55 +45,78 @@ jobs:
         env:
             USE_COVERAGE: no
         strategy:
-            fail-fast: true
+            fail-fast: false
             matrix:
-                php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0' ]
-                deps-mode: [ 'prefer-lowest', 'prefer-highest' ]
-                composer-ver: [ 'Composer 1', 'Composer 2' ]
-                include:
+                php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2' ]
+                composer-ver: [ '^1', '~2.0.0', '~2.1.0', '~2.2.0', '~2.3.0' ]
+                exclude:
+                    -   php-ver: '7.1'
+                        composer-ver: '~2.3.0'
                     -   php-ver: '8.1'
-                        deps-mode: 'prefer-highest'
-                        composer-ver: 'Composer 2'
+                        composer-ver: '^1'
+                    -   php-ver: '8.1'
+                        composer-ver: '~2.0.0'
                     -   php-ver: '8.2'
-                        deps-mode: 'prefer-highest'
-                        composer-options: ' --ignore-platform-reqs'
-                        composer-ver: 'Composer 2'
+                        composer-ver: '^1'
+                    -   php-ver: '8.2'
+                        composer-ver: '~2.0.0'
+                    -   php-ver: '8.2'
+                        composer-ver: '~2.1.0'
         steps:
             -   name: Update "USE_COVERAGE" env var based on matrix
-                if: ${{ matrix.php-ver == '7.4' && matrix.deps-mode == 'prefer-highest' }}
+                if: ${{ matrix.php-ver == '7.4' && matrix.composer-ver == '~2.3.0' }}
                 run: echo "USE_COVERAGE=yes" >> $GITHUB_ENV
 
             -   name: Checkout
-                uses: actions/checkout@v2
+                uses: actions/checkout@v3
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
                     php-version: ${{ matrix.php-ver }}
-                    ini-values: zend.assertions=1, error_reporting=-1, display_errors=On
+                    # WP CLI does not support yet PHP 8.2, so we hide deprecation messages
+                    ini-values: zend.assertions=1, error_reporting=${{ ((matrix.php-ver == '8.2') && 'E_ALL & ~E_DEPRECATED & ~E_STRICT') || 'E_ALL' }}, display_errors=${{ ((matrix.php-ver == '8.2') && 'Off') || 'On' }}
                     coverage: ${{ ((env.USE_COVERAGE == 'yes') && 'xdebug') || 'none' }}
-                    tools: cs2pr, parallel-lint
 
-            -   name: Check syntax error in sources
-                if: ${{ (matrix.deps-mode == 'prefer-highest') }}
-                run: parallel-lint ./src/
+            -   name: Adjust Composer dependencies
+                run:  |
+                    composer remove --dev --no-update "roave/security-advisories"
+                    composer require --dev --no-update "composer/composer:${{ matrix.composer-ver }}"
 
-            -   name: Install Composer dependencies
-                run: |
-                    composer config platform.php ${{ matrix.php-ver }}
-                    composer require --dev --no-update "composer/composer:^${{ ((matrix.composer-ver == 'Composer 1') && '1') || '2' }}"
-                    composer update${{ ((matrix.deps-mode == 'prefer-lowest') && ' --prefer-lowest') || '' }}${{ matrix.composer-options }}
-
-            -   name: Migrate test configuration (PHPUnit 9.0)
-                if: ${{( (matrix.php-ver >= 7.3) && (matrix.deps-mode == 'prefer-highest')) || (matrix.php-ver >= 8.0) }}
-                run: ./vendor/bin/phpunit --migrate-configuration
+            -   name: Install dependencies
+                uses: ramsey/composer-install@v2
+                with:
+                    dependency-versions: highest
 
             -   name: Run unit tests
-                run: ./vendor/bin/phpunit ${{ ((env.USE_COVERAGE == 'yes') && '--coverage-html=coverage-report') || '--no-coverage' }}
+                run: |
+                    ./vendor/bin/phpunit --atleast-version 9 && ./vendor/bin/phpunit --migrate-configuration || echo 'Config does not need updates.'
+                    ./vendor/bin/phpunit ${{ ((env.USE_COVERAGE == 'yes') && '--coverage-html=coverage-report') || '--no-coverage' }}
 
             -   name: Upload coverage report
-                uses: actions/upload-artifact@v2
+                uses: actions/upload-artifact@v3
                 if: ${{ env.USE_COVERAGE == 'yes' }}
                 with:
                     name: coverage-report
                     path: coverage-report/
+
+    lint:
+        runs-on: ubuntu-latest
+        if: ${{ !contains(github.event.head_commit.message, 'skip lint') }}
+        strategy:
+            fail-fast: true
+            matrix:
+                php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2' ]
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v3
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.php-ver }}
+                    ini-values: zend.assertions=1, error_reporting=E_ALL, display_errors=On
+                    tools: parallel-lint
+
+            -   name: Check syntax error in sources
+                run: parallel-lint ./src/

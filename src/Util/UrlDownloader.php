@@ -95,7 +95,7 @@ class UrlDownloader
     /**
      * Download a URL and save content to a file.
      *
-     * @param string $url
+     * @param non-empty-string $url
      * @param string $filename
      * @return bool
      */
@@ -130,7 +130,7 @@ class UrlDownloader
     /**
      * Perform a remote request and return the response as string.
      *
-     * @param string $url
+     * @param non-empty-string $url
      * @return string
      */
     public function fetch(string $url): string
@@ -161,7 +161,7 @@ class UrlDownloader
     }
 
     /**
-     * @param string $url
+     * @param non-empty-string $url
      * @return string
      */
     private function retrieveContents(string $url): string
@@ -192,7 +192,7 @@ class UrlDownloader
     }
 
     /**
-     * @param string $url
+     * @param non-empty-string $url
      * @param string $filename
      * @return bool
      */

@@ -260,7 +260,6 @@ final class Config implements \ArrayAccess
      * @param mixed $value
      * @return Result
      *
-     * @psalm-suppress MissingParamType
      * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     private function validateValue(string $name, $value): Result

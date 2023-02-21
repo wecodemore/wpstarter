@@ -22,7 +22,7 @@ class SystemProcessTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\SystemProcess
      */
-    public function testExecute()
+    public function testExecute(): void
     {
         $process = $this->factorySystemProcess()->withEnvironment(['FOO' => 'I ran with env!']);
 
@@ -36,7 +36,7 @@ class SystemProcessTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Cli\SystemProcess
      */
-    public function testExecuteSilently()
+    public function testExecuteSilently(): void
     {
         $process = $this->factorySystemProcess();
 

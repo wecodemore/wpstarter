@@ -63,7 +63,7 @@ class SystemProcess
      * @param string|null $cwd
      * @return bool
      */
-    public function execute(string $command, string $cwd = null): bool
+    public function execute(string $command, ?string $cwd = null): bool
     {
         try {
             is_string($cwd) or $cwd = $this->paths->root();
@@ -93,7 +93,7 @@ class SystemProcess
      * @param string|null $cwd
      * @return bool
      */
-    public function executeSilently(string $command, string $cwd = null): bool
+    public function executeSilently(string $command, ?string $cwd = null): bool
     {
         try {
             is_string($cwd) or $cwd = $this->paths->root();
@@ -113,7 +113,7 @@ class SystemProcess
      * @param string|null $cwd
      * @return Process
      */
-    private function factoryProcess(string $command, string $cwd = null): Process
+    private function factoryProcess(string $command, ?string $cwd = null): Process
     {
         if (method_exists(Process::class, 'fromShellCommandline')) {
             return Process::fromShellCommandline($command, $cwd, $this->environment ?: null);

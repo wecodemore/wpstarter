@@ -69,8 +69,14 @@ final class WpStarterCommand extends BaseCommand
     {
         // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
 
-        /** @var Composer $composer */
-        $composer = $this->getComposer(true, false);
+        /**
+         * @psalm-suppress DeprecatedMethod
+         * @var Composer $composer
+         */
+        $composer = method_exists($this, 'requireComposer')
+            ? $this->requireComposer(false, false)
+            : $this->getComposer(true, false);
+
         if ($composer->getPackage()->getType() === ComposerPlugin::EXTENSIONS_TYPE) {
             $this->writeError(
                 $output,

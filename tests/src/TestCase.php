@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests;
 
@@ -104,6 +107,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function factoryLocator(...$objects): Util\Locator
     {
+        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
+        // phpcs:enable Generic.Metrics.NestingLevel
+
         $reflection = new \ReflectionClass(Util\Locator::class);
         /** @var Util\Locator $locator */
         $locator = $reflection->newInstanceWithoutConstructor();
@@ -126,20 +132,16 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         ];
 
         $closure = function (...$objects) use ($supportedObjects) {
-            /** @noinspection PhpUndefinedFieldInspection */
             $this->objects = [];
             foreach ($objects as $object) {
                 foreach ($supportedObjects as $supportedObject) {
                     if (is_a($object, $supportedObject)) {
-                        /** @noinspection PhpUndefinedFieldInspection */
                         $this->objects[$supportedObject] = $object;
                         break;
                     }
                 }
             }
         };
-
-        // phpcs:enable
 
         \Closure::bind($closure, $locator, Util\Locator::class)(...$objects);
 

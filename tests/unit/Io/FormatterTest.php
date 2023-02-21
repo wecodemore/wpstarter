@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Io;
 
@@ -13,7 +16,10 @@ use WeCodeMore\WpStarter\Tests\TestCase;
 
 class FormatterTest extends TestCase
 {
-    public function testEnsureLineLength()
+    /**
+     * @test
+     */
+    public function testEnsureLineLength(): void
     {
         $line1 = str_repeat('aa ', 40); // 120 chars
         $line2 = str_repeat('aa ', 50); // 150 chars
@@ -35,7 +41,10 @@ class FormatterTest extends TestCase
         static::assertSame($expected, $lines);
     }
 
-    public function testEnsureLineLengthWithEmptyLinesEndingInsideLines()
+    /**
+     * @test
+     */
+    public function testEnsureLineLengthWithEmptyLinesEndingInsideLines(): void
     {
         $line1 = str_repeat('aa ', 40); // 120 chars
         $line2 = str_repeat('aa ', 50); // 150 chars
@@ -62,7 +71,10 @@ class FormatterTest extends TestCase
         static::assertSame($expected, $lines);
     }
 
-    public function testEnsureLineLengthWithLongLines()
+    /**
+     * @test
+     */
+    public function testEnsureLineLengthWithLongLines(): void
     {
         $line1 = str_repeat('a', 80); // single word 80 chars
         $line2 = str_repeat('aa ', 50); // 150 chars
@@ -85,7 +97,10 @@ class FormatterTest extends TestCase
         static::assertSame($expected, $lines);
     }
 
-    public function testCreateFilledBlock()
+    /**
+     * @test
+     */
+    public function testCreateFilledBlock(): void
     {
         $line1 = 'Lorem ipsum dolor sit amet';
         $line2 = 'consectetur adipiscing elit.';
@@ -112,7 +127,10 @@ class FormatterTest extends TestCase
         static::assertSame($expected, $block);
     }
 
-    public function testCreateCenteredBlock()
+    /**
+     * @test
+     */
+    public function testCreateCenteredBlock(): void
     {
         $line1 = 'Lorem ipsum dolor sit amet';
         $line2 = 'consectetur adipiscing elit.';
@@ -140,7 +158,10 @@ class FormatterTest extends TestCase
         static::assertSame($expected, $block);
     }
 
-    public function testCreateList()
+    /**
+     * @test
+     */
+    public function testCreateList(): void
     {
         $line1 = 'Lorem ipsum dolor sit amet';
         $line2 = 'consectetur adipiscing elit.';
@@ -162,7 +183,10 @@ class FormatterTest extends TestCase
         static::assertSame($expected, $block);
     }
 
-    public function testCreateListWithPrefix()
+    /**
+     * @test
+     */
+    public function testCreateListWithPrefix(): void
     {
         $line1 = 'Lorem ipsum dolor sit amet consectetur adipiscing elit.';
         $line2 = 'Donec lorem libero, semper pellentes sodales sit amet, accumsan at nibh.';

@@ -171,7 +171,7 @@ final class DropinStep implements FileCreationStepInterface
     /**
      * Download dropin file from given url and save it to in wp-content folder.
      *
-     * @param string $url
+     * @param non-empty-string $url
      * @param string $destination
      * @return int
      */

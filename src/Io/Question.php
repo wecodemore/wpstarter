@@ -38,7 +38,7 @@ class Question
      * @param array<string, string> $answers
      * @param string|null $default
      */
-    public function __construct(array $lines, array $answers = [], string $default = null)
+    public function __construct(array $lines, array $answers = [], ?string $default = null)
     {
         $this->lines = array_filter(
             $lines,

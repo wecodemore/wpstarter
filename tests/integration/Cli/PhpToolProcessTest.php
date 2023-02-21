@@ -24,9 +24,10 @@ class PhpToolProcessTest extends IntegrationTestCase
      * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcess
      * @see \WeCodeMore\WpStarter\Tests\DummyPhpTool::prepareCommand
      */
-    public function testExecute()
+    public function testExecute(): void
     {
-        $process = $this->factoryPhpToolProcess()->withEnvironment(['XX' => 'I ran tool with env!']);
+        $process = $this->factoryPhpToolProcess()
+            ->withEnvironment(['XX' => 'I ran tool with env!']);
 
         static::assertTrue($process->execute('-r "echo getenv(\'XX\');"'));
 
@@ -41,9 +42,10 @@ class PhpToolProcessTest extends IntegrationTestCase
      * @covers \WeCodeMore\WpStarter\Cli\PhpToolProcess
      * @see \WeCodeMore\WpStarter\Tests\DummyPhpTool::prepareCommand
      */
-    public function testExecuteSilently()
+    public function testExecuteSilently(): void
     {
-        $process = $this->factoryPhpToolProcess()->withEnvironment(['XX' => 'I ran tool with env!']);
+        $process = $this->factoryPhpToolProcess()
+            ->withEnvironment(['XX' => 'I ran tool with env!']);
 
         static::assertTrue($process->executeSilently('-r "echo getenv(\'XX\');"'));
         static::assertSame('Dummy!', trim($this->collectOutput()));

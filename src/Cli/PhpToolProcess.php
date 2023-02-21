@@ -94,7 +94,7 @@ class PhpToolProcess
      * @param string|null $cwd
      * @return bool
      */
-    public function executeSilently(string $command, string $cwd = null): bool
+    public function executeSilently(string $command, ?string $cwd = null): bool
     {
         return $this->phpProcess->executeSilently(
             $this->tool->prepareCommand(

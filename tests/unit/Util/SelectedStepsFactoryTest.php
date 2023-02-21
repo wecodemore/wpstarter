@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
@@ -29,7 +32,10 @@ use WeCodeMore\WpStarter\Util\SelectedStepsFactory;
 
 class SelectedStepsFactoryTest extends TestCase
 {
-    public function testSelectedCommandModeIsSetAccordingToFlags()
+    /**
+     * @test
+     */
+    public function testSelectedCommandModeIsSetAccordingToFlags(): void
     {
         $factory = SelectedStepsFactory::autorun();
         static::assertFalse($factory->isSelectedCommandMode());
@@ -55,7 +61,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertTrue($factory->isSelectedCommandMode());
     }
 
-    public function testLastErrorEmptyBeforeRunning()
+    /**
+     * @test
+     */
+    public function testLastErrorEmptyBeforeRunning(): void
     {
         $autorun = SelectedStepsFactory::autorun();
         $command = new SelectedStepsFactory(SelectedStepsFactory::MODE_COMMAND, 'foo');
@@ -64,7 +73,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertSame('', $command->lastError());
     }
 
-    public function testLastFatalErrorEmptyBeforeRunning()
+    /**
+     * @test
+     */
+    public function testLastFatalErrorEmptyBeforeRunning(): void
     {
         $autorun = SelectedStepsFactory::autorun();
         $command = new SelectedStepsFactory(SelectedStepsFactory::MODE_COMMAND, 'foo');
@@ -73,7 +85,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertSame('', $command->lastFatalError());
     }
 
-    public function testOptInValidSteps()
+    /**
+     * @test
+     */
+    public function testOptInValidSteps(): void
     {
         $factory = new SelectedStepsFactory(
             SelectedStepsFactory::MODE_COMMAND,
@@ -97,7 +112,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertSame('', $factory->lastError());
     }
 
-    public function testOptInBothValidInvalidSteps()
+    /**
+     * @test
+     */
+    public function testOptInBothValidInvalidSteps(): void
     {
         $factory = new SelectedStepsFactory(
             SelectedStepsFactory::MODE_COMMAND,
@@ -120,7 +138,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertStringContainsString('invalid step', $factory->lastError());
     }
 
-    public function testOptInInvalidSteps()
+    /**
+     * @test
+     */
+    public function testOptInInvalidSteps(): void
     {
         $factory = new SelectedStepsFactory(
             SelectedStepsFactory::MODE_COMMAND,
@@ -138,7 +159,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertStringContainsString('invalid steps', $factory->lastError());
     }
 
-    public function testOptInCommandSteps()
+    /**
+     * @test
+     */
+    public function testOptInCommandSteps(): void
     {
         $factory = new SelectedStepsFactory(SelectedStepsFactory::MODE_COMMAND, 'dummy');
 
@@ -153,7 +177,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertSame('', $factory->lastError());
     }
 
-    public function testOptInCommandStepsWrongName()
+    /**
+     * @test
+     */
+    public function testOptInCommandStepsWrongName(): void
     {
         $factory = new SelectedStepsFactory(SelectedStepsFactory::MODE_COMMAND, 'cmd-step');
 
@@ -167,7 +194,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertStringContainsString('invalid step setting', $factory->lastError());
     }
 
-    public function testOptInValidStepsWithSkipConfig()
+    /**
+     * @test
+     */
+    public function testOptInValidStepsWithSkipConfig(): void
     {
         $factory = new SelectedStepsFactory(
             SelectedStepsFactory::MODE_COMMAND,
@@ -189,7 +219,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertStringContainsString('--ignore-skip-config', $factory->lastError());
     }
 
-    public function testOptInValidStepsWithSkipButSkipConfigIgnored()
+    /**
+     * @test
+     */
+    public function testOptInValidStepsWithSkipButSkipConfigIgnored(): void
     {
         $factory = new SelectedStepsFactory(
             SelectedStepsFactory::MODE_COMMAND | SelectedStepsFactory::IGNORE_SKIP_STEPS_CONFIG,
@@ -213,7 +246,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertSame('', $factory->lastError());
     }
 
-    public function testOptOutValidSteps()
+    /**
+     * @test
+     */
+    public function testOptOutValidSteps(): void
     {
         $factory = new SelectedStepsFactory(
             SelectedStepsFactory::MODE_COMMAND | SelectedStepsFactory::MODE_OPT_OUT,
@@ -240,7 +276,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertSame('', $factory->lastError());
     }
 
-    public function testOptOutBothValidAndInvalidSteps()
+    /**
+     * @test
+     */
+    public function testOptOutBothValidAndInvalidSteps(): void
     {
         $factory = new SelectedStepsFactory(
             SelectedStepsFactory::MODE_COMMAND | SelectedStepsFactory::MODE_OPT_OUT,
@@ -268,7 +307,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertStringContainsString('invalid step name', $factory->lastError());
     }
 
-    public function testOptOutValidStepsWithSkipConfig()
+    /**
+     * @test
+     */
+    public function testOptOutValidStepsWithSkipConfig(): void
     {
         $factory = new SelectedStepsFactory(
             SelectedStepsFactory::MODE_COMMAND | SelectedStepsFactory::MODE_OPT_OUT,
@@ -299,7 +341,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertSame('', $factory->lastError());
     }
 
-    public function testOptOutValidStepsWithSkipConfigWithIgnoredSkipConfig()
+    /**
+     * @test
+     */
+    public function testOptOutValidStepsWithSkipConfigWithIgnoredSkipConfig(): void
     {
         $flags = SelectedStepsFactory::MODE_COMMAND
             | SelectedStepsFactory::MODE_OPT_OUT
@@ -339,7 +384,10 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertSame('', $factory->lastError());
     }
 
-    public function testOptOutWithoutAnySteps()
+    /**
+     * @test
+     */
+    public function testOptOutWithoutAnySteps(): void
     {
         $flags = SelectedStepsFactory::MODE_COMMAND
             | SelectedStepsFactory::MODE_OPT_OUT

@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Io;
 
@@ -16,30 +19,33 @@ use WeCodeMore\WpStarter\Tests\TestCase;
 
 class IoTest extends TestCase
 {
-    public function testAskTooMuchTries()
+    /**
+     * @test
+     */
+    public function testAskTooMuchTries(): void
     {
         $question = new Question(['Yes or no?'], ['y' => 'Yes', 'n' => 'No']);
 
         $composerIo = \Mockery::mock(IOInterface::class);
         $composerIo
-            ->shouldReceive('ask')
+            ->expects('ask')
             ->times(5)
             ->andReturn('a', 'b', 'c', 'd', 'e');
         $composerIo
-            ->shouldReceive('write')
+            ->expects('write')
             ->times(4)
             ->with(\Mockery::type('string'))
             ->andReturnUsing(
-                function (string $error) {
+                static function (string $error): void {
                     static::assertStringContainsString('Invalid answer, try again', $error);
                 }
             );
         $composerIo
-            ->shouldReceive('writeError')
+            ->expects('writeError')
             ->twice()
             ->with(\Mockery::type('string'))
             ->andReturnUsing(
-                function (string $error) {
+                static function (string $error) {
                     static $i;
                     $i = $i ?? 0;
                     $i++;
@@ -55,14 +61,17 @@ class IoTest extends TestCase
         static::assertSame('y', $answer);
     }
 
-    public function testAskWithRightAnswer()
+    /**
+     * @test
+     */
+    public function testAskWithRightAnswer(): void
     {
         $question = new Question(['Yes or no?'], ['y' => 'Yes', 'n' => 'No']);
 
         $composerIo = \Mockery::mock(IOInterface::class);
-        $composerIo->shouldReceive('ask')->once()->andReturn(' Y ');
-        $composerIo->shouldReceive('write')->never();
-        $composerIo->shouldReceive('writeError')->never();
+        $composerIo->expects('ask')->once()->andReturn(' Y ');
+        $composerIo->expects('write')->never();
+        $composerIo->expects('writeError')->never();
 
         $io = new Io($composerIo, new Formatter());
 
@@ -71,14 +80,17 @@ class IoTest extends TestCase
         static::assertSame('y', $answer);
     }
 
-    public function testAskConfirmDefaultFalseAnswerYes()
+    /**
+     * @test
+     */
+    public function testAskConfirmDefaultFalseAnswerYes(): void
     {
         $composerIo = \Mockery::mock(IOInterface::class);
         $composerIo
-            ->shouldReceive('ask')
+            ->expects('ask')
             ->once()
             ->andReturnUsing(
-                function (string $message): string {
+                static function (string $message): string {
                     static::assertStringContainsString('Yes or No?', $message);
                     static::assertStringContainsString('[Y]es | [N]o', $message);
                     static::assertStringContainsString("Default: 'n'", $message);
@@ -92,14 +104,17 @@ class IoTest extends TestCase
         static::assertTrue($io->askConfirm(['Yes or No?'], false));
     }
 
-    public function testAskConfirmDefaultFalseAnswerNo()
+    /**
+     * @test
+     */
+    public function testAskConfirmDefaultFalseAnswerNo(): void
     {
         $composerIo = \Mockery::mock(IOInterface::class);
         $composerIo
-            ->shouldReceive('ask')
+            ->expects('ask')
             ->once()
             ->andReturnUsing(
-                function (string $message): string {
+                static function (string $message): string {
                     static::assertStringContainsString('Yes or No?', $message);
                     static::assertStringContainsString('[Y]es | [N]o', $message);
                     static::assertStringContainsString("Default: 'n'", $message);
@@ -113,14 +128,17 @@ class IoTest extends TestCase
         static::assertFalse($io->askConfirm(['Yes or No?'], false));
     }
 
-    public function testAskConfirmDefaultTrueAnswerYes()
+    /**
+     * @test
+     */
+    public function testAskConfirmDefaultTrueAnswerYes(): void
     {
         $composerIo = \Mockery::mock(IOInterface::class);
         $composerIo
-            ->shouldReceive('ask')
+            ->expects('ask')
             ->once()
             ->andReturnUsing(
-                function (string $message): string {
+                static function (string $message): string {
                     static::assertStringContainsString('Yes or No?', $message);
                     static::assertStringContainsString('[Y]es | [N]o', $message);
                     static::assertStringContainsString("Default: 'y'", $message);
@@ -134,14 +152,17 @@ class IoTest extends TestCase
         static::assertTrue($io->askConfirm(['Yes or No?'], true));
     }
 
-    public function testAskConfirmDefaultTrueAnswerNo()
+    /**
+     * @test
+     */
+    public function testAskConfirmDefaultTrueAnswerNo(): void
     {
         $composerIo = \Mockery::mock(IOInterface::class);
         $composerIo
-            ->shouldReceive('ask')
+            ->expects('ask')
             ->once()
             ->andReturnUsing(
-                function (string $message): string {
+                static function (string $message): string {
                     static::assertStringContainsString('Yes or No?', $message);
                     static::assertStringContainsString('[Y]es | [N]o', $message);
                     static::assertStringContainsString("Default: 'y'", $message);

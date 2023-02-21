@@ -24,7 +24,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadSkippingFile()
+    public function testLoadSkippingFile(): void
     {
         $_ENV['WPSTARTER_ENV_LOADED'] = 1;
 
@@ -38,7 +38,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadFile()
+    public function testLoadFile(): void
     {
         $bridge = new WordPressEnvBridge();
 
@@ -56,7 +56,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadFileMoreTimesDoNothing()
+    public function testLoadFileMoreTimesDoNothing(): void
     {
         $bridge = new WordPressEnvBridge();
 
@@ -71,7 +71,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testHttpServerVarsAreReturnedOnlyIfLoaded()
+    public function testHttpServerVarsAreReturnedOnlyIfLoaded(): void
     {
         $_SERVER['HTTP_FOO'] = 'foo';
         $_SERVER['_HTTP_FOO'] = 'foo';
@@ -88,7 +88,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testGetEnvIsSkippedForNotLoadedVars()
+    public function testGetEnvIsSkippedForNotLoadedVars(): void
     {
         putenv('PUT_THE_ENV=HERE');
 
@@ -103,7 +103,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadAppended()
+    public function testLoadAppended(): void
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
@@ -117,7 +117,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadAppendedWrongFileDoNothing()
+    public function testLoadAppendedWrongFileDoNothing(): void
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
@@ -131,7 +131,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadAppendedAlwaysLoadsIfLoadWasCalledAndEnvLoaded()
+    public function testLoadAppendedAlwaysLoadsIfLoadWasCalledAndEnvLoaded(): void
     {
         $_ENV['WPSTARTER_ENV_LOADED'] = 1;
 
@@ -149,7 +149,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadAppendedNotLoadsIfLoadWasNotCalledAndEnvLoaded()
+    public function testLoadAppendedNotLoadsIfLoadWasNotCalledAndEnvLoaded(): void
     {
         $_ENV['WPSTARTER_ENV_LOADED'] = 1;
 
@@ -166,7 +166,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadAppendedDoesNotOverrideActualEnv()
+    public function testLoadAppendedDoesNotOverrideActualEnv(): void
     {
         $_ENV['FOO'] = "I come first.";
 
@@ -187,7 +187,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testSetupWordPress()
+    public function testSetupWordPress(): void
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
@@ -224,7 +224,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testArbitraryValuesUnfiltered()
+    public function testArbitraryValuesUnfiltered(): void
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
@@ -237,7 +237,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testNewValuesCanBeAppended()
+    public function testNewValuesCanBeAppended(): void
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
@@ -250,7 +250,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadedValuesCanBeUpdated()
+    public function testLoadedValuesCanBeUpdated(): void
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
@@ -263,7 +263,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testValuesInActualEnvCanNotBeAppended()
+    public function testValuesInActualEnvCanNotBeAppended(): void
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
@@ -278,9 +278,12 @@ class WordPressEnvBridgeTest extends TestCase
     /**
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
+     *
+     *  phpcs:disable Generic.Metrics.CyclomaticComplexity
      */
-    public function testDumpCacheAndLoadFromDump()
+    public function testDumpCacheAndLoadFromDump(): void
     {
+        // phpcs:enable Generic.Metrics.CyclomaticComplexity
         $dir = vfsStream::setup('directory');
         $cacheFile = $dir->url() . '/cached.env.php';
 
@@ -314,12 +317,10 @@ class WordPressEnvBridgeTest extends TestCase
         $oldCache = null;
 
         $cleanLoaded = \Closure::bind(
+            /** @bound */
             function (bool $setCache) use (&$oldCache) {
-                /** @noinspection PhpUndefinedFieldInspection */
                 $setCache and $oldCache = static::$cache;
-                /** @noinspection PhpUndefinedFieldInspection */
                 static::$cache = [];
-                /** @noinspection PhpUndefinedFieldInspection */
                 static::$loadedVars = null;
                 putenv('SYMFONY_DOTENV_VARS');
             },
@@ -361,8 +362,8 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertTrue($cachedBridge->hasCachedValues());
 
         $newCache = \Closure::bind(
+            /** @bound */
             function (): array {
-                /** @noinspection PhpUndefinedFieldInspection */
                 return static::$cache;
             },
             $cachedBridge,
@@ -422,7 +423,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testsSetupConstants()
+    public function testsSetupConstants(): void
     {
         $this->deleteCacheFile();
 
@@ -476,9 +477,13 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      * @depends testsSetupConstants
+     *
+     * phpcs:disable Generic.Metrics.CyclomaticComplexity
      */
-    public function testLoadCacheFromScratch()
+    public function testLoadCacheFromScratch(): void
     {
+        // phpcs:enable Generic.Metrics.CyclomaticComplexity
+
         $cacheFile = $this->fixturesPath() . '/cached.env.php';
         if (!file_exists($cacheFile)) {
             static::markTestSkipped('Cache file was not written.');
@@ -549,7 +554,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadWpEnvironmentTypeFromWpEnvWithAlias()
+    public function testLoadWpEnvironmentTypeFromWpEnvWithAlias(): void
     {
         $_ENV['WP_ENV'] = 'PREPROD';
         $bridge = new WordPressEnvBridge();
@@ -565,7 +570,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testSetDifferentEnvForWpAndWpStarter()
+    public function testSetDifferentEnvForWpAndWpStarter(): void
     {
         $_ENV['WP_ENV'] = 'something_very_custom';
         $_ENV['WP_ENVIRONMENT_TYPE'] = 'development';
@@ -583,7 +588,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadWpEnvironmentTypeFromWpEnvWhenStartingWithValue()
+    public function testLoadWpEnvironmentTypeFromWpEnvWhenStartingWithValue(): void
     {
         $_ENV['WP_ENVIRONMENT_TYPE'] = 'PREPROD-US-1';
         $bridge = new WordPressEnvBridge();
@@ -601,7 +606,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadWpEnvironmentTypeFromWpEnvWhenEndingWithValue()
+    public function testLoadWpEnvironmentTypeFromWpEnvWhenEndingWithValue(): void
     {
         $_ENV['WP_ENVIRONMENT_TYPE'] = 'My.Production';
         $bridge = new WordPressEnvBridge();
@@ -617,7 +622,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadWpEnvironmentTypeFromWpEnvWhenValueInTheMiddle()
+    public function testLoadWpEnvironmentTypeFromWpEnvWhenValueInTheMiddle(): void
     {
         $_ENV['WP_ENVIRONMENT_TYPE'] = 'my_dev_one';
         $bridge = new WordPressEnvBridge();
@@ -633,7 +638,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testCustomWpEnvironmentThatCantBeMapped()
+    public function testCustomWpEnvironmentThatCantBeMapped(): void
     {
         $_ENV['WP_ENVIRONMENT_TYPE'] = 'my_devone';
         $bridge = new WordPressEnvBridge();
@@ -649,7 +654,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testCustomWpEnvironmentWithCustomMapping()
+    public function testCustomWpEnvironmentWithCustomMapping(): void
     {
         $_ENV['WP_ENV'] = 'THIS_CANT_BE_MAPPED';
         $_ENV['WP_ENVIRONMENT_TYPE'] = 'dev';

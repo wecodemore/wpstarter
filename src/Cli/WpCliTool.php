@@ -179,7 +179,7 @@ class WpCliTool implements PhpTool
 
     /**
      * @param Io $io
-     * @return array{0:string,1:string}
+     * @return array{non-empty-string, non-empty-string}
      */
     private function hashAlgorithmUrl(Io $io): array
     {

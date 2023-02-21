@@ -146,8 +146,8 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
     /**
      * Download a remote .env.example in root folder.
      *
-     * @param  string $url
-     * @param  string $destination
+     * @param non-empty-string $url
+     * @param string $destination
      * @return int
      */
     private function download(string $url, string $destination): int
@@ -170,7 +170,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      * @param  string|null $source
      * @return int
      */
-    private function copy(Paths $paths, string $destination, string $source = null): int
+    private function copy(Paths $paths, string $destination, ?string $source = null): int
     {
         if ($source === null) {
             $source = $paths->template('.env.example');

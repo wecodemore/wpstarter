@@ -22,7 +22,7 @@ class PackageFinderTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Util\PackageFinder
      */
-    public function testFindByType()
+    public function testFindByType(): void
     {
         $finder = $this->factoryFinder();
 
@@ -37,14 +37,16 @@ class PackageFinderTest extends IntegrationTestCase
         static::assertCount(3, $names);
         static::assertTrue(in_array('composer/installers', $names, true));
         static::assertTrue(in_array('composer/package-versions-deprecated', $names, true));
-        static::assertTrue(in_array('dealerdirect/phpcodesniffer-composer-installer', $names, true));
+        static::assertTrue(
+            in_array('dealerdirect/phpcodesniffer-composer-installer', $names, true)
+        );
     }
 
     /**
      * @test
      * @covers \WeCodeMore\WpStarter\Util\PackageFinder
      */
-    public function testFindPathOf()
+    public function testFindPathOf(): void
     {
         $finder = $this->factoryFinder();
 
@@ -65,11 +67,11 @@ class PackageFinderTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Util\PackageFinder
      */
-    public function testFindByVendor()
+    public function testFindByVendor(): void
     {
         $finder = $this->factoryFinder();
 
-        $roavePackages = $finder->findByVendor('roave');
+        $roavePackages = $finder->findByVendor('phpunit');
 
         $names = [];
         foreach ($roavePackages as $package) {
@@ -77,14 +79,14 @@ class PackageFinderTest extends IntegrationTestCase
             $names[] = $package->getName();
         }
 
-        static::assertTrue(in_array('roave/security-advisories', $names, true));
+        static::assertTrue(in_array('phpunit/phpunit', $names, true));
     }
 
     /**
      * @test
      * @covers \WeCodeMore\WpStarter\Util\PackageFinder
      */
-    public function testFindByName()
+    public function testFindByName(): void
     {
         $finder = $this->factoryFinder();
 
@@ -98,7 +100,7 @@ class PackageFinderTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Util\PackageFinder
      */
-    public function testSearch()
+    public function testSearch(): void
     {
         $finder = $this->factoryFinder();
 
@@ -111,7 +113,9 @@ class PackageFinderTest extends IntegrationTestCase
 
         static::assertCount(2, $names);
         static::assertTrue(in_array('squizlabs/php_codesniffer', $names, true));
-        static::assertTrue(in_array('dealerdirect/phpcodesniffer-composer-installer', $names, true));
+        static::assertTrue(
+            in_array('dealerdirect/phpcodesniffer-composer-installer', $names, true)
+        );
     }
 
     /**

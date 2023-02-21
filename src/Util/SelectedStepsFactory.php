@@ -370,9 +370,12 @@ class SelectedStepsFactory
     /**
      * @param bool $fatal
      * @return string
+     *
+     * phpcs:disable Generic.Metrics.CyclomaticComplexity
      */
     private function lastErrorMessage(bool $fatal): string
     {
+        // phpcs:enable Generic.Metrics.CyclomaticComplexity
         if ($this->maybeWantIgnoreConfig) {
             $error = $this->inputErrors > 1
                 ? "{$this->inputErrors} of the given step names have been ignored"

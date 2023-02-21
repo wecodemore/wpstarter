@@ -60,7 +60,7 @@ final class Result
      * @param \Throwable|null $error
      * @return Result
      */
-    public static function error(\Throwable $error = null): Result
+    public static function error(?\Throwable $error = null): Result
     {
         return new static(null, $error ?: new \Error('Error.'));
     }

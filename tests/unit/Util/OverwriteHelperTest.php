@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
@@ -18,48 +21,39 @@ use WeCodeMore\WpStarter\Util\OverwriteHelper;
 class OverwriteHelperTest extends TestCase
 {
     /**
-     * @param array $configs
-     * @param bool $confirm
-     * @param string $file
-     * @return OverwriteHelper
+     * @test
      */
-    private function makeHelper(
-        array $configs = [],
-        bool $confirm = true,
-        string $file = ''
-    ): OverwriteHelper {
-
-        $config = new Config($configs, $this->factoryValidator());
-        $io = \Mockery::mock(Io::class);
-        $io->shouldReceive('askConfirm')
-            ->with(\Mockery::type('array'), basename($file))
-            ->andReturn($confirm);
-
-        return new OverwriteHelper($config, $io, dirname(__DIR__), new Filesystem());
-    }
-
-    public function testShouldOverwriteReturnTrueIfFileNotExists()
+    public function testShouldOverwriteReturnTrueIfFileNotExists(): void
     {
         $helper = $this->makeHelper([Config::PREVENT_OVERWRITE => true]);
 
         static::assertTrue($helper->shouldOverwrite(__DIR__ . '/foo.bar'));
     }
 
-    public function testShouldOverwriteReturnTrueIfConfigIsTrue()
+    /**
+     * @test
+     */
+    public function testShouldOverwriteReturnTrueIfConfigIsTrue(): void
     {
         $helper = $this->makeHelper([Config::PREVENT_OVERWRITE => true]);
 
         static::assertFalse($helper->shouldOverwrite(__FILE__));
     }
 
-    public function testShouldOverwriteReturnFalseIfConfigIsFalse()
+    /**
+     * @test
+     */
+    public function testShouldOverwriteReturnFalseIfConfigIsFalse(): void
     {
         $helper = $this->makeHelper([Config::PREVENT_OVERWRITE => false]);
 
         static::assertTrue($helper->shouldOverwrite(__FILE__));
     }
 
-    public function testShouldOverwriteReturnTrueIfConfirmationAskedReturnsTrue()
+    /**
+     * @test
+     */
+    public function testShouldOverwriteReturnTrueIfConfirmationAskedReturnsTrue(): void
     {
         $helper = $this->makeHelper(
             [Config::PREVENT_OVERWRITE => OptionalStep::ASK],
@@ -70,7 +64,10 @@ class OverwriteHelperTest extends TestCase
         static::assertTrue($helper->shouldOverwrite(__FILE__));
     }
 
-    public function testShouldOverwriteReturnFalseIfConfirmationAskedReturnsFalse()
+    /**
+     * @test
+     */
+    public function testShouldOverwriteReturnFalseIfConfirmationAskedReturnsFalse(): void
     {
         $helper = $this->makeHelper(
             [Config::PREVENT_OVERWRITE => OptionalStep::ASK],
@@ -81,7 +78,10 @@ class OverwriteHelperTest extends TestCase
         static::assertFalse($helper->shouldOverwrite(__FILE__));
     }
 
-    public function testShouldOverwriteWithPatternMatch()
+    /**
+     * @test
+     */
+    public function testShouldOverwriteWithPatternMatch(): void
     {
         $fileName = pathinfo(__FILE__, PATHINFO_FILENAME);
 
@@ -98,9 +98,30 @@ class OverwriteHelperTest extends TestCase
         static::assertTrue($helper4->shouldOverwrite(__FILE__));
         static::assertFalse($helper5->shouldOverwrite(__FILE__));
 
-        static::assertFalse($helper6->shouldOverwrite($this->packagePath().'/composer.json'));
+        static::assertFalse($helper6->shouldOverwrite($this->packagePath() . '/composer.json'));
         static::assertFalse($helper6->shouldOverwrite(__DIR__));
         static::assertTrue($helper6->shouldOverwrite("{$fileName}.txt"));
         static::assertFalse($helper6->shouldOverwrite(__FILE__));
+    }
+
+    /**
+     * @param array $configs
+     * @param bool $confirm
+     * @param string $file
+     * @return OverwriteHelper
+     */
+    private function makeHelper(
+        array $configs = [],
+        bool $confirm = true,
+        string $file = ''
+    ): OverwriteHelper {
+
+        $config = new Config($configs, $this->factoryValidator());
+        $io = \Mockery::mock(Io::class);
+        $io->allows('askConfirm')
+            ->with(\Mockery::type('array'), basename($file))
+            ->andReturn($confirm);
+
+        return new OverwriteHelper($config, $io, dirname(__DIR__), new Filesystem());
     }
 }

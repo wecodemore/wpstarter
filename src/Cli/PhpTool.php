@@ -16,7 +16,6 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 interface PhpTool
 {
-
     /**
      * @return string
      */

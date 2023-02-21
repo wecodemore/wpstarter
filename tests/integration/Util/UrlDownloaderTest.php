@@ -19,7 +19,7 @@ class UrlDownloaderTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Util\UrlDownloader
      */
-    public function testFetchFailsForWrongUrl()
+    public function testFetchFailsForWrongUrl(): void
     {
         $downloader = $this->createUrlDownloader();
 
@@ -30,7 +30,7 @@ class UrlDownloaderTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Util\UrlDownloader
      */
-    public function testFetch()
+    public function testFetch(): void
     {
         $downloader = $this->createUrlDownloader();
 
@@ -44,7 +44,7 @@ class UrlDownloaderTest extends IntegrationTestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Util\UrlDownloader
      */
-    public function testSave()
+    public function testSave(): void
     {
         $downloader = $this->createUrlDownloader();
 

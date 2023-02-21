@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Env;
 
@@ -17,16 +20,11 @@ class FiltersTest extends TestCase
      * @dataProvider filterDataProvider
      *
      * @param string $mode
-     * @param $input
-     * @param $expectedOutput
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
+     * @param mixed $input
+     * @param mixed $expectedOutput
      */
     public function testFilter(string $mode, $input, $expectedOutput)
     {
-        // phpcs:enable
-
         $filter = new Filters();
 
         $describe = preg_replace(
@@ -43,13 +41,13 @@ class FiltersTest extends TestCase
     }
 
     /**
-     * @return array[]
+     * @return list<array{string, mixed, mixed}>
      *
      * phpcs:disable Inpsyde.CodeQuality.FunctionLength
      */
-    public function filterDataProvider(): array
+    public static function filterDataProvider(): array
     {
-        // phpcs:enable
+        // phpcs:enable Inpsyde.CodeQuality.FunctionLength
 
         return [
             [Filters::FILTER_BOOL, 1, true],

@@ -597,9 +597,12 @@ class Validator
      * @param mixed $value
      * @return Result
      * @see Validator::validateFileName()
+     *
+     * phpcs:disable Generic.Metrics.CyclomaticComplexity
      */
     public function validateDirName($value): Result
     {
+        // phpcs:enable Generic.Metrics.CyclomaticComplexity
         if (!is_string($value)) {
             return Result::errored('Folder name must be in a string.');
         }
@@ -632,7 +635,7 @@ class Validator
 
         // extract a prefix being a protocol://, protocol:, protocol://drive: or simply drive:
         $regex = '{^(?:[0-9a-z]{2,}+:(?://(?:[a-z]:)?)?|[a-z]:)(?:/?(.+))+}i';
-        if ($trimmed === $normalized && preg_match($regex, $trimmed, $driveStartMatch)) {
+        if (($trimmed === $normalized) && preg_match($regex, $trimmed, $driveStartMatch)) {
             $trimmed = $driveStartMatch[1] ?? '';
         }
 

@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
@@ -6,16 +7,20 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace WeCodeMore\WpStarter\Tests\Unit\Config;
 
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Config\Error;
 use WeCodeMore\WpStarter\Config\Result;
 use WeCodeMore\WpStarter\Tests\TestCase;
 
 class ConfigTest extends TestCase
 {
-    public function testConstructor()
+    /**
+     * @test
+     */
+    public function testConstructor(): void
     {
         $config = new Config(
             ['foo' => 'bar', Config::ENV_EXAMPLE => 'no'],
@@ -27,7 +32,10 @@ class ConfigTest extends TestCase
         static::assertTrue($config[Config::REGISTER_THEME_FOLDER]->is(false));
     }
 
-    public function testSetNewOrDefaultConfig()
+    /**
+     * @test
+     */
+    public function testSetNewOrDefaultConfig(): void
     {
         $config = new Config([], $this->factoryValidator());
 
@@ -38,17 +46,23 @@ class ConfigTest extends TestCase
         $config['foo'] = 'bar';
         $config[Config::CACHE_ENV] = false;
 
+        /** @noinspection PhpUndefinedMethodInspection */
         static::assertTrue($config['foo']->is('bar'));
+        /** @noinspection PhpUndefinedMethodInspection */
         static::assertTrue($config[Config::CACHE_ENV]->is(false));
     }
 
-    public function testSetNewEmptyConfig()
+    /**
+     * @test
+     */
+    public function testSetNewEmptyConfig(): void
     {
         $config = new Config([], $this->factoryValidator());
 
         $dir = str_replace('\\', '/', __DIR__);
         $config[Config::TEMPLATES_DIR] = $dir;
 
+        /** @noinspection PhpUndefinedMethodInspection */
         static::assertTrue($config[Config::TEMPLATES_DIR]->is($dir));
 
         $this->expectException(\BadMethodCallException::class);
@@ -56,16 +70,16 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateCustomWithResult()
+    public function testValidateCustomWithResult(): void
     {
         $config = new Config(['a' => 'hello', 'b' => 'goodbye'], $this->factoryValidator());
 
-        $config->appendValidator('a', function (string $value): Result {
+        $config->appendValidator('a', static function (string $value): Result {
             return $value === 'hello' ? Result::ok($value) : Result::errored('Invalid');
         });
-        $config->appendValidator('b', function (string $value): Result {
+        $config->appendValidator('b', static function (string $value): Result {
             return $value === 'hello' ? Result::ok($value) : Result::errored('Invalid');
         });
 
@@ -74,13 +88,13 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateCustomIsWrappedInResult()
+    public function testValidateCustomIsWrappedInResult(): void
     {
         $config = new Config(['hi' => 'hello!'], $this->factoryValidator());
 
-        $config->appendValidator('hi', function (string $value): string {
+        $config->appendValidator('hi', static function (string $value): string {
             return strtoupper($value);
         });
 
@@ -88,13 +102,13 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateWithError()
+    public function testValidateWithError(): void
     {
         $config = new Config(['hello' => 'Hello!'], $this->factoryValidator());
 
-        $config->appendValidator('hello', function () {
+        $config->appendValidator('hello', static function () {
             throw new \Error('No hello!');
         });
 
@@ -105,13 +119,13 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateWithThrowable()
+    public function testValidateWithThrowable(): void
     {
         $config = new Config(['hello' => 'Hello!'], $this->factoryValidator());
 
-        $config->appendValidator('hello', function () {
+        $config->appendValidator('hello', static function () {
             throw new \Error('No hello!');
         });
 
@@ -122,9 +136,9 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateCustomCantOverwriteDefault()
+    public function testValidateCustomCantOverwriteDefault(): void
     {
         $config = new Config([], $this->factoryValidator());
 
@@ -135,22 +149,21 @@ class ConfigTest extends TestCase
     }
 
     /**
-     * @see TestCase::factoryValidator()
+     * @test
      */
-    public function testValidateCustomCantWarningMeansError()
+    public function testValidateCustomCantWarningMeansError(): void
     {
         $config = new Config(['hi' => 'hello', 'bye' => 'goodbye'], $this->factoryValidator());
 
-        $config->appendValidator('hello', function (): Result {
-            $warning = 1/0;
+        $config->appendValidator('hello', static function (): Result {
+            /** @noinspection PhpDivisionByZeroInspection */
+            $warning = 1 / 0;
 
             return Result::ok($warning > 0 ? 1 : 2);
         });
 
-        $config->appendValidator('bye', function (): Result {
-            $noWarning = 1/1;
-
-            return Result::ok($noWarning > 0 ? 1 : 2);
+        $config->appendValidator('bye', static function (): Result {
+            return Result::ok(1);
         });
 
         static::assertSame('Ha!', $config['hello']->unwrapOrFallback('Ha!'));

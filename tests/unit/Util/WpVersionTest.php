@@ -1,10 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
 /*
  * This file is part of the WP Starter package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
@@ -17,117 +20,125 @@ use WeCodeMore\WpStarter\Util\WpVersion;
 class WpVersionTest extends TestCase
 {
     /**
+     * @test
      * @dataProvider versionsDataProvider
-     * @param string $input
-     * @param string $expected
      */
-    public function testNormalize(string $input, string $expected)
+    public function testNormalize(string $input, string $expected): void
     {
         static::assertSame($expected, WpVersion::normalize($input));
     }
 
-    public function testDiscoverFindsNothingIfNoPackages()
+    /**
+     * @test
+     */
+    public function testDiscoverFindsNothingIfNoPackages(): void
     {
         $packageFinder = \Mockery::mock(PackageFinder::class);
-        $packageFinder->shouldReceive('findByType')
+        $packageFinder->expects('findByType')
             ->with(WpVersion::WP_PACKAGE_TYPE)
             ->andReturn([]);
 
         $io = \Mockery::mock(Io::class);
-        $io->shouldReceive('writeErrorBlock');
+        $io->allows('writeErrorBlock');
         $wpVer = new WpVersion($packageFinder, $io);
 
         static::assertSame('', $wpVer->discover());
     }
 
-    public function testDiscoverFindsWordPressPackage()
+    /**
+     * @test
+     */
+    public function testDiscoverFindsWordPressPackage(): void
     {
         $packageFinder = \Mockery::mock(PackageFinder::class);
         $io = \Mockery::mock(Io::class);
         $wpVer = new WpVersion($packageFinder, $io);
 
         $package1 = \Mockery::mock(PackageInterface::class);
-        $package1->shouldReceive('getType')->andReturn('wordpress-core');
-        $package1->shouldReceive('getVersion')->andReturn('4.8');
-        $package1->shouldReceive('isDev')->andReturn(false);
+        $package1->expects('getVersion')->andReturn('4.8');
 
-        $packageFinder->shouldReceive('findByType')
+        $packageFinder->expects('findByType')
             ->with(WpVersion::WP_PACKAGE_TYPE)
             ->andReturn([$package1]);
 
         static::assertSame('4.8.0', $wpVer->discover());
     }
 
-    public function testDiscoverForDevWordPress()
+    /**
+     * @test
+     */
+    public function testDiscoverForDevWordPress(): void
     {
         $packageFinder = \Mockery::mock(PackageFinder::class);
         $io = \Mockery::mock(Io::class);
-        $io->shouldReceive('writeErrorBlock');
+        $io->allows('writeErrorBlock');
         $wpVer = new WpVersion($packageFinder, $io);
 
         $package1 = \Mockery::mock(PackageInterface::class);
-        $package1->shouldReceive('getType')->andReturn('wordpress-core');
-        $package1->shouldReceive('getVersion')->andReturn('99999-dev');
+        $package1->expects('getVersion')->andReturn('99999-dev');
 
-        $packageFinder->shouldReceive('findByType')
+        $packageFinder->expects('findByType')
             ->with(WpVersion::WP_PACKAGE_TYPE)
             ->andReturn([$package1]);
 
         static::assertSame('99999.0.0', $wpVer->discover());
     }
 
-    public function testDiscoverSuccessForDevNumericVersion()
+    /**
+     * @test
+     */
+    public function testDiscoverSuccessForDevNumericVersion(): void
     {
         $packageFinder = \Mockery::mock(PackageFinder::class);
         $io = \Mockery::mock(Io::class);
         $wpVer = new WpVersion($packageFinder, $io);
 
         $package1 = \Mockery::mock(PackageInterface::class);
-        $package1->shouldReceive('getType')->andReturn('wordpress-core');
-        $package1->shouldReceive('getVersion')->andReturn('4.8-alpha1');
-        $package1->shouldReceive('isDev')->andReturn(true);
+        $package1->expects('getVersion')->andReturn('4.8-alpha1');
 
-        $packageFinder->shouldReceive('findByType')
+        $packageFinder->expects('findByType')
             ->with(WpVersion::WP_PACKAGE_TYPE)
             ->andReturn([$package1]);
 
         static::assertSame('4.8.0', $wpVer->discover());
     }
 
-    public function testDiscoverReturnsEmptyIfWpVerIsTooOld()
+    /**
+     * @test
+     */
+    public function testDiscoverReturnsEmptyIfWpVerIsTooOld(): void
     {
         $packageFinder = \Mockery::mock(PackageFinder::class);
         $io = \Mockery::mock(Io::class);
-        $io->shouldReceive('writeErrorBlock');
+        $io->allows('writeErrorBlock');
         $wpVer = new WpVersion($packageFinder, $io);
 
         $package1 = \Mockery::mock(PackageInterface::class);
-        $package1->shouldReceive('getType')->andReturn('wordpress-core');
-        $package1->shouldReceive('getVersion')->andReturn('1');
-        $package1->shouldReceive('isDev')->andReturn(false);
+        $package1->expects('getVersion')->andReturn('1');
 
-        $packageFinder->shouldReceive('findByType')
+        $packageFinder->expects('findByType')
             ->with(WpVersion::WP_PACKAGE_TYPE)
             ->andReturn([$package1]);
 
         static::assertSame('', $wpVer->discover());
     }
 
-    public function testDiscoverPrintsErrorForMoreWordPressPackages()
+    /**
+     * @test
+     */
+    public function testDiscoverPrintsErrorForMoreWordPressPackages(): void
     {
         $packageFinder = \Mockery::mock(PackageFinder::class);
         $io = \Mockery::mock(Io::class);
-        $io->shouldReceive('writeErrorBlock');
+        $io->allows('writeErrorBlock');
         $wpVer = new WpVersion($packageFinder, $io);
 
         $package1 = \Mockery::mock(PackageInterface::class);
-        $package1->shouldReceive('getType')->andReturn('wordpress-core');
-        $package1->shouldReceive('getVersion')->andReturn('5');
-        $package1->shouldReceive('isDev')->andReturn(false);
-
         $package2 = clone $package1;
+        $package1->expects('getVersion')->andReturn('5');
+        $package2->expects('getVersion')->andReturn('5');
 
-        $packageFinder->shouldReceive('findByType')
+        $packageFinder->expects('findByType')
             ->with(WpVersion::WP_PACKAGE_TYPE)
             ->andReturn([$package1, $package2]);
 
@@ -135,9 +146,9 @@ class WpVersionTest extends TestCase
     }
 
     /**
-     * @return array[]
+     * @return list<array{string, string}>
      */
-    public function versionsDataProvider(): array
+    public static function versionsDataProvider(): array
     {
         return [
             ['0', '0.0.0'],

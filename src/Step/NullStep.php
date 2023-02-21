@@ -19,7 +19,6 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 class NullStep implements Step
 {
-
     /**
      * @return string
      */
