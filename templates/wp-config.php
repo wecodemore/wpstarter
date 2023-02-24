@@ -97,15 +97,15 @@ ENV_VARIABLES: {
 
     unset($envCacheEnabled, $envIsCached);
 
-    $phpEnvFilePath = WPSTARTER_PATH . "/{$envType}.php";
+    $phpEnvFilePath = realpath(__DIR__ . "{{{ENV_BOOTSTRAP_DIR}}}/{$envType}.php");
     $hasPhpEnvFile = file_exists($phpEnvFilePath) && is_readable($phpEnvFilePath);
     if ($hasPhpEnvFile) {
-        require_once WPSTARTER_PATH . "/{$envType}.php";
+        require_once $phpEnvFilePath;
     }
     $debugInfo['env-php-file'] = [
         'label' => 'Env-specific PHP file',
-        'value' => $hasPhpEnvFile ? WPSTARTER_PATH . "/{$envType}.php" : 'None',
-        'debug' => $hasPhpEnvFile ? WPSTARTER_PATH . "/{$envType}.php" : '',
+        'value' => $hasPhpEnvFile ? $phpEnvFilePath : 'None',
+        'debug' => $hasPhpEnvFile ? $phpEnvFilePath : '',
     ];
     unset($phpEnvFilePath, $hasPhpEnvFile);
 } #@@/ENV_VARIABLES
