@@ -110,7 +110,7 @@ final class MuLoaderStep implements FileCreationStepInterface
 
         $built = $this->builder->build(
             $paths,
-            'wpstarter-mu-loader.php',
+            self::TARGET_FILE_NAME,
             ['MU_PLUGINS_LIST' => implode(', ', $muPluginsPaths)]
         );
 
