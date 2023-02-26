@@ -114,6 +114,8 @@ There's no configuration affecting this step. The MU plugins to load are identif
 
 If no MU plugin packages are installed via Composer, the step is entirely skipped.
 
+WP Starter also supports packages containing multiple MU plugin, or any other purpose, PHP files. Because a multi-file package can contain unrelated PHP code, each MU plugin needs to have a WordPress standard `Plugin Name` header to have it included in MU plugin loader.
+
 ### `EnvExampleStep`
 
 It is a quite standard practice for applications that support `.env` files to provide a `.env.example` file as a blueprint of the available configurations.
