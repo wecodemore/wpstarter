@@ -207,6 +207,7 @@ class SelectedStepsFactoryTest extends TestCase
 
         $locator = $this->factoryLocator(
             $this->factoryConfig([Config::SKIP_STEPS => [CheckPathStep::NAME]]),
+            \Mockery::mock(Filesystem::class),
             \Mockery::mock(Io::class)
         );
 
@@ -265,7 +266,11 @@ class SelectedStepsFactoryTest extends TestCase
             WpCliCommandsStep::NAME
         );
 
-        $locator = $this->factoryLocator($this->factoryConfig(), \Mockery::mock(Io::class));
+        $locator = $this->factoryLocator(
+            $this->factoryConfig(),
+            \Mockery::mock(Filesystem::class),
+            \Mockery::mock(Io::class)
+        );
 
         $composer = \Mockery::mock(Composer::class);
 
@@ -296,7 +301,11 @@ class SelectedStepsFactoryTest extends TestCase
             'foo'
         );
 
-        $locator = $this->factoryLocator($this->factoryConfig(), \Mockery::mock(Io::class));
+        $locator = $this->factoryLocator(
+            $this->factoryConfig(),
+            \Mockery::mock(Filesystem::class),
+            \Mockery::mock(Io::class)
+        );
 
         $composer = \Mockery::mock(Composer::class);
 
@@ -330,7 +339,11 @@ class SelectedStepsFactoryTest extends TestCase
             ],
         ];
 
-        $locator = $this->factoryLocator($this->factoryConfig($config), \Mockery::mock(Io::class));
+        $locator = $this->factoryLocator(
+            $this->factoryConfig($config),
+            \Mockery::mock(Filesystem::class),
+            \Mockery::mock(Io::class)
+        );
 
         $composer = \Mockery::mock(Composer::class);
 
