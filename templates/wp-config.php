@@ -209,13 +209,18 @@ SSL_FIX : {
 } #@@/SSL_FIX
 
 URL_CONSTANTS : {
+    // Defining WP_HOME is highly suggested. We do our best here, but this will never be 100% fine.
     if (!defined('WP_HOME')) {
-        $home = filter_var($_SERVER['HTTPS'] ?? '', FILTER_VALIDATE_BOOLEAN) ? 'https://' : 'http://';
+        $port = is_numeric($_SERVER['SERVER_PORT'] ?? '') ? (int)$_SERVER['SERVER_PORT'] : 0;
+        $scheme = isset($_SERVER['HTTPS'])
+            ? (filter_var($_SERVER['HTTPS'], FILTER_VALIDATE_BOOLEAN) ? 'https' : 'http')
+            : ($port === 443 ? 'https' : 'http');
+        $home = "{$scheme}://";
         $home .= $_SERVER['SERVER_NAME'] ?? 'localhost';
-        $port =  $_SERVER['SERVER_PORT'] ?? '';
-        (is_numeric($port) && (int)$port > 0) and $home .= sprintf(':%d', $port);
+        $ports = ['https' => 443, 'http' => 80];
+        (($port > 0) && ($port !== $ports[$scheme])) and $home .= sprintf(':%d', $port);
         define('WP_HOME', $home);
-        unset($home);
+        unset($port, $scheme, $home, $ports);
     }
 
     /** Set WordPress other URL / path constants not set via environment variables. */
