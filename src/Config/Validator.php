@@ -124,24 +124,33 @@ class Validator
             return Result::none();
         }
 
+        $error = 'Scripts config must an array where keys are script names (start with "pre-" or '
+            . '"post-" and values are a single callback or a list of callbacks.';
+
         if (!is_array($value)) {
-            return Result::errored('Scripts config must be either a string or an array.');
+            return Result::errored($error);
         }
 
         $allScripts = [];
 
         foreach ($value as $name => $scripts) {
-            if (!is_string($name) || !is_array($scripts)) {
-                continue;
+            if (!is_string($name) || !preg_match('~^(?:pre|post)\-.+$~i', $name)) {
+                return Result::errored($error);
             }
 
             $name = strtolower($name);
-            if (!preg_match('~^(?:pre|post)\-.+$~', $name)) {
+
+            if ($this->isCallback($scripts)) {
+                $allScripts[$name] = [$scripts];
                 continue;
             }
 
-            $scripts = array_filter($scripts, [$this, 'isCallback']);
-            $scripts and $allScripts[$name] = $scripts;
+            if (!is_array($scripts)) {
+                return Result::errored($error);
+            }
+
+            $validScripts = array_filter($scripts, [$this, 'isCallback']);
+            $validScripts and $allScripts[$name] = array_values($validScripts);
         }
 
         if (!$allScripts) {

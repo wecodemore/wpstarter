@@ -40,11 +40,11 @@ interface Step
 - `success()` and `error()` has to return feedback message for the user in case the command execution was either successful or not.
 - `allowed() ` must return true if the step should be run. For example, a step that will copy a file will return false in this method if the source file is not found.
 - `run()` is where the actual execution of the step happen. This method is never called if `allowed() ` returns false, so if some checks are done in that method, there's no need to perform those again or to manually call `allowed()` inside `run()`.
-  The method should return one the interface constants `Step::SUCCESS` or `Step::ERROR` depending if the step was successful or not. `Step::NONE` should be returned if the step is aborted for any reason without an outcome that can be either considered successful or erroneous.
+  The method should return one the interface constants `Step::SUCCESS` or `Step::ERROR` depending on the step being successful or not. `Step::NONE` should be returned if the step is aborted for any reason without an outcome that can be either considered successful or erroneous.
 
 The first three methods are very simple and pretty much logicless.
 
-The last two methods receive the same parameters. Those are objects that provide information about WP Starter and Composer configuration to inform the methods logic.
+The last two methods receive the same parameters. Those are objects that provide information about WP Starter and Composer configuration to inform the methods' logic.
 
 ### Config object
 
@@ -52,7 +52,7 @@ The `Config` object (fully qualified name `WeCodeMore\WpStarter\Config\Config`) 
 
 The object implements `ArrayAccess` to access settings, where the keys to obtain values are the exact same keys used in the JSON config files.
 
-Accessing a value does **not** return the "plain" value as it is set in the JSON files, but returns an instance of a `Result` object. This is a wrapper that helps avoiding exceptions in case of missing configuration and provides helpers to get or check the "wrapped" value.
+Accessing a value does **not** return the "plain" value as it is set in the JSON files, but returns an instance of a `Result` object. This is a wrapper that helps to avoid exceptions in case of missing configuration and provides helpers to get or check the "wrapped" value.
 
 The most relevant methods of `Result` object are:
 
@@ -77,7 +77,7 @@ It has several methods, each for one path:
 - `wpContent()` - returns the project WordPress content folder (which contains plugin, themes...), according to configuration in `composer.json`.
 - `template()` - takes a `$filename` argument, and returns the full path of given file, searching in the WP Starter templates folder that can be customised in `composer.json` or `wpstarter.json`.
 
-**Each** of the methods accept a relative path to be appended. For example, if `$paths->wpContent()` returns `/html/my-project/wp-content/` , than  `$paths->wpContent('plugins/plugin.php')`  will return `/html/my-content/plugins/plugin.php` . And so on.
+**Each** of the methods accepts a relative path to be appended. For example, if `$paths->wpContent()` returns `/html/my-project/wp-content/` , than  `$paths->wpContent('plugins/plugin.php')`  will return `/html/my-content/plugins/plugin.php` . And so on.
 
 
 
@@ -85,7 +85,7 @@ It has several methods, each for one path:
 
 When creating custom steps or even extending steps via scripts it is necessary that step classes and scripts callbacks are autoloadable, or it is not possible for WP Starter to run them.
 
-The obvious way to do that it is to use entries via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json`. That obviously works, but considering that Composer is used to require WordPress, and that Composer autoload  is loaded at every WordPress request, "polluting" Composer autoload with things that are not meant to be run in production is probably not a good idea considering that the autoloader can have quite a substantial impact on web request time.
+The obvious way to do that it is to use entries via the [`autoload`](https://getcomposer.org/doc/01-basic-usage.md#autoloading) setting in `composer.json`. That obviously works, but considering that Composer is used to require WordPress, and that Composer's autoload is loaded at every WordPress request, "polluting" Composer autoload with things that are not meant to be run in production is probably not a good idea considering that the autoloader can have quite a substantial impact on web request time.
 
 WP Starter itself registers a custom autoloader just in time before running its steps, and only registers  in `composer.json` autoload the minimum required, that is its plugin class and little more.
 
@@ -114,7 +114,7 @@ use WeCodeMore\WpStarter\Step\Step;
 use WeCodeMore\WpStarter\Util\Locator;
 
 function sayHelloBeforeStarting(int $result, Step $step, Locator $locator) {
-    $locator->io()->writeColorBlock('magenta', "Hello there!\n");
+    $locator->io()->writeCenteredColorBlock('magenta', 'black', "Hello there!\n");
 }
 ```
 
@@ -124,7 +124,7 @@ An even more powerful yet simpler way to obtain autoload for custom steps is via
 
 ## WP Starter extensions
 
-Many configurations of WP Starter allow pointing local files, which includes files in packages pulled via Composer. Which means that creating Composer packages to extends WP Starter possibilities is an effective way to, for example, add  shared configuration, WP CLI scripts, custom scripts, and custom steps.
+Many configurations of WP Starter allow pointing local files, which includes files in packages pulled via Composer. Which means that creating Composer packages to extend WP Starter possibilities is an effective way to, for example, add  shared configuration, WP CLI scripts, custom scripts, and custom steps.
 
 In such packages, especially in custom scripts and steps, it is very likely necessary to make use of WP Starter objects, which means that WP Starter should probably be used as a dependency.
 
@@ -132,7 +132,7 @@ However, when installing (or updating) Composer packages that declares WP Starte
 
 A special **package type**, **`wpstarter-extension`** , can be used in such packages to avoid that issue: when WP Starter will recognize that root package has `wpstarter-extension` type, will do nothing on Composer installation or update.
 
-Moreover, packages of type `wpstarter-extension` can use the setting `extra.wpstarter-autoload` to setup an autoload strategy that will only be used when WP Starter perform its tasks, without affecting regular application autoload.
+Moreover, packages of type `wpstarter-extension` can use the setting `extra.wpstarter-autoload` to set up an autoload strategy that will only be used when WP Starter perform its tasks, without affecting regular application autoload.
 
 ### WP Starter autoload
 
@@ -157,9 +157,9 @@ For example, a package with a `composer.json` like this:
             "files": [
                 "helpers.php"
             ],
-            "psr-4": [
+            "psr-4": {
                 "MyCompany\\WpStarterExtension\\": "src/"
-            ]
+            }
         }
     }
 }
@@ -228,11 +228,11 @@ Thanks to that method WP Starter will check if the file exists before even attem
 
 Considering that WP Starter will check for us that any overwrite will happen with respect to user settings, we don't really have reasons to not run this step. Which means that `allowed()` method can just return `true`.
 
-Finally it's time to build the step routine, that is the `run()` method.
+Finally, it's time to build the step routine, that is the `run()` method.
 
 What we need to do, basically, is to write a file. We could surely use plain PHP functions to do it, however WP Starter ships with a class `Filesystem` that makes the job easier by addressing edge cases, nicely handling errors and so on.
 
-To obtain an instance of of this object we can use the WP Starter `Locator` object that is always passed as first argument to step classes constructors.
+To obtain an instance of this object we can use the WP Starter `Locator` object that is always passed as first argument to step classes constructors.
 
 ```php
 namespace WPStarter\Examples;
@@ -255,7 +255,7 @@ class HtaccessStep implements FileCreationStepInterface {
 }
 ```
 
-Now, we need to know the content of the file. For readability sake we extract the file content output in a separate private method. Something like this:
+Now, we need to know the content of the file. For readability's sake we extract the file content output in a separate private method. Something like this:
 
 ```php
     // ...
@@ -301,7 +301,7 @@ RewriteRule ^(wp-(content|admin|includes).*) wordpress/$1 [L]
 RewriteRule ^(.*\.php)$ wordpress/$1 [L]
 ```
 
-We are telling Apache that when an URL like `example.com/wp-admin/` is requested, it should be rewritten to `example.com/wordpress/wp-admin/` this way, even if we have WordPress installed into the `/wordpress` subfolder, we can access WP dashboard without having to add the subfolder name into the URL.
+We are telling Apache that when a URL like `example.com/wp-admin/` is requested, it should be rewritten to `example.com/wordpress/wp-admin/` this way, even if we have WordPress installed into the `/wordpress` subfolder, we can access WP dashboard without having to add the subfolder name into the URL.
 
 This is nice, however the `/wordpress` subfolder is hardcoded here, but that it is just the default folder, that could be configured in `composer.json` to something different.
 
