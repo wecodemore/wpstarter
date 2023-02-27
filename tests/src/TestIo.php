@@ -16,11 +16,20 @@ use Composer\IO\NullIO;
 
 class TestIo extends NullIO
 {
-    /** @var list<string> */
-    public array $outputs = [];
-    /** @var list<string> */
-    public array $errors = [];
-    public int $verbosity;
+    /**
+     * @var list<string>
+     */
+    public $outputs = [];
+
+    /**
+     * @var list<string>
+     */
+    public $errors = [];
+
+    /**
+     * @var int
+     */
+    public $verbosity;
 
     /**
      * @param int $verbosity
