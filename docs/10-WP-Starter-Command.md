@@ -1,6 +1,6 @@
 # WP Starter Command
 
-By default **WP Starter runs every time `composer update` or `composer install` is ran**, including the very first time a project dependencies are installed.
+By default, **WP Starter runs every time `composer update` or `composer install` is run**, including the very first time a project dependencies are installed.
 
 Sometimes might be desirable to *only* perform WP Starter steps (according to configuration) without also updating Composer dependencies.
 
@@ -31,19 +31,20 @@ Options:
                                  are those to skip, not those to run.
       --skip-custom              Skip any step defined in "custom-steps" setting.
       --ignore-skip-config       Ignore "skip-steps" config.
+  -l, --list-commands            List available commands.
 ```
 
 
 
 ### Customizing steps to run ("opt-in" mode)
 
-The first thing to notice is that is is possible to pass an array of step to run, by listing them after the command, for example:
+The first thing to notice is that it is possible to pass an array of step to run, by listing them after the command, for example:
 
 ```shell
 composer wpstarter publish-content-dev wp-cli
 ```
 
-In the example above only *"publish-content-dev"* and *"wp-cli"* steps would be ran.
+In the example above only *"publish-content-dev"* and *"wp-cli"* steps would be executed.
 
 ### Skip ("opt-out" mode)
 
@@ -57,7 +58,7 @@ Note that when using this option, one or more step names are required. By runnin
 composer wpstarter --skip publish-content-dev wp-cli
 ```
 
-In the example above , WP starter would run all the default steps, plus all custom steps, but skipping both *"publish-content-dev"*, *"wp-cli"* and also skipping any step listed in the `skip-steps` config.
+In the example above, WP starter would run all the default steps, plus all custom steps, but skipping both *"publish-content-dev"*, *"wp-cli"* and also skipping any step listed in the `skip-steps` config.
 
 ### Skip custom
 
@@ -79,7 +80,8 @@ composer wpstarter --skip step-one step-two
 
 assuming that "step-one" and "step-two" are all the steps listed in the `custom-steps` setting. 
 
-Note that tis flag is ignored when running in the "opt-in" mode (i.e. listing one or more steps without using the `--skip` flag). Reason is opt-in mode takes precedence over opt-out mode, so if the command is run like:
+Note that this flag is ignored when running in the "opt-in" mode (i.e. listing one or more steps without using the `--skip` flag).
+Reason is opt-in mode takes precedence over opt-out mode, so if the command is run like:
 
 ```shell
 composer wpstarter step-one --skip-custom
@@ -188,6 +190,16 @@ composer wpstarter yarn wp-cli step-one
 will run the three steps with no issue.
 
 
+## Listing commands
+
+```shell
+composer wpstarter --steps-help
+```
+
+Does execute nothing, but lists all available steps, including custom, but excluding those disabled
+in config or explicitly passed using the `--skip` flag.
+
+Can be used in combination with other flags like `--skip`, `--skip-custom`, and `--ignore-skip-config`.
 
 ------
 

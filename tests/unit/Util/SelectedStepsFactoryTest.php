@@ -13,6 +13,7 @@ namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
 use Composer\Composer;
 use Composer\Util\Filesystem;
+use WeCodeMore\WpStarter\ComposerPlugin;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Step\CheckPathStep;
 use WeCodeMore\WpStarter\Step\ContentDevStep;
@@ -28,6 +29,9 @@ use WeCodeMore\WpStarter\Step\WpConfigStep;
 use WeCodeMore\WpStarter\Tests\DummyStep;
 use WeCodeMore\WpStarter\Tests\TestCase;
 use WeCodeMore\WpStarter\Io\Io;
+use WeCodeMore\WpStarter\Tests\TestIo;
+use WeCodeMore\WpStarter\Tests\TestStepOne;
+use WeCodeMore\WpStarter\Tests\TestStepTwo;
 use WeCodeMore\WpStarter\Util\SelectedStepsFactory;
 
 class SelectedStepsFactoryTest extends TestCase
@@ -415,5 +419,224 @@ class SelectedStepsFactoryTest extends TestCase
 
         static::assertSame([], $steps);
         static::assertStringContainsString('was expecting one or more step', $factory->lastError());
+    }
+
+    /**
+     * @test
+     */
+    public function testListAll(): void
+    {
+        $flags = SelectedStepsFactory::MODE_LIST;
+
+        $factory = new SelectedStepsFactory($flags);
+
+        $io = new TestIo();
+
+        $locator = $this->factoryLocator($this->factoryConfig(), new Io($io));
+        $composer = \Mockery::mock(Composer::class);
+
+        $steps = $factory->selectAndFactory($locator, $composer);
+
+        static::assertSame([], $steps);
+        static::assertSame('', $factory->lastError());
+        static::assertTrue($io->hasOutputThatMatches('/available commands/i'));
+        static::assertFalse($io->hasOutputThatMatches('/\* Command only/i'));
+        foreach (array_keys(ComposerPlugin::defaultSteps()) as $name) {
+            static::assertTrue($io->hasOutputThatMatches("~{$name}~i"));
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function testListNotListExcluded(): void
+    {
+        $flags = SelectedStepsFactory::MODE_LIST;
+
+        $factory = new SelectedStepsFactory($flags);
+
+        $allSteps = ComposerPlugin::defaultSteps();
+
+        $config = $this->factoryConfig(['skip-steps' => [EnvExampleStep::NAME]]);
+        $io = new TestIo();
+
+        $locator = $this->factoryLocator($config, new Io($io));
+        $composer = \Mockery::mock(Composer::class);
+
+        $steps = $factory->selectAndFactory($locator, $composer);
+
+        static::assertSame([], $steps);
+        static::assertSame('', $factory->lastError());
+        static::assertTrue($io->hasOutputThatMatches('/available commands/i'));
+        static::assertFalse($io->hasOutputThatMatches('/\* Command only/i'));
+        foreach (array_keys($allSteps) as $name) {
+            ($name === EnvExampleStep::NAME)
+                ? static::assertFalse($io->hasOutputThatMatches("~{$name}~i"))
+                : static::assertTrue($io->hasOutputThatMatches("~{$name}~i"));
+        }
+
+        static::assertTrue($io->hasOutputThatMatches("~is not included because excluded~i"));
+        static::assertFalse($io->hasOutputThatMatches("~is not included because skipped~i"));
+    }
+
+    /**
+     * @test
+     */
+    public function testListIncludeExcludedIfConfigIgnored(): void
+    {
+        $flags = SelectedStepsFactory::MODE_LIST | SelectedStepsFactory::IGNORE_SKIP_STEPS_CONFIG;
+
+        $factory = new SelectedStepsFactory($flags);
+
+        $allSteps = ComposerPlugin::defaultSteps();
+        $exclude = array_rand($allSteps, 2);
+
+        $config = $this->factoryConfig(['skip-steps' => $exclude]);
+        $io = new TestIo();
+
+        $locator = $this->factoryLocator($config, new Io($io));
+        $composer = \Mockery::mock(Composer::class);
+
+        $steps = $factory->selectAndFactory($locator, $composer);
+
+        static::assertSame([], $steps);
+        static::assertSame('', $factory->lastError());
+        static::assertTrue($io->hasOutputThatMatches('/available commands/i'));
+        static::assertFalse($io->hasOutputThatMatches('/\* Command only/i'));
+        foreach (array_keys($allSteps) as $name) {
+            static::assertTrue($io->hasOutputThatMatches("~{$name}~i"));
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function testListSkipGivenWhenOptOut(): void
+    {
+        $flags = SelectedStepsFactory::MODE_LIST | SelectedStepsFactory::MODE_OPT_OUT;
+
+        $allSteps = ComposerPlugin::defaultSteps();
+
+        $factory = new SelectedStepsFactory($flags, EnvExampleStep::NAME);
+
+        $config = $this->factoryConfig();
+        $io = new TestIo();
+
+        $locator = $this->factoryLocator($config, new Io($io));
+        $composer = \Mockery::mock(Composer::class);
+
+        $steps = $factory->selectAndFactory($locator, $composer);
+
+        static::assertSame([], $steps);
+        static::assertSame('', $factory->lastError());
+        static::assertTrue($io->hasOutputThatMatches('/available commands/i'));
+        static::assertFalse($io->hasOutputThatMatches('/\* Command only/i'));
+        foreach (array_keys($allSteps) as $name) {
+            ($name === EnvExampleStep::NAME)
+                ? static::assertFalse($io->hasOutputThatMatches("~{$name}~i"))
+                : static::assertTrue($io->hasOutputThatMatches("~{$name}~i"));
+        }
+
+        static::assertFalse($io->hasOutputThatMatches("~because excluded~i"));
+        static::assertTrue($io->hasOutputThatMatches("~is not included because skipped~i"));
+    }
+
+    /**
+     * @test
+     * @runInSeparateProcess
+     */
+    public function testListIncludeCustomSteps(): void
+    {
+        $flags = SelectedStepsFactory::MODE_LIST;
+
+        $allSteps = ComposerPlugin::defaultSteps();
+
+        $factory = new SelectedStepsFactory($flags);
+
+        require_once $this->fixturesPath() . '/TestStepOne.php';
+        require_once $this->fixturesPath() . '/TestStepTwo.php';
+
+        $config = $this->factoryConfig([
+            Config::COMMAND_STEPS => ['test-step-one' => TestStepOne::class],
+            Config::CUSTOM_STEPS => ['test-step-two' => TestStepTwo::class],
+        ]);
+        $io = new TestIo();
+
+        $locator = $this->factoryLocator($config, new Io($io));
+        $composer = \Mockery::mock(Composer::class);
+
+        $steps = $factory->selectAndFactory($locator, $composer);
+
+        static::assertSame([], $steps);
+        static::assertSame('', $factory->lastError());
+        static::assertTrue($io->hasOutputThatMatches('/test-step-one*/i'));
+        static::assertTrue($io->hasOutputThatMatches('/test class with a single line doc bloc/i'));
+        static::assertTrue($io->hasOutputThatMatches('/test-step-two/i'));
+        static::assertFalse($io->hasOutputThatMatches('/test-step-two\*/i'));
+        static::assertTrue($io->hasOutputThatMatches('/test class with a multi-line doc bloc/i'));
+        static::assertFalse($io->hasOutputThatMatches('/with a second line/i'));
+        static::assertFalse($io->hasOutputThatMatches('/and a third line after a space/i'));
+        static::assertTrue($io->hasOutputThatMatches('/\* Command only/i'));
+        foreach (array_keys($allSteps) as $name) {
+            static::assertTrue($io->hasOutputThatMatches("~{$name}~i"));
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function testListIncludeErrors(): void
+    {
+        $flags = SelectedStepsFactory::MODE_LIST;
+
+        $factory = new SelectedStepsFactory($flags);
+
+        $config = $this->factoryConfig([
+            Config::CUSTOM_STEPS => ['test-step-invalid' => __CLASS__],
+        ]);
+        $io = new TestIo();
+
+        $locator = $this->factoryLocator($config, new Io($io));
+        $composer = \Mockery::mock(Composer::class);
+
+        $steps = $factory->selectAndFactory($locator, $composer);
+
+        static::assertSame([], $steps);
+        static::assertNotFalse(stripos($factory->lastError(), 'one invalid step'));
+        static::assertFalse($io->hasOutputThatMatches('/test-step-invalid/i'));
+        foreach (array_keys(ComposerPlugin::defaultSteps()) as $name) {
+            static::assertTrue($io->hasOutputThatMatches("~{$name}~i"));
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function testListAllExcluded(): void
+    {
+        $flags = SelectedStepsFactory::MODE_LIST;
+
+        $allSteps = ComposerPlugin::defaultSteps();
+
+        $factory = new SelectedStepsFactory($flags);
+
+        $config = $this->factoryConfig([
+            Config::SKIP_STEPS => array_keys($allSteps),
+        ]);
+        $io = new TestIo();
+
+        $locator = $this->factoryLocator($config, new Io($io));
+        $composer = \Mockery::mock(Composer::class);
+
+        $steps = $factory->selectAndFactory($locator, $composer);
+
+        static::assertSame([], $steps);
+        static::assertSame('', $factory->lastError());
+        foreach (array_keys($allSteps) as $name) {
+            static::assertFalse($io->hasOutputThatMatches("~{$name}~i"));
+        }
+
+        static::assertTrue($io->hasOutputThatMatches("~are not included because excluded~i"));
+        static::assertFalse($io->hasOutputThatMatches("~are not included because skipped~i"));
     }
 }

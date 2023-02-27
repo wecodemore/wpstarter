@@ -204,9 +204,12 @@ final class ComposerPlugin implements
     /**
      * @param Util\SelectedStepsFactory $factory
      * @return void
+     *
+     * phpcs:disable Inpsyde.CodeQuality.FunctionLength
      */
     public function run(Util\SelectedStepsFactory $factory)
     {
+        // phpcs:enable Inpsyde.CodeQuality.FunctionLength
         $this->mode or $this->mode = self::MODE_COMMAND;
 
         /*
@@ -242,14 +245,20 @@ final class ComposerPlugin implements
             $this->loadExtensions();
             $this->checkWp($config);
 
-            $isSelectedCommandMode = $factory->isSelectedCommandMode();
-            $isSelectedCommandMode or $this->logo();
+            $needsLogo = $factory->needsLogo();
+            $needsLogo and $this->logo();
+
+            if ($factory->isListMode()) {
+                $factory->selectAndFactory($this->locator, $this->composer);
+
+                return;
+            }
 
             if ($config[Config\Config::SKIP_DB_CHECK]->is(false)) {
                 $this->locator->dbChecker()->check();
             }
 
-            $runner = $isSelectedCommandMode
+            $runner = $factory->isSelectedCommandMode()
                 ? Step\Steps::commandMode($this->locator, $this->composer)
                 : Step\Steps::composerMode($this->locator, $this->composer);
 

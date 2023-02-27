@@ -80,9 +80,9 @@ class ValidatorTest extends TestCase
         $cbsOutExpected = ['pre-a' => ['a_func'], 'post-b' => ['b_func']];
         $join = ['pre-x' => ['a_func', 'b_func']];
 
-        /*static::assertSame([], $validator->validateScripts($cbsInErr)->unwrap([]));
+        static::assertSame([], $validator->validateScripts($cbsInErr)->unwrapOrFallback([]));
         static::assertSame($cbsOutExpected, $validator->validateScripts($cbsInOk)->unwrap());
-        static::assertSame($cbsOutExpected, $validator->validateScripts($cbsInOkString)->unwrap());*/
+        static::assertSame($cbsOutExpected, $validator->validateScripts($cbsInOkString)->unwrap());
         static::assertSame($join, $validator->validateScripts($join)->unwrap());
     }
 

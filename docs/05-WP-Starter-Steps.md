@@ -335,6 +335,18 @@ Besides the scripts for the *actual* steps, there are an additional couple of pr
 For this "special" couple of scripts, the step object passed as a second parameter will be an instance of `WeCodeMore\WpStarter\Step\Steps` that is a sort of "steps runner" which implements `Step` interface as well. This is especially interesting for the `pre-wpstarter` script, because callbacks attached to that script can call on the passed `Steps` object via its `addStep()` / `removeStep()` methods, adding or removing steps "on the fly".
 
 
+## Listing commands
+
+The command:
+
+```shell
+composer wpstarter --steps-help
+```
+
+Does execute nothing, but lists all available steps, including custom, but excluding those disabled 
+in config or explicitly passed using the `--skip` flag.
+
+Can be used in combination with other flags like `--skip`, `--skip-custom`, and `--ignore-skip-config`.
 
 ------
 

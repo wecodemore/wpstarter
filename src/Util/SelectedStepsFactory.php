@@ -21,6 +21,7 @@ use WeCodeMore\WpStarter\Step\WpCliCommandsStep;
 class SelectedStepsFactory
 {
     public const MODE_COMMAND = 16;
+    public const MODE_LIST = 32;
     public const MODE_OPT_OUT = 1;
     public const SKIP_CUSTOM_STEPS = 2;
     public const IGNORE_SKIP_STEPS_CONFIG = 4;
@@ -29,6 +30,11 @@ class SelectedStepsFactory
      * @var bool
      */
     private $commandMode;
+
+    /**
+     * @var bool
+     */
+    private $listMode;
 
     /**
      * @var bool
@@ -85,15 +91,16 @@ class SelectedStepsFactory
     final public function __construct(int $flags = 0, string ...$stepNames)
     {
         $this->commandMode = $this->checkFlag($flags, self::MODE_COMMAND);
-        $this->commandStepNames = $this->commandMode ? $stepNames : [];
+        $this->listMode = $this->checkFlag($flags, self::MODE_LIST);
+        $this->commandStepNames = ($this->listMode || $this->commandMode) ? $stepNames : [];
 
-        $this->optOutMode = $this->commandMode
+        $this->optOutMode = ($this->commandMode || $this->listMode)
             && $this->checkFlag($flags, self::MODE_OPT_OUT);
 
-        $this->skipCustomSteps = $this->commandMode
+        $this->skipCustomSteps = ($this->commandMode || $this->listMode)
             && $this->checkFlag($flags, self::SKIP_CUSTOM_STEPS);
 
-        $this->ignoreSkipConfig = $this->commandMode
+        $this->ignoreSkipConfig = ($this->commandMode || $this->listMode)
             && $this->checkFlag($flags, self::IGNORE_SKIP_STEPS_CONFIG);
     }
 
@@ -103,6 +110,22 @@ class SelectedStepsFactory
     public function isSelectedCommandMode(): bool
     {
         return $this->commandStepNames && !$this->optOutMode;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isListMode(): bool
+    {
+        return $this->listMode;
+    }
+
+    /**
+     * @return bool
+     */
+    public function needsLogo(): bool
+    {
+        return !($this->isSelectedCommandMode() || $this->isListMode());
     }
 
     /**
@@ -117,7 +140,15 @@ class SelectedStepsFactory
         $this->emptyOptOutInput = false;
         $this->maybeWantIgnoreConfig = 0;
 
-        $availableSteps = $this->availableStepsNameToClassMap($locator->config(), $locator->io());
+        $io = $locator->io();
+        $config = $locator->config();
+        $availableSteps = $this->availableStepsNameToClassMap($config, $io);
+
+        if ($this->listMode) {
+            $this->printCommandList($io, $availableSteps, $config);
+
+            return [];
+        }
 
         if (!$availableSteps) {
             return [];
@@ -175,7 +206,7 @@ class SelectedStepsFactory
             ? $defaultSteps
             : array_merge($defaultSteps, $customSteps);
 
-        if ($commandSteps && $this->isSelectedCommandMode()) {
+        if ($commandSteps && ($this->isListMode() || $this->isSelectedCommandMode())) {
             $targetSteps = array_merge($targetSteps, $commandSteps);
         }
 
@@ -266,7 +297,7 @@ class SelectedStepsFactory
             if ($skipNamesByConfig && in_array($name, $skipNamesByConfig, true)) {
                 $skippedByConfig++;
                 $skipped = true;
-                $this->commandMode or $io->writeIfVerbose(
+                ($this->commandMode || $this->listMode) or $io->writeIfVerbose(
                     "- Step '{$name}' will be skipped: disabled in config."
                 );
 
@@ -365,6 +396,77 @@ class SelectedStepsFactory
         }
 
         return $factored;
+    }
+
+    /**
+     * @param Io $io
+     * @param array<string, class-string<Step>> $availableSteps
+     * @param Config $config
+     * @return void
+     */
+    private function printCommandList(Io $io, array $availableSteps, Config $config): void
+    {
+        /** @var array<string, string> $commandSteps */
+        $commandSteps = $config[Config::COMMAND_STEPS]->unwrapOrFallback([]);
+
+        $io->write("Usage:");
+        $io->write("$ composer <comment>wpstarter</comment> <info>\<command\>...</info>");
+        $io->write('');
+        $io->write('Available commands:');
+        $io->write('');
+        foreach ($availableSteps as $name => $class) {
+            $suffix = isset($commandSteps[$name]) ? '*' : '';
+            $io->write("<info>{$name}</info>{$suffix}");
+            $ref = new \ReflectionClass($class);
+            $desc = "The '{$name}' step command.";
+            if (preg_match('~/\*\*\s*(?:\*\s*)?([^\*]+)~', $ref->getDocComment() ?: '', $matches)) {
+                $desc = trim(rtrim($matches[1], '\\*'));
+            }
+            $io->write($desc);
+            $io->write('');
+        }
+        if ($commandSteps) {
+            $io->write('<comment>* Command only</comment>');
+            $io->write('');
+        }
+
+        $this->lastFatalError();
+        $this->printExclusionInList($io, $config);
+    }
+
+    /**
+     * @param Io $io
+     * @param Config $config
+     * @return void
+     */
+    private function printExclusionInList(Io $io, Config $config): void
+    {
+        $skipByInput = $this->optOutMode ? $this->commandStepNames : null;
+        /** @var null|array $skipByConfig */
+        $skipByConfig = $this->ignoreSkipConfig
+            ? null
+            : $config[Config::SKIP_STEPS]->unwrapOrFallback([]);
+        if (!$skipByInput && !$skipByConfig) {
+            return;
+        }
+
+        $message = 'Please note %d step%s not included because %s';
+        $args = [];
+        if ($skipByConfig) {
+            $count = count($skipByConfig);
+            $args[] = $count;
+            $args[] = ($count === 1) ? ' is' : 's are';
+            $args[] = "excluded in project's composer.json";
+        }
+        if ($skipByInput) {
+            $skipByConfig and $message .= ', moreover %d step%s not included because %s';
+            $count = count($skipByInput);
+            $args[] = $count;
+            $args[] = ($count === 1) ? ' is' : 's are';
+            $args[] = 'skipped via command';
+        }
+
+        $io->write(vsprintf("{$message}.", $args));
     }
 
     /**
