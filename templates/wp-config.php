@@ -98,7 +98,7 @@ ENV_VARIABLES: {
     unset($envCacheEnabled, $envIsCached);
 
     $phpEnvFilePath = realpath(__DIR__ . "{{{ENV_BOOTSTRAP_DIR}}}/{$envType}.php");
-    $hasPhpEnvFile = file_exists($phpEnvFilePath) && is_readable($phpEnvFilePath);
+    $hasPhpEnvFile = $phpEnvFilePath && file_exists($phpEnvFilePath) && is_readable($phpEnvFilePath);
     if ($hasPhpEnvFile) {
         require_once $phpEnvFilePath;
     }
