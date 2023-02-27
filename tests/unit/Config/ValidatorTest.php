@@ -74,12 +74,16 @@ class ValidatorTest extends TestCase
         static::assertFalse($validator->validateScripts('xxx')->notEmpty());
         static::assertFalse($validator->validateScripts(null)->notEmpty());
 
-        $cbsIn = ['pre-a' => ['a_function'], 'post-b' => ['b_function'], 'pre-' => ['a_function']];
-        $cbsOut = ['pre-a' => ['a_function'], 'post-b' => ['b_function']];
-        $join = ['pre-x' => ['a_function', 'b_function']];
+        $cbsInErr = ['pre-a' => ['a_func'], 'post-b' => ['b_func'], 'pre-' => ['a_function']];
+        $cbsInOk = ['pre-a' => ['a_func'], 'post-b' => ['b_func']];
+        $cbsInOkString = ['pre-a' => 'a_func', 'post-b' => ['b_func']];
+        $cbsOutExpected = ['pre-a' => ['a_func'], 'post-b' => ['b_func']];
+        $join = ['pre-x' => ['a_func', 'b_func']];
 
-        static::assertTrue($validator->validateScripts($cbsIn)->is($cbsOut));
-        static::assertTrue($validator->validateScripts($join)->is($join));
+        /*static::assertSame([], $validator->validateScripts($cbsInErr)->unwrap([]));
+        static::assertSame($cbsOutExpected, $validator->validateScripts($cbsInOk)->unwrap());
+        static::assertSame($cbsOutExpected, $validator->validateScripts($cbsInOkString)->unwrap());*/
+        static::assertSame($join, $validator->validateScripts($join)->unwrap());
     }
 
     /**

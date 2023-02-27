@@ -98,9 +98,9 @@ final class Steps implements PostProcessStep, \Countable
     {
         $this->locator = $locator;
         $this->composer = $composer;
-        $this->scripts = $this->locator->config()[Config::SCRIPTS]->unwrapOrFallback([]);
         $this->isCommandMode = $isCommandMode;
         $this->steps = new \SplObjectStorage();
+        $this->scripts = $this->locator->config()[Config::SCRIPTS]->unwrap();
     }
 
     /**
