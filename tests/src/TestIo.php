@@ -96,7 +96,7 @@ class TestIo extends NullIO
      * @param int $verbosity
      * @return void
      */
-    public function write($messages, bool $newline = true, int $verbosity = self::NORMAL): void
+    public function write($messages, $newline = true, $verbosity = self::NORMAL): void
     {
         $this->executeTestWrite($messages, $newline, $verbosity, false);
     }
@@ -107,7 +107,7 @@ class TestIo extends NullIO
      * @param int $verbosity
      * @return void
      */
-    public function writeError($messages, bool $newline = true, int $verbosity = self::NORMAL): void
+    public function writeError($messages, $newline = true, $verbosity = self::NORMAL): void
     {
         $this->executeTestWrite($messages, $newline, $verbosity, true);
     }
