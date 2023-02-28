@@ -27,7 +27,7 @@
         "source": "https://github.com/wecodemore/wpstarter"
     },
     "require": {
-        "php": ">=7.1",
+        "php": ">=7.1 <= 8.2",
         "ext-curl": "*",
         "ext-dom": "*",
         "ext-filter": "*",
@@ -87,7 +87,8 @@
         "branch-alias": {
             "dev-master": "2.x-dev",
             "dev-dev": "3.x-dev",
-            "dev-version-2": "2.x-dev"
+            "dev-version-2": "2.x-dev",
+            "dev-version-3": "3.x-dev"
         }
     }
 }
