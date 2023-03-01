@@ -1,5 +1,9 @@
-WP Starter
-==========
+---
+title: WP Starter
+nav_exclude: true
+---
+
+# WP Starter
 
 > WordPress whole-site Composer packages has never been so easy.
 

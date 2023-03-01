@@ -1,6 +1,9 @@
+---
+title: Environment Variables
+nav_order: 2
+---
+
 # Environment Variables
-
-
 
 ## The issue with configuration files
 

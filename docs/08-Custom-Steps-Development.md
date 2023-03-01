@@ -1,3 +1,8 @@
+---
+title: Custom Steps
+nav_order: 8
+---
+
 # Custom Steps Development
 
 It may often be desirable to perform custom operations to automate the setup of websites.

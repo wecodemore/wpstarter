@@ -1,3 +1,8 @@
+---
+title: WordPress Integration
+nav_order: 3
+---
+
 # WordPress Integration
 
 ## Include WordPress in the project

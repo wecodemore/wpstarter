@@ -1,3 +1,8 @@
+---
+title: Configuration
+nav_order: 4
+---
+
 # WP Starter Configuration
 
 **WP Starter can work without any setup at all**, however one of its greatest features is its flexibility that allows for fine grained customization of every aspect according to the project requirements.

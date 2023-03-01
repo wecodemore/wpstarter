@@ -1,3 +1,8 @@
+---
+title: Command-line Interface
+nav_order: 10
+---
+
 # WP Starter Command
 
 By default, **WP Starter runs every time `composer update` or `composer install` is run**, including the very first time a project dependencies are installed.

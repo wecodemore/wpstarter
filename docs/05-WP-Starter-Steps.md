@@ -1,3 +1,8 @@
+---
+title: Steps
+nav_order: 5
+---
+
 # WP Starter Steps
 
 At its core, WP Starter is a command line script that performs, in order, a set of tasks that are called **"steps"**.

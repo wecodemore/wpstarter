@@ -1,3 +1,8 @@
+---
+title: WP CLI Commands
+nav_order: 7
+---
+
 # Running WP CLI Commands
 
 WP Starter takes care of the file structure of the website and its configuration at filesystem level, however it does nothing, for example, for the database.

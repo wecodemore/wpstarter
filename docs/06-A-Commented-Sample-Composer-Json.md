@@ -1,3 +1,8 @@
+---
+title: Sample composer.json
+nav_order: 6
+---
+
 # A Commented Sample `composer.json`
 
 The sample `composer.json` below is not very different from what can be used in real world WP Starter powered website:

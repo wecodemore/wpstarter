@@ -1,1 +1,21 @@
+title: WP Starter 3
+description: WordPress whole-site Composer packages has never been so easy.
 remote_theme: just-the-docs/just-the-docs
+enable_copy_code_button: true
+heading_anchors: true
+aux_links_new_tab: false
+aux_links:
+    "WP Starter on GitHub":
+        - "//github.com/wecodemore/wpstarter"
+nav_external_links:
+    - title: WP Starter on GitHub
+      url: https://github.com/wecodemore/wpstarter
+back_to_top: true
+back_to_top_text: "Back to top"
+footer_content: "<a href=\"https://github.com/wecodemore/wpstarter/blob/dev/LICENSE\">MIT licensed</a>. Copyright &copy; 2023 Giuseppe Mazzapica and contributors."
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/github.com/wecodemore/wpstarter"
+gh_edit_branch: "dev"
+gh_edit_source: "docs"
+gh_edit_view_mode: "tree"
