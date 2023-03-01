@@ -16,7 +16,7 @@ A step is nothing more than a PHP class performing a given specific operation.
 The (current) list of default WP Starter steps is (in order of execution):
 
 | Slug                | Class Name<sup>1</sup> | Notes                 |
-| ------------------- | ---------------------- | --------------------- |
+|---------------------|------------------------|-----------------------|
 | check-paths         | `CheckPathStep`        | blocking              |
 | build-wp-config     | `WpConfigStep`         | create file, blocking |
 | build-index         | `IndexStep`            | create file, blocking |

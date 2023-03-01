@@ -1,5 +1,5 @@
 ---
-title: WP Starter
+title: WordPress whole-site Composer packages has never been so easy
 nav_exclude: true
 ---
 
