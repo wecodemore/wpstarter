@@ -256,7 +256,7 @@ class WordPressEnvBridge
     private static $loadedVars;
 
     /**
-     * @var array<string, array{string, bool|int|null|string}>
+     * @var array<string, array{string, bool|int|float|string|null}>
      */
     private static $cache = [];
 
@@ -669,7 +669,7 @@ class WordPressEnvBridge
     /**
      * @param string $name
      * @param string $value
-     * @return int|bool|string|null
+     * @return int|float|bool|string|null
      *
      * @psalm-assert Filters $this->filters
      * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
