@@ -1,9 +1,9 @@
 ---
-title: Introduction to WP Starter
+title: Introduction
 nav_order: 1
 ---
 
-# Introduction to WP Starter
+# Introduction
 
 ## What is this?
 
