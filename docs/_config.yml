@@ -10,7 +10,7 @@ aux_links:
         - "//github.com/wecodemore/wpstarter"
 back_to_top: true
 back_to_top_text: "Back to top"
-footer_content: "<a href=\"https://github.com/wecodemore/wpstarter/blob/dev/LICENSE\">MIT licensed</a>. Copyright &copy; 2023 Giuseppe Mazzapica and contributors."
+footer_content: "WP Starter is released under <a href=\"https://github.com/wecodemore/wpstarter/blob/dev/LICENSE\">MIT license</a>. Copyright &copy; 2023 Giuseppe Mazzapica and contributors."
 gh_edit_link: true
 gh_edit_link_text: "Edit this page on GitHub"
 gh_edit_repository: "https://github.com/wecodemore/wpstarter"
