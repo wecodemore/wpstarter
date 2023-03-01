@@ -235,7 +235,8 @@ add_filter('wpstarter.skip-cache-env', function ($skip, $envName) {
 
 ---
 
-- ***> Environment Variables***
+- [Introduction](01-Introduction.md)
+- ***Environment Variables***
 - [WordPress Integration](03-WordPress-Integration.md)
 - [WP Starter Configuration](04-WP-Starter-Configuration.md)
 - [WP Starter Steps](05-WP-Starter-Steps.md)
@@ -243,7 +244,7 @@ add_filter('wpstarter.skip-cache-env', function ($skip, $envName) {
 - [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
 - [Custom Steps Development](08-Custom-Steps-Development.md)
 - [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
-- [WP Starter Command](10-WP-Starter-Command.md)
+- [Command-line Interface](10-Command-Line-Interface.md)
 
 
 

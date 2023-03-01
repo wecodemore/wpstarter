@@ -36,10 +36,11 @@ Alphabetically ordered:
 
 ------
 
-**Next:** [WP Starter Command](10-WP-Starter-Command.md)
+**Next:** [Command-line Interface](10-Command-Line-Interface.md)
 
 ---
 
+- [Introduction](01-Introduction.md)
 - [Environment Variables](02-Environment-Variables.md)
 - [WordPress Integration](03-WordPress-Integration.md)
 - [WP Starter Configuration](04-WP-Starter-Configuration.md)
@@ -47,5 +48,5 @@ Alphabetically ordered:
 - [A Commented Sample `composer.json`](06-A-Commented-Sample-Composer-Json.md)
 - [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
 - [Custom Steps Development](08-Custom-Steps-Development.md)
-- ***> Settings Cheat Sheet***
-- [WP Starter Command](10-WP-Starter-Command.md)
+- ***Settings Cheat Sheet***
+- [Command-line Interface](10-Command-Line-Interface.md)

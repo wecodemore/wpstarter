@@ -22,7 +22,7 @@ WP Starter is the easiest and fastest way to bootstrap WordPress sites entirely 
 - [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
 - [Custom Steps Development](08-Custom-Steps-Development.md)
 - [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
-- [WP Starter Command](10-WP-Starter-Command.md)
+- [Command-line Interface](10-Command-Line-Interface.md)
 
 # System Requirements
 

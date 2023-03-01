@@ -214,12 +214,9 @@ in config or explicitly passed using the `--skip` flag.
 
 Can be used in combination with other flags like `--skip`, `--skip-custom`, and `--ignore-skip-config`.
 
-------
-
-[< Back to Introduction](01-Introduction.md)
-
 ---
 
+- [Introduction](01-Introduction.md)
 - [Environment Variables](02-Environment-Variables.md)
 - [WordPress Integration](03-WordPress-Integration.md)
 - [WP Starter Configuration](04-WP-Starter-Configuration.md)
@@ -228,5 +225,5 @@ Can be used in combination with other flags like `--skip`, `--skip-custom`, and 
 - [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
 - [Custom Steps Development](08-Custom-Steps-Development.md)
 - [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
-- ***> WP Starter Command***
+- ***Command-line Interface***
 
