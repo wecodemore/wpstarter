@@ -23,20 +23,19 @@ What shown above is just the simplest form of the command that tells WP Starter 
 
 By running `composer help wpstarter` it is possible to obtain more info about the command option and arguments. The output (stripped from "generic" Composer options) is something like:
 
-```shell
+```
 Usage:
   wpstarter [options] [--] [<steps>]...
 
 Arguments:
-  steps                          Which steps to run (or to skip).
-                                 Separate step names with a space.
-
+  steps                     Which steps to run (or to skip).
+                            Separate step names with a space.
 Options:
-      --skip                     Enable opt-out mode: provided steps names
-                                 are those to skip, not those to run.
-      --skip-custom              Skip any step defined in "custom-steps" setting.
-      --ignore-skip-config       Ignore "skip-steps" config.
-  -l, --list-commands            List available commands.
+      --skip                Enable opt-out mode: provided steps names
+                            are those to skip, not those to run.
+      --skip-custom         Skip any step defined in "custom-steps" setting.
+      --ignore-skip-config  Ignore "skip-steps" config.
+      --steps-help          List available commands.
 ```
 
 
