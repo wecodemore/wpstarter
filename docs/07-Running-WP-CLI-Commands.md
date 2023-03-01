@@ -3,13 +3,22 @@ title: WP CLI Commands
 nav_order: 7
 ---
 
-# Running WP CLI Commands
+# WP CLI Commands
+{: .no_toc }
+
+## Table of contents
+{: .no_toc .text-delta }
+
+- TOC
+  {:toc}
+
+## WP CLI for automation
 
 WP Starter takes care of the file structure of the website and its configuration at filesystem level, however it does nothing, for example, for the database.
 
 If the aim is to automate the complete bootstrap of the website, it is clear that WP Starter is not enough. [WP CLI](https://wp-cli.org/) completes our requirements.
 
-The setup of a website via WP CLI is something that can be done independently from WP Starter. For example, assuming we have a deploy / CI tool that installs Composer dependencies triggering WP Starter, the same deploy / CI tool can take care of running WP CLI commands.
+The setup of a website via WP CLI is something that can be done independently of WP Starter. For example, assuming we have a deploy / CI tool that installs Composer dependencies triggering WP Starter, the same deploy / CI tool can take care of running WP CLI commands.
 
 WP Starter writes a `wp-cli.yml` pointing to the correct WP path so that commands don’t need to pass `--path` argument to WP CLI commands.
 

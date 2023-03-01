@@ -4,6 +4,15 @@ nav_order: 8
 ---
 
 # Custom Steps Development
+{: .no_toc }
+
+## Table of contents
+{: .no_toc .text-delta }
+
+- TOC
+  {:toc}
+
+## Why custom steps?
 
 It may often be desirable to perform custom operations to automate the setup of websites.
 

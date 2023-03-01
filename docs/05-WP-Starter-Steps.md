@@ -4,11 +4,19 @@ nav_order: 5
 ---
 
 # WP Starter Steps
+{: .no_toc }
+
+## Table of contents
+{: .no_toc .text-delta }
+
+- TOC
+  {:toc}
+
+## What's a step
 
 At its core, WP Starter is a command line script that performs, in order, a set of tasks that are called **"steps"**.
 
 A step is nothing more than a PHP class performing a given specific operation.
-
 
 
 ## Default steps

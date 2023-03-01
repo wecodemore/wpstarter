@@ -1,9 +1,18 @@
 ---
-title: Sample composer.json
+title: composer.json Example
 nav_order: 6
 ---
 
-# A Commented Sample `composer.json`
+# A `composer.json` example
+{: .no_toc }
+
+## Table of contents
+{: .no_toc .text-delta }
+
+- TOC
+  {:toc}
+
+## The code
 
 The sample `composer.json` below is not very different from what can be used in real world WP Starter powered website:
 
@@ -49,7 +58,7 @@ The sample `composer.json` below is not very different from what can be used in 
 }
 ```
 
-For readability sake, WP Starter specific configuration will be placed in separate `wpstarter.json` file that could look like this:
+For readability’s sake, WP Starter specific configuration will be placed in separate `wpstarter.json` file that could look like this:
 
 ```json
 {
