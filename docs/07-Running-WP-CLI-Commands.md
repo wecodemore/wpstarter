@@ -9,8 +9,8 @@ nav_order: 7
 ## Table of contents
 {: .no_toc .text-delta }
 
-- TOC
-  {:toc}
+1. TOC
+{:toc}
 
 ## WP CLI for automation
 

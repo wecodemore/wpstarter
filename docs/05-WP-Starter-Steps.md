@@ -9,8 +9,8 @@ nav_order: 5
 ## Table of contents
 {: .no_toc .text-delta }
 
-- TOC
-  {:toc}
+1. TOC
+{:toc}
 
 ## What's a step
 

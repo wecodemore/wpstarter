@@ -9,8 +9,8 @@ nav_order: 2
 ## Table of contents
 {: .no_toc .text-delta }
 
-- TOC
-  {:toc}
+1. TOC
+{:toc}
 
 ## The issue with configuration files
 
