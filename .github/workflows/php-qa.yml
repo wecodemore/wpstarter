@@ -2,6 +2,14 @@ name: PHP Quality Assurance
 
 on:
     push:
+        paths:
+            - '**workflows/php-qa.yml'
+            - '**.php'
+            - '**templates/**'
+            -  '**phpcs.xml.dist'
+            - '**phpunit.xml.dist'
+            - '**psalm.xml'
+            - '**composer.json'
     pull_request:
     workflow_dispatch:
 
