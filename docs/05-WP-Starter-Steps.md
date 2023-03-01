@@ -41,7 +41,7 @@ The (current) list of default WP Starter steps is (in order of execution):
 
 ## Customizable templates
 
-Several steps produce files. Files are built using "templates" as a base, where placeholders in the format `{{{PLACEHOLDER}}}` are replaced with values calculated by the step.
+Several steps produce files. Files are built using "templates" as a base, where placeholders in the format `{{{``PLACEHOLDER``}}}` are replaced with values calculated by the step.
 
 Templates are located in the `/templates` directory under WP Starter root.
 
