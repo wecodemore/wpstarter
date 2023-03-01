@@ -57,17 +57,17 @@ $link-color: $wps-green-3;
 $btn-primary-color: $wps-green;
 $base-button-color: $wps-grey-lt;
 
-$font-size-4: 16px;
-$font-size-5: 18px; // h3
-$font-size-6: 22px; // h2
-$font-size-7: 26px;
-$font-size-8: 36px; // h1
-$font-size-9: 40px;
-$font-size-10: 44px;
-$font-size-10-sm: 48px;
+$font-size-1: 10px;
+$font-size-1-sm: 11px !default;
+$font-size-2: 12px; // h4 - uppercased!, h6 not uppercased, text-small
+$font-size-3: 13px !default; // h5
+$font-size-4: 16px !default;
+$font-size-5: 18px !default; // h3
+$font-size-6: 20px !default; // h2
+$font-size-7: 26px !default;
+$font-size-8: 34px !default; // h1
+$font-size-9: 38px !default;
+$font-size-10: 44px !default;
+$font-size-10-sm: 48px !default;
 
 $mono-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-$root-font-size: 18px;
-$body-line-height: 1.5;
-$content-line-height: 1.75;
-$body-heading-line-height: 1.66;
