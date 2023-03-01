@@ -29,6 +29,7 @@ final class Filters
 {
     public const FILTER_BOOL = 'bool';
     public const FILTER_INT = 'int';
+    public const FILTER_FLOAT = 'float';
     public const FILTER_INT_OR_BOOL = 'int|bool';
     public const FILTER_STRING_OR_BOOL = 'string|bool';
     public const FILTER_STRING = 'string';
@@ -73,7 +74,7 @@ final class Filters
     /**
      * @param string $mode
      * @param mixed $value
-     * @return int|bool|string|null
+     * @return int|float|bool|string|null
      */
     private function applyFilter(string $mode, $value)
     {
@@ -82,6 +83,8 @@ final class Filters
                 return $this->filterBool($value);
             case self::FILTER_INT:
                 return $this->filterInt($value);
+            case self::FILTER_FLOAT:
+                return $this->filterFloat($value);
             case self::FILTER_STRING:
                 return $this->filterString($value);
             case self::FILTER_INT_OR_BOOL:
@@ -126,6 +129,19 @@ final class Filters
         }
 
         return (int)$value;
+    }
+
+    /**
+     * @param mixed $value
+     * @return float
+     */
+    private function filterFloat($value): float
+    {
+        if (!is_numeric($value)) {
+            throw new \Exception('Invalid float.');
+        }
+
+        return (float)$value;
     }
 
     /**
