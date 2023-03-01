@@ -3,7 +3,7 @@ title: Settings Cheat Sheet
 nav_order: 9
 ---
 
-## Settings Cheat Sheet
+# Settings Cheat Sheet
 
 Alphabetically ordered:
 

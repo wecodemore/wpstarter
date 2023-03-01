@@ -9,7 +9,7 @@ nav_order: 3
 ## Table of contents
 {: .no_toc .text-delta }
 
-1. TOC
+- TOC
 {:toc}
 
 ## Include WordPress in the project
