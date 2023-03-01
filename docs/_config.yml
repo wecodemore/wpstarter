@@ -1,6 +1,7 @@
 title: WP Starter 3
 description: WordPress whole-site Composer packages has never been so easy.
 remote_theme: just-the-docs/just-the-docs
+color_scheme: wpstarter
 enable_copy_code_button: true
 heading_anchors: true
 aux_links_new_tab: false

@@ -1,0 +1,58 @@
+$wps-green: #9FC65D;
+$wps-green-2: #87BC5C;
+$wps-green-3: #38919F;
+$wps-grey-lt: #F8F8F8;
+$wps-grey-dk: #3C3D46;
+$wps-yellow: #FFBC3B;
+
+$white: #fff;
+
+$grey-dk-000: $wps-grey-dk;
+$grey-dk-100: $wps-grey-dk;
+$grey-dk-200: darken($wps-grey-dk, 3%);
+$grey-dk-250: darken($wps-grey-dk, 6%);
+$grey-dk-300: darken($wps-grey-dk, 15%);
+
+$grey-lt-000: $wps-grey-lt;
+$grey-lt-100: darken($wps-grey-lt, 3%);
+$grey-lt-200: darken($wps-grey-lt, 6%);
+$grey-lt-300: darken($wps-grey-lt, 15%);
+
+$purple-000: $wps-green;
+$purple-100: $wps-green;
+$purple-200: $wps-green-3;
+$purple-300: $wps-grey-dk;
+
+$blue-000: $wps-green;
+$blue-100: $wps-green-2;
+$blue-200: darken($wps-green-3, 6%);
+$blue-300: darken($wps-green-3, 15%);
+
+$green-000: $wps-green;
+$green-100: $wps-green-2;
+$green-200: darken($wps-green-3, 6%);
+$blue-300: darken($wps-green-3, 15%);
+
+$yellow-000: $wps-yellow;
+$yellow-100: darken($wps-yellow, 3%);
+$yellow-200: darken($wps-yellow, 6%);
+$yellow-300: darken($wps-yellow, 15%);
+
+$red-000: $wps-yellow;
+$red-100: darken($wps-yellow, 3%);
+$red-200: darken($wps-yellow, 6%);
+$red-300: darken($wps-yellow, 15%);
+
+$body-background-color: $white;
+$sidebar-color: $wps-grey-lt;
+$search-background-color: $white;
+$table-background-color: $white;
+$code-background-color: $wps-grey-lt;
+$feedback-color: $wps-grey-lt;
+$body-text-color: $wps-grey-dk;
+$body-heading-color: $wps-yellow;
+$search-result-preview-color: $wps-grey-dk;
+$nav-child-link-color: $wps-grey-dk;
+$link-color: $wps-green;
+$btn-primary-color: $wps-green;
+$base-button-color: $wps-grey-lt;
