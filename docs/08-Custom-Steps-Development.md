@@ -539,7 +539,7 @@ By using that object in combination with custom template folders that WP Starter
 - [WP Starter Configuration](04-WP-Starter-Configuration.md)
 - [WP Starter Steps](05-WP-Starter-Steps.md)
 - [A Commented Sample `composer.json`](06-A-Commented-Sample-Composer-Json.md)
-- [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
+- [WP CLI Commands](07-WP-CLI-Commands.md)
 - ***Custom Steps Development***
 - [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
 - [Command-line Interface](10-Command-Line-Interface.md)

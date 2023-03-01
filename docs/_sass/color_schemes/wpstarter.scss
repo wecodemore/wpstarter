@@ -57,8 +57,17 @@ $link-color: $wps-green-3;
 $btn-primary-color: $wps-green;
 $base-button-color: $wps-grey-lt;
 
+$font-size-4: 16px;
+$font-size-5: 18px; // h3
+$font-size-6: 22px; // h2
+$font-size-7: 26px;
+$font-size-8: 36px; // h1
+$font-size-9: 40px;
+$font-size-10: 44px;
+$font-size-10-sm: 48px;
+
 $mono-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 $root-font-size: 18px;
 $body-line-height: 1.5;
-$content-line-height: 1.66;
-$body-heading-line-height: 1.33;
+$content-line-height: 1.75;
+$body-heading-line-height: 1.66;

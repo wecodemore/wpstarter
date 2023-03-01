@@ -115,7 +115,7 @@ This configuration defaults to `"./wp-content"` meaning a `wp-content` folder in
 - ***WP Starter Configuration***
 - [WP Starter Steps](05-WP-Starter-Steps.md)
 - [A Commented Sample `composer.json`](06-A-Commented-Sample-Composer-Json.md)
-- [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
+- [WP CLI Commands](07-WP-CLI-Commands.md)
 - [Custom Steps Development](08-Custom-Steps-Development.md)
 - [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
 - [Command-line Interface](10-Command-Line-Interface.md)

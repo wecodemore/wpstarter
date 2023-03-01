@@ -218,7 +218,7 @@ When WP Starter finished, if webroot is correctly pointing to `./public`, and th
 
 ------
 
-**Next:** [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
+**Next:** [WP CLI Commands](07-WP-CLI-Commands.md)
 
 ---
 
@@ -228,7 +228,7 @@ When WP Starter finished, if webroot is correctly pointing to `./public`, and th
 - [WP Starter Configuration](04-WP-Starter-Configuration.md)
 - [WP Starter Steps](05-WP-Starter-Steps.md)
 - ***A Commented Sample `composer.json`***
-- [Running WP CLI Commands](07-Running-WP-CLI-Commands.md)
+- [WP CLI Commands](07-WP-CLI-Commands.md)
 - [Custom Steps Development](08-Custom-Steps-Development.md)
 - [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
 - [Command-line Interface](10-Command-Line-Interface.md)

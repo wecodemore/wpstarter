@@ -235,7 +235,7 @@ The same thing can be done by creating a custom step, because the `Locator` (and
 - [WP Starter Configuration](04-WP-Starter-Configuration.md)
 - [WP Starter Steps](05-WP-Starter-Steps.md)
 - [A Commented Sample `composer.json`](06-A-Commented-Sample-Composer-Json.md)
-- ***Running WP CLI Commands***
+- ***WP CLI Commands***
 - [Custom Steps Development](08-Custom-Steps-Development.md)
 - [Settings Cheat Sheet](09-Settings-Cheat-Sheet.md)
 - [Command-line Interface](10-Command-Line-Interface.md)
