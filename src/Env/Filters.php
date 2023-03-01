@@ -60,7 +60,7 @@ final class Filters
      *
      * @param string $mode One of the `FILTER_*` class constants.
      * @param mixed $value
-     * @return int|bool|string|null
+     * @return int|float|bool|string|null
      */
     public function filter(string $mode, $value)
     {
@@ -205,6 +205,6 @@ final class Filters
             return 'wp_';
         }
 
-        return (string)preg_replace('#[\W]#', '', $value);
+        return (string)preg_replace('#\W#', '', $value);
     }
 }
