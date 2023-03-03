@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Step;
 
 use Composer\Util\Platform;
+use Composer\Util\Filesystem as ComposerFilesystem;
+use Symfony\Component\Finder\Finder;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Io\Question;
@@ -45,9 +47,14 @@ final class ContentDevStep implements OptionalStep
     public const NAME = 'publish-content-dev';
 
     /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
+     * @var Filesystem
      */
     private $filesystem;
+
+    /**
+     * @var ComposerFilesystem
+     */
+    private $composerFilesystem;
 
     /**
      * @var string|null
@@ -70,6 +77,7 @@ final class ContentDevStep implements OptionalStep
     public function __construct(Locator $locator)
     {
         $this->filesystem = $locator->filesystem();
+        $this->composerFilesystem = $locator->composerFilesystem();
     }
 
     /**
@@ -143,7 +151,7 @@ final class ContentDevStep implements OptionalStep
         }
 
         /** @var string $src */
-        $src = $config[Config::CONTENT_DEV_DIR]->unwrap();
+        $src = $this->composerFilesystem->normalizePath($config[Config::CONTENT_DEV_DIR]->unwrap());
         $this->contentDevDir = $src;
         $targetBase = $paths->wpContent();
 
@@ -218,17 +226,26 @@ final class ContentDevStep implements OptionalStep
         $done = 0;
         $all = 0;
 
-        foreach ($devContentSubfolders as $source) {
-            if (!is_dir($source)) {
+        foreach ($devContentSubfolders as $baseSource) {
+            if (!is_dir($baseSource)) {
                 continue;
             }
 
-            $all++;
-            $devContentSubfolderBase = basename($source);
-            $target = "{$contentDir}/{$devContentSubfolderBase}";
-            $this->filesystem->unlinkOrRemove($target);
-            if ($this->filesystem->symlinkOrCopyOperation($source, $target, $operation)) {
-                $done++;
+            $baseTarget = "{$contentDir}/" . basename($baseSource);
+            $this->filesystem->createDir($baseTarget);
+
+            $elements = Finder::create()
+                ->in($baseSource)
+                ->depth(0)
+                ->ignoreVCS(true)
+                ->ignoreUnreadableDirs(true)
+                ->ignoreDotFiles(true);
+
+            foreach ($elements as $element) {
+                $all++;
+                $target = "{$baseTarget}/" . $element->getBasename();
+                $source = $element->getRealPath();
+                $this->filesystem->symlinkOrCopyOperation($source, $target, $operation) and $done++;
             }
         }
 
