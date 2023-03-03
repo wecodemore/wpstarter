@@ -105,23 +105,31 @@ class DbChecker
         empty($env['DB_HOST']) and $env['DB_HOST'] = 'localhost';
         empty($env['DB_TABLE_PREFIX']) and $env['DB_TABLE_PREFIX'] = 'wp_';
 
-        $db = @\mysqli_connect($env['DB_HOST'], $env['DB_USER'], $env['DB_PASSWORD'] ?: '');
-
-        if (!$db || $db->connect_errno) {
-            $this->setupEnv(false, false, false);
-            $db and \mysqli_close($db);
-
-            return;
-        }
-
-        $dbExists = @\mysqli_select_db($db, $env['DB_NAME']);
-
+        $dbExists = false;
         $wpInstalled = false;
-        if ($dbExists) {
-            $result = @mysqli_query($db, "SELECT 1 FROM {$env['DB_TABLE_PREFIX']}users");
-            $wpInstalled = ($result instanceof \mysqli_result) && $result->field_count;
+
+        try {
+            $db = @\mysqli_connect($env['DB_HOST'], $env['DB_USER'], $env['DB_PASSWORD'] ?: '');
+
+            if (!$db || $db->connect_errno) {
+                $this->setupEnv(false, false, false);
+                $db and \mysqli_close($db);
+
+                return;
+            }
+
+            $dbExists = @\mysqli_select_db($db, $env['DB_NAME']);
+
+
+            if ($dbExists) {
+                $result = @mysqli_query($db, "SELECT 1 FROM {$env['DB_TABLE_PREFIX']}users");
+                $wpInstalled = ($result instanceof \mysqli_result) && $result->field_count;
+            }
+            @\mysqli_close($db);
+        } catch (\Throwable $exception) {
+            $this->write($exception->getMessage());
         }
-        @\mysqli_close($db);
+
         $this->setupEnv(true, $dbExists, $wpInstalled);
 
         switch (true) {
