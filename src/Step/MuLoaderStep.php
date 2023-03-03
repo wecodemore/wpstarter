@@ -81,7 +81,7 @@ final class MuLoaderStep implements FileCreationStepInterface
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        $this->muPlugins = $this->list->pluginsList();
+        $this->muPlugins = $this->list->pluginsList($config);
 
         return (bool)$this->muPlugins;
     }

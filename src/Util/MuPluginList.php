@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Util;
 
 use Composer\Package\PackageInterface;
+use Composer\Util\Filesystem as ComposerFilesystem;
+use Symfony\Component\Finder\Finder;
+use WeCodeMore\WpStarter\Config\Config;
 
 /**
  * Helper that uses Composer objects to get a list of installed packages and filter them to obtain
@@ -30,22 +33,44 @@ class MuPluginList
     private $paths;
 
     /**
+     * @var ComposerFilesystem
+     */
+    private $filesystem;
+
+    /**
+     * @var list<string>|null
+     */
+    private $dropins = null;
+
+    /**
      * @param PackageFinder $packageFinder
      * @param Paths $paths
+     * @param ComposerFilesystem $filesystem
      */
-    public function __construct(PackageFinder $packageFinder, Paths $paths)
-    {
+    public function __construct(
+        PackageFinder $packageFinder,
+        Paths $paths,
+        ComposerFilesystem $filesystem
+    ) {
+
         $this->packageFinder = $packageFinder;
         $this->paths = $paths;
+        $this->filesystem = $filesystem;
     }
 
     /**
+     * @param Config $config
      * @return array<string, string>
      */
-    public function pluginsList(): array
+    public function pluginsList(Config $config): array
     {
         $list = [];
 
+        // First, we search for packages with "wordpress-muplugin" type.
+        // We store each path we have looked into in an array we'll use below.
+        // PHP files found in "wordpress-muplugin" packages' root will need the use "Plugin name"
+        // header to have them loaded, unless a single file is found in path.
+        $packagesPaths = [];
         $packages = $this->packageFinder->findByType('wordpress-muplugin');
         foreach ($packages as $package) {
             $paths = $this->pathsForPluginPackage($package);
@@ -56,6 +81,40 @@ class MuPluginList
             $name = $package->getName();
             $multi = count($paths) > 1;
             foreach ($paths as $path) {
+                $packagesPaths[] = dirname($path);
+                $key = $multi ? "{$name}_" . pathinfo($path, PATHINFO_FILENAME) : $name;
+                $list[$key] = $path;
+            }
+        }
+
+        // Now we check any subdirectory of MU plugins folder, which we haven't looked into yet
+        // (that why we store the array above), to see if there's any MU plugin to load in there.
+        // This is necessary because MU plugins in the wp.org repository don't have the
+        // "wordpress-muplugin" type, because wp.org doesn't allow it.
+        // So we can move them to the MU plugin folder via installers path, but we then need to have
+        // them loaded.
+        // Because we have no indication files are actually plugins, we require the plugin header to
+        // be there even if a single PHP file is in a path.
+        $muPluginsDir = $this->paths->wpContent('/mu-plugins/');
+        $muPluginsSubDirs = Finder::create()
+            ->in($muPluginsDir)
+            ->depth(0)
+            ->directories()
+            ->ignoreUnreadableDirs()
+            ->ignoreVCS(true);
+
+        foreach ($muPluginsSubDirs as $muSubDir) {
+            $muDirPath = $this->filesystem->normalizePath($muSubDir->getPathname());
+            if (in_array($muDirPath, $packagesPaths, true)) {
+                continue;
+            }
+            $morePaths = $this->mupluginsPathsInDir($muDirPath, true);
+            $name = basename($muDirPath);
+            $multi = count($morePaths) > 1;
+            foreach ($morePaths as $path) {
+                if ($this->isDropinPath($path, $config)) {
+                    continue;
+                }
                 $key = $multi ? "{$name}_" . pathinfo($path, PATHINFO_FILENAME) : $name;
                 $list[$key] = $path;
             }
@@ -66,7 +125,7 @@ class MuPluginList
 
     /**
      * @param PackageInterface $package
-     * @return array<string>
+     * @return list<string>
      */
     private function pathsForPluginPackage(PackageInterface $package): array
     {
@@ -84,21 +143,41 @@ class MuPluginList
             return [];
         }
 
-        $files = glob("{$path}/*.php");
-        if (!$files) {
+        return $this->mupluginsPathsInDir($path, false);
+    }
+
+    /**
+     * @param string $path
+     * @param bool $requireHeader
+     * @return list<string>
+     */
+    private function mupluginsPathsInDir(string $path, bool $requireHeader): array
+    {
+        $files = Finder::create()->in($path)
+            ->name('*.php')
+            ->depth(0)
+            ->ignoreUnreadableDirs()
+            ->ignoreVCS(true)
+            ->ignoreDotFiles(true)
+            ->files();
+        $count = $files->count();
+        if ($count === 0) {
             return [];
         }
 
-        if (count($files) === 1) {
-            $file = reset($files);
-
-            return is_readable($file) ? [$file] : [];
-        }
+        // If a folder contains a single file, and we know the folder is for a MU plugin, then
+        // we can assume that file is the file to load without checking plugin header.
+        // A header is required when we don't know for sure the path belongs to a MU plugin package.
+        $single = ($count === 1) && !$requireHeader;
 
         $paths = [];
         foreach ($files as $file) {
-            if (is_readable($file) && $this->isPluginFile($file)) {
-                $paths[] = $file;
+            if (!$file->isReadable()) {
+                continue;
+            }
+            $path = $this->filesystem->normalizePath($file->getRealPath());
+            if ($single || $this->isPluginFile($path)) {
+                $paths[] = $path;
             }
         }
 
@@ -125,5 +204,30 @@ class MuPluginList
         $data = str_replace("\r", "\n", $data);
 
         return preg_match('/^[ \t\/*#@]*Plugin Name:(.*)$/mi', $data, $match) && !empty($match[1]);
+    }
+
+    /**
+     * @param string $path
+     * @param Config $config
+     * @return bool
+     */
+    private function isDropinPath(string $path, Config $config): bool
+    {
+        if ($this->dropins === null) {
+            $this->dropins = [];
+            /** @var array<string, string> $dropins */
+            $dropins = $config[Config::DROPINS]->unwrapOrFallback([]);
+            foreach ($dropins as $dropin) {
+                if (filter_var($dropin, FILTER_VALIDATE_URL)) {
+                    continue;
+                }
+                $dropinPath = realpath($dropin);
+                $dropinPath and $this->dropins[] = $this->filesystem->normalizePath($dropinPath);
+            }
+        }
+
+        $realpath = $this->filesystem->normalizePath(realpath($path));
+
+        return in_array($realpath, $this->dropins, true);
     }
 }
