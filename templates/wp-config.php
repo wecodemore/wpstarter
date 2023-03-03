@@ -309,6 +309,12 @@ CLEAN_UP : {
     unset($debugInfo, $envType, $envLoader);
 } #@@/CLEAN_UP
 
+WP_CLI_HACK : {
+    if (defined('WP_STARTER_WP_CONFIG_PATH') && defined('WP_CLI') && \WP_CLI) {
+        return;
+    }
+} #@@/WP_CLI_HACK
+
 ###################################################################################################
 #  I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion.  #
 #                 I watched C-beams glitter in the dark near the Tannhäuser Gate.                 #

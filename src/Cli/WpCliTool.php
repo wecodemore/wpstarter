@@ -20,6 +20,11 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class WpCliTool implements PhpTool
 {
+    private const API_URL = 'https://api.github.com/repos/wp-cli/wp-cli/releases/latest';
+    private const PHAR_URL_BASE = 'https://github.com/wp-cli/wp-cli/releases/download';
+    private const PHAR_URL_FORMAT = self::PHAR_URL_BASE . '/v%1$s/wp-cli-%1$s.phar';
+    private const PHAR_URL_REGEX = 'v[^/]+/wp\-cli\-[^/]+\.phar';
+
     /**
      * @var bool
      */
@@ -34,6 +39,11 @@ class WpCliTool implements PhpTool
      * @var Io
      */
     private $io;
+
+    /**
+     * @var string|null
+     */
+    private $pharUrl = null;
 
     /**
      * @param Config $config
@@ -68,11 +78,53 @@ class WpCliTool implements PhpTool
      */
     public function pharUrl(): string
     {
-        $ver = $this->minVersion();
+        if (!$this->downloadEnabled) {
+            return '';
+        }
 
-        return $this->downloadEnabled
-            ? "https://github.com/wp-cli/wp-cli/releases/download/v{$ver}/wp-cli-{$ver}.phar"
-            : '';
+        if ($this->pharUrl !== null) {
+            return $this->pharUrl;
+        }
+
+        $min = $this->minVersion();
+        $this->pharUrl = sprintf(self::PHAR_URL_FORMAT, $min);
+
+        try {
+            $json = $this->urlDownloader->fetch(self::API_URL);
+            $data = @json_decode($json, true);
+            if (!is_array($data) || !is_array($data['assets'] ?? null)) {
+                $url = self::API_URL;
+                throw new \Error("Failed downloading data from API URL '{$url}'.");
+            }
+            foreach ($data['assets'] as $asset) {
+                if (!is_array($asset) || !is_string($asset['browser_download_url'] ?? null)) {
+                    continue;
+                }
+                /** @var string $url */
+                $url = $asset['browser_download_url'];
+                $regex = sprintf(
+                    '~^%s/%s$~',
+                    preg_quote(self::PHAR_URL_BASE, '~'),
+                    self::PHAR_URL_REGEX
+                );
+                if (
+                    preg_match($regex, $url)
+                    && filter_var($url, FILTER_VALIDATE_URL)
+                ) {
+                    /** @var string|false $sanitizesUrl */
+                    $sanitizesUrl = filter_var($url, FILTER_SANITIZE_URL);
+                    $sanitizesUrl and $this->pharUrl = $sanitizesUrl;
+                    break;
+                }
+            }
+            throw new \Error("Could not find latest version from API URL '" . self::API_URL . "'.");
+        } catch (\Throwable $throwable) {
+            $this->io->writeError('GitHub API call failed.');
+            $this->io->writeError($throwable->getMessage());
+            $this->io->writeError("Will fallback to WP CLI '{$min}' version.");
+        }
+
+        return $this->pharUrl;
     }
 
     /**
@@ -135,7 +187,7 @@ class WpCliTool implements PhpTool
      */
     public function minVersion(): string
     {
-        return '2.4.0';
+        return '2.5.0';
     }
 
     /**

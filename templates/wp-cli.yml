@@ -1,1 +1,2 @@
 path: {{{WP_INSTALL_PATH}}}
+exec: 'putenv("WP_CONFIG_PATH={{{WP_CONFIG_PATH}}}");'

@@ -80,7 +80,10 @@ final class WpCliConfigStep implements FileCreationStepInterface
         $built = $this->builder->build(
             $paths,
             'wp-cli.yml',
-            ['WP_INSTALL_PATH' => $paths->relativeToRoot(Util\Paths::WP)]
+            [
+                'WP_INSTALL_PATH' => $paths->relativeToRoot(Util\Paths::WP),
+                'WP_CONFIG_PATH' => $paths->root('wp-config.php'),
+            ]
         );
 
         if (!$this->filesystem->writeContent($built, $this->targetPath($paths))) {
