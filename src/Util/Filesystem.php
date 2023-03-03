@@ -178,7 +178,7 @@ class Filesystem
      */
     public function symlinkOrCopy(string $sourcePath, string $targetPath): bool
     {
-        if ($this->symlink($targetPath, $sourcePath)) {
+        if ($this->symlink($sourcePath, $targetPath)) {
             return true;
         }
 
@@ -211,7 +211,7 @@ class Filesystem
                         ? $this->copyFile($source, $target)
                         : $this->copyDir($source, $target);
                 case Filesystem::OP_SYMLINK:
-                    return $this->symlink($target, $source);
+                    return $this->symlink($source, $target);
                 default:
                     return $this->symlinkOrCopy($source, $target);
             }
