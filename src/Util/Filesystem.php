@@ -331,7 +331,7 @@ class Filesystem
                 return false;
             }
 
-            file_exists($targetPath) and $this->filesystem->unlink($targetPath);
+            $this->unlinkOrRemove($targetPath);
 
             $copy
                 ? copy($sourcePath, $targetPath)

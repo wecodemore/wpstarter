@@ -181,11 +181,12 @@ final class Locator
              */
             $client = $factory($composerIo, $this->composerConfig());
 
-            $filesystem = $this->composerFilesystem();
+            $filesystem = $this->filesystem();
+            $verbose = $composerIo->isVerbose();
 
             $this->objects[__FUNCTION__] = ($client instanceof HttpDownloader)
-                ? UrlDownloader::newV2($client, $filesystem, $composerIo->isVerbose())
-                : UrlDownloader::newV1($client, $filesystem, $composerIo->isVerbose());
+                ? UrlDownloader::newV2($client, $filesystem, $verbose)
+                : UrlDownloader::newV1($client, $filesystem, $verbose);
         }
 
         return $this->objects[__FUNCTION__];

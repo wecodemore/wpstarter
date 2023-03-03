@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Util;
 
-use Composer\Util\Filesystem;
+use Composer\Util\Filesystem as ComposerFilesystem;
 use Composer\Util\HttpDownloader;
 use Composer\Util\RemoteFilesystem;
 
@@ -84,7 +84,7 @@ class UrlDownloader
 
     /**
      * @param Filesystem $filesystem
-     * @param RemoteFilesystem $remoteFilesystem
+     * @param bool $isVerbose
      */
     private function __construct(Filesystem $filesystem, bool $isVerbose)
     {
@@ -117,7 +117,7 @@ class UrlDownloader
         }
 
         try {
-            $this->filesystem->ensureDirectoryExists($directory);
+            $this->filesystem->createDir($directory);
             $result = $this->copyUrl($url, $filename);
         } catch (\Throwable $exception) {
             $this->error = $exception->getMessage();

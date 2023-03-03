@@ -13,12 +13,13 @@ namespace WeCodeMore\WpStarter\Tests;
 
 use Composer;
 use Composer\Factory;
-use Composer\Util\Filesystem;
+use Composer\Util\Filesystem as ComposerFilesystem;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
 
@@ -156,12 +157,13 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
     {
         $ver = Composer\Composer::RUNTIME_API_VERSION;
         if (version_compare($ver, '2', '<')) {
+            /** @noinspection PhpUndefinedMethodInspection */
             return UrlDownloader::newV1(
                 Factory::createRemoteFilesystem(
                     $this->createComposerIo(),
                     $this->createComposerConfig()
                 ),
-                new Filesystem(),
+                new Filesystem(new ComposerFilesystem()),
                 false
             );
         }
@@ -171,7 +173,7 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
                 $this->createComposerIo(),
                 $this->createComposerConfig()
             ),
-            new Filesystem(),
+            new Filesystem(new ComposerFilesystem()),
             false
         );
     }
