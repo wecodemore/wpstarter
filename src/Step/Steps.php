@@ -310,12 +310,21 @@ final class Steps implements PostProcessStep, \Countable
         }
 
         if (!$process) {
-            $comment
-                ? $io->writeComment($comment)
-                : $io->writeIfVerbose(sprintf("- Step '%s' skipped: not allowed.", $step->name()));
+        if ($process) {
+            return true;
         }
 
-        return $process;
+        $name = $step->name();
+
+        if ($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->is(true)) {
+            $comment = sprintf("Step '%s' not executed: requisites not met.", $name);
+        }
+
+        $comment
+            ? $io->writeComment($comment)
+            : $io->writeIfVerbose(sprintf("- Step '%s' skipped: requisites not met.", $name));
+
+        return false;
     }
 
     /**
