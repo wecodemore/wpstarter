@@ -193,15 +193,7 @@ final class DropinsStep implements Step
         }
 
         foreach ($customDropins as $basename => $url) {
-            if ($basename === $url) {
-                $basename = filter_var($url, FILTER_VALIDATE_URL)
-                    ? trim((parse_url($url, PHP_URL_PATH) ?: ''), '/') ?: $url
-                    : basename($url);
-            }
-
-            $this->isKnownDropin($basename, $config)
-                ? $this->runDropinStep($basename, $url, $config, $paths)
-                : $this->error .= "{$basename} is not a valid dropin name. Skipped.\n";
+            $this->runDropinStep($basename, $url, $config, $paths);
         }
 
         if (!$this->error) {
@@ -238,7 +230,7 @@ final class DropinsStep implements Step
             }
 
             $all++;
-            if (!$this->filesystem->copyFile("{$srcDir}/{$file}", "{$target}/{$file}")) {
+            if (!$this->filesystem->symlinkOrCopy("{$srcDir}/{$file}", "{$target}/{$file}")) {
                 $this->error .= "Error copying {$file} dropin to {$target}\n";
                 continue;
             }
@@ -265,7 +257,8 @@ final class DropinsStep implements Step
             $url,
             $this->io,
             $this->urlDownloader,
-            $this->overwriteHelper
+            $this->overwriteHelper,
+            $this->filesystem
         );
 
         if (!$step->allowed($config, $paths)) {
@@ -281,37 +274,5 @@ final class DropinsStep implements Step
                 $this->error .= $step->error() . "\n";
                 break;
         }
-    }
-
-    /**
-     * Besides dropins stored in DROPINS class constant, locales files are valid dropins as well.
-     * This method checks that required dropin is one of the default or one of supported locales,
-     * retrieved from wp.org API.
-     * Via "unknown-dropins" config is possible to change how this method acts in case of unknown
-     * dropins.
-     *
-     * @param  string $filename
-     * @param Config $config
-     * @return bool
-     */
-    private function isKnownDropin(string $filename, Config $config): bool
-    {
-        if (
-            $config[Config::UNKNOWN_DROPINS]->is(true)
-            || in_array($filename, self::DROPINS, true)
-        ) {
-            return true;
-        }
-
-        if (!$config[Config::UNKNOWN_DROPINS]->is(OptionalStep::ASK)) {
-            return false;
-        }
-
-        $lines = [
-            "{$filename} seems not a valid dropin file.",
-            'Do you want to proceed with it anyway?',
-        ];
-
-        return $this->io->askConfirm($lines, false);
     }
 }

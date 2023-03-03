@@ -13,6 +13,7 @@ namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
@@ -53,6 +54,11 @@ final class DropinStep implements FileCreationStepInterface
     private $overwrite;
 
     /**
+     * @var Filesystem
+     */
+    private $filesystem;
+
+    /**
      * @var array{string, string}|array{null, null}
      */
     private $actionAndSource = [null, null];
@@ -73,13 +79,15 @@ final class DropinStep implements FileCreationStepInterface
      * @param Io $io
      * @param UrlDownloader $urlDownloader
      * @param OverwriteHelper $overwrite
+     * @param Filesystem $filesystem
      */
     public function __construct(
         string $name,
         string $url,
         Io $io,
         UrlDownloader $urlDownloader,
-        OverwriteHelper $overwrite
+        OverwriteHelper $overwrite,
+        Filesystem $filesystem
     ) {
 
         $this->name = basename($name);
@@ -87,6 +95,7 @@ final class DropinStep implements FileCreationStepInterface
         $this->io = $io;
         $this->urlDownloader = $urlDownloader;
         $this->overwrite = $overwrite;
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -199,17 +208,17 @@ final class DropinStep implements FileCreationStepInterface
      */
     private function copy(string $source, string $destination): int
     {
-        $sourceBase = basename($source);
         $name = basename($destination);
         try {
-            $copied = copy($source, $destination);
+            $this->filesystem->unlinkOrRemove($destination);
+            $copied = $this->filesystem->symlinkOrCopy($source, $destination);
             $copied
-                ? $this->success .= "<comment>{$name}</comment> copied successfully."
-                : $this->error .= "Impossible to copy {$sourceBase} to {$name}.";
+                ? $this->success .= "<comment>{$name}</comment> dropin copied successfully."
+                : $this->error .= "Impossible to copy {$source} as {$name} dropin.";
 
             return $copied ? self::SUCCESS : self::ERROR;
         } catch (\Throwable $exception) {
-            $this->error .= "Impossible to copy {$sourceBase} to {$name}.";
+            $this->error .= "Impossible to copy {$source} as {$name} dropin.";
 
             return self::ERROR;
         }

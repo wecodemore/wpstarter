@@ -180,12 +180,18 @@ class Validator
         }
 
         $dropins = [];
-        foreach ($value as $name => $dropin) {
-            $check = $this->validateUrlOrPath($dropin);
-            if ($check->notEmpty()) {
-                /** @var string $dropin */
-                $dropin = $check->unwrap();
-                $dropins[is_string($name) ? $name : $dropin] = $dropin;
+        foreach ($value as $basename => $dropin) {
+            $dropin = $this->validateUrlOrPath($dropin)->unwrapOrFallback(null);
+            if (($dropin === '') || !is_string($dropin)) {
+                continue;
+            }
+            if (is_numeric($basename)) {
+                $basename = filter_var($dropin, FILTER_VALIDATE_URL)
+                    ? trim((parse_url($dropin, PHP_URL_PATH) ?: ''), '/') ?: ''
+                    : basename($dropin);
+            }
+            if ($basename !== '') {
+                $dropins[$basename] = $dropin;
             }
         }
 

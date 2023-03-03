@@ -166,6 +166,27 @@ class Filesystem
     }
 
     /**
+     * @param string $sourcePath
+     * @param string $targetPath
+     * @return bool
+     */
+    public function symlinkOrCopy(string $sourcePath, string $targetPath): bool
+    {
+        if ($this->symlink($targetPath, $sourcePath)) {
+            return true;
+        }
+
+        $realpath = realpath($sourcePath);
+        if (!$realpath) {
+            return false;
+        }
+
+        return is_dir($realpath)
+            ? $this->copyDir($sourcePath, $targetPath)
+            : $this->copyFile($sourcePath, $targetPath);
+    }
+
+    /**
      * Create a directory recursively, derived from wp_makedir_p.
      *
      * @param string $targetPath
@@ -238,6 +259,23 @@ class Filesystem
         return $this->filesystem->isSymlinkedDirectory($path)
             || $this->filesystem->isJunction($path)
             || is_link($path);
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function unlinkOrRemove(string $path): bool
+    {
+        try {
+            if ($this->isLink($path)) {
+                return $this->filesystem->unlink($path);
+            }
+
+            return !file_exists($path) || $this->filesystem->remove($path);
+        } catch (\Throwable $exception) {
+            return false;
+        }
     }
 
     /**

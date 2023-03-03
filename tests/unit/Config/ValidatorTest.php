@@ -99,25 +99,25 @@ class ValidatorTest extends TestCase
         static::assertFalse($validator->validateDropins('xx"x')->notEmpty());
         static::assertFalse($validator->validateDropins(null)->notEmpty());
 
-        $dir = str_replace('\\', '/', __DIR__);
-        $file = str_replace('\\', '/', __FILE__);
-
         $input = [
             'foo',
-            'dir' => $dir,
+            'dir' => __DIR__,
             'f"oo',
             '../foo/bar',
             'url-1' => 'https://foo/bar?x=y',
-            $file,
+            __FILE__,
             'meh',
             'https://username:password@127.0.0.1',
+            'something' => 'https://username:password@127.0.0.1',
+            'https://username:password@127.0.0.1/foo',
         ];
 
         $expected = [
-            'dir' => $dir,
+            'dir' => str_replace('\\', '/', __DIR__),
             'url-1' => 'https://foo/bar?x=y',
-            $file => $file,
-            'https://username:password@127.0.0.1' => 'https://username:password@127.0.0.1',
+            basename(__FILE__) => str_replace('\\', '/', __FILE__),
+            'something' => 'https://username:password@127.0.0.1',
+            'foo' => 'https://username:password@127.0.0.1/foo',
         ];
 
         static::assertSame($expected, $validator->validateDropins($input)->unwrap());

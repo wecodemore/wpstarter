@@ -47,7 +47,6 @@ final class Config implements \ArrayAccess
     public const SKIP_DB_CHECK = 'skip-db-check';
     public const SKIP_STEPS = 'skip-steps';
     public const TEMPLATES_DIR = 'templates-dir';
-    public const UNKNOWN_DROPINS = 'unknown-dropins';
     public const WP_CLI_COMMANDS = 'wp-cli-commands';
     public const WP_CLI_FILES = 'wp-cli-files';
     public const WP_VERSION = 'wp-version';
@@ -79,7 +78,6 @@ final class Config implements \ArrayAccess
         self::SKIP_DB_CHECK => false,
         self::SKIP_STEPS => null,
         self::TEMPLATES_DIR => null,
-        self::UNKNOWN_DROPINS => false,
         self::WP_CLI_COMMANDS => null,
         self::WP_CLI_FILES => null,
         self::WP_VERSION => null,
@@ -112,7 +110,6 @@ final class Config implements \ArrayAccess
         self::SCRIPTS => 'validateScripts',
         self::SKIP_DB_CHECK => 'validateBool',
         self::SKIP_STEPS => 'validateArray',
-        self::UNKNOWN_DROPINS => 'validateBoolOrAsk',
         self::WP_CLI_COMMANDS => 'validateWpCliCommands',
         self::WP_CLI_FILES => 'validateWpCliCommandsFileList',
         self::WP_VERSION => 'validateWpVersion',
