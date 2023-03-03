@@ -56,7 +56,7 @@ final class Config implements \ArrayAccess
         self::CACHE_ENV => true,
         self::COMMAND_STEPS => null,
         self::COMPOSER_UPDATED_PACKAGES => [],
-        self::CONTENT_DEV_OPERATION => ContentDevStep::OP_SYMLINK,
+        self::CONTENT_DEV_OPERATION => ContentDevStep::OP_AUTO,
         self::CONTENT_DEV_DIR => 'content-dev',
         self::CUSTOM_STEPS => null,
         self::DROPINS => null,

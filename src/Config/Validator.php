@@ -246,7 +246,7 @@ class Validator
         }
 
         return $bool->is(true)
-            ? Result::ok(ContentDevStep::OP_SYMLINK)
+            ? Result::ok(ContentDevStep::OP_AUTO)
             : Result::ok(ContentDevStep::OP_NONE);
     }
 
