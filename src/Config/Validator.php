@@ -209,7 +209,7 @@ class Validator
      */
     public function validateContentDevOperation($value): Result
     {
-        return $this->validateOperation('Dev Content', $value);
+        return $this->validateOperation(Config::CONTENT_DEV_OPERATION, $value);
     }
 
     /**
@@ -220,7 +220,7 @@ class Validator
      */
     public function validateDropinsOperation($value): Result
     {
-        return $this->validateOperation('Dropins', $value);
+        return $this->validateOperation(Config::DROPINS_OPERATION, $value);
     }
 
     /**
@@ -440,7 +440,10 @@ class Validator
 
         if (!is_string($value)) {
             return Result::errored(
-                'Given value must be either a valid URL, a valid path, or a boolean, or "ask".'
+                sprintf(
+                    'Given value must be either a valid URL, a valid path, or a boolean, or "%s".',
+                    OptionalStep::ASK
+                )
             );
         }
 
@@ -466,7 +469,12 @@ class Validator
             return $this->validateUrl(trim(strtolower($value)));
         }
 
-        return Result::errored('Given value must be either a valid URL, a boolean or "ask".');
+        return Result::errored(
+            sprintf(
+                'Given value must be either a valid URL, a boolean or "%s".',
+                OptionalStep::ASK
+            )
+        );
     }
 
     /**
@@ -877,8 +885,12 @@ class Validator
         $bool = $this->validateBool($value);
         if (!$bool->either(true, false)) {
             return Result::errored(
-                "'{$label}' operation must be either: "
-                . "'ask', 'auto', 'symlink', 'copy', true or false."
+                sprintf(
+                    '"%s" configuration must be either: "%s", "%s", true or false.',
+                    $label,
+                    implode('", "', Filesystem::OPERATIONS),
+                    OptionalStep::ASK
+                )
             );
         }
 

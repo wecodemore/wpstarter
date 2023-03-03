@@ -315,7 +315,7 @@ final class DropinsStep implements Step
         /** @var string $operation */
         $operation = $config[Config::DROPINS_OPERATION]
             ->unwrapOrFallback(Filesystem::OP_AUTO);
-        if ($operation === 'ask') {
+        if ($operation === OptionalStep::ASK) {
             return $this->askOperation();
         }
 

@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Config;
 
-use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Util\Filesystem;
 
 /**

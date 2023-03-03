@@ -150,8 +150,9 @@ final class ContentDevStep implements OptionalStep
             return Step::NONE;
         }
 
-        /** @var string $src */
-        $src = $this->composerFilesystem->normalizePath($config[Config::CONTENT_DEV_DIR]->unwrap());
+        /** @var string $dirName */
+        $dirName = $config[Config::CONTENT_DEV_DIR]->unwrap();
+        $src = $this->composerFilesystem->normalizePath($dirName);
         $this->contentDevDir = $src;
         $targetBase = $paths->wpContent();
 
