@@ -12,11 +12,11 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Tests\Unit\Config;
 
 use WeCodeMore\WpStarter\Step\CheckPathStep;
-use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Step\OptionalStep;
 use WeCodeMore\WpStarter\Step\WpConfigStep;
 use WeCodeMore\WpStarter\Tests\TestCase;
 use WeCodeMore\WpStarter\Cli\WpCliFileData;
+use WeCodeMore\WpStarter\Util\Filesystem;
 
 class ValidatorTest extends TestCase
 {
@@ -138,19 +138,19 @@ class ValidatorTest extends TestCase
             ->is(OptionalStep::ASK));
 
         static::assertTrue($validator->validateContentDevOperation(false)
-            ->is(ContentDevStep::OP_NONE));
+            ->is(Filesystem::OP_NONE));
 
         static::assertTrue($validator->validateContentDevOperation(true)
-            ->is(ContentDevStep::OP_SYMLINK));
+            ->is(Filesystem::OP_AUTO));
 
-        static::assertTrue($validator->validateContentDevOperation(ContentDevStep::OP_SYMLINK)
-            ->is(ContentDevStep::OP_SYMLINK));
+        static::assertTrue($validator->validateContentDevOperation(Filesystem::OP_SYMLINK)
+            ->is(Filesystem::OP_SYMLINK));
 
-        static::assertTrue($validator->validateContentDevOperation(ContentDevStep::OP_NONE)
-            ->is(ContentDevStep::OP_NONE));
+        static::assertTrue($validator->validateContentDevOperation(Filesystem::OP_NONE)
+            ->is(Filesystem::OP_NONE));
 
-        static::assertTrue($validator->validateContentDevOperation(ContentDevStep::OP_COPY)
-            ->is(ContentDevStep::OP_COPY));
+        static::assertTrue($validator->validateContentDevOperation(Filesystem::OP_COPY)
+            ->is(Filesystem::OP_COPY));
     }
 
     /**

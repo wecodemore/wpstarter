@@ -353,8 +353,9 @@ class SelectedStepsFactoryTest extends TestCase
 
         $steps = $factory->selectAndFactory($locator, $composer);
 
-        static::assertCount(1, $steps);
+        static::assertCount(2, $steps);
         static::assertInstanceOf(FlushEnvCacheStep::class, $steps[0]);
+        static::assertInstanceOf(WpCliCommandsStep::class, $steps[1]);
         static::assertSame('', $factory->lastError());
     }
 
@@ -395,9 +396,10 @@ class SelectedStepsFactoryTest extends TestCase
 
         $steps = $factory->selectAndFactory($locator, $composer);
 
-        static::assertCount(2, $steps);
+        static::assertCount(3, $steps);
         static::assertInstanceOf(CheckPathStep::class, $steps[0]);
         static::assertInstanceOf(FlushEnvCacheStep::class, $steps[1]);
+        static::assertInstanceOf(WpCliCommandsStep::class, $steps[2]);
         static::assertSame('', $factory->lastError());
     }
 

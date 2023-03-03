@@ -87,11 +87,11 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     ): Config\Validator {
 
         $config = \Mockery::mock(Composer\Config::class);
-        $config->shouldReceive('get')->with('vendor-dir')->andReturn($vendorDir);
-        $config->shouldReceive('get')->with('bin-dir')->andReturn($binDir);
+        $config->allows('get')->with('vendor-dir')->andReturn($vendorDir);
+        $config->allows('get')->with('bin-dir')->andReturn($binDir);
         $composer = \Mockery::mock(Composer\Composer::class);
-        $composer->shouldReceive('getConfig')->andReturn($config);
-        $composer->shouldReceive('getPackage->getExtra')->andReturn($extra);
+        $composer->allows('getConfig')->andReturn($config);
+        $composer->allows('getPackage->getExtra')->andReturn($extra);
 
         $filesystem = new Composer\Util\Filesystem();
 
@@ -157,8 +157,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $root = $this->fixturesPath() . '/paths-root';
 
         $config = \Mockery::mock(Composer\Config::class);
-        $config->shouldReceive('get')->with('vendor-dir')->andReturn("{$root}/vendor");
-        $config->shouldReceive('get')->with('bin-dir')->andReturn("{$root}/vendor/bin");
+        $config->allows('get')->with('vendor-dir')->andReturn("{$root}/vendor");
+        $config->allows('get')->with('bin-dir')->andReturn("{$root}/vendor/bin");
 
         is_array($extra) or $extra = [
             'wordpress-install-dir' => 'public/wp',
