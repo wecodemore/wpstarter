@@ -11,13 +11,13 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Config;
 
-use Composer\Util\Filesystem;
+use Composer\Util\Filesystem as ComposerFilesystem;
 use Symfony\Component\Console\Input\StringInput;
-use WeCodeMore\WpStarter\Step\ContentDevStep;
 use WeCodeMore\WpStarter\Step\OptionalStep;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\WpVersion;
 use WeCodeMore\WpStarter\Cli;
+use WeCodeMore\WpStarter\Util\Filesystem;
 
 /**
  * All this class methods receive a "$value" coming from JSON, so we don't have type safety.
@@ -33,15 +33,15 @@ class Validator
     private $paths;
 
     /**
-     * @var Filesystem
+     * @var ComposerFilesystem
      */
     private $filesystem;
 
     /**
      * @param Paths $paths
-     * @param Filesystem $filesystem
+     * @param ComposerFilesystem $filesystem
      */
-    public function __construct(Paths $paths, Filesystem $filesystem)
+    public function __construct(Paths $paths, ComposerFilesystem $filesystem)
     {
         $this->paths = $paths;
         $this->filesystem = $filesystem;
@@ -167,20 +167,23 @@ class Validator
      *
      * @param mixed $value
      * @return Result
+     *
+     * phpcs:disable Generic.Metrics.CyclomaticComplexity
      */
     public function validateDropins($value): Result
     {
+        // phpcs:enable Generic.Metrics.CyclomaticComplexity
+
         if (!$value) {
             return Result::none();
         }
 
-        is_string($value) and $value = [$value];
-        if (!is_array($value)) {
+        if (!is_array($value) && !is_string($value)) {
             return Result::errored('Dropins config must be an array.');
         }
 
         $dropins = [];
-        foreach ($value as $basename => $dropin) {
+        foreach ((array)$value as $basename => $dropin) {
             $dropin = $this->validateUrlOrPath($dropin)->unwrapOrFallback(null);
             if (($dropin === '') || !is_string($dropin)) {
                 continue;
@@ -195,59 +198,29 @@ class Validator
             }
         }
 
-        if (!$dropins) {
-            return Result::errored('No valid dropins provided.');
-        }
-
-        return Result::ok($dropins);
+        return $dropins ? Result::ok($dropins) : Result::errored('No valid dropins provided.');
     }
 
     /**
      * Validate the operation to apply for "content dev".
-     *
-     * WP Starter allows to have plugins, themes and mu-plugins in the same folder of the project
-     * itself. For WordPress to be able to recognize those, it is needed they are placed in the
-     * wp-content folder, which will also contains 3rd party plugins, themes and mu-plugins pulled
-     * via Composer. To keep things separated, and easily managed via Git, WP Starter allows
-     * "1st hand" content to be placed in a separate folder of the project and then either
-     * symlinked or copied into wp-content folder.
-     *
-     * This setting tells WP starter what to do: symlink (default) or copy the files.
-     * It is accepted:
-     * - the word "symlink"
-     * - the word "copy"
-     * - the word "none", which means do nothing
-     * - boolean true, which means default operation, i.e. "symlink"
-     * - boolean false, which means do nothing
      *
      * @param string|bool|null $value
      * @return Result
      */
     public function validateContentDevOperation($value): Result
     {
-        if ($value === null) {
-            return Result::none();
-        }
+        return $this->validateOperation('Dev Content', $value);
+    }
 
-        if ($value === OptionalStep::ASK) {
-            return Result::ok($value);
-        }
-
-        is_string($value) and $value = trim(strtolower($value));
-        if (in_array($value, ContentDevStep::OPERATIONS, true)) {
-            return Result::ok($value);
-        }
-
-        $bool = $this->validateBool($value);
-        if (!$bool->either(true, false)) {
-            return Result::errored(
-                "'Dev Content' operation must be either: 'ask', 'symlink', 'copy', true or false."
-            );
-        }
-
-        return $bool->is(true)
-            ? Result::ok(ContentDevStep::OP_AUTO)
-            : Result::ok(ContentDevStep::OP_NONE);
+    /**
+     * Validate the operation to apply for "content dev".
+     *
+     * @param string|bool|null $value
+     * @return Result
+     */
+    public function validateDropinsOperation($value): Result
+    {
+        return $this->validateOperation('Dropins', $value);
     }
 
     /**
@@ -377,7 +350,7 @@ class Validator
      * It is expected a string, that is a path to a PHP or JSON file. The file must return (if PHP)
      * or contain (if JSON) an array of WP CLI commands as they would be run in the terminal.
      *
-     * @param string|null $value
+     * @param mixed $value
      * @return Result
      */
     public function validateWpCliCommandsFileList($value): Result
@@ -851,7 +824,7 @@ class Validator
      * @param bool $namespace
      * @return bool
      */
-    private function isValidEntityName(string $value, $namespace = true): bool
+    private function isValidEntityName(string $value, bool $namespace = true): bool
     {
         $parts = $namespace ? explode('\\', ltrim($value, '\\')) : [$value];
         foreach ($parts as $part) {
@@ -861,5 +834,56 @@ class Validator
         }
 
         return true;
+    }
+
+    /**
+     * Validate the operation to apply for "content dev".
+     *
+     * WP Starter allows to have plugins, themes and mu-plugins in the same folder of the project
+     * itself. For WordPress to be able to recognize those, it is needed they are placed in the
+     * wp-content folder, which will also contains 3rd party plugins, themes and mu-plugins pulled
+     * via Composer. To keep things separated, and easily managed via Git, WP Starter allows
+     * "1st hand" content to be placed in a separate folder of the project and then either
+     * symlinked or copied into wp-content folder.
+     *
+     * This setting tells WP starter what to do: symlink (default) or copy the files.
+     * It is accepted:
+     * - the word "auto"
+     * - the word "symlink"
+     * - the word "copy"
+     * - the word "none", which means do nothing
+     * - boolean true, which means default operation, i.e. "auto"
+     * - boolean false, which means do nothing
+     *
+     * @param string $label
+     * @param mixed $value
+     * @return Result
+     */
+    private function validateOperation(string $label, $value): Result
+    {
+        if ($value === null) {
+            return Result::none();
+        }
+
+        if ($value === OptionalStep::ASK) {
+            return Result::ok($value);
+        }
+
+        is_string($value) and $value = trim(strtolower($value));
+        if (in_array($value, Filesystem::OPERATIONS, true)) {
+            return Result::ok($value);
+        }
+
+        $bool = $this->validateBool($value);
+        if (!$bool->either(true, false)) {
+            return Result::errored(
+                "'{$label}' operation must be either: "
+                . "'ask', 'auto', 'symlink', 'copy', true or false."
+            );
+        }
+
+        return $bool->is(true)
+            ? Result::ok(Filesystem::OP_AUTO)
+            : Result::ok(Filesystem::OP_NONE);
     }
 }

@@ -19,6 +19,12 @@ use Composer\Util\Platform;
  */
 class Filesystem
 {
+    public const OP_AUTO = 'auto';
+    public const OP_COPY = 'copy';
+    public const OP_SYMLINK = 'symlink';
+    public const OP_NONE = 'none';
+    public const OPERATIONS = [self::OP_AUTO, self::OP_COPY, self::OP_SYMLINK, self::OP_NONE];
+
     /**
      * @var ComposerFilesystem
      */
@@ -182,8 +188,36 @@ class Filesystem
         }
 
         return is_dir($realpath)
-            ? $this->copyDir($sourcePath, $targetPath)
-            : $this->copyFile($sourcePath, $targetPath);
+            ? $this->copyDir($realpath, $targetPath)
+            : $this->copyFile($realpath, $targetPath);
+    }
+
+    /**
+     * @param string $source
+     * @param string $target
+     * @param string $operation
+     * @return bool
+     */
+    public function symlinkOrCopyOperation(string $source, string $target, string $operation): bool
+    {
+        if (!in_array($operation, self::OPERATIONS, true) || ($operation === self::OP_NONE)) {
+            return false;
+        }
+
+        try {
+            switch ($operation) {
+                case Filesystem::OP_COPY:
+                    return is_file($source)
+                        ? $this->copyFile($source, $target)
+                        : $this->copyDir($source, $target);
+                case Filesystem::OP_SYMLINK:
+                    return $this->symlink($target, $source);
+                default:
+                    return $this->symlinkOrCopy($source, $target);
+            }
+        } catch (\Throwable $throwable) {
+            return false;
+        }
     }
 
     /**

@@ -108,13 +108,10 @@ class MuPluginList
             if (in_array($muDirPath, $packagesPaths, true)) {
                 continue;
             }
-            $morePaths = $this->mupluginsPathsInDir($muDirPath, true);
+            $morePaths = $this->mupluginsPathsInDir($muDirPath, true, $config);
             $name = basename($muDirPath);
             $multi = count($morePaths) > 1;
             foreach ($morePaths as $path) {
-                if ($this->isDropinPath($path, $config)) {
-                    continue;
-                }
                 $key = $multi ? "{$name}_" . pathinfo($path, PATHINFO_FILENAME) : $name;
                 $list[$key] = $path;
             }
@@ -149,10 +146,15 @@ class MuPluginList
     /**
      * @param string $path
      * @param bool $requireHeader
+     * @param Config|null $config
      * @return list<string>
      */
-    private function mupluginsPathsInDir(string $path, bool $requireHeader): array
-    {
+    private function mupluginsPathsInDir(
+        string $path,
+        bool $requireHeader,
+        ?Config $config = null
+    ): array {
+
         $files = Finder::create()->in($path)
             ->name('*.php')
             ->depth(0)
@@ -176,6 +178,9 @@ class MuPluginList
                 continue;
             }
             $path = $this->filesystem->normalizePath($file->getRealPath());
+            if ($config && $this->isDropinPath($path, $config)) {
+                continue;
+            }
             if ($single || $this->isPluginFile($path)) {
                 $paths[] = $path;
             }
@@ -213,21 +218,34 @@ class MuPluginList
      */
     private function isDropinPath(string $path, Config $config): bool
     {
-        if ($this->dropins === null) {
-            $this->dropins = [];
-            /** @var array<string, string> $dropins */
-            $dropins = $config[Config::DROPINS]->unwrapOrFallback([]);
-            foreach ($dropins as $dropin) {
-                if (filter_var($dropin, FILTER_VALIDATE_URL)) {
-                    continue;
-                }
-                $dropinPath = realpath($dropin);
-                $dropinPath and $this->dropins[] = $this->filesystem->normalizePath($dropinPath);
-            }
-        }
-
         $realpath = $this->filesystem->normalizePath(realpath($path));
 
-        return in_array($realpath, $this->dropins, true);
+        return in_array($realpath, $this->dropinsList($config), true);
+    }
+
+    /**
+     * @param Config $config
+     * @return list<string>
+     *
+     * @psalm-assert list<string> $this->dropins
+     */
+    private function dropinsList(Config $config): array
+    {
+        if (is_array($this->dropins)) {
+            return $this->dropins;
+        }
+
+        $this->dropins = [];
+        /** @var array<string, string> $dropins */
+        $dropins = $config[Config::DROPINS]->unwrapOrFallback([]);
+        foreach ($dropins as $dropin) {
+            if (filter_var($dropin, FILTER_VALIDATE_URL)) {
+                continue;
+            }
+            $dropinPath = realpath($dropin);
+            $dropinPath and $this->dropins[] = $this->filesystem->normalizePath($dropinPath);
+        }
+
+        return $this->dropins;
     }
 }

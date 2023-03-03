@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Config;
 
 use WeCodeMore\WpStarter\Step\ContentDevStep;
+use WeCodeMore\WpStarter\Util\Filesystem;
 
 /**
  * Data storage for configuration.
@@ -29,6 +30,7 @@ final class Config implements \ArrayAccess
     public const CONTENT_DEV_OPERATION = 'content-dev-op';
     public const CUSTOM_STEPS = 'custom-steps';
     public const DROPINS = 'dropins';
+    public const DROPINS_OPERATION = 'dropins-op';
     public const EARLY_HOOKS_FILE = 'early-hook-file';
     public const ENV_BOOTSTRAP_DIR = 'env-bootstrap-dir';
     public const ENV_DIR = 'env-dir';
@@ -56,10 +58,11 @@ final class Config implements \ArrayAccess
         self::CACHE_ENV => true,
         self::COMMAND_STEPS => null,
         self::COMPOSER_UPDATED_PACKAGES => [],
-        self::CONTENT_DEV_OPERATION => ContentDevStep::OP_AUTO,
+        self::CONTENT_DEV_OPERATION => Filesystem::OP_AUTO,
         self::CONTENT_DEV_DIR => 'content-dev',
         self::CUSTOM_STEPS => null,
         self::DROPINS => null,
+        self::DROPINS_OPERATION => Filesystem::OP_AUTO,
         self::EARLY_HOOKS_FILE => '',
         self::ENV_BOOTSTRAP_DIR => null,
         self::ENV_DIR => null,
@@ -92,6 +95,7 @@ final class Config implements \ArrayAccess
         self::CONTENT_DEV_DIR => 'validatePath',
         self::CUSTOM_STEPS => 'validateSteps',
         self::DROPINS => 'validateDropins',
+        self::DROPINS_OPERATION => 'validateDropinsOperation',
         self::EARLY_HOOKS_FILE => 'validatePath',
         self::ENV_BOOTSTRAP_DIR => 'validateDirName',
         self::ENV_DIR => 'validatePath',

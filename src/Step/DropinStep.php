@@ -13,6 +13,7 @@ namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Io\Question;
 use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\Util\Paths;
@@ -37,6 +38,11 @@ final class DropinStep implements FileCreationStepInterface
      * @var string
      */
     private $url;
+
+    /**
+     * @var string
+     */
+    private $operation;
 
     /**
      * @var Io
@@ -76,6 +82,7 @@ final class DropinStep implements FileCreationStepInterface
     /**
      * @param string $name
      * @param string $url
+     * @param string $operation
      * @param Io $io
      * @param UrlDownloader $urlDownloader
      * @param OverwriteHelper $overwrite
@@ -84,6 +91,7 @@ final class DropinStep implements FileCreationStepInterface
     public function __construct(
         string $name,
         string $url,
+        string $operation,
         Io $io,
         UrlDownloader $urlDownloader,
         OverwriteHelper $overwrite,
@@ -92,6 +100,7 @@ final class DropinStep implements FileCreationStepInterface
 
         $this->name = basename($name);
         $this->url = $url;
+        $this->operation = $operation;
         $this->io = $io;
         $this->urlDownloader = $urlDownloader;
         $this->overwrite = $overwrite;
@@ -149,7 +158,7 @@ final class DropinStep implements FileCreationStepInterface
 
         return $isDownload
             ? $this->download($source, $destination)
-            : $this->copy($source, $destination);
+            : $this->symlinkOrCopy($source, $destination);
     }
 
     /**
@@ -203,22 +212,24 @@ final class DropinStep implements FileCreationStepInterface
      * Copy dropin file from given source path and save it in wp-content folder.
      *
      * @param string $source
-     * @param string $destination
+     * @param string $target
      * @return int
      */
-    private function copy(string $source, string $destination): int
+    private function symlinkOrCopy(string $source, string $target): int
     {
-        $name = basename($destination);
+        $name = basename($target);
+
         try {
-            $this->filesystem->unlinkOrRemove($destination);
-            $copied = $this->filesystem->symlinkOrCopy($source, $destination);
+            $this->filesystem->unlinkOrRemove($target);
+            $copied = $this->filesystem->symlinkOrCopyOperation($source, $target, $this->operation);
+
             $copied
-                ? $this->success .= "<comment>{$name}</comment> dropin copied successfully."
-                : $this->error .= "Impossible to copy {$source} as {$name} dropin.";
+                ? $this->success .= $this->describeSuccess($name)
+                : $this->error .= $this->describeError($name, $source);
 
             return $copied ? self::SUCCESS : self::ERROR;
         } catch (\Throwable $exception) {
-            $this->error .= "Impossible to copy {$source} as {$name} dropin.";
+            $this->error .= $this->describeError($name, $source);
 
             return self::ERROR;
         }
@@ -242,5 +253,40 @@ final class DropinStep implements FileCreationStepInterface
         }
 
         return [null, null];
+    }
+
+    /**
+     * @param string $name
+     * @return string
+     */
+    private function describeSuccess(string $name): string
+    {
+        if ($this->operation === Filesystem::OP_COPY) {
+            return "<comment>{$name}</comment> dropin copied successfully.";
+        }
+
+        if ($this->operation === Filesystem::OP_SYMLINK) {
+            return "<comment>{$name}</comment> dropin symlinked successfully.";
+        }
+
+        return "<comment>{$name}</comment> dropin published successfully.";
+    }
+
+    /**
+     * @param string $name
+     * @param string $source
+     * @return string
+     */
+    private function describeError(string $name, string $source): string
+    {
+        if ($this->operation === Filesystem::OP_COPY) {
+            return "Failed copying {$source} as {$name} dropin.";
+        }
+
+        if ($this->operation === Filesystem::OP_SYMLINK) {
+            return "Failed symlinking {$source} as {$name} dropin.";
+        }
+
+        return "Both symlink and copy from {$source} to {$name} dropin failed.";
     }
 }
