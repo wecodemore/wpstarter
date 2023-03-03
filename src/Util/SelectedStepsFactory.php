@@ -213,13 +213,6 @@ class SelectedStepsFactory
         $targetSteps = $this->filterOutSkippedSteps($config, $targetSteps, $io);
         $availableStepClassesMap = $this->filterOutInvalidSteps($targetSteps);
 
-        if (
-            !$config[Config::WP_CLI_FILES]->notEmpty()
-            && !$config[Config::WP_CLI_COMMANDS]->notEmpty()
-        ) {
-            unset($availableStepClassesMap[WpCliCommandsStep::NAME]);
-        }
-
         return $availableStepClassesMap;
     }
 

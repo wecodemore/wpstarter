@@ -36,9 +36,14 @@ final class WpCliCommandsStep implements Step
     private $io;
 
     /**
-     * @var Cli\PhpToolProcess
+     * @var callable():Cli\PhpToolProcess
      */
-    private $process;
+    private $processFactory;
+
+    /**
+     * @var Cli\PhpToolProcess|null
+     */
+    private $process = null;
 
     /**
      * @var string[]
@@ -56,7 +61,7 @@ final class WpCliCommandsStep implements Step
     public function __construct(Locator $locator)
     {
         $this->io = $locator->io();
-        $this->process = $locator->wpCliProcess();
+        $this->processFactory = [$locator, 'wpCliProcess'];
     }
 
     /**
@@ -102,8 +107,8 @@ final class WpCliCommandsStep implements Step
         $this->io->writeComment("Running WP CLI commands...");
 
         $checkVer = $this->io->isVerbose()
-            ? $this->process->execute('cli version')
-            : $this->process->executeSilently('cli version');
+            ? $this->process()->execute('cli version')
+            : $this->process()->executeSilently('cli version');
 
         $this->io->write('');
 
@@ -128,7 +133,7 @@ final class WpCliCommandsStep implements Step
             $commandDesc = $this->commandDesc($command);
             $dashes = str_repeat('-', 54 - strlen($commandDesc));
             $this->io->write("<fg=magenta>\$ wp {$commandDesc} {$dashes}</>");
-            $continue = $this->process->execute($command);
+            $continue = $this->process()->execute($command);
             if (!$continue) {
                 $this->io->writeError("'wp {$command}' FAILED! Quitting WP CLI.");
             }
@@ -155,6 +160,16 @@ final class WpCliCommandsStep implements Step
     public function success(): string
     {
         return '  <comment>WP CLI commands executed.</comment>';
+    }
+
+    /**
+     * @return Cli\PhpToolProcess
+     */
+    private function process(): Cli\PhpToolProcess
+    {
+        $this->process or $this->process = ($this->processFactory)();
+
+        return $this->process;
     }
 
     /**
