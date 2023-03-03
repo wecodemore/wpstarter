@@ -28,7 +28,8 @@ AUTOLOAD: {
     /** Composer autoload. */
     require_once realpath(__DIR__ . '{{{AUTOLOAD_PATH}}}');
 
-    define('WPSTARTER_PATH', realpath(__DIR__ . '{{{ENV_REL_PATH}}}'));
+    define('WPSTARTER_PATH', realpath('{{{WPSTARTER_PATH}}}'));
+    define('WPSTARTER_ENV_PATH', realpath(__DIR__ . '{{{ENV_REL_PATH}}}'));
 
     $debugInfo['autoload-path'] = [
         'label' => 'Autoload path',
@@ -39,6 +40,11 @@ AUTOLOAD: {
         'label' => 'Base path',
         'value' => WPSTARTER_PATH,
         'debug' => WPSTARTER_PATH,
+    ];
+    $debugInfo['env-path'] = [
+        'label' => 'Base path',
+        'value' => WPSTARTER_ENV_PATH,
+        'debug' => WPSTARTER_ENV_PATH,
     ];
 } #@@/AUTOLOAD
 
@@ -53,15 +59,15 @@ ENV_VARIABLES: {
      */
     $envCacheEnabled = filter_var('{{{CACHE_ENV}}}', FILTER_VALIDATE_BOOLEAN);
     $envLoader = $envCacheEnabled
-        ? WordPressEnvBridge::buildFromCacheDump(WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE)
+        ? WordPressEnvBridge::buildFromCacheDump(WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE)
         : new WordPressEnvBridge();
 
     $envIsCached = $envLoader->hasCachedValues();
     if (!$envIsCached) {
-        $envLoader->load('{{{ENV_FILE_NAME}}}', WPSTARTER_PATH);
+        $envLoader->load('{{{ENV_FILE_NAME}}}', WPSTARTER_ENV_PATH);
         $envType = $envLoader->determineEnvType();
         if ($envType !== 'example') {
-            $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$envType}", WPSTARTER_PATH);
+            $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$envType}", WPSTARTER_ENV_PATH);
         }
     }
     /**
@@ -76,8 +82,8 @@ ENV_VARIABLES: {
 
     $debugInfo['env-cache-file'] = [
         'label' => 'Env cache file',
-        'value' => WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE,
-        'debug' => WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE,
+        'value' => WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE,
+        'debug' => WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE,
     ];
     $debugInfo['env-cache-enabled'] = [
         'label' => 'Env cache enabled',
@@ -261,7 +267,7 @@ ENV_CACHE : {
             static function () use ($envLoader, $envType) {
                 $isLocal = $envType === 'local';
                 if (!apply_filters('wpstarter.skip-cache-env', $isLocal, $envType)) {
-                    $envLoader->dumpCached(WPSTARTER_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
+                    $envLoader->dumpCached(WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
                 }
             }
         );

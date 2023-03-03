@@ -98,7 +98,7 @@ final class Config implements \ArrayAccess
         self::DROPINS_OPERATION => 'validateDropinsOperation',
         self::EARLY_HOOKS_FILE => 'validatePath',
         self::ENV_BOOTSTRAP_DIR => 'validateDirName',
-        self::ENV_DIR => 'validatePath',
+        self::ENV_DIR => 'validateDirName',
         self::ENV_EXAMPLE => 'validateBoolOrAskOrUrlOrPath',
         self::ENV_FILE => 'validateFileName',
         self::INSTALL_WP_CLI => 'validateBool',

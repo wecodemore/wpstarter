@@ -86,7 +86,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      */
     public function targetPath(Paths $paths): string
     {
-        return $paths->wpParent('wp-config.php');
+        return $paths->root('wp-config.php');
     }
 
     /**
@@ -96,7 +96,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        $from = $this->composerFilesystem->normalizePath($paths->wpParent());
+        $from = $paths->root();
 
         $autoload = $paths->vendor('autoload.php');
 
@@ -115,7 +115,9 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         }
 
         /** @var string $envDir */
-        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
+        $envDirName = $config[Config::ENV_DIR]->unwrap();
+        $envDir = $this->composerFilesystem->normalizePath("{$from}/{$envDirName}");
+        $this->filesystem->createDir($envDir);
         $envRelDir = $this->relPath($from, $envDir);
 
         $register = $config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback(false);
@@ -131,6 +133,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
             'EARLY_HOOKS_FILE' => $earlyHookFile,
             'ENV_BOOTSTRAP_DIR' => $envBootstrapDir ?: $envRelDir,
             'ENV_FILE_NAME' => $config[Config::ENV_FILE]->unwrapOrFallback('.env'),
+            'WPSTARTER_PATH' => $from,
             'ENV_REL_PATH' => $envRelDir,
             'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
             'WP_CONTENT_PATH' => $contentRelDir,
@@ -145,8 +148,14 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
             array_merge($vars, $this->salter->keys())
         );
 
-        if (!$this->filesystem->writeContent($built, $this->targetPath($paths))) {
+        $target = $this->targetPath($paths);
+        if (!$this->filesystem->writeContent($built, $target)) {
             return self::ERROR;
+        }
+
+        $wpConfigLoaderPath = $paths->wpParent('wp-config.php');
+        if ($wpConfigLoaderPath !== $target) {
+            return $this->buildLoader($target, $wpConfigLoaderPath, $paths);
         }
 
         return self::SUCCESS;
@@ -207,5 +216,28 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         strpos($path, '../') === 0 and $path = dirname($path);
 
         return $path;
+    }
+
+    /**
+     * @param string $wpConfigPath
+     * @param string $wpConfigLoaderPath
+     * @param Paths $paths
+     * @return int
+     */
+    private function buildLoader(
+        string $wpConfigPath,
+        string $wpConfigLoaderPath,
+        Paths $paths
+    ): int {
+
+        $built = $this->builder->build(
+            $paths,
+            'wp-config-loader.php',
+            ['WP_CONFIG_PATH' => $this->relPath($wpConfigLoaderPath, $wpConfigPath, false)]
+        );
+
+        return $this->filesystem->writeContent($built, $wpConfigLoaderPath)
+            ? Step::SUCCESS
+            : Step::ERROR;
     }
 }
