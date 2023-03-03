@@ -34,6 +34,9 @@ jobs:
                     coverage: none
                     tools: cs2pr
 
+            -   name: Setup Composer aut for GitHub
+                run: composer config github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+
             -   name: Install dependencies
                 uses: ramsey/composer-install@v2
 

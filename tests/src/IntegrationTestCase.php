@@ -33,10 +33,19 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
     private $outputs = [];
 
     /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->outputs = [];
+    }
+
+    /**
      * @param int $verbosity
      * @return string
      */
-    public function collectOutput(int $verbosity = OutputInterface::VERBOSITY_NORMAL): string
+    protected function collectOutput(int $verbosity = OutputInterface::VERBOSITY_NORMAL): string
     {
         if ($this->outputs[$verbosity] ?? null) {
             $output = $this->outputs[$verbosity]->output;
@@ -52,7 +61,7 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      * @param int $verbosity
      * @return OutputInterface
      */
-    public function createConsoleOutput(
+    protected function factoryConsoleOutput(
         int $verbosity = OutputInterface::VERBOSITY_NORMAL
     ): OutputInterface {
 
@@ -67,10 +76,17 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
         ) extends Output {
 
             public $output = '';
+            public $lines = [];
 
-            protected function doWrite($message, $newline) // phpcs:ignore
+            protected function doWrite(string $message, bool $newline)
             {
-                $this->output .= $message . ($newline ? "\n" : '');
+                if (!$newline && $this->lines) {
+                    $last = array_pop($this->lines);
+                    $message = $last . $message;
+                }
+
+                $this->lines[] = $message;
+                $this->output = implode("\n", $this->lines);
             }
         };
 
@@ -82,14 +98,14 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      * @param int $verbosity
      * @return Composer\IO\IOInterface
      */
-    public function createComposerIo(
+    protected function factoryComposerIo(
         string $input = '',
         int $verbosity = OutputInterface::VERBOSITY_NORMAL
     ): Composer\IO\IOInterface {
 
         return new Composer\IO\ConsoleIO(
             new StringInput($input),
-            $this->createConsoleOutput($verbosity),
+            $this->factoryConsoleOutput($verbosity),
             new HelperSet()
         );
     }
@@ -101,7 +117,7 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      * @param array $extra
      * @return Paths
      */
-    public function createPaths(
+    protected function factoryPaths(
         string $cwd = null,
         int $verbosity = OutputInterface::VERBOSITY_NORMAL,
         string $input = '',
@@ -111,12 +127,12 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
         return $cwd
             ? Paths::withRoot(
                 $cwd,
-                $this->createComposerConfig($input, $verbosity, $cwd),
+                $this->factoryComposerConfig($input, $verbosity, $cwd),
                 $extra,
                 new Composer\Util\Filesystem()
             )
             : new Paths(
-                $this->createComposerConfig($input, $verbosity, $cwd),
+                $this->factoryComposerConfig($input, $verbosity, $cwd),
                 $extra,
                 new Composer\Util\Filesystem()
             );
@@ -128,14 +144,14 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      * @param string|null $cwd
      * @return Composer\Config
      */
-    public function createComposerConfig(
+    protected function factoryComposerConfig(
         string $input = '',
         int $verbosity = OutputInterface::VERBOSITY_NORMAL,
         string $cwd = null
     ): Composer\Config {
 
         return Composer\Factory::createConfig(
-            $this->createComposerIo($input, $verbosity),
+            $this->factoryComposerIo($input, $verbosity),
             $cwd ?? getenv('PACKAGE_PATH')
         );
     }
@@ -143,25 +159,25 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
     /**
      * @return Composer\Composer
      */
-    public function createComposer(): Composer\Composer
+    protected function factoryComposer(): Composer\Composer
     {
         $path = getenv('PACKAGE_PATH') . '/composer.json';
 
-        return Composer\Factory::create($this->createComposerIo(), $path, true);
+        return Composer\Factory::create($this->factoryComposerIo(), $path, true);
     }
 
     /**
      * @return UrlDownloader
      */
-    public function createUrlDownloader(): UrlDownloader
+    protected function factoryUrlDownloader(): UrlDownloader
     {
         $ver = Composer\Composer::RUNTIME_API_VERSION;
         if (version_compare($ver, '2', '<')) {
             /** @noinspection PhpUndefinedMethodInspection */
             return UrlDownloader::newV1(
                 Factory::createRemoteFilesystem(
-                    $this->createComposerIo(),
-                    $this->createComposerConfig()
+                    $this->factoryComposerIo(),
+                    $this->factoryComposerConfig()
                 ),
                 new Filesystem(new ComposerFilesystem()),
                 false
@@ -170,8 +186,8 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
 
         return UrlDownloader::newV2(
             Factory::createHttpDownloader(
-                $this->createComposerIo(),
-                $this->createComposerConfig()
+                $this->factoryComposerIo(),
+                $this->factoryComposerConfig()
             ),
             new Filesystem(new ComposerFilesystem()),
             false

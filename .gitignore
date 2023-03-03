@@ -3,4 +3,7 @@
 /build/
 /phpunit.xml
 /tests/fixtures/some-zip-content.txt
+/tests/fixtures/wp-cli-*.phar
+/tests/fixtures/wp-cli.phar
+!/tests/fixtures/wp-cli-2.0.1.phar
 .phpunit.result.cache

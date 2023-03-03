@@ -60,8 +60,8 @@ class PhpToolProcessTest extends IntegrationTestCase
             (new PhpExecutableFinder())->find() ?: '',
             new DummyPhpTool(),
             '',
-            $this->createPaths(),
-            new Io($this->createComposerIo())
+            $this->factoryPaths(),
+            new Io($this->factoryComposerIo())
         );
     }
 }

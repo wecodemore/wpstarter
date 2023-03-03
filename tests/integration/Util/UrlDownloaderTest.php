@@ -21,7 +21,7 @@ class UrlDownloaderTest extends IntegrationTestCase
      */
     public function testFetchFailsForWrongUrl(): void
     {
-        $downloader = $this->createUrlDownloader();
+        $downloader = $this->factoryUrlDownloader();
 
         static::assertSame('', $downloader->fetch('-https://example.com'));
     }
@@ -32,7 +32,7 @@ class UrlDownloaderTest extends IntegrationTestCase
      */
     public function testFetch(): void
     {
-        $downloader = $this->createUrlDownloader();
+        $downloader = $this->factoryUrlDownloader();
 
         $html = $downloader->fetch('https://www.w3.org/');
 
@@ -46,7 +46,7 @@ class UrlDownloaderTest extends IntegrationTestCase
      */
     public function testSave(): void
     {
-        $downloader = $this->createUrlDownloader();
+        $downloader = $this->factoryUrlDownloader();
 
         $targetFile = getenv('TESTS_FIXTURES_PATH') . '/w3c.html';
         if (file_exists($targetFile)) {

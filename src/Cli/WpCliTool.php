@@ -89,40 +89,19 @@ class WpCliTool implements PhpTool
         $min = $this->minVersion();
         $this->pharUrl = sprintf(self::PHAR_URL_FORMAT, $min);
 
+        $found = null;
+
         try {
-            $json = $this->urlDownloader->fetch(self::API_URL);
-            $data = @json_decode($json, true);
-            if (!is_array($data) || !is_array($data['assets'] ?? null)) {
-                $url = self::API_URL;
-                throw new \Error("Failed downloading data from API URL '{$url}'.");
-            }
-            foreach ($data['assets'] as $asset) {
-                if (!is_array($asset) || !is_string($asset['browser_download_url'] ?? null)) {
-                    continue;
-                }
-                /** @var string $url */
-                $url = $asset['browser_download_url'];
-                $regex = sprintf(
-                    '~^%s/%s$~',
-                    preg_quote(self::PHAR_URL_BASE, '~'),
-                    self::PHAR_URL_REGEX
-                );
-                if (
-                    preg_match($regex, $url)
-                    && filter_var($url, FILTER_VALIDATE_URL)
-                ) {
-                    /** @var string|false $sanitizesUrl */
-                    $sanitizesUrl = filter_var($url, FILTER_SANITIZE_URL);
-                    $sanitizesUrl and $this->pharUrl = $sanitizesUrl;
-                    break;
-                }
-            }
-            throw new \Error("Could not find latest version from API URL '" . self::API_URL . "'.");
+            $found = $this->findLatestReleaseUrl();
+            $found
+                ? ($this->pharUrl = $found)
+                : $this->io->writeError('Could not find latest WP CLI version via GitHub API.');
         } catch (\Throwable $throwable) {
             $this->io->writeError('GitHub API call failed.');
             $this->io->writeError($throwable->getMessage());
-            $this->io->writeError("Will fallback to WP CLI '{$min}' version.");
         }
+
+        $found or $this->io->writeComment("Will fallback to WP CLI '{$min}' version.");
 
         return $this->pharUrl;
     }
@@ -227,6 +206,40 @@ class WpCliTool implements PhpTool
     public function prepareCommand(string $command, Paths $paths, Io $io): string
     {
         return "{$command} --path=" . $paths->wp();
+    }
+
+    /**
+     * @return string|null
+     */
+    private function findLatestReleaseUrl(): ?string
+    {
+        $found = null;
+        $json = $this->urlDownloader->fetch(self::API_URL);
+        $data = @json_decode($json, true);
+        if (!is_array($data) || !is_array($data['assets'] ?? null)) {
+            $url = self::API_URL;
+            throw new \Error("Failed downloading data from API URL '{$url}'.");
+        }
+        foreach ($data['assets'] as $asset) {
+            if (!is_array($asset) || !is_string($asset['browser_download_url'] ?? null)) {
+                continue;
+            }
+            /** @var string $url */
+            $url = $asset['browser_download_url'];
+            $regex = sprintf(
+                '~^%s/%s$~',
+                preg_quote(self::PHAR_URL_BASE, '~'),
+                self::PHAR_URL_REGEX
+            );
+            if (preg_match($regex, $url) && filter_var($url, FILTER_VALIDATE_URL)) {
+                /** @var string|false $sanitizesUrl */
+                $sanitizesUrl = filter_var($url, FILTER_SANITIZE_URL);
+                $sanitizesUrl and $found = $sanitizesUrl;
+                break;
+            }
+        }
+
+        return $found;
     }
 
     /**

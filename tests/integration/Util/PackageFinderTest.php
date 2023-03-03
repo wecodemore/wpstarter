@@ -57,7 +57,7 @@ class PackageFinderTest extends IntegrationTestCase
         $path = $finder->findPathOf($phpcsInstaller);
         $paths = explode('/vendor/', $path);
 
-        $expectedVendor = str_replace('\\', '/', $this->createComposerConfig()->get('vendor-dir'));
+        $expectedVendor = str_replace('\\', '/', $this->factoryComposerConfig()->get('vendor-dir'));
 
         static::assertCount(2, $paths);
         static::assertSame("{$paths[0]}/vendor", $expectedVendor);
@@ -123,7 +123,7 @@ class PackageFinderTest extends IntegrationTestCase
      */
     private function factoryFinder(): PackageFinder
     {
-        $composer = $this->createComposer();
+        $composer = $this->factoryComposer();
 
         return new PackageFinder(
             $composer->getRepositoryManager()->getLocalRepository(),

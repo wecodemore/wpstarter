@@ -77,8 +77,8 @@ class PhpProcessTest extends IntegrationTestCase
     {
         return new PhpProcess(
             (new PhpExecutableFinder())->find() ?: '',
-            $this->createPaths(),
-            new Io($this->createComposerIo())
+            $this->factoryPaths(),
+            new Io($this->factoryComposerIo())
         );
     }
 }

@@ -52,8 +52,8 @@ class SystemProcessTest extends IntegrationTestCase
     private function factorySystemProcess(): SystemProcess
     {
         return new SystemProcess(
-            $this->createPaths(),
-            new Io($this->createComposerIo())
+            $this->factoryPaths(),
+            new Io($this->factoryComposerIo())
         );
     }
 }

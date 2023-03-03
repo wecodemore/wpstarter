@@ -129,8 +129,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
         $tool->pharIsValid = true;
 
         $process = $factory->create($tool);
-
-        static::assertStringContainsString('Installing ', $this->collectOutput());
+        static::assertNotFalse(strpos($this->collectOutput(), 'Installing '));
 
         $this->assertProcessWorks($process);
     }
@@ -176,13 +175,13 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
     {
         $config = new Config(
             [Config::INSTALL_WP_CLI => false],
-            new Validator($this->createPaths(), new Filesystem())
+            new Validator($this->factoryPaths(), new Filesystem())
         );
 
         $tool = new WpCliTool(
             $config,
-            $this->createUrlDownloader(),
-            new Io($this->createComposerIo())
+            $this->factoryUrlDownloader(),
+            new Io($this->factoryComposerIo())
         );
 
         $factory = $this->factoryPhpToolProcessFactory();
@@ -201,10 +200,12 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
     {
         static::assertTrue($process->execute('-r "echo \'Hi!!!\';"'));
 
-        $output = trim($this->collectOutput());
+        $lines = array_map('trim', explode("\n", $this->collectOutput()));
+        $last = array_pop($lines);
+        $penultimate = array_pop($lines);
 
-        static::assertStringStartsWith('Dummy!', $output);
-        static::assertStringEndsWith('Hi!!!', $output);
+        static::assertSame(0, strpos($penultimate, 'Dummy!'));
+        static::assertSame('Hi!!!', substr($last, -5));
     }
 
     /**
@@ -215,15 +216,15 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
         UrlDownloader $urlDownloader = null
     ): PhpToolProcessFactory {
 
-        $urlDownloader or $urlDownloader = $this->createUrlDownloader();
+        $urlDownloader or $urlDownloader = $this->factoryUrlDownloader();
 
-        $composer = $this->createComposer();
+        $composer = $this->factoryComposer();
 
         return new PhpToolProcessFactory(
-            $this->createPaths(),
-            new Io($this->createComposerIo()),
+            $this->factoryPaths(),
+            new Io($this->factoryComposerIo()),
             new PharInstaller(
-                new Io($this->createComposerIo()),
+                new Io($this->factoryComposerIo()),
                 $urlDownloader
             ),
             new PackageFinder(

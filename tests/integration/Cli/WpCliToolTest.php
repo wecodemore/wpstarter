@@ -18,6 +18,8 @@ use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Config\Validator;
 use WeCodeMore\WpStarter\Tests\IntegrationTestCase;
 use WeCodeMore\WpStarter\Io\Io;
+use WeCodeMore\WpStarter\Util\Locator;
+use WeCodeMore\WpStarter\Util\Requirements;
 
 class WpCliToolTest extends IntegrationTestCase
 {
@@ -42,7 +44,7 @@ class WpCliToolTest extends IntegrationTestCase
 
         $tool = $this->factoryTool($root);
 
-        static::assertSame("{$root}/wp-cli.phar", $tool->pharTarget($this->createPaths($root)));
+        static::assertSame("{$root}/wp-cli.phar", $tool->pharTarget($this->factoryPaths($root)));
     }
 
     /**
@@ -62,7 +64,7 @@ class WpCliToolTest extends IntegrationTestCase
         touch("{$root}/wp-cli-1.0.phar");
         touch("{$root}/{$name}");
 
-        static::assertSame("{$root}/{$name}", $tool->pharTarget($this->createPaths($root)));
+        static::assertSame("{$root}/{$name}", $tool->pharTarget($this->factoryPaths($root)));
     }
 
     /**
@@ -76,7 +78,7 @@ class WpCliToolTest extends IntegrationTestCase
 
         $tool = $this->factoryTool($root);
 
-        $paths = $this->createPaths($root);
+        $paths = $this->factoryPaths($root);
 
         touch("{$root}/wp-cli-1.0.phar");
 
@@ -93,10 +95,39 @@ class WpCliToolTest extends IntegrationTestCase
      */
     public function testCheckPharSuccess(): void
     {
-        $path = getenv('TESTS_FIXTURES_PATH') . '/wp-cli-2.4.0.phar';
-        $tool = $this->factoryTool();
+        $io = $this->factoryComposerIo();
+        $composer = $this->factoryComposer();
+        $filesystem = new Filesystem();
+        $locator = new Locator(
+            Requirements::forGenericCommand($composer, $io, $filesystem),
+            $composer,
+            $io
+        );
 
-        static::assertTrue($tool->checkPhar($path, new Io($this->createComposerIo())));
+        $targetDir = getenv('TESTS_FIXTURES_PATH');
+        $targetFile = "{$targetDir}/wp-cli.phar";
+
+        file_exists($targetFile) and $filesystem->unlink($targetFile);
+        if (file_exists($targetFile)) {
+            $this->markTestSkipped(
+                sprintf(
+                    'Could not complete "%s" exists and could not be deleted',
+                    $targetFile
+                )
+            );
+        }
+
+        $tool = new WpCliTool($locator->config(), $locator->urlDownloader(), $locator->io());
+        $installer = $locator->pharInstaller();
+        $installed = $installer->install($tool, $targetFile);
+
+        $testOutput = $this->collectOutput();
+
+        static::assertSame($targetFile, $installed);
+        static::assertNotFalse(stripos($testOutput, 'installing'));
+        static::assertNotFalse(stripos($testOutput, 'success'));
+        static::assertFalse(stripos($testOutput, 'failed'));
+        static::assertFalse(stripos($testOutput, 'skip'));
     }
 
     /**
@@ -108,7 +139,7 @@ class WpCliToolTest extends IntegrationTestCase
         $path = getenv('TESTS_FIXTURES_PATH') . '/wp-cli-2.0.1.phar';
         $tool = $this->factoryTool();
 
-        static::assertFalse($tool->checkPhar($path, new Io($this->createComposerIo())));
+        static::assertFalse($tool->checkPhar($path, new Io($this->factoryComposerIo())));
     }
 
     /**
@@ -120,10 +151,10 @@ class WpCliToolTest extends IntegrationTestCase
         return new WpCliTool(
             new Config(
                 [Config::INSTALL_WP_CLI => true],
-                new Validator($this->createPaths($cwd), new Filesystem())
+                new Validator($this->factoryPaths($cwd), new Filesystem())
             ),
-            $this->createUrlDownloader(),
-            new Io($this->createComposerIo())
+            $this->factoryUrlDownloader(),
+            new Io($this->factoryComposerIo())
         );
     }
 }
