@@ -423,7 +423,7 @@ class SelectedStepsFactory
             $io->write('');
         }
 
-        $this->lastFatalError();
+        $this->lastError();
         $this->printExclusionInList($io, $config);
     }
 
@@ -472,7 +472,7 @@ class SelectedStepsFactory
     {
         // phpcs:enable Generic.Metrics.CyclomaticComplexity
         if ($this->maybeWantIgnoreConfig) {
-            $error = $this->inputErrors > 1
+            $error = ($this->inputErrors > 1)
                 ? "{$this->inputErrors} of the given step names have been ignored"
                 : 'One given step name has been ignored';
 
@@ -488,11 +488,11 @@ class SelectedStepsFactory
         $message = $fatal ? 'No valid step to run found.' : '';
 
         if ($this->inputErrors) {
-            $error = $this->inputErrors > 1
+            $error = ($this->inputErrors > 1)
                 ? "Command input contains {$this->inputErrors} invalid steps names"
                 : 'Command input contains one invalid step name';
             if (!$fatal) {
-                $error .= $this->inputErrors > 1
+                $error .= ($this->inputErrors > 1)
                     ? ', they will be ignored.'
                     : ' and it will be ignored.';
             }

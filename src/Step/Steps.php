@@ -296,20 +296,20 @@ final class Steps implements PostProcessStep, \Countable
     private function shouldProcess(Step $step, Paths $paths, Io $io): bool
     {
         $comment = '';
-        $process = $step->allowed($this->locator->config(), $paths);
+        $config = $this->locator->config();
+        $process = $step->allowed($config, $paths);
 
-        if ($process && $step instanceof FileCreationStepInterface) {
+        if ($process && ($step instanceof FileCreationStepInterface)) {
             $path = $step->targetPath($paths);
             $process = $this->locator->overwriteHelper()->shouldOverwrite($path);
             $comment = $process ? '' : '- ' . basename($path) . ' exists and will be preserved.';
         }
 
-        if ($process && $step instanceof OptionalStep) {
+        if ($process && ($step instanceof OptionalStep)) {
             $process = $step->askConfirm($this->locator->config(), $this->locator->io());
             $comment = $process ? '' : $step->skipped();
         }
 
-        if (!$process) {
         if ($process) {
             return true;
         }
