@@ -73,12 +73,31 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
             return $this->outputs[$verbosity];
         }
 
-        $this->outputs[$verbosity] = new class(
-            $verbosity,
-            false,
-            new OutputFormatter(false, Composer\Factory::createAdditionalStyles())
-        ) extends Output {
+        $formatter = new OutputFormatter(false, Composer\Factory::createAdditionalStyles());
 
+        if (PHP_VERSION_ID < 702000) {
+            $this->outputs[$verbosity] = new class($verbosity, false, $formatter) extends Output
+            {
+                public $output = '';
+                public $lines = [];
+
+                protected function doWrite($message, $newline)
+                {
+                    if (!$newline && $this->lines) {
+                        $last = array_pop($this->lines);
+                        $message = $last . $message;
+                    }
+
+                    $this->lines[] = $message;
+                    $this->output = implode("\n", $this->lines);
+                }
+            };
+
+            return $this->outputs[$verbosity];
+        }
+
+        $this->outputs[$verbosity] = new class($verbosity, false, $formatter) extends Output
+        {
             public $output = '';
             public $lines = [];
 
