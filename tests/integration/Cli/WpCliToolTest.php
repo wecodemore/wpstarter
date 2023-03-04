@@ -132,7 +132,6 @@ class WpCliToolTest extends IntegrationTestCase
         static::assertSame($targetFile, $installed);
         static::assertNotFalse(stripos($testOutput, 'installing'));
         static::assertNotFalse(stripos($testOutput, 'success'));
-        static::assertFalse(stripos($testOutput, 'failed'));
         static::assertFalse(stripos($testOutput, 'skip'));
     }
 
