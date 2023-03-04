@@ -39,22 +39,30 @@ class PhpToolProcessFactory
     private $packageFinder;
 
     /**
+     * @var PhpProcess
+     */
+    private $process;
+
+    /**
      * @param Paths $paths
-     * @param \WeCodeMore\WpStarter\Io\Io $io
+     * @param Io $io
      * @param PharInstaller $pharInstaller
      * @param PackageFinder $packageFinder
+     * @param PhpProcess $process
      */
     public function __construct(
         Paths $paths,
         Io $io,
         PharInstaller $pharInstaller,
-        PackageFinder $packageFinder
+        PackageFinder $packageFinder,
+        PhpProcess $process
     ) {
 
         $this->paths = $paths;
         $this->io = $io;
         $this->pharInstaller = $pharInstaller;
         $this->packageFinder = $packageFinder;
+        $this->process = $process;
     }
 
     /**
@@ -78,13 +86,13 @@ class PhpToolProcessFactory
 
         // Installed via Composer, build executor and return
         if ($fsPath) {
-            return new PhpToolProcess($phpPath, $command, $fsPath, $this->paths, $this->io);
+            return new PhpToolProcess($this->process, $command, $fsPath, $this->paths, $this->io);
         }
 
         $targetPath = $command->pharTarget($this->paths);
 
         if ($targetPath && file_exists($targetPath)) {
-            return new PhpToolProcess($phpPath, $command, $targetPath, $this->paths, $this->io);
+            return new PhpToolProcess($this->process, $command, $targetPath, $this->paths, $this->io);
         }
 
         $pharUrl = $command->pharUrl();
@@ -106,7 +114,7 @@ class PhpToolProcessFactory
             throw new \RuntimeException("Failed phar download from {$pharUrl}.");
         }
 
-        return new PhpToolProcess($phpPath, $command, $installedPath, $this->paths, $this->io);
+        return new PhpToolProcess($this->process, $command, $installedPath, $this->paths, $this->io);
     }
 
     /**

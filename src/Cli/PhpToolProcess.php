@@ -42,22 +42,22 @@ class PhpToolProcess
     private $io;
 
     /**
-     * @param string $phpPath
+     * @param PhpProcess $phpProcess
      * @param PhpTool $tool
      * @param string $toolPath
      * @param Paths $paths
      * @param Io $io
      */
     public function __construct(
-        string $phpPath,
+        PhpProcess $phpProcess,
         PhpTool $tool,
         string $toolPath,
         Paths $paths,
         Io $io
     ) {
 
+        $this->phpProcess = $phpProcess;
         $this->tool = $tool;
-        $this->phpProcess = new PhpProcess($phpPath, $paths, $io);
         $this->paths = $paths;
         $this->io = $io;
         $this->toolPath = $toolPath;

@@ -107,11 +107,16 @@ class WpCliToolTest extends IntegrationTestCase
         $targetDir = getenv('TESTS_FIXTURES_PATH');
         $targetFile = "{$targetDir}/wp-cli.phar";
 
-        file_exists($targetFile) and $filesystem->unlink($targetFile);
-        if (file_exists($targetFile)) {
+        try {
+            file_exists($targetFile) and $filesystem->unlink($targetFile);
+            if (file_exists($targetFile)) {
+                throw new \Error();
+            }
+        } catch (\Throwable $exception) {
             $this->markTestSkipped(
                 sprintf(
-                    'Could not complete "%s" exists and could not be deleted',
+                    'Could not complete test "%s": "%s" exists and could not be deleted',
+                    __METHOD__,
                     $targetFile
                 )
             );

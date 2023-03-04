@@ -19,6 +19,10 @@ use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\PhpExecutableFinder;
+use WeCodeMore\WpStarter\Cli\PhpProcess;
+use WeCodeMore\WpStarter\Cli\SystemProcess;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
@@ -164,6 +168,29 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
         $path = getenv('PACKAGE_PATH') . '/composer.json';
 
         return Composer\Factory::create($this->factoryComposerIo(), $path, true);
+    }
+
+    /**
+     * @param string $cwd
+     * @return SystemProcess
+     */
+    protected function factorySystemProcess(string $cwd = null): SystemProcess
+    {
+        return new SystemProcess(
+            $this->factoryPaths($cwd),
+            new Io($this->factoryComposerIo())
+        );
+    }
+
+    /**
+     * @param string $cwd
+     * @return PhpProcess
+     */
+    protected function factoryPhpProcess(string $cwd = null): PhpProcess
+    {
+        $php = (new PhpExecutableFinder())->find() ?: 'php';
+
+        return new PhpProcess($php, $this->factorySystemProcess($cwd));
     }
 
     /**

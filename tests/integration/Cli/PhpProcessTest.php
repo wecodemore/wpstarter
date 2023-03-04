@@ -69,16 +69,4 @@ class PhpProcessTest extends IntegrationTestCase
         static::assertTrue($process->execute('-r "echo \'I ran!\';"'));
         static::assertStringContainsString('I ran!', $this->collectOutput());
     }
-
-    /**
-     * @return PhpProcess
-     */
-    private function factoryPhpProcess(): PhpProcess
-    {
-        return new PhpProcess(
-            (new PhpExecutableFinder())->find() ?: '',
-            $this->factoryPaths(),
-            new Io($this->factoryComposerIo())
-        );
-    }
 }

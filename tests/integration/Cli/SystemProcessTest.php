@@ -45,15 +45,4 @@ class SystemProcessTest extends IntegrationTestCase
         static::assertTrue($process->executeSilently($php . ' -r "echo \'la la la\';"'));
         static::assertSame('', trim($this->collectOutput()));
     }
-
-    /**
-     * @return SystemProcess
-     */
-    private function factorySystemProcess(): SystemProcess
-    {
-        return new SystemProcess(
-            $this->factoryPaths(),
-            new Io($this->factoryComposerIo())
-        );
-    }
 }

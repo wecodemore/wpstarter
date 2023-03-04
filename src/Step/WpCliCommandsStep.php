@@ -31,14 +31,14 @@ final class WpCliCommandsStep implements Step
     public const NAME = 'wp-cli';
 
     /**
+     * @var Locator
+     */
+    private $locator;
+
+    /**
      * @var Io
      */
     private $io;
-
-    /**
-     * @var callable():Cli\PhpToolProcess
-     */
-    private $processFactory;
 
     /**
      * @var Cli\PhpToolProcess|null
@@ -60,8 +60,8 @@ final class WpCliCommandsStep implements Step
      */
     public function __construct(Locator $locator)
     {
+        $this->locator = $locator;
         $this->io = $locator->io();
-        $this->processFactory = [$locator, 'wpCliProcess'];
     }
 
     /**
@@ -79,7 +79,10 @@ final class WpCliCommandsStep implements Step
      */
     public function allowed(Config $config, Paths $paths): bool
     {
+        global $locator;
+        $locator = $this->locator;
         $commands = $config[Config::WP_CLI_COMMANDS]->unwrapOrFallback([]);
+        unset($GLOBALS['locator']);
         $files = $config[Config::WP_CLI_FILES]->unwrapOrFallback([]);
 
         if ($commands || $files) {
@@ -167,7 +170,7 @@ final class WpCliCommandsStep implements Step
      */
     private function process(): Cli\PhpToolProcess
     {
-        $this->process or $this->process = ($this->processFactory)();
+        $this->process or $this->process = $this->locator->wpCliProcess();
 
         return $this->process;
     }

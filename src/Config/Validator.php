@@ -248,7 +248,7 @@ class Validator
             $path = $this->validatePath($value)->unwrapOrFallback();
 
             return $path
-                ? $this->validateWpCliCommandsFileList($path)
+                ? $this->validateWpCliCommandsListFile($path)
                 : Result::errored($error);
         }
 
@@ -342,57 +342,6 @@ class Validator
         }
 
         return Result::ok($valid);
-    }
-
-    /**
-     * Validate the path of a file containing WP CLI commands.
-     *
-     * It is expected a string, that is a path to a PHP or JSON file. The file must return (if PHP)
-     * or contain (if JSON) an array of WP CLI commands as they would be run in the terminal.
-     *
-     * @param mixed $value
-     * @return Result
-     */
-    public function validateWpCliCommandsFileList($value): Result
-    {
-        if ($value === null) {
-            return Result::none();
-        }
-
-        $error = 'WP CLI commands must be either provided as path to a PHP file returning an array '
-            . 'of commands or as path to a JSON file containing the array.';
-
-        $validPath = $this->validatePath($value);
-        if (!$validPath->notEmpty()) {
-            return Result::errored($error);
-        }
-
-        /** @var string $fullpath */
-        $fullpath = $validPath->unwrap();
-        if (!is_file($fullpath) || !is_readable($fullpath)) {
-            return Result::errored("{$error} {$fullpath} is not a file or is not readable.");
-        }
-
-        $extension = strtolower((string)pathinfo($fullpath, PATHINFO_EXTENSION));
-        $isJson = $extension === 'json';
-        if ($extension !== 'php' && !$isJson) {
-            return Result::errored($error);
-        }
-
-        if ($isJson) {
-            $data = @json_decode(file_get_contents($fullpath) ?: '', true);
-
-            return is_array($data) ? $this->validateWpCliCommands($data) : Result::errored($error);
-        }
-
-        $provider = function () use ($fullpath, $error): Result {
-            $data = @include $fullpath;
-            return is_array($data)
-                ? $this->validateWpCliCommands($data)
-                : Result::errored($error);
-        };
-
-        return Result::promise($provider);
     }
 
     /**
@@ -825,6 +774,57 @@ class Validator
         }
 
         return $this->isValidEntityName($script);
+    }
+
+    /**
+     * Validate the path of a file containing WP CLI commands.
+     *
+     * It is expected a string, that is a path to a PHP or JSON file. The file must return (if PHP)
+     * or contain (if JSON) an array of WP CLI commands as they would be run in the terminal.
+     *
+     * @param mixed $value
+     * @return Result
+     */
+    private function validateWpCliCommandsListFile($value): Result
+    {
+        if ($value === null) {
+            return Result::none();
+        }
+
+        $error = 'WP CLI commands must be either provided as path to a PHP file returning an array '
+            . 'of commands or as path to a JSON file containing the array.';
+
+        $validPath = $this->validatePath($value);
+        if (!$validPath->notEmpty()) {
+            return Result::errored($error);
+        }
+
+        /** @var string $fullpath */
+        $fullpath = $validPath->unwrap();
+        if (!is_file($fullpath) || !is_readable($fullpath)) {
+            return Result::errored("{$error} {$fullpath} is not a file or is not readable.");
+        }
+
+        $extension = strtolower((string)pathinfo($fullpath, PATHINFO_EXTENSION));
+        $isJson = $extension === 'json';
+        if ($extension !== 'php' && !$isJson) {
+            return Result::errored($error);
+        }
+
+        if ($isJson) {
+            $data = @json_decode(file_get_contents($fullpath) ?: '', true);
+
+            return is_array($data) ? $this->validateWpCliCommands($data) : Result::errored($error);
+        }
+
+        $provider = function () use ($fullpath, $error): Result {
+            $data = @include $fullpath;
+            return is_array($data)
+                ? $this->validateWpCliCommands($data)
+                : Result::errored($error);
+        };
+
+        return Result::promise($provider);
     }
 
     /**

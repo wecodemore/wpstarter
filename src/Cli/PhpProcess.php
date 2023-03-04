@@ -28,13 +28,12 @@ class PhpProcess
 
     /**
      * @param string $phpPath
-     * @param Paths $paths
-     * @param Io $io
+     * @param SystemProcess $process
      */
-    public function __construct(string $phpPath, Paths $paths, Io $io)
+    public function __construct(string $phpPath, SystemProcess $process)
     {
         $this->phpPath = $phpPath;
-        $this->process = new SystemProcess($paths, $io);
+        $this->process = $process;
     }
 
     /**

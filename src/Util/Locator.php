@@ -16,7 +16,9 @@ use Composer\IO\IOInterface as ComposerIo;
 use Composer\Util\Filesystem as ComposerFilesystem;
 use Composer\Config as ComposerConfig;
 use Composer\Util\HttpDownloader;
+use Composer\Util\ProcessExecutor;
 use Composer\Util\RemoteFilesystem;
+use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 use WeCodeMore\WpStarter\Cli;
@@ -354,6 +356,21 @@ final class Locator
     }
 
     /**
+     * @return ExecutableFinder
+     *
+     * @psalm-suppress MixedReturnStatement
+     * @psalm-suppress MixedInferredReturnType
+     */
+    public function executableFinder(): ExecutableFinder
+    {
+        if (empty($this->objects[__FUNCTION__])) {
+            $this->objects[__FUNCTION__] = new ExecutableFinder();
+        }
+
+        return $this->objects[__FUNCTION__];
+    }
+
+    /**
      * @return Cli\PhpProcess
      *
      * @psalm-suppress MixedReturnStatement
@@ -364,8 +381,7 @@ final class Locator
         if (empty($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new Cli\PhpProcess(
                 $this->php,
-                $this->paths(),
-                $this->io()
+                $this->systemProcess()
             );
         }
 
@@ -385,7 +401,8 @@ final class Locator
                 $this->paths(),
                 $this->io(),
                 new Cli\PharInstaller($this->io(), $this->urlDownloader()),
-                $this->packageFinder()
+                $this->packageFinder(),
+                $this->phpProcess()
             );
         }
 

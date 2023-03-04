@@ -57,7 +57,7 @@ class PhpToolProcessTest extends IntegrationTestCase
     private function factoryPhpToolProcess(): PhpToolProcess
     {
         return new PhpToolProcess(
-            (new PhpExecutableFinder())->find() ?: '',
+            $this->factoryPhpProcess(),
             new DummyPhpTool(),
             '',
             $this->factoryPaths(),

@@ -22,7 +22,9 @@ use WeCodeMore\WpStarter\Config\Validator;
 use WeCodeMore\WpStarter\Tests\DummyPhpTool;
 use WeCodeMore\WpStarter\Tests\IntegrationTestCase;
 use WeCodeMore\WpStarter\Io\Io;
+use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\PackageFinder;
+use WeCodeMore\WpStarter\Util\Requirements;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class PhpToolProcessFactoryTest extends IntegrationTestCase
@@ -216,22 +218,20 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
         UrlDownloader $urlDownloader = null
     ): PhpToolProcessFactory {
 
-        $urlDownloader or $urlDownloader = $this->factoryUrlDownloader();
-
         $composer = $this->factoryComposer();
+        $io = $this->factoryComposerIo();
+        $requirements = Requirements::forGenericCommand($composer, $io, new Filesystem());
+        $locator = new Locator($requirements, $composer, $io);
 
-        return new PhpToolProcessFactory(
-            $this->factoryPaths(),
-            new Io($this->factoryComposerIo()),
-            new PharInstaller(
-                new Io($this->factoryComposerIo()),
-                $urlDownloader
-            ),
-            new PackageFinder(
-                $composer->getRepositoryManager()->getLocalRepository(),
-                $composer->getInstallationManager(),
-                new Filesystem()
-            )
-        );
+        if (!$urlDownloader) {
+            return $locator->phpToolProcessFactory();
+        }
+
+        $paths = $locator->paths();
+        $io = $locator->io();
+        $installer =  new PharInstaller($io, $urlDownloader);
+        $finder = $locator->packageFinder();
+
+        return new PhpToolProcessFactory($paths, $io, $installer, $finder, $locator->phpProcess());
     }
 }

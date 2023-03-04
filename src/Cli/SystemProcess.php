@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Cli;
 
+use Composer\IO\IOInterface;
 use Symfony\Component\Process\Process;
 use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\Paths;
@@ -18,9 +19,9 @@ use WeCodeMore\WpStarter\Util\Paths;
 class SystemProcess
 {
     /**
-     * @var callable|null
+     * @var array<int, callable>
      */
-    private $printer;
+    private $printers = [];
 
     /**
      * @var Paths
@@ -61,23 +62,24 @@ class SystemProcess
     /**
      * @param string $command
      * @param string|null $cwd
+     * @param int $verbosity
      * @return bool
      */
-    public function execute(string $command, ?string $cwd = null): bool
-    {
+    public function execute(
+        string $command,
+        ?string $cwd = null,
+        int $verbosity = IOInterface::NORMAL
+    ): bool {
+
+        if ($verbosity <= IOInterface::QUIET) {
+            return $this->executeSilently($command, $cwd);
+        }
+
         try {
             is_string($cwd) or $cwd = $this->paths->root();
 
             $process = $this->factoryProcess($command, $cwd);
-
-            $this->printer or $this->printer = function (string $type, string $buffer) {
-                $lines = array_filter(array_map('rtrim', explode("\n", $buffer)));
-                Process::ERR === $type
-                    ? array_walk($lines, [$this->io, 'writeError'])
-                    : array_walk($lines, [$this->io, 'write']);
-            };
-
-            $process->mustRun($this->printer);
+            $process->mustRun($this->factoryPrinter($verbosity));
 
             return $process->isSuccessful();
         } catch (\Throwable $exception) {
@@ -121,5 +123,29 @@ class SystemProcess
 
         /** @psalm-suppress InvalidArgument */
         return new Process($command, $cwd, $this->environment ?: null);
+    }
+
+    /**
+     * @param int $vvv
+     * @return callable
+     */
+    private function factoryPrinter(int $vvv = IOInterface::NORMAL): callable
+    {
+        $ifVerbose = $vvv >= IOInterface::VERBOSE;
+        $key = $ifVerbose ? IOInterface::VERBOSE : IOInterface::NORMAL;
+        if (isset($this->printers[$key])) {
+            return $this->printers[$key];
+        }
+
+        $this->printers[$key] = function (string $type, string $buffer) use ($ifVerbose): void {
+            $write = $ifVerbose ? 'writeIfVerbose' : 'write';
+            $writeError = $ifVerbose ? 'writeErrorIfVerbose' : 'writeError';
+            $lines = array_filter(array_map('rtrim', explode("\n", $buffer)));
+            Process::ERR === $type
+                ? array_walk($lines, [$this->io, $writeError])
+                : array_walk($lines, [$this->io, $write]);
+        };
+
+        return $this->printers[$key];
     }
 }

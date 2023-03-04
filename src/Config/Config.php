@@ -114,7 +114,7 @@ final class Config implements \ArrayAccess
         self::SKIP_DB_CHECK => 'validateBool',
         self::SKIP_STEPS => 'validateArray',
         self::WP_CLI_COMMANDS => 'validateWpCliCommands',
-        self::WP_CLI_FILES => 'validateWpCliCommandsFileList',
+        self::WP_CLI_FILES => 'validateWpCliFiles',
         self::WP_VERSION => 'validateWpVersion',
     ];
 
