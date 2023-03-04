@@ -435,7 +435,12 @@ final class Locator
     public function dbChecker(): DbChecker
     {
         if (empty($this->objects[__FUNCTION__])) {
-            $this->objects[__FUNCTION__] = new DbChecker($this->env(), $this->io());
+            $this->objects[__FUNCTION__] = new DbChecker(
+                $this->env(),
+                $this->io(),
+                $this->systemProcess(),
+                $this->executableFinder()
+            );
         }
 
         return $this->objects[__FUNCTION__];

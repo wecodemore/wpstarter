@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Util;
 
+use Symfony\Component\Process\ExecutableFinder;
+use WeCodeMore\WpStarter\Cli\SystemProcess;
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 use WeCodeMore\WpStarter\Io\Io;
 
@@ -34,13 +36,32 @@ class DbChecker
     private $io;
 
     /**
+     * @var SystemProcess
+     */
+    private $process;
+
+    /**
+     * @var ExecutableFinder
+     */
+    private $finder;
+
+    /**
      * @param WordPressEnvBridge $env
      * @param Io $io
+     * @param SystemProcess $process
+     * @param ExecutableFinder $finder
      */
-    public function __construct(WordPressEnvBridge $env, Io $io)
-    {
+    public function __construct(
+        WordPressEnvBridge $env,
+        Io $io,
+        SystemProcess $process,
+        ExecutableFinder $finder
+    ) {
+
         $this->env = $env;
         $this->io = $io;
+        $this->process = $process;
+        $this->finder = $finder;
     }
 
     /**
@@ -143,6 +164,37 @@ class DbChecker
                 $this->write('DB not found.');
                 break;
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function mysqlcheck(): bool
+    {
+        $checker = $this->finder->find('mysqlcheck');
+        if (!$checker) {
+            $this->io->writeError('Sorry, mysqlcheck not found, can not check DB.');
+
+            return false;
+        }
+        $user = $this->env->read('DB_USER');
+        $password = $this->env->read('DB_PASSWORD');
+        $command = sprintf(
+            'mysqlcheck --no-defaults "%s" --check --default-character-set="utf8" --host="%s"',
+            (string)$this->env->read('DB_NAME'),
+            (string)$this->env->read('DB_HOST'),
+        );
+        $user and $command .= " --user=\"{$user}\"";
+        $password and $command .= " --password=\"{$password}\"";
+        $command .= ' --default-character-set="utf8"';
+        $this->io->writeCommentIfVerbose('- Checking database via mysqlcheck...');
+        $ok = $this->process->executeSilently($command);
+
+        $ok
+            ? $this->io->write('- <info>[WPDB Check]</info> Database tables are OK')
+            : $this->io->writeError('Database check failed');
+
+        return $ok;
     }
 
     /**
