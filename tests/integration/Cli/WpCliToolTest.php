@@ -105,7 +105,8 @@ class WpCliToolTest extends IntegrationTestCase
         );
 
         $targetDir = getenv('TESTS_FIXTURES_PATH');
-        $targetFile = "{$targetDir}/wp-cli.phar";
+        $rand = bin2hex(random_bytes(8));
+        $targetFile = "{$targetDir}/wp-cli-{$rand}.phar";
 
         try {
             file_exists($targetFile) and $filesystem->unlink($targetFile);

@@ -182,7 +182,7 @@ class DbChecker
         $command = sprintf(
             'mysqlcheck --no-defaults "%s" --check --default-character-set="utf8" --host="%s"',
             (string)$this->env->read('DB_NAME'),
-            (string)$this->env->read('DB_HOST'),
+            (string)$this->env->read('DB_HOST')
         );
         $user and $command .= " --user=\"{$user}\"";
         $password and $command .= " --password=\"{$password}\"";
