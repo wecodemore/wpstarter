@@ -97,6 +97,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
     public function run(Config $config, Paths $paths): int
     {
         $from = $paths->root();
+        $wpParent = $paths->wpParent();
 
         $autoload = $paths->vendor('autoload.php');
 
@@ -124,8 +125,9 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
         ($register === OptionalStep::ASK) and $register = $this->askForRegister();
 
         $contentRelDir = $this->relPath($from, $paths->wpContent());
-
+        $contentRelUrlPath = $this->relPath($wpParent, $paths->wpContent());
         $wpRelDir = $this->relPath($from, $paths->wp());
+        $wpRelUrlDir = $this->relPath($wpParent, $paths->wp());
 
         $vars = [
             'AUTOLOAD_PATH' => $this->relPath("{$from}/index.php", $autoload, false),
@@ -137,9 +139,9 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
             'ENV_REL_PATH' => $envRelDir,
             'REGISTER_THEME_DIR' => $register ? 'true' : 'false',
             'WP_CONTENT_PATH' => $contentRelDir,
-            'WP_CONTENT_URL_RELATIVE' => $this->stripDot($contentRelDir),
+            'WP_CONTENT_URL_RELATIVE' => $this->stripDot($contentRelUrlPath),
             'WP_INSTALL_PATH' => $wpRelDir,
-            'WP_SITEURL_RELATIVE' => $this->stripDot($wpRelDir),
+            'WP_SITEURL_RELATIVE' => $this->stripDot($wpRelUrlDir),
         ];
 
         $built = $this->builder->build(
