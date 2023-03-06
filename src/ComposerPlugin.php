@@ -254,9 +254,7 @@ final class ComposerPlugin implements
                 return;
             }
 
-            if ($config[Config\Config::SKIP_DB_CHECK]->is(false)) {
-                $this->locator->dbChecker()->check();
-            }
+            $this->checkDb($config);
 
             $runner = $factory->isSelectedCommandMode()
                 ? Step\Steps::commandMode($this->locator, $this->composer)
@@ -411,9 +409,9 @@ final class ComposerPlugin implements
 
     /**
      * @param Config\Config $config
-     * @return string
+     * @return void
      */
-    private function checkWp(Config\Config $config): string
+    private function checkWp(Config\Config $config)
     {
         $requireWp = $config[Config\Config::REQUIRE_WP]->not(false);
         /** @var string $fallbackVer */
@@ -436,8 +434,6 @@ final class ComposerPlugin implements
         if ($wpVersion && !$fallbackVer) {
             $config[Config\Config::WP_VERSION] = $fallbackVer;
         }
-
-        return $wpVersion;
     }
 
     /**
@@ -493,6 +489,29 @@ LOGO;
         $this->io->write("\n{$logo}\n");
     }
 
+    /**
+     * @param Config\Config $config
+     * @return void
+     */
+    private function checkDb(Config\Config $config): void
+    {
+        $check = $config[Config\Config::DB_CHECK];
+        $skipped = $config[Config\Config::SKIP_DB_CHECK]->not(false);
+        if ($skipped) {
+            $this->io->write(
+                sprintf(
+                    'The configuration "%s" is deprecated, please use "%s" instead.',
+                    Config\Config::SKIP_DB_CHECK,
+                    Config\Config::DB_CHECK
+                )
+            );
+        }
+        if ($check->not(false) && !$skipped) {
+            $check->is(Util\DbChecker::HEALTH_CHECK)
+                ? $this->locator->dbChecker()->mysqlcheck()
+                : $this->locator->dbChecker()->check();
+        }
+    }
 
     /**
      * @param Composer $composer

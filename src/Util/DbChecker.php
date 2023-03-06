@@ -47,6 +47,16 @@ class DbChecker
     private $finder;
 
     /**
+     * @var bool|null
+     */
+    private $exists = null;
+
+    /**
+     * @var bool|null
+     */
+    private $installed = null;
+
+    /**
      * @param WordPressEnvBridge $env
      * @param Io $io
      * @param SystemProcess $process
@@ -70,9 +80,11 @@ class DbChecker
      */
     public function dbExists(): bool
     {
-        $this->check();
+        if (!is_bool($this->exists)) {
+            $this->check();
+        }
 
-        return (bool)$this->env->read(self::WPDB_EXISTS);
+        return (bool)$this->exists;
     }
 
     /**
@@ -80,9 +92,11 @@ class DbChecker
      */
     public function isInstalled(): bool
     {
-        $this->check();
+        if (!is_bool($this->installed)) {
+            $this->check();
+        }
 
-        return (bool)$this->env->read(self::WP_INSTALLED);
+        return (bool)$this->installed;
     }
 
     /**
@@ -100,11 +114,7 @@ class DbChecker
      */
     public function check(): void
     {
-        if (
-            $this->env->has(self::WPDB_ENV_VALID)
-            || $this->env->has(self::WPDB_EXISTS)
-            || $this->env->has(self::WP_INSTALLED)
-        ) {
+        if ($this->hasCheckVars()) {
             return;
         }
 
@@ -127,30 +137,13 @@ class DbChecker
         empty($env['DB_HOST']) and $env['DB_HOST'] = 'localhost';
         empty($env['DB_TABLE_PREFIX']) and $env['DB_TABLE_PREFIX'] = 'wp_';
 
-        $dbExists = false;
-        $wpInstalled = false;
-
-        try {
-            $db = @\mysqli_connect($env['DB_HOST'], $env['DB_USER'], $env['DB_PASSWORD'] ?: '');
-
-            if (!$db || $db->connect_errno) {
-                $this->setupEnv(false, false, false);
-                $db and \mysqli_close($db);
-
-                return;
-            }
-
-            $dbExists = @\mysqli_select_db($db, $env['DB_NAME']);
-
-
-            if ($dbExists) {
-                $result = @mysqli_query($db, "SELECT 1 FROM {$env['DB_TABLE_PREFIX']}users");
-                $wpInstalled = ($result instanceof \mysqli_result) && $result->field_count;
-            }
-            @\mysqli_close($db);
-        } catch (\Throwable $exception) {
-            $this->write($exception->getMessage());
-        }
+        [$dbExists, $wpInstalled] = $this->tryConnection(
+            $env['DB_HOST'],
+            $env['DB_NAME'],
+            $env['DB_TABLE_PREFIX'],
+            $env['DB_USER'],
+            $env['DB_PASSWORD'] ?: ''
+        );
 
         $this->setupEnv(true, $dbExists, $wpInstalled);
 
@@ -172,9 +165,13 @@ class DbChecker
      */
     public function mysqlcheck(): bool
     {
+        if (!$this->dbExists()) {
+            return false;
+        }
+
         $checker = $this->finder->find('mysqlcheck');
         if (!$checker) {
-            $this->io->writeError('Sorry, mysqlcheck not found, can not check DB.');
+            $this->writeError('Sorry, mysqlcheck not found, can not check DB health.');
 
             return false;
         }
@@ -192,8 +189,8 @@ class DbChecker
         $ok = $this->process->executeSilently($command);
 
         $ok
-            ? $this->io->write('- <info>[WPDB Check]</info> Database tables are OK')
-            : $this->io->writeError('Database check failed');
+            ? $this->write('Database tables are OK')
+            : $this->writeError('Database check failed');
 
         return $ok;
     }
@@ -209,6 +206,8 @@ class DbChecker
         $this->env->write(self::WPDB_ENV_VALID, $valid ? '1' : '');
         $this->env->write(self::WPDB_EXISTS, $exists ? '1' : '');
         $this->env->write(self::WP_INSTALLED, $installed ? '1' : '');
+        $this->exists = $exists;
+        $this->installed = $installed;
     }
 
     /**
@@ -218,5 +217,68 @@ class DbChecker
     private function write(string $line): void
     {
         $this->io->writeIfVerbose("- <info>[WPDB Check]</info> <comment>{$line}</comment>");
+    }
+
+    /**
+     * @param string $line
+     * @return void
+     */
+    private function writeError(string $line): void
+    {
+        $this->io->writeErrorIfVerbose("- [WPDB Check] {$line}");
+    }
+
+    /**
+     * @param string $host
+     * @param string $dbName
+     * @param string $dbPrefix
+     * @param string $user
+     * @param string $password
+     * @return array{bool, bool}
+     */
+    private function tryConnection(
+        string $host,
+        string $dbName,
+        string $dbPrefix,
+        string $user,
+        string $password
+    ): array {
+
+        $dbExists = false;
+        $wpInstalled = false;
+
+        try {
+            $db = @\mysqli_connect($host, $user, $password ?: '');
+
+            if (!$db || $db->connect_errno) {
+                $this->setupEnv(false, false, false);
+                $db and \mysqli_close($db);
+
+                return [$dbExists, $wpInstalled];
+            }
+
+            $dbExists = @\mysqli_select_db($db, $dbName);
+            if ($dbExists) {
+                $result = @mysqli_query($db, "SELECT 1 FROM {$dbPrefix}users");
+                $wpInstalled = ($result instanceof \mysqli_result) && $result->field_count;
+            }
+            @\mysqli_close($db);
+
+            return [$dbExists, $wpInstalled];
+        } catch (\Throwable $exception) {
+            $this->write($exception->getMessage());
+
+            return [$dbExists, $wpInstalled];
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    private function hasCheckVars(): bool
+    {
+        return $this->env->has(self::WPDB_ENV_VALID)
+            || $this->env->has(self::WPDB_EXISTS)
+            || $this->env->has(self::WP_INSTALLED);
     }
 }
