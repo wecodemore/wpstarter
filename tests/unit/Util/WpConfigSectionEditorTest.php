@@ -79,6 +79,34 @@ class WpConfigSectionEditorTest extends TestCase
     /**
      * @test
      */
+    public function testEditSectionHash(): void
+    {
+        $editor = $this->factorySectionEditor();
+
+        $this->doAppend($editor, 'TWO', 'Hello');
+        $this->doAppend($editor, 'TWO', 'Hello');
+        $this->doAppend($editor, 'TWO', 'World');
+        $this->doAppend($editor, 'TWO', 'Hello');
+        $this->doAppend($editor, 'TWO', 'World');
+        $this->doAppend($editor, 'TWO', 'Hello');
+
+        $currentContent = $editor->sectionContent('TWO');
+        $lines = explode("\n", $currentContent);
+
+        static::assertSame('/** This is the section two */', array_shift($lines));
+
+        static::assertNotFalse(preg_match('~^# <(A\-.+?)>$~', array_shift($lines), $matches));
+        static::assertSame('Hello', array_shift($lines));
+        static::assertSame("# </{$matches[1]}>", array_shift($lines));
+        static::assertNotFalse(preg_match('~^# <(A\-.+?)>$~', array_shift($lines), $matches));
+        static::assertSame('World', array_shift($lines));
+        static::assertSame("# </{$matches[1]}>", array_pop($lines));
+        static::assertSame([], $lines);
+    }
+
+    /**
+     * @test
+     */
     public function testReplaceSection(bool $repeat = false): void
     {
         $editor = $this->factorySectionEditor();
@@ -118,9 +146,20 @@ class WpConfigSectionEditorTest extends TestCase
     }
 
     /**
+     * @param WpConfigSectionEditor $editor
+     * @param string $key
+     * @param string $content
+     * @return void
+     */
+    private function doAppend(WpConfigSectionEditor $editor, string $key, string $content): void
+    {
+        $editor->append($key, $content);
+    }
+
+    /**
      * @return WpConfigSectionEditor
      */
-    public function factorySectionEditor(): WpConfigSectionEditor
+    private function factorySectionEditor(): WpConfigSectionEditor
     {
         return new WpConfigSectionEditor($this->factoryPaths(), new Filesystem());
     }

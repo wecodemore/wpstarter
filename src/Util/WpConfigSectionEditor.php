@@ -205,15 +205,16 @@ class WpConfigSectionEditor
         if ($editMode === self::REPLACE) {
             return "\n{$section}\n";
         }
-        $hash = 'unknown-' . bin2hex(random_bytes(4));
+        $file = '-';
+        $line = -1;
         // phpcs:disable WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
         // phpcs:enable WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace
         if (is_array($trace[1] ?? null)) {
             $file = $this->filesystem->normalizePath($trace[1]['file'] ?? '-');
             $line = $trace[1]['line'] ?? -1;
-            $hash = md5(sprintf('%s#%d', $file, $line));
         }
+        $hash = md5(sprintf('%s#%s#%d', preg_replace("~\s+~", '', trim($section)), $file, $line));
         $id = sprintf('%s-%s', $this->editModeLabel($editMode), $hash);
 
         return "# <{$id}>\n{$section}\n# </{$id}>";
