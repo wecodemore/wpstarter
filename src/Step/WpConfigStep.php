@@ -144,11 +144,8 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
             'WP_SITEURL_RELATIVE' => $this->stripDot($wpRelUrlDir),
         ];
 
-        $built = $this->builder->build(
-            $paths,
-            'wp-config.php',
-            array_merge($vars, $this->salter->keys())
-        );
+        $allVars = array_merge($vars, $this->salter->keys());
+        $built = $this->builder->build($paths, 'wp-config.php', $allVars);
 
         $target = $this->targetPath($paths);
         if (!$this->filesystem->writeContent($built, $target)) {

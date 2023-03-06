@@ -81,6 +81,7 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
                 public $output = '';
                 public $lines = [];
 
+                /** @noinspection PhpSignatureMismatchDuringInheritanceInspection */
                 protected function doWrite($message, $newline)
                 {
                     if (!$newline && $this->lines) {
