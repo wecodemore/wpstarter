@@ -105,7 +105,7 @@ final class WpCliFileData
      *
      * @psalm-assert array $this->parsed
      */
-    private function setup()
+    private function setup(): void
     {
         if (is_array($this->parsed)) {
             return;

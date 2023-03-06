@@ -95,7 +95,7 @@ final class Paths implements \ArrayAccess
      * @param string $templatesRootDir
      * @return void
      */
-    public function useCustomTemplatesDir(string $templatesRootDir)
+    public function useCustomTemplatesDir(string $templatesRootDir): void
     {
         if (is_dir($templatesRootDir)) {
             $this->customTemplatesDir[] = rtrim($templatesRootDir, '/');

@@ -208,7 +208,7 @@ final class Result
     /**
      * @return void
      */
-    private function maybeResolve()
+    private function maybeResolve(): void
     {
         if (!$this->promise) {
             return;

@@ -28,7 +28,7 @@ final class WpStarterCommand extends BaseCommand
     /**
      * @return void
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('wpstarter')
@@ -134,7 +134,7 @@ final class WpStarterCommand extends BaseCommand
      * @param string $message
      * @return void
      */
-    private function writeError(OutputInterface $output, string $message)
+    private function writeError(OutputInterface $output, string $message): void
     {
         if (!$message) {
             return;

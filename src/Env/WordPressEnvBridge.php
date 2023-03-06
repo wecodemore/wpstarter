@@ -340,7 +340,7 @@ class WordPressEnvBridge
      * @param string|null $path Environment file path
      * @return void
      */
-    public function load(string $file = '.env', ?string $path = null)
+    public function load(string $file = '.env', ?string $path = null): void
     {
         $this->loadFile($this->fullpathFor($file, $path));
     }
@@ -373,7 +373,7 @@ class WordPressEnvBridge
      * @param string $path
      * @return void
      */
-    public function loadFile(string $path)
+    public function loadFile(string $path): void
     {
         $loaded = $_ENV['WPSTARTER_ENV_LOADED'] ?? $_SERVER['WPSTARTER_ENV_LOADED'] ?? null;
         if ($loaded !== null) {
@@ -398,7 +398,7 @@ class WordPressEnvBridge
      * @param string|null $path
      * @return void
      */
-    public function loadAppended(string $file, ?string $path = null)
+    public function loadAppended(string $file, ?string $path = null): void
     {
         if (self::$loadedVars === null) {
             $this->load($file, $path);
@@ -521,7 +521,7 @@ class WordPressEnvBridge
      * @param string $value
      * @return void
      */
-    public function write(string $name, string $value)
+    public function write(string $name, string $value): void
     {
         if (!$this->isWritable($name)) {
             throw new \BadMethodCallException("{$name} is not a writable ENV var.");
@@ -598,7 +598,7 @@ class WordPressEnvBridge
     /**
      * @return void
      */
-    public function setupConstants()
+    public function setupConstants(): void
     {
         static $done;
         if ($done) {

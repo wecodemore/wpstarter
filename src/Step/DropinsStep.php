@@ -279,7 +279,7 @@ final class DropinsStep implements Step
         Config $config,
         Paths $paths,
         string $operation
-    ) {
+    ): void {
 
         $step = new DropinStep(
             $basename,

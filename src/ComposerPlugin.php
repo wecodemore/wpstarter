@@ -130,7 +130,7 @@ final class ComposerPlugin implements
      * @param IOInterface $io
      * @return void
      */
-    public function activate(Composer $composer, IOInterface $io)
+    public function activate(Composer $composer, IOInterface $io): void
     {
         $this->composer = $composer;
         $this->io = $io;
@@ -145,7 +145,7 @@ final class ComposerPlugin implements
      *
      * @return void
      */
-    public function setupAutoload()
+    public function setupAutoload(): void
     {
         static::$autoload or spl_autoload_register(
             $this->psr4LoaderFor(__NAMESPACE__, __DIR__),
@@ -160,7 +160,7 @@ final class ComposerPlugin implements
      * @param PackageEvent $event
      * @return void
      */
-    public function onPrePackageOperation(PackageEvent $event)
+    public function onPrePackageOperation(PackageEvent $event): void
     {
         $operation = $event->getOperation();
 
@@ -180,7 +180,7 @@ final class ComposerPlugin implements
      * @param Event $event
      * @return void
      */
-    public function onAutorunBecauseInstall(Event $event)
+    public function onAutorunBecauseInstall(Event $event): void
     {
         $this->mode or $this->mode = self::MODE_COMPOSER_INSTALL;
         $this->setupAutoload();
@@ -195,7 +195,7 @@ final class ComposerPlugin implements
      * @param Event $event
      * @return void
      */
-    public function onAutorunBecauseUpdate(Event $event)
+    public function onAutorunBecauseUpdate(Event $event): void
     {
         $this->mode = self::MODE_COMPOSER_UPDATE;
         $this->onAutorunBecauseInstall($event);
@@ -207,7 +207,7 @@ final class ComposerPlugin implements
      *
      * phpcs:disable Inpsyde.CodeQuality.FunctionLength
      */
-    public function run(Util\SelectedStepsFactory $factory)
+    public function run(Util\SelectedStepsFactory $factory): void
     {
         // phpcs:enable Inpsyde.CodeQuality.FunctionLength
         $this->mode or $this->mode = self::MODE_COMMAND;
@@ -340,7 +340,7 @@ final class ComposerPlugin implements
     /**
      * @return void
      */
-    private function convertErrorsToExceptions()
+    private function convertErrorsToExceptions(): void
     {
         set_error_handler(
             static function (int $code, string $msg, string $file = '', int $line = 0) {
@@ -357,7 +357,7 @@ final class ComposerPlugin implements
     /**
      * @return void
      */
-    private function loadExtensions()
+    private function loadExtensions(): void
     {
         $packages = $this->locator->packageFinder()->findByType(self::EXTENSIONS_TYPE);
 
@@ -370,7 +370,7 @@ final class ComposerPlugin implements
      * @param PackageInterface $package
      * @return void
      */
-    private function loadExtensionAutoload(PackageInterface $package)
+    private function loadExtensionAutoload(PackageInterface $package): void
     {
         $autoload = $package->getExtra()['wpstarter-autoload'] ?? null;
         if (!$autoload || !is_array($autoload)) {
@@ -479,7 +479,7 @@ final class ComposerPlugin implements
     /**
      * @return void
      */
-    private function logo()
+    private function logo(): void
     {
         // phpcs:disable
         $logo = <<<LOGO
@@ -493,12 +493,13 @@ LOGO;
         $this->io->write("\n{$logo}\n");
     }
 
+
     /**
      * @param Composer $composer
      * @param IOInterface $io
      * @return void
      */
-    public function deactivate(Composer $composer, IOInterface $io)
+    public function deactivate(Composer $composer, IOInterface $io): void
     {
         // noop
     }
@@ -508,7 +509,7 @@ LOGO;
      * @param IOInterface $io
      * @return void
      */
-    public function uninstall(Composer $composer, IOInterface $io)
+    public function uninstall(Composer $composer, IOInterface $io): void
     {
         // noop
     }

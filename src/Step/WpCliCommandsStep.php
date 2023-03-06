@@ -202,7 +202,7 @@ final class WpCliCommandsStep implements Step
      * @param string ...$commands
      * @return void
      */
-    private function initMessage(string ...$commands)
+    private function initMessage(string ...$commands): void
     {
         $count = count($commands);
         $this->io->writeIfVerbose(sprintf('Will run %d command%s:', $count, $count > 1 ? 's' : ''));

@@ -22,5 +22,5 @@ interface PostProcessStep extends Step
      * @param Io $io
      * @return void
      */
-    public function postProcess(Io $io);
+    public function postProcess(Io $io): void;
 }

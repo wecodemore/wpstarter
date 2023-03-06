@@ -35,7 +35,7 @@ class WpConfigSectionEditor
      * @param string $newContent
      * @return void
      */
-    public function append(string $section, string $newContent)
+    public function append(string $section, string $newContent): void
     {
         $this->edit($section, $newContent, self::APPEND);
     }
@@ -46,7 +46,7 @@ class WpConfigSectionEditor
      * @param string $newContent
      * @return void
      */
-    public function prepend(string $section, string $newContent)
+    public function prepend(string $section, string $newContent): void
     {
         $this->edit($section, $newContent, self::PREPEND);
     }
@@ -57,7 +57,7 @@ class WpConfigSectionEditor
      * @param string $newContent
      * @return void
      */
-    public function replace(string $section, string $newContent)
+    public function replace(string $section, string $newContent): void
     {
         $this->edit($section, $newContent, self::REPLACE);
     }
@@ -67,7 +67,7 @@ class WpConfigSectionEditor
      * @param string $section
      * @return void
      */
-    public function delete(string $section)
+    public function delete(string $section): void
     {
         $this->replace($section, '');
     }
@@ -78,7 +78,7 @@ class WpConfigSectionEditor
      * @param int $editMode
      * @return void
      */
-    private function edit(string $section, string $newContent, int $editMode)
+    private function edit(string $section, string $newContent, int $editMode): void
     {
         $content = $this->currentContent();
 

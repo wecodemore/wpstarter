@@ -134,7 +134,7 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
      * @param Io $io
      * @return void
      */
-    public function postProcess(Io $io)
+    public function postProcess(Io $io): void
     {
         if ($this->envInWebRoot) {
             $io->writeCommentBlock(

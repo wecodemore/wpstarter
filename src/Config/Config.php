@@ -219,7 +219,7 @@ final class Config implements \ArrayAccess
      * @return void
      */
     #[\ReturnTypeWillChange]
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         if (!is_string($offset)) {
             return;

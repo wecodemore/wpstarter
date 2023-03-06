@@ -233,7 +233,7 @@ final class Steps implements PostProcessStep, \Countable
      * @param Io $io
      * @return void
      */
-    public function postProcess(Io $io)
+    public function postProcess(Io $io): void
     {
         if ($this->running || !$this->postProcessSteps) {
             return;
@@ -359,7 +359,7 @@ final class Steps implements PostProcessStep, \Countable
      * @param int $result
      * @return void
      */
-    private function runStepScripts(Step $step, Io $io, string $prefix, int $result = Step::NONE)
+    private function runStepScripts(Step $step, Io $io, string $prefix, int $result = Step::NONE): void
     {
         $name = $step->name();
         $scriptLabel = "'{$prefix}' scripts for '{$name}' step";
@@ -398,8 +398,14 @@ final class Steps implements PostProcessStep, \Countable
      * @param Io $io
      * @return void
      */
-    private function runStepScript(callable $script, string $label, Step $step, int $result, Io $io)
-    {
+    private function runStepScript(
+        callable $script,
+        string $label,
+        Step $step,
+        int $result,
+        Io $io
+    ): void {
+
         try {
             $script($result, $step, $this->locator, $this->composer);
         } catch (\Throwable $error) {
@@ -413,7 +419,7 @@ final class Steps implements PostProcessStep, \Countable
      * @param bool $error
      * @return void
      */
-    private function printMessages(Io $io, string $message, bool $error = false)
+    private function printMessages(Io $io, string $message, bool $error = false): void
     {
         $error ? $io->writeErrorBlock($message) : $io->writeSuccess($message);
     }
