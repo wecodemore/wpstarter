@@ -14,6 +14,7 @@ namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\Tests\TestCase;
 use WeCodeMore\WpStarter\Util\WpConfigSectionEditor;
+
 use function PHPUnit\Framework\assertSame;
 
 class WpConfigSectionEditorTest extends TestCase

@@ -50,7 +50,6 @@ class Question
         ?string $default = null
     ): Question {
 
-
         $instance = new self($lines, [], null);
         $instance->validator = $validator;
         if ($default !== null && $validator($default)) {
@@ -105,15 +104,19 @@ class Question
 
     /**
      * @param string $answer
-     * @return bool
+     * @return string|null
      */
-    public function isValidAnswer(string $answer): bool
+    public function filterAnswer(string $answer): ?string
     {
+        $answer = trim($answer);
+
         if ($this->validator) {
-            return (bool)($this->validator)($answer);
+            return ($this->validator)($answer) ? $answer : null;
         }
 
-        return array_key_exists(strtolower(trim($answer)), $this->answers);
+        $answer = strtolower($answer);
+
+        return array_key_exists($answer, $this->answers) ? $answer : null;
     }
 
     /**

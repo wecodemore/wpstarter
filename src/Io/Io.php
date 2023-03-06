@@ -187,7 +187,7 @@ class Io
         try {
             $answer = null;
             $count = 0;
-            while (!is_string($answer) || !$question->isValidAnswer($answer)) {
+            while ($answer === null) {
                 if ($count > 4) {
                     usleep(250000);
                     throw $tooMuchTriesException;
@@ -196,8 +196,8 @@ class Io
                     $this->writeComment('Invalid answer, try again.');
                     usleep(250000);
                 }
-                $answer = $this->io->ask($questionText, $question->defaultAnswerKey());
-                $answer = is_string($answer) ? trim($answer) : null;
+                $asked = $this->io->ask($questionText, $question->defaultAnswerKey());
+                $answer = is_string($asked) ? $question->filterAnswer($asked) : null;
                 $count++;
             }
 

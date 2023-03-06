@@ -25,15 +25,15 @@ class QuestionTest extends TestCase
 
         static::assertSame($question->defaultAnswerKey(), 'n');
         static::assertSame($question->defaultAnswerText(), 'No');
-        static::assertTrue($question->isValidAnswer('y'));
-        static::assertTrue($question->isValidAnswer('Y'));
-        static::assertTrue($question->isValidAnswer(' Y '));
-        static::assertTrue($question->isValidAnswer(' y '));
-        static::assertTrue($question->isValidAnswer('n'));
-        static::assertTrue($question->isValidAnswer('N'));
-        static::assertTrue($question->isValidAnswer(' N '));
-        static::assertTrue($question->isValidAnswer(' n'));
-        static::assertFalse($question->isValidAnswer('x'));
+        static::assertSame('y', $question->filterAnswer('y'));
+        static::assertSame('y', $question->filterAnswer('Y'));
+        static::assertSame('y', $question->filterAnswer(' Y '));
+        static::assertSame('y', $question->filterAnswer(' y '));
+        static::assertSame('n', $question->filterAnswer('n'));
+        static::assertSame('n', $question->filterAnswer('N'));
+        static::assertSame('n', $question->filterAnswer(' N '));
+        static::assertSame('n', $question->filterAnswer(' n'));
+        static::assertNull($question->filterAnswer('x'));
     }
 
     /**
@@ -90,7 +90,7 @@ class QuestionTest extends TestCase
     {
         $question = Question::newWithValidator(
             ['Give me a valid URL'],
-            static function ($value): bool {
+            static function (string $value): bool {
                 return (bool)filter_var($value, FILTER_VALIDATE_URL);
             },
             'https://example.org'
@@ -100,7 +100,7 @@ class QuestionTest extends TestCase
             'QUESTION:',
             'Give me a valid URL',
             '',
-            "Default: 'https://example.org'"
+            "Default: 'https://example.org'",
         ];
 
         static::assertSame($expected, $question->questionLines());
@@ -115,7 +115,7 @@ class QuestionTest extends TestCase
     {
         $question = Question::newWithValidator(
             ['Give me a valid URL'],
-            static function ($value): bool {
+            static function (string $value): bool {
                 return (bool)filter_var($value, FILTER_VALIDATE_URL);
             },
             'meh'
@@ -123,7 +123,7 @@ class QuestionTest extends TestCase
 
         $expected = [
             'QUESTION:',
-            'Give me a valid URL'
+            'Give me a valid URL',
         ];
 
         static::assertSame($expected, $question->questionLines());

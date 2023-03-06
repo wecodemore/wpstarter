@@ -68,7 +68,7 @@ class IoTest extends TestCase
     {
         $question = Question::newWithValidator(
             ['URL?'],
-            static function ($value): bool {
+            static function (string $value): bool {
                 return (bool)filter_var($value, FILTER_VALIDATE_URL);
             },
             'https://example.com'
@@ -135,7 +135,7 @@ class IoTest extends TestCase
     {
         $question = Question::newWithValidator(
             ['URL?'],
-            static function ($value): bool {
+            static function (string $value): bool {
                 return (bool)filter_var($value, FILTER_VALIDATE_URL);
             },
             'https://example.com'

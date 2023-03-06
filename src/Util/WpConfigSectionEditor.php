@@ -122,25 +122,11 @@ class WpConfigSectionEditor
             $newSection = '';
         }
 
-        $editing = $newSection;
+        $editing = $this->wrapSectionInEditHash($newSection, $editMode);
         $isReplace = $editMode === self::REPLACE;
-        if (!$isReplace) {
-            $hash = 'unknown-' . bin2hex(random_bytes(4));
-            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-            if (is_array($trace[1] ?? null)) {
-                $file = $this->filesystem->normalizePath($trace[1]['file'] ?? '-');
-                $line = $trace[1]['line'] ?? -1;
-                $hash = md5(sprintf('%s#%d', $file, $line));
-            }
-            $id = sprintf('%s-%s', $this->editModeLabel($editMode), $hash);
-            $editing = "# <{$id}>\n{$newSection}\n# </{$id}>";
-
-            if (strpos($content, $editing) !== false) {
-                return;
-            }
+        if (!$isReplace && (strpos($content, $editing) !== false)) {
+            return;
         }
-
-        ($editing && $isReplace) and $editing = "\n{$editing}\n";
 
         if (!$editing) {
             if (!$isReplace) {
@@ -151,9 +137,7 @@ class WpConfigSectionEditor
         }
 
         if (!$isReplace) {
-            $editing = ($editMode === self::APPEND)
-                ? '$2' . "{$editing}\n"
-                : "\n{$editing}" . '$2';
+            $editing = ($editMode === self::APPEND) ? '$2' . "{$editing}\n" : "\n{$editing}" . '$2';
         }
 
         $original = $content;
@@ -209,6 +193,30 @@ class WpConfigSectionEditor
         }
 
         return $content;
+    }
+
+    /**
+     * @param string $section
+     * @param int $editMode
+     * @return string
+     */
+    private function wrapSectionInEditHash(string $section, int $editMode): string
+    {
+        if ($editMode === self::REPLACE) {
+            return "\n{$section}\n";
+        }
+        $hash = 'unknown-' . bin2hex(random_bytes(4));
+        // phpcs:disable WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+        // phpcs:enable WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace
+        if (is_array($trace[1] ?? null)) {
+            $file = $this->filesystem->normalizePath($trace[1]['file'] ?? '-');
+            $line = $trace[1]['line'] ?? -1;
+            $hash = md5(sprintf('%s#%d', $file, $line));
+        }
+        $id = sprintf('%s-%s', $this->editModeLabel($editMode), $hash);
+
+        return "# <{$id}>\n{$section}\n# </{$id}>";
     }
 
     /**
