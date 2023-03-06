@@ -14,6 +14,7 @@ namespace WeCodeMore\WpStarter\Config;
 use Composer\Util\Filesystem as ComposerFilesystem;
 use Symfony\Component\Console\Input\StringInput;
 use WeCodeMore\WpStarter\Step\OptionalStep;
+use WeCodeMore\WpStarter\Util\DbChecker;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\WpVersion;
 use WeCodeMore\WpStarter\Cli;
@@ -158,6 +159,19 @@ class Validator
         }
 
         return Result::ok($allScripts);
+    }
+
+    /**
+     * @param mixed $value
+     * @return Result
+     */
+    public function validateDbCheck($value): Result
+    {
+        if (is_string($value) && (strtolower($value) === DbChecker::HEALTH_CHECK)) {
+            return Result::ok(DbChecker::HEALTH_CHECK);
+        }
+
+        return $this->validateBool($value);
     }
 
     /**

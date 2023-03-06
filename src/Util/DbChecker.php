@@ -24,6 +24,7 @@ class DbChecker
     public const WP_INSTALLED = 'WP_INSTALLED';
     public const WPDB_EXISTS = 'WPDB_EXISTS';
     public const WPDB_ENV_VALID = 'WPDB_ENV_VALID';
+    public const HEALTH_CHECK = 'health';
 
     /**
      * @var WordPressEnvBridge
@@ -97,7 +98,7 @@ class DbChecker
     /**
      * @return void
      */
-    public function check()
+    public function check(): void
     {
         if (
             $this->env->has(self::WPDB_ENV_VALID)
@@ -203,7 +204,7 @@ class DbChecker
      * @param bool $installed
      * @return void
      */
-    private function setupEnv(bool $valid, bool $exists, bool $installed)
+    private function setupEnv(bool $valid, bool $exists, bool $installed): void
     {
         $this->env->write(self::WPDB_ENV_VALID, $valid ? '1' : '');
         $this->env->write(self::WPDB_EXISTS, $exists ? '1' : '');
@@ -214,7 +215,7 @@ class DbChecker
      * @param string $line
      * @return void
      */
-    private function write(string $line)
+    private function write(string $line): void
     {
         $this->io->writeIfVerbose("- <info>[WPDB Check]</info> <comment>{$line}</comment>");
     }

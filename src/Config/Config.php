@@ -28,6 +28,7 @@ final class Config implements \ArrayAccess
     public const CONTENT_DEV_DIR = 'content-dev-dir';
     public const CONTENT_DEV_OPERATION = 'content-dev-op';
     public const CUSTOM_STEPS = 'custom-steps';
+    public const DB_CHECK = 'db-check';
     public const DROPINS = 'dropins';
     public const DROPINS_OPERATION = 'dropins-op';
     public const EARLY_HOOKS_FILE = 'early-hook-file';
@@ -60,6 +61,7 @@ final class Config implements \ArrayAccess
         self::CONTENT_DEV_OPERATION => Filesystem::OP_AUTO,
         self::CONTENT_DEV_DIR => 'content-dev',
         self::CUSTOM_STEPS => null,
+        self::DB_CHECK => true,
         self::DROPINS => null,
         self::DROPINS_OPERATION => Filesystem::OP_AUTO,
         self::EARLY_HOOKS_FILE => '',
@@ -93,6 +95,7 @@ final class Config implements \ArrayAccess
         self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
         self::CONTENT_DEV_DIR => 'validatePath',
         self::CUSTOM_STEPS => 'validateSteps',
+        self::DB_CHECK => 'validateDbCheck',
         self::DROPINS => 'validateDropins',
         self::DROPINS_OPERATION => 'validateDropinsOperation',
         self::EARLY_HOOKS_FILE => 'validatePath',
