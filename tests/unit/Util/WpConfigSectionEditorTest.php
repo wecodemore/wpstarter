@@ -15,8 +15,6 @@ use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\Tests\TestCase;
 use WeCodeMore\WpStarter\Util\WpConfigSectionEditor;
 
-use function PHPUnit\Framework\assertSame;
-
 class WpConfigSectionEditorTest extends TestCase
 {
     /**
@@ -69,8 +67,8 @@ class WpConfigSectionEditorTest extends TestCase
         static::assertSame("# </{$matches[1]}>", array_shift($lines));
 
         if ($repeat) {
-            assertSame(2, substr_count($currentContent, 'New line 1'));
-            assertSame(2, substr_count($currentContent, 'New line 2'));
+            static::assertSame(2, substr_count($currentContent, 'New line 1'));
+            static::assertSame(2, substr_count($currentContent, 'New line 2'));
         }
 
         if (!$repeat) {
@@ -108,10 +106,10 @@ class WpConfigSectionEditorTest extends TestCase
         static::assertSame([], $linesThree);
 
         if ($repeat) {
-            assertSame(1, substr_count($currentContentTwo, 'New line 1'));
-            assertSame(1, substr_count($currentContentTwo, 'New line 2'));
-            assertSame(2, substr_count($currentContentThree, 'New line 1'));
-            assertSame(2, substr_count($currentContentThree, 'New line 2'));
+            static::assertSame(1, substr_count($currentContentTwo, 'New line 1'));
+            static::assertSame(1, substr_count($currentContentTwo, 'New line 2'));
+            static::assertSame(2, substr_count($currentContentThree, 'New line 1'));
+            static::assertSame(2, substr_count($currentContentThree, 'New line 2'));
         }
 
         if (!$repeat) {
