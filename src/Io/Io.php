@@ -187,7 +187,7 @@ class Io
         try {
             $answer = null;
             $count = 0;
-            while (!is_string($answer) || !$question->isValidAnswer((string)$answer)) {
+            while (!is_string($answer) || !$question->isValidAnswer($answer)) {
                 if ($count > 4) {
                     usleep(250000);
                     throw $tooMuchTriesException;
@@ -197,7 +197,7 @@ class Io
                     usleep(250000);
                 }
                 $answer = $this->io->ask($questionText, $question->defaultAnswerKey());
-                $answer = is_string($answer) ? strtolower(trim($answer)) : null;
+                $answer = is_string($answer) ? trim($answer) : null;
                 $count++;
             }
 
