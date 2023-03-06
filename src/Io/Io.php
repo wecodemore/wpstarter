@@ -207,13 +207,14 @@ class Io
                 throw $exception;
             }
 
-            $default = $question->defaultAnswerText();
+            $default = $question->defaultAnswerKey();
             if ($default) {
                 $this->writeError($exception->getMessage());
-                $this->writeError("Going to use default: \"{$default}\".");
+                $defaultText = $question->defaultAnswerText();
+                $this->writeError("Going to use default: \"{$defaultText}\".");
             }
 
-            return $question->defaultAnswerKey();
+            return $default;
         }
     }
 

@@ -64,6 +64,54 @@ class IoTest extends TestCase
     /**
      * @test
      */
+    public function testAskTooMuchTriesWithValidator(): void
+    {
+        $question = Question::newWithValidator(
+            ['URL?'],
+            static function ($value): bool {
+                return (bool)filter_var($value, FILTER_VALIDATE_URL);
+            },
+            'https://example.com'
+        );
+
+        $composerIo = \Mockery::mock(IOInterface::class);
+        $composerIo
+            ->expects('ask')
+            ->times(5)
+            ->andReturn('ht', 'meh', '12', 'a', 'e');
+        $composerIo
+            ->expects('write')
+            ->times(4)
+            ->with(\Mockery::type('string'))
+            ->andReturnUsing(
+                static function (string $error): void {
+                    static::assertStringContainsString('Invalid answer, try again', $error);
+                }
+            );
+        $composerIo
+            ->expects('writeError')
+            ->twice()
+            ->with(\Mockery::type('string'))
+            ->andReturnUsing(
+                static function (string $error) {
+                    static $i;
+                    $i = $i ?? 0;
+                    $i++;
+                    $i === 1 and static::assertStringContainsString('Too much tries', $error);
+                    $i === 2 and static::assertStringContainsString('Going to use default', $error);
+                }
+            );
+
+        $io = new Io($composerIo, new Formatter());
+
+        $answer = $io->ask($question);
+
+        static::assertSame('https://example.com', $answer);
+    }
+
+    /**
+     * @test
+     */
     public function testAskWithRightAnswer(): void
     {
         $question = new Question(['Yes or no?'], ['y' => 'Yes', 'n' => 'No']);
@@ -78,6 +126,31 @@ class IoTest extends TestCase
         $answer = $io->ask($question);
 
         static::assertSame('y', $answer);
+    }
+
+    /**
+     * @test
+     */
+    public function testAskWithValidatorWithRightAnswer(): void
+    {
+        $question = Question::newWithValidator(
+            ['URL?'],
+            static function ($value): bool {
+                return (bool)filter_var($value, FILTER_VALIDATE_URL);
+            },
+            'https://example.com'
+        );
+
+        $composerIo = \Mockery::mock(IOInterface::class);
+        $composerIo->expects('ask')->once()->andReturn(' https://wikipedia.org ');
+        $composerIo->expects('write')->never();
+        $composerIo->expects('writeError')->never();
+
+        $io = new Io($composerIo, new Formatter());
+
+        $answer = $io->ask($question);
+
+        static::assertSame('https://wikipedia.org', $answer);
     }
 
     /**

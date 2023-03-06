@@ -82,4 +82,52 @@ class QuestionTest extends TestCase
 
         static::assertSame($expected, $question->questionLines());
     }
+
+    /**
+     * @test
+     */
+    public function testQuestionLinesWithValidator(): void
+    {
+        $question = Question::newWithValidator(
+            ['Give me a valid URL'],
+            static function ($value): bool {
+                return (bool)filter_var($value, FILTER_VALIDATE_URL);
+            },
+            'https://example.org'
+        );
+
+        $expected = [
+            'QUESTION:',
+            'Give me a valid URL',
+            '',
+            "Default: 'https://example.org'"
+        ];
+
+        static::assertSame($expected, $question->questionLines());
+        static::assertSame('https://example.org', $question->defaultAnswerText());
+        static::assertSame('https://example.org', $question->defaultAnswerKey());
+    }
+
+    /**
+     * @test
+     */
+    public function testQuestionLinesWithValidatorWithWrongDefault(): void
+    {
+        $question = Question::newWithValidator(
+            ['Give me a valid URL'],
+            static function ($value): bool {
+                return (bool)filter_var($value, FILTER_VALIDATE_URL);
+            },
+            'meh'
+        );
+
+        $expected = [
+            'QUESTION:',
+            'Give me a valid URL'
+        ];
+
+        static::assertSame($expected, $question->questionLines());
+        static::assertSame('', $question->defaultAnswerText());
+        static::assertSame('', $question->defaultAnswerKey());
+    }
 }

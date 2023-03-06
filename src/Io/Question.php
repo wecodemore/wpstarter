@@ -34,6 +34,33 @@ class Question
     private $question;
 
     /**
+     * @var callable|null
+     */
+    private $validator = null;
+
+    /**
+     * @param array<string> $lines
+     * @param callable(mixed):bool $validator
+     * @param string|null $default
+     * @return Question
+     */
+    public static function newWithValidator(
+        array $lines,
+        callable $validator,
+        ?string $default = null
+    ): Question {
+
+
+        $instance = new self($lines, [], null);
+        $instance->validator = $validator;
+        if ($default !== null && $validator($default)) {
+            $instance->default = $default;
+        }
+
+        return $instance;
+    }
+
+    /**
      * @param array<string> $lines
      * @param array<string, string> $answers
      * @param string|null $default
@@ -82,6 +109,10 @@ class Question
      */
     public function isValidAnswer(string $answer): bool
     {
+        if ($this->validator) {
+            return (bool)($this->validator)($answer);
+        }
+
         return array_key_exists(strtolower(trim($answer)), $this->answers);
     }
 
@@ -98,7 +129,9 @@ class Question
      */
     public function defaultAnswerText(): string
     {
-        return $this->default ? $this->answers[$this->default] : '';
+        return ($this->default && $this->answers)
+            ? ($this->answers[$this->default] ?? '')
+            : $this->defaultAnswerKey();
     }
 
     /**
@@ -112,7 +145,7 @@ class Question
             return $this->question;
         }
 
-        if (!$this->lines || !$this->answers) {
+        if (!$this->lines) {
             $this->question = [];
 
             return [];
@@ -120,8 +153,12 @@ class Question
 
         $this->question = array_values($this->lines);
         array_unshift($this->question, 'QUESTION:');
+        if (!$this->answers && !$this->default) {
+            return $this->question;
+        }
+
         $this->question[] = "";
-        $this->question[] = implode(' | ', $this->answers);
+        $this->answers and $this->question[] = implode(' | ', $this->answers);
         $this->default and $this->question[] = "Default: '{$this->default}'";
 
         return $this->question;
