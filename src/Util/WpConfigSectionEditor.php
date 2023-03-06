@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Util;
 
+use Composer\Util\Filesystem as ComposerFilesystem;
+
 class WpConfigSectionEditor
 {
     public const APPEND = 1;
@@ -21,12 +23,18 @@ class WpConfigSectionEditor
     private $wpPath;
 
     /**
-     * @param \Composer\Util\Filesystem $filesystem
-     * @param Paths $paths
+     * @var ComposerFilesystem
      */
-    public function __construct(Paths $paths)
+    private $filesystem;
+
+    /**
+     * @param Paths $paths
+     * @param ComposerFilesystem $filesystem
+     */
+    public function __construct(Paths $paths, ComposerFilesystem $filesystem)
     {
         $this->paths = $paths;
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -74,6 +82,30 @@ class WpConfigSectionEditor
 
     /**
      * @param string $section
+     * @return string
+     */
+    public function sectionContent(string $section): string
+    {
+        $safeSection = preg_quote(strtoupper(trim($section)), '~');
+
+        preg_match(
+            "~(?:{$safeSection}\s*\:\s*\{)(.+?)(?:\}\s*#@@/{$safeSection})~s",
+            $this->currentContent(),
+            $matches
+        );
+
+        $content = $matches && is_string($matches[1] ?? null) ? $matches[1] : null;
+        if (!$content) {
+            return '';
+        }
+
+        $lines = array_map('trim', explode("\n", trim($content)));
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * @param string $section
      * @param string $newContent
      * @param int $editMode
      * @return void
@@ -90,33 +122,54 @@ class WpConfigSectionEditor
             $newSection = '';
         }
 
+        $editing = $newSection;
         $isReplace = $editMode === self::REPLACE;
-        ($newSection && $isReplace) and $newSection = "\n{$newSection}\n";
+        if (!$isReplace) {
+            $hash = 'unknown-' . bin2hex(random_bytes(4));
+            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+            if (is_array($trace[1] ?? null)) {
+                $file = $this->filesystem->normalizePath($trace[1]['file'] ?? '-');
+                $line = $trace[1]['line'] ?? -1;
+                $hash = md5(sprintf('%s#%d', $file, $line));
+            }
+            $id = sprintf('%s-%s', $this->editModeLabel($editMode), $hash);
+            $editing = "# <{$id}>\n{$newSection}\n# </{$id}>";
 
-        if (!$newSection) {
+            if (strpos($content, $editing) !== false) {
+                return;
+            }
+        }
+
+        ($editing && $isReplace) and $editing = "\n{$editing}\n";
+
+        if (!$editing) {
             if (!$isReplace) {
                 return;
             }
 
-            $newSection = PHP_EOL;
+            $editing = PHP_EOL;
         }
 
         if (!$isReplace) {
-            $newSection = $editMode === self::APPEND
-                ? '$2' . "{$newSection}\n"
-                : "\n{$newSection}" . '$2';
+            $editing = ($editMode === self::APPEND)
+                ? '$2' . "{$editing}\n"
+                : "\n{$editing}" . '$2';
         }
 
         $original = $content;
         $safeSection = preg_quote($section, '~');
         $replaced = preg_replace(
-            "~({$safeSection}\s*\:\s*\{)(.+)(\}\s*#@@/{$safeSection})~s",
-            '$1' . $newSection . '$3',
+            "~({$safeSection}\s*\:\s*\{)(.+?)(\}\s*#@@/{$safeSection})~s",
+            '$1' . $editing . '$3',
             $content
         );
 
-        if ($replaced === null || ($original === $replaced)) {
+        if ($replaced === null) {
             throw new \Exception("Failed replacing section {$section} in wp-config.php.");
+        }
+
+        if ($original === $replaced) {
+            return;
         }
 
         $pathToFile = $this->wpConfigPath();
@@ -134,7 +187,7 @@ class WpConfigSectionEditor
             return $this->wpPath;
         }
 
-        $pathToFile = $this->paths->wpParent('wp-config.php');
+        $pathToFile = $this->paths->root('wp-config.php');
         if (!file_exists($pathToFile)) {
             throw new \Exception("Could not find {$pathToFile}.");
         }
@@ -156,5 +209,18 @@ class WpConfigSectionEditor
         }
 
         return $content;
+    }
+
+    /**
+     * @param int $mode
+     * @return string
+     */
+    private function editModeLabel(int $mode): string
+    {
+        if ($mode === self::REPLACE) {
+            return 'R';
+        }
+
+        return ($mode === self::APPEND) ? 'A' : 'P';
     }
 }

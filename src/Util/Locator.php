@@ -292,7 +292,10 @@ final class Locator
     public function wpConfigSectionEditor(): WpConfigSectionEditor
     {
         if (empty($this->objects[__FUNCTION__])) {
-            $this->objects[__FUNCTION__] = new WpConfigSectionEditor($this->paths());
+            $this->objects[__FUNCTION__] = new WpConfigSectionEditor(
+                $this->paths(),
+                $this->composerFilesystem()
+            );
         }
 
         return $this->objects[__FUNCTION__];

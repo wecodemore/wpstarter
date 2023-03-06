@@ -2,6 +2,7 @@
 /composer.lock
 /build/
 /phpunit.xml
+/tests/fixtures/paths-root/wp-config.php
 /tests/fixtures/some-zip-content.txt
 /tests/fixtures/wp-cli-*.phar
 /tests/fixtures/wp-cli.phar
