@@ -135,6 +135,7 @@ final class Requirements
 
         $extra = $composer->getPackage()->getExtra();
 
+        $this->io = new Io($io, new Formatter());
         $this->paths = new Paths($composer->getConfig(), $extra, $filesystem);
         $root = $this->paths->root();
 
@@ -144,9 +145,8 @@ final class Requirements
         $config[Config::IS_COMPOSER_UPDATE] = $isComposer && $isComposerUpdate;
         $config[Config::IS_COMPOSER_INSTALL] = $isComposer && !$isComposerUpdate;
         $config[Config::COMPOSER_UPDATED_PACKAGES] = $isComposer ? $updatedPackages : [];
-
+        $config = $this->determineWpConfigPath($config);
         $this->config = new Config($config, new Validator($this->paths, $filesystem));
-        $this->io = new Io($io, new Formatter());
 
         $templatesDirConfig = $this->config[Config::TEMPLATES_DIR];
         /** @var string|null $templatesDir */
@@ -223,5 +223,37 @@ final class Requirements
         $overrideConfigs and $configs = array_merge($configs, (array)$overrideConfigs);
 
         return $configs;
+    }
+
+    /**
+     * @param array $config
+     * @param Io $io
+     * @return array
+     */
+    private function determineWpConfigPath(array $config): array
+    {
+        $root = $this->paths->root();
+        $wpParent = $this->paths->wpParent();
+        if ($root === $wpParent) {
+            $config[Config::WP_CONFIG_PATH] = $root;
+
+            return $config;
+        }
+        $wpConfigPath = $this->paths->wpParent('wp-config.php');
+        if (!file_exists($wpConfigPath)) {
+            $config[Config::WP_CONFIG_PATH] = $root;
+
+            return $config;
+        }
+        $content = file_get_contents($wpConfigPath);
+        if (strpos($content, 'WordPressEnvBridge') === false) {
+            $config[Config::WP_CONFIG_PATH] = $root;
+
+            return $config;
+        }
+
+        $config[Config::WP_CONFIG_PATH] = $wpParent;
+
+        return $config;
     }
 }

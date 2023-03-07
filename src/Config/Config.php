@@ -51,6 +51,7 @@ final class Config implements \ArrayAccess
     public const TEMPLATES_DIR = 'templates-dir';
     public const WP_CLI_COMMANDS = 'wp-cli-commands';
     public const WP_CLI_FILES = 'wp-cli-files';
+    public const WP_CONFIG_PATH = 'wp-config-php-path';
     public const WP_VERSION = 'wp-version';
 
     public const DEFAULTS = [

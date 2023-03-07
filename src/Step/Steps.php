@@ -22,6 +22,8 @@ use WeCodeMore\WpStarter\Util\SelectedStepsFactory;
  * A step whose routine consists in running other steps routines.
  *
  * This is used as main "task runner" for WP Starter.
+ *
+ * phpcs:disable Inpsyde.CodeQuality.PropertyPerClassLimit
  */
 final class Steps implements PostProcessStep, \Countable
 {

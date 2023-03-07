@@ -246,6 +246,7 @@ final class ComposerPlugin implements
             $this->checkWp($config);
 
             $factory->needsLogo() and $this->logo();
+            $this->compatibilityMode($config);
 
             if ($factory->isListMode()) {
                 $factory->selectAndFactory($this->locator, $this->composer);
@@ -530,5 +531,28 @@ LOGO;
     public function uninstall(Composer $composer, IOInterface $io): void
     {
         // noop
+    }
+
+    /**
+     * @param Config\Config $config
+     * @return void
+     */
+    private function compatibilityMode(Config\Config $config): void
+    {
+        $paths = $this->locator->paths();
+        $root = $paths->root();
+        if ($config[Config\Config::WP_CONFIG_PATH]->is($root)) {
+            return;
+        }
+
+        $wpParent = $paths->wpParent();
+
+        $this->io->isVerbose() and $this->locator->io()->writeCommentBlock(
+            'WP Starter will write wp-config.php in',
+            '"compatibility mode".',
+            "That is, it will be written inside '{$wpParent}' where it was located "
+            . 'before updating WP Starter.',
+            "If starting a project from scratch, it would be written in root folder '{$root}'."
+        );
     }
 }
