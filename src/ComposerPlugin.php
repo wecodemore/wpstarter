@@ -245,8 +245,7 @@ final class ComposerPlugin implements
             $this->loadExtensions();
             $this->checkWp($config);
 
-            $needsLogo = $factory->needsLogo();
-            $needsLogo and $this->logo();
+            $factory->needsLogo() and $this->logo();
 
             if ($factory->isListMode()) {
                 $factory->selectAndFactory($this->locator, $this->composer);
