@@ -123,7 +123,7 @@ final class Config implements \ArrayAccess
     ];
 
     /**
-     * @var Result[]
+     * @var array<string, Result>
      */
     private $configs;
 
