@@ -67,12 +67,12 @@ class ValidatorTest extends TestCase
     {
         $validator = $this->factoryValidator();
 
-        static::assertFalse($validator->validateScripts([])->notEmpty());
-        static::assertFalse($validator->validateScripts([])->notEmpty());
+        static::assertTrue($validator->validateScripts([])->is([]));
+        static::assertTrue($validator->validateScripts([])->is([]));
         static::assertFalse($validator->validateScripts(['xxx'])->notEmpty());
         static::assertFalse($validator->validateScripts(2)->notEmpty());
-        static::assertFalse($validator->validateScripts('xxx')->notEmpty());
-        static::assertFalse($validator->validateScripts(null)->notEmpty());
+        static::assertFalse($validator->validateScripts('xxx')->notEmpty([]));
+        static::assertTrue($validator->validateScripts(null)->is([]));
 
         $cbsInErr = ['pre-a' => ['a_func'], 'post-b' => ['b_func'], 'pre-' => ['a_function']];
         $cbsInOk = ['pre-a' => ['a_func'], 'post-b' => ['b_func']];

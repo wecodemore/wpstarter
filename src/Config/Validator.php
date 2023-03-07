@@ -122,7 +122,7 @@ class Validator
     public function validateScripts($value): Result
     {
         if (!$value) {
-            return Result::none();
+            return Result::ok([]);
         }
 
         $error = 'Scripts config must an array where keys are script names (start with "pre-" or '
@@ -770,10 +770,15 @@ class Validator
             return false;
         }
 
+        /** @psalm-suppress RedundantCondition */
+        if (is_callable($script)) {
+            return true;
+        }
+
+        /** @var string|array{string|object, string}|object $script */
+
         if (is_array($script)) {
-            return !empty($script[0])
-                && !empty($script[1])
-                && is_string($script[0])
+            return is_string($script[0])
                 && $this->isValidEntityName($script[0])
                 && $this->isValidEntityName($script[1], false);
         }

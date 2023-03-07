@@ -16,6 +16,7 @@ use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
+use WeCodeMore\WpStarter\Util\SelectedStepsFactory;
 
 /**
  * A step whose routine consists in running other steps routines.
@@ -35,19 +36,34 @@ final class Steps implements PostProcessStep, \Countable
     private $composer;
 
     /**
-     * @var array<string, array>
-     */
-    private $scripts;
-
-    /**
      * @var \SplObjectStorage<Step,null>
      */
     private $steps;
 
     /**
+     * @var Io
+     */
+    private $io;
+
+    /**
+     * @var \WeCodeMore\WpStarter\Util\OverwriteHelper
+     */
+    private $overwriteHelper;
+
+    /**
+     * @var bool
+     */
+    private $isCommandMode;
+
+    /**
      * @var \SplObjectStorage<PostProcessStep,null>|null
      */
-    private $postProcessSteps;
+    private $postProcessSteps = null;
+
+    /**
+     * @var array<string, array>|null
+     */
+    private $scripts = null;
 
     /**
      * @var int
@@ -67,7 +83,7 @@ final class Steps implements PostProcessStep, \Countable
     /**
      * @var bool
      */
-    private $isCommandMode;
+    private $runningSteps = false;
 
     /**
      * @param Locator $locator
@@ -98,9 +114,10 @@ final class Steps implements PostProcessStep, \Countable
     {
         $this->locator = $locator;
         $this->composer = $composer;
-        $this->isCommandMode = $isCommandMode;
+        $this->io = $locator->io();
+        $this->overwriteHelper = $locator->overwriteHelper();
         $this->steps = new \SplObjectStorage();
-        $this->scripts = $this->locator->config()[Config::SCRIPTS]->unwrap();
+        $this->isCommandMode = $isCommandMode;
     }
 
     /**
@@ -174,12 +191,12 @@ final class Steps implements PostProcessStep, \Countable
             return Step::NONE;
         }
 
-        $io = $this->locator->io();
+        $this->scripts = $config[Config::SCRIPTS]->unwrap();
 
         $this->running = true;
 
         $this->runningScripts = 'pre';
-        $this->runStepScripts($this, $io, 'pre-');
+        $this->runStepScripts($this, 'pre-');
         $this->runningScripts = '';
 
         // We check here because "pre" scripts can add or remove steps.
@@ -188,25 +205,36 @@ final class Steps implements PostProcessStep, \Countable
         }
 
         $this->steps->rewind();
+        $this->runningSteps = true;
         while ($this->steps->valid()) {
             $step = $this->steps->current();
 
-            if (!$this->runStep($step, $config, $io, $paths)) {
+            try {
+                $result = $this->runStep($step, $config, $paths);
+            } catch (\Throwable $throwable) {
+                $this->runningSteps = false;
+                throw $throwable;
+            }
+
+            if (!$result) {
+                $this->runningSteps = false;
+
                 return Step::ERROR;
             }
 
             $this->steps->next();
         }
+        $this->runningSteps = false;
 
-        $this->postProcess($io);
+        $this->postProcess($this->io);
 
         $this->runningScripts = 'post';
-        $this->runStepScripts($this, $io, 'post-', Step::SUCCESS);
+        $this->runStepScripts($this, 'post-', Step::SUCCESS);
         $this->runningScripts = '';
 
         $this->running = false;
 
-        return $this->finalMessage($io);
+        return $this->finalMessage();
     }
 
     /**
@@ -251,62 +279,62 @@ final class Steps implements PostProcessStep, \Countable
     /**
      * @param Step $step
      * @param Config $config
-     * @param Io $io
      * @param Paths $paths
      * @return bool
      */
-    private function runStep(Step $step, Config $config, Io $io, Paths $paths): bool
+    private function runStep(Step $step, Config $config, Paths $paths): bool
     {
         $name = $step->name();
         if (!$name) {
             return true;
         }
 
-        $io->writeIfVerbose("- Initializing '{$name}' step.");
+        $this->io->writeIfVerbose("- Initializing '{$name}' step.");
 
         if ($step instanceof PostProcessStep) {
             $this->postProcessSteps or $this->postProcessSteps = new \SplObjectStorage();
             $this->postProcessSteps->attach($step);
         }
 
-        if (!$this->shouldProcess($step, $paths, $io)) {
+        if (!$this->shouldProcess($step, $paths, $config)) {
             return true;
         }
 
-        $this->runStepScripts($step, $io, 'pre-');
+        if (!$this->runStepScripts($step, 'pre-')) {
+            return true;
+        }
 
         try {
             $result = $step->run($config, $paths);
         } catch (\Throwable $throwable) {
-            $this->printMessages($io, $throwable->getMessage(), true);
+            $this->printMessages($throwable->getMessage(), true);
             $result = self::ERROR;
         }
 
-        $this->runStepScripts($step, $io, 'post-', $result);
+        $this->runStepScripts($step, 'post-', $result);
 
-        return $this->continueOnStepResult($step, $result, $io);
+        return $this->continueOnStepResult($step, $result);
     }
 
     /**
      * @param Step $step
      * @param Paths $paths
-     * @param Io $io
+     * @param Config $config
      * @return bool
      */
-    private function shouldProcess(Step $step, Paths $paths, Io $io): bool
+    private function shouldProcess(Step $step, Paths $paths, Config $config): bool
     {
         $comment = '';
-        $config = $this->locator->config();
         $process = $step->allowed($config, $paths);
 
         if ($process && ($step instanceof FileCreationStepInterface)) {
             $path = $step->targetPath($paths);
-            $process = $this->locator->overwriteHelper()->shouldOverwrite($path);
+            $process = $this->overwriteHelper->shouldOverwrite($path);
             $comment = $process ? '' : '- ' . basename($path) . ' exists and will be preserved.';
         }
 
         if ($process && ($step instanceof OptionalStep)) {
-            $process = $step->askConfirm($this->locator->config(), $this->locator->io());
+            $process = $step->askConfirm($config, $this->io);
             $comment = $process ? '' : $step->skipped();
         }
 
@@ -321,8 +349,8 @@ final class Steps implements PostProcessStep, \Countable
         }
 
         $comment
-            ? $io->writeComment($comment)
-            : $io->writeIfVerbose(sprintf("- Step '%s' skipped: requisites not met.", $name));
+            ? $this->io->writeComment($comment)
+            : $this->io->writeIfVerbose(sprintf("- Step '%s' skipped: requisites not met.", $name));
 
         return false;
     }
@@ -330,23 +358,22 @@ final class Steps implements PostProcessStep, \Countable
     /**
      * @param Step $step
      * @param int $result
-     * @param Io $io
      * @return bool
      */
-    private function continueOnStepResult(Step $step, int $result, Io $io): bool
+    private function continueOnStepResult(Step $step, int $result): bool
     {
         if ($result === Step::SUCCESS) {
-            $this->printMessages($io, $step->success(), false);
+            $this->printMessages($step->success(), false);
         }
 
         if (($result & Step::ERROR) === Step::ERROR) {
-            $this->printMessages($io, $step->error(), true);
+            $this->printMessages($step->error(), true);
             $this->errors++;
         }
 
         $continue = ($result !== Step::ERROR) || !($step instanceof BlockingStep);
         if (!$continue) {
-            $this->finalMessage($io);
+            $this->finalMessage();
         }
 
         return $continue;
@@ -354,19 +381,22 @@ final class Steps implements PostProcessStep, \Countable
 
     /**
      * @param Step $step
-     * @param Io $io
      * @param string $prefix
      * @param int $result
-     * @return void
+     * @return bool
      */
-    private function runStepScripts(Step $step, Io $io, string $prefix, int $result = Step::NONE): void
-    {
-        $name = $step->name();
-        $scriptLabel = "'{$prefix}' scripts for '{$name}' step";
+    private function runStepScripts(
+        Step $step,
+        string $prefix,
+        int $result = Step::NONE
+    ): bool {
 
-        $allStepScripts = $this->scripts[$prefix . $name] ?? null;
+        $name = $step->name();
+        $scriptLabel = sprintf("'%s' scripts for '%s' step", rtrim($prefix, '-'), $name);
+        $scriptName = $this->findScriptName($name, $prefix);
+        $allStepScripts = $this->scripts[$scriptName] ?? null;
         if (!$allStepScripts) {
-            return;
+            return true;
         }
 
         $validStepScripts = array_filter($allStepScripts, 'is_callable');
@@ -376,18 +406,97 @@ final class Steps implements PostProcessStep, \Countable
             $message = $invalidScriptsCount > 1
                 ? "Found {$invalidScriptsCount} invalid script callbacks for {$scriptLabel}, they"
                 : "Found one invalid script callback for {$scriptLabel}, it";
-            $io->writeErrorIfVerbose("{$message} will be ignored.");
+            $this->io->writeErrorIfVerbose("{$message} will be ignored.");
         }
 
         if (!$validStepScripts) {
-            return;
+            return true;
         }
 
-        $io->writeIfVerbose("Start running {$scriptLabel}...");
+        $this->io->writeIfVerbose("Start running {$scriptLabel}...");
 
-        foreach ($validStepScripts as $script) {
-            $this->runStepScript($script, $scriptLabel, $step, $result, $io);
+        $continue = true;
+        $exit = true;
+        while ($continue && $validStepScripts) {
+            $script = array_shift($validStepScripts);
+            [$stepHalted, $propagationStopped] = $this->handleScriptSignal(
+                $this->runStepScript($script, $scriptLabel, $step, $result),
+                $name,
+                $prefix,
+                $exit
+            );
+            if ($propagationStopped) {
+                $continue = false;
+            }
+            if ($stepHalted) {
+                $exit = false;
+            }
         }
+
+        return $exit;
+    }
+
+    /**
+     * @param ScriptHaltSignal|null $signal
+     * @param string $name
+     * @param string $prefix
+     * @param bool $exit
+     * @return array{bool, bool}
+     */
+    private function handleScriptSignal(
+        ?ScriptHaltSignal $signal,
+        string $name,
+        string $prefix,
+        bool $exit,
+    ): array {
+
+        if (!$signal) {
+            return [false, false];
+        }
+
+        $stepHalted = ($prefix === 'pre-') && $exit && $signal->isStepHalted();
+        $propagationStopped = $signal->isPropagationStopped();
+        $what = $stepHalted ? 'halted step execution' : 'stopped scripts propagation';
+        ($stepHalted && $propagationStopped) and $what .= ' and stopped scripts propagation';
+        $message = "A '{$prefix}' script for '{$name}' step {$what}";
+        $reason = $signal->reason();
+        $message .= $reason ? ": {$reason}" : '.';
+        $this->io->writeComment($message);
+
+        return [$stepHalted, $propagationStopped];
+    }
+
+    /**
+     * @param string $name
+     * @param string $prefix
+     * @return string
+     */
+    private function findScriptName(string $name, string $prefix): string
+    {
+        if (!$this->runningSteps) {
+            return $prefix . $name;
+        }
+
+        foreach (array_keys($this->scripts ?? []) as $scriptName) {
+            if (strpos($scriptName, $prefix) !== 0) {
+                continue;
+            }
+            $noPrefix = substr($scriptName, strlen($prefix));
+            $canonicalStepName = SelectedStepsFactory::findStepNameByAlias($noPrefix, [$name]);
+            if (!$canonicalStepName) {
+                continue;
+            }
+            $canonicalScript = $prefix . $canonicalStepName;
+            if ($scriptName !== $canonicalScript) {
+                $this->io->writeComment(
+                    "Script name '{$scriptName}' is deprecated, please use '{$canonicalScript}'."
+                );
+            }
+
+            return $scriptName;
+        }
+
+        return $prefix . $name;
     }
 
     /**
@@ -395,40 +504,43 @@ final class Steps implements PostProcessStep, \Countable
      * @param string $label
      * @param Step $step
      * @param int $result
-     * @param Io $io
-     * @return void
+     * @return ScriptHaltSignal|null
      */
     private function runStepScript(
         callable $script,
         string $label,
         Step $step,
         int $result,
-        Io $io
-    ): void {
+    ): ?ScriptHaltSignal {
 
         try {
-            $script($result, $step, $this->locator, $this->composer);
+            $return = $script($result, $step, $this->locator, $this->composer);
+            if ($return instanceof ScriptHaltSignal) {
+                return $return;
+            }
+
+            return null;
         } catch (\Throwable $error) {
-            $io->writeErrorBlock("Error running {$label}:", $error->getMessage());
+            $this->io->writeErrorBlock("Error running {$label}:", $error->getMessage());
+
+            return null;
         }
     }
 
     /**
-     * @param Io $io
      * @param string $message
      * @param bool $error
      * @return void
      */
-    private function printMessages(Io $io, string $message, bool $error = false): void
+    private function printMessages(string $message, bool $error = false): void
     {
-        $error ? $io->writeErrorBlock($message) : $io->writeSuccess($message);
+        $error ? $this->io->writeErrorBlock($message) : $this->io->writeSuccess($message);
     }
 
     /**
-     * @param Io $io
      * @return int
      */
-    private function finalMessage(Io $io): int
+    private function finalMessage(): int
     {
         if ($this->isCommandMode) {
             return $this->errors > 0 ? self::ERROR : self::SUCCESS;
@@ -437,12 +549,12 @@ final class Steps implements PostProcessStep, \Countable
         usleep(250000);
 
         if ($this->errors > 0) {
-            $io->writeErrorBlock($this->error());
+            $this->io->writeErrorBlock($this->error());
 
             return self::ERROR;
         }
 
-        $io->writeSuccessBlock($this->success());
+        $this->io->writeSuccessBlock($this->success());
 
         return self::SUCCESS;
     }

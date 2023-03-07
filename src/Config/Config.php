@@ -78,7 +78,7 @@ final class Config implements \ArrayAccess
         self::PREVENT_OVERWRITE => null,
         self::REGISTER_THEME_FOLDER => false,
         self::REQUIRE_WP => true,
-        self::SCRIPTS => null,
+        self::SCRIPTS => [],
         self::SKIP_DB_CHECK => false,
         self::SKIP_STEPS => null,
         self::TEMPLATES_DIR => null,

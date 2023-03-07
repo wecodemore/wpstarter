@@ -85,6 +85,37 @@ class SelectedStepsFactory
     }
 
     /**
+     * @param string $alias
+     * @param list<string> $validNames
+     * @return string|null
+     */
+    public static function findStepNameByAlias(string $alias, array $validNames): ?string
+    {
+        if (in_array($alias, $validNames, true)) {
+            return $alias;
+        }
+
+        $altNames = [];
+        $noSpecial = preg_replace('/[^a-zA-Z0-9]/', '', $alias) ?? '';
+        $noSpecialValid = ($noSpecial !== '') && ($noSpecial !== $alias);
+        $noSpecialValid and $altNames[] = $noSpecial;
+        if (strpos($alias, 'build') === 0) {
+            $noBuild = preg_replace('/^[^a-zA-Z0-9]+/', '', substr($alias, 5)) ?? '';
+            $altNames[] = $noBuild;
+            $noBuildNoSpecial = $noSpecialValid ? substr($noSpecial, 5) : '';
+            ($noBuildNoSpecial !== '') and $altNames[] = $noBuildNoSpecial;
+        }
+
+        foreach ($altNames as $altName) {
+            if (in_array($altName, $validNames, true)) {
+                return $altName;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param int $flags
      * @param string ...$stepNames
      */
@@ -156,7 +187,7 @@ class SelectedStepsFactory
 
         $stepsToFactory = $availableSteps;
         if ($this->isSelectedCommandMode()) {
-            $stepsToFactory = $this->selectedStepsNameToClassMap($availableSteps);
+            $stepsToFactory = $this->selectedStepsNameToClassMap($availableSteps, $io);
         }
 
         return $this->factory($stepsToFactory, $locator, $composer);
@@ -322,28 +353,24 @@ class SelectedStepsFactory
     }
 
     /**
-     * @param array<string, class-string<Step>> $allAvailableStepNameToClassMap
+     * @param array<string, class-string<Step>> $availableStepNameToClassMap
+     * @param Io $io
      * @return array<string, class-string<Step>>
      */
-    private function selectedStepsNameToClassMap(array $allAvailableStepNameToClassMap): array
+    private function selectedStepsNameToClassMap(array $availableStepNameToClassMap, Io $io): array
     {
         // When opt-out mode, $allAvailableStepNameToClassMap have been already filtered-out from
         // selected steps in `filterOutSkippedSteps`
         if ($this->optOutMode) {
-            return $allAvailableStepNameToClassMap;
+            return $availableStepNameToClassMap;
         }
 
         $validCommandStepNamesToClasses = [];
 
         foreach ($this->commandStepNames as $name) {
-            if (array_key_exists($name, $allAvailableStepNameToClassMap)) {
-                $validCommandStepNamesToClasses[$name] = $allAvailableStepNameToClassMap[$name];
-                continue;
-            }
-
-            [$altName, $className] = $this->tryAltNames($name, $allAvailableStepNameToClassMap);
-            if (($altName !== null) && ($className !== null)) {
-                $validCommandStepNamesToClasses[$altName] = $className;
+            [$stepName, $stepClass] = $this->findStepName($name, $availableStepNameToClassMap, $io);
+            if (($stepName !== null) && ($stepClass !== null)) {
+                $validCommandStepNamesToClasses[$stepName] = $stepClass;
                 continue;
             }
 
@@ -356,25 +383,18 @@ class SelectedStepsFactory
     /**
      * @param string $name
      * @param array<string, class-string<Step>> $availableStepsMap
+     * @param Io $io
      * @return array{string, class-string<Step>}|array{null, null}
      */
-    private function tryAltNames(string $name, array $availableStepsMap): array
+    private function findStepName(string $name, array $availableStepsMap, Io $io): array
     {
-        $altNames = [];
-        $noSpecial = preg_replace('/[^a-zA-Z0-9]/', '', $name) ?? '';
-        $noSpecialValid = ($noSpecial !== '') && ($noSpecial !== $name);
-        $noSpecialValid and $altNames[] = $noSpecial;
-        if (strpos($name, 'build') === 0) {
-            $noBuild = preg_replace('/^[^a-zA-Z0-9]+/', '', substr($name, 5)) ?? '';
-            $altNames[] = $noBuild;
-            $noBuildNoSpecial = $noSpecialValid ? substr($noSpecial, 5) : '';
-            ($noBuildNoSpecial !== '') and $altNames[] = $noBuildNoSpecial;
-        }
-
-        foreach ($altNames as $altName) {
-            if (array_key_exists($altName, $availableStepsMap)) {
-                return [$altName, $availableStepsMap[$altName]];
+        $stepName = static::findStepNameByAlias($name, array_keys($availableStepsMap));
+        if ($stepName) {
+            if ($stepName !== $name) {
+                $io->writeComment("Step name '{$name}' is deprecated, please use '{$stepName}'.");
             }
+
+            return [$stepName, $availableStepsMap[$stepName]];
         }
 
         return [null, null];

@@ -122,6 +122,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             Composer\Util\Filesystem::class,
             Composer\Util\RemoteFilesystem::class,
             Config\Config::class,
+            Util\OverwriteHelper::class,
             Util\Filesystem::class,
             Util\Paths::class,
             Io\Io::class,
