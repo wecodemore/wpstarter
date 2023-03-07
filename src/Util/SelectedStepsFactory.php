@@ -336,15 +336,48 @@ class SelectedStepsFactory
         $validCommandStepNamesToClasses = [];
 
         foreach ($this->commandStepNames as $name) {
-            if (!array_key_exists($name, $allAvailableStepNameToClassMap)) {
-                $this->inputErrors ++;
+            if (array_key_exists($name, $allAvailableStepNameToClassMap)) {
+                $validCommandStepNamesToClasses[$name] = $allAvailableStepNameToClassMap[$name];
                 continue;
             }
 
-            $validCommandStepNamesToClasses[$name] = $allAvailableStepNameToClassMap[$name];
+            [$altName, $className] = $this->tryAltNames($name, $allAvailableStepNameToClassMap);
+            if (($altName !== null) && ($className !== null)) {
+                $validCommandStepNamesToClasses[$altName] = $className;
+                continue;
+            }
+
+            $this->inputErrors ++;
         }
 
         return $validCommandStepNamesToClasses;
+    }
+
+    /**
+     * @param string $name
+     * @param array<string, class-string<Step>> $availableStepsMap
+     * @return array{string, class-string<Step>}|array{null, null}
+     */
+    private function tryAltNames(string $name, array $availableStepsMap): array
+    {
+        $altNames = [];
+        $noSpecial = preg_replace('/[^a-zA-Z0-9]/', '', $name) ?? '';
+        $noSpecialValid = ($noSpecial !== '') && ($noSpecial !== $name);
+        $noSpecialValid and $altNames[] = $noSpecial;
+        if (strpos($name, 'build') === 0) {
+            $noBuild = preg_replace('/^[^a-zA-Z0-9]+/', '', substr($name, 5)) ?? '';
+            $altNames[] = $noBuild;
+            $noBuildNoSpecial = $noSpecialValid ? substr($noSpecial, 5) : '';
+            ($noBuildNoSpecial !== '') and $altNames[] = $noBuildNoSpecial;
+        }
+
+        foreach ($altNames as $altName) {
+            if (array_key_exists($altName, $availableStepsMap)) {
+                return [$altName, $availableStepsMap[$altName]];
+            }
+        }
+
+        return [null, null];
     }
 
     /**

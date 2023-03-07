@@ -44,7 +44,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class ContentDevStep implements OptionalStep
 {
-    public const NAME = 'publish-content-dev';
+    public const NAME = 'publishcontentdev';
 
     /**
      * @var Filesystem

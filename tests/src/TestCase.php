@@ -116,6 +116,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
         static $supportedObjects;
         $supportedObjects or $supportedObjects = [
+            Composer\Composer::class,
             Composer\Config::class,
             Composer\IO\IOInterface::class,
             Composer\Util\Filesystem::class,
@@ -166,5 +167,16 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         ];
 
         return Util\Paths::withRoot($root, $config, $extra, new Composer\Util\Filesystem());
+    }
+
+    /**
+     * @param Composer\IO\IOInterface|null $io
+     * @return Composer\Composer
+     */
+    protected function factoryComposer(?Composer\IO\IOInterface $io = null): Composer\Composer
+    {
+        $path = getenv('PACKAGE_PATH') . '/composer.json';
+
+        return Composer\Factory::create($io ?? new TestIo(), $path, true);
     }
 }

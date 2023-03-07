@@ -84,11 +84,11 @@ class WpConfigSectionEditorTest extends TestCase
         $editor = $this->factorySectionEditor();
 
         $this->doAppend($editor, 'TWO', 'Hello');
-        $this->doAppend($editor, 'TWO', 'Hello');
+        $this->doAppend($editor, 'TWO', 'Hello ');
         $this->doAppend($editor, 'TWO', 'World');
-        $this->doAppend($editor, 'TWO', 'Hello');
+        $this->doAppend($editor, 'TWO', ' Hello');
         $this->doAppend($editor, 'TWO', 'World');
-        $this->doAppend($editor, 'TWO', 'Hello');
+        $this->doAppend($editor, 'TWO', ' Hello ');
 
         $currentContent = $editor->sectionContent('TWO');
         $lines = explode("\n", $currentContent);

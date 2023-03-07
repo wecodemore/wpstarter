@@ -23,7 +23,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class WpConfigStep implements FileCreationStepInterface, BlockingStep
 {
-    public const NAME = 'build-wp-config';
+    public const NAME = 'wpconfig';
 
     /**
      * @var \WeCodeMore\WpStarter\Io\Io

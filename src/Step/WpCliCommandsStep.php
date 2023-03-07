@@ -28,7 +28,7 @@ use WeCodeMore\WpStarter\Cli;
  */
 final class WpCliCommandsStep implements Step
 {
-    public const NAME = 'wp-cli';
+    public const NAME = 'wpcli';
 
     /**
      * @var Locator

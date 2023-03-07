@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
 use Composer\Composer;
+use Composer\Repository\RepositoryManager;
 use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\ComposerPlugin;
 use WeCodeMore\WpStarter\Config\Config;
@@ -114,6 +115,71 @@ class SelectedStepsFactoryTest extends TestCase
         static::assertInstanceOf(CheckPathStep::class, $steps[0]);
         static::assertInstanceOf(FlushEnvCacheStep::class, $steps[1]);
         static::assertSame('', $factory->lastError());
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider provideStepClasses
+     */
+    public function testOptInValidStepsWithAlias(string $stepName, string $stepClass): void
+    {
+        $io = new TestIo();
+        $composer = $this->factoryComposer($io);
+
+        $locator = $this->factoryLocator(
+            $this->factoryConfig(),
+            new Filesystem(),
+            new Io($io),
+            $composer,
+            $io,
+            $this->factoryPaths()
+        );
+
+        $nameParts = str_split($stepName, (int)ceil(strlen($stepName) / 2));
+        $alt1 = implode('_', $nameParts);
+        $alt2 = implode('-', $nameParts);
+        $names = [
+            $alt1,
+            $alt2,
+            '-._.-' . $alt1,
+            '-._.-' . $alt2,
+            $alt1 . '--',
+            $alt2 . '/',
+            implode('---', $nameParts),
+            implode('/', $nameParts),
+            '-' . implode('//', $nameParts) . '__',
+            'build.~.' . $stepName,
+            'build' . $stepName,
+            'build' . $alt1,
+            'build' . $alt2,
+            'build-' . $alt1,
+            'build-' . $alt2,
+            'build-' . $stepName,
+            'build_' . $alt1,
+            'build_' . $alt2,
+            'build_' . $stepName,
+            'build.' . $alt1,
+            'build.' . $alt2,
+            'build.' . $stepName,
+            'build.~.' . $alt1,
+            'build.~.' . $alt2,
+            'build.~.' . $stepName,
+        ];
+
+        foreach ($names as $name) {
+            $factory = new SelectedStepsFactory(
+                SelectedStepsFactory::MODE_COMMAND,
+                $name
+            );
+
+            $steps = $factory->selectAndFactory($locator, $composer);
+
+            $message = "For {$name} of {$stepName} => {$stepClass}";
+            static::assertCount(1, $steps, $message);
+            static::assertInstanceOf($stepClass, $steps[0], $message);
+            static::assertSame('', $factory->lastError(), $message);
+        }
     }
 
     /**
@@ -640,5 +706,24 @@ class SelectedStepsFactoryTest extends TestCase
 
         static::assertTrue($io->hasOutputThatMatches("~are not included because excluded~i"));
         static::assertFalse($io->hasOutputThatMatches("~are not included because skipped~i"));
+    }
+
+    /**
+     * @return list<array{string, string}>
+     */
+    public static function provideStepClasses(): array
+    {
+        return [
+            [CheckPathStep::NAME, CheckPathStep::class],
+            [ContentDevStep::NAME, ContentDevStep::class],
+            [DropinsStep::NAME, DropinsStep::class],
+            [EnvExampleStep::NAME, EnvExampleStep::class],
+            [FlushEnvCacheStep::NAME, FlushEnvCacheStep::class],
+            [IndexStep::NAME, IndexStep::class],
+            [MoveContentStep::NAME, MoveContentStep::class],
+            [WpCliCommandsStep::NAME, WpCliCommandsStep::class],
+            [WpCliConfigStep::NAME, WpCliConfigStep::class],
+            [WpConfigStep::NAME, WpConfigStep::class],
+        ];
     }
 }

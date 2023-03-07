@@ -28,7 +28,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class MoveContentStep implements OptionalStep
 {
-    public const NAME = 'move-content';
+    public const NAME = 'movecontent';
 
     /**
      * @var \WeCodeMore\WpStarter\Util\Filesystem

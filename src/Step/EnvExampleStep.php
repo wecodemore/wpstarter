@@ -29,7 +29,7 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
  */
 final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
 {
-    public const NAME = 'build-env-example';
+    public const NAME = 'envexample';
 
     /**
      * @var Config
@@ -72,7 +72,7 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      */
     public function name(): string
     {
-        return 'build-env-example';
+        return self::NAME;
     }
 
     /**

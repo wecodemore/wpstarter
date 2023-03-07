@@ -23,7 +23,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class IndexStep implements FileCreationStepInterface, BlockingStep
 {
-    public const NAME = 'build-index';
+    public const NAME = 'index';
 
     /**
      * @var \WeCodeMore\WpStarter\Util\FileContentBuilder

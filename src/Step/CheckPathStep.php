@@ -21,7 +21,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class CheckPathStep implements BlockingStep, PostProcessStep
 {
-    public const NAME = 'check-paths';
+    public const NAME = 'checkpaths';
 
     /**
      * @var \WeCodeMore\WpStarter\Util\Filesystem

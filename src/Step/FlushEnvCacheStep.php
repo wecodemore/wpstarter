@@ -21,7 +21,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  */
 final class FlushEnvCacheStep implements Step
 {
-    public const NAME = 'flush-env-cache';
+    public const NAME = 'flushenvcache';
 
     /**
      * @var \WeCodeMore\WpStarter\Io\Io
