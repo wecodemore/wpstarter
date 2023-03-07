@@ -40,8 +40,6 @@ final class Result
     /**
      * @param mixed $value
      * @return Result
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     public static function ok($value): Result
     {
@@ -87,15 +85,11 @@ final class Result
     }
 
     /**
-     * @param mixed|null $value
+     * @param mixed $value
      * @param \Throwable|null $error
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     private function __construct($value = null, \Throwable $error = null)
     {
-        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-
         if ($value instanceof Result) {
             $this->value = $value->value;
             $this->error = $value->error;
@@ -125,14 +119,10 @@ final class Result
     /**
      * @param mixed $compare
      * @return bool
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     public function is($compare): bool
     {
         $this->maybeResolve();
-
-        // phpcs:enable
 
         return !$this->error && ($this->value === $compare);
     }
@@ -140,30 +130,22 @@ final class Result
     /**
      * @param mixed $compare
      * @return bool
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     public function not($compare): bool
     {
         $this->maybeResolve();
-
-        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
 
         return !$this->is($compare);
     }
 
     /**
      * @param mixed $thing
-     * @param mixed ...$things
+     * @param mixed $things
      * @return bool
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     public function either($thing, ...$things): bool
     {
         $this->maybeResolve();
-
-        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
 
         array_unshift($things, $thing);
 
@@ -173,29 +155,19 @@ final class Result
     /**
      * @param mixed $fallback
      * @return mixed
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
     public function unwrapOrFallback($fallback = null)
     {
         $this->maybeResolve();
-
-        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-        // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
 
         return $this->notEmpty() ? $this->value : $fallback;
     }
 
     /**
      * @return mixed
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
     public function unwrap()
     {
-        // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
-
         $this->maybeResolve();
 
         if ($this->error) {
