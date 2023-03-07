@@ -46,16 +46,6 @@ final class WpCliCommandsStep implements Step
     private $process = null;
 
     /**
-     * @var string[]
-     */
-    private $commands = [];
-
-    /**
-     * @var Cli\WpCliFileData[]
-     */
-    private $files = [];
-
-    /**
      * @param Locator $locator
      */
     public function __construct(Locator $locator)
@@ -79,20 +69,7 @@ final class WpCliCommandsStep implements Step
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        global $locator;
-        $locator = $this->locator;
-        $commands = $config[Config::WP_CLI_COMMANDS]->unwrapOrFallback([]);
-        unset($GLOBALS['locator']);
-        $files = $config[Config::WP_CLI_FILES]->unwrapOrFallback([]);
-
-        if ($commands || $files) {
-            $this->commands = $commands;
-            $this->files = $files;
-
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     /**
@@ -102,7 +79,12 @@ final class WpCliCommandsStep implements Step
      */
     public function run(Config $config, Paths $paths): int
     {
-        if ((!$this->commands && !$this->files)) {
+        [$commands, $files] = $this->extractConfig($config);
+        if (!$commands && !$files) {
+            if ($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->is(true)) {
+                $this->io->writeComment('No commands to execute.');
+            }
+
             return self::NONE;
         }
 
@@ -120,14 +102,14 @@ final class WpCliCommandsStep implements Step
         }
 
         $fileCommands = [];
-        if ($this->files) {
-            foreach ($this->files as $file) {
+        if ($files) {
+            foreach ($files as $file) {
                 $command = $this->buildEvalFileCommand($file, $paths);
                 $command and $fileCommands[] = $command;
             }
         }
 
-        $commands = array_merge($fileCommands, $this->commands);
+        $commands = array_merge($fileCommands, $commands);
         $this->initMessage(...$commands);
 
         $continue = true;
@@ -163,6 +145,23 @@ final class WpCliCommandsStep implements Step
     public function success(): string
     {
         return '  <comment>WP CLI commands executed.</comment>';
+    }
+
+    /**
+     * @param Config $config
+     * @return array{list<string>, list<Cli\WpCliFileData>}
+     */
+    private function extractConfig(Config $config): array
+    {
+        global $locator;
+        $locator = $this->locator;
+        /** @var list<string> $commands */
+        $commands = $config[Config::WP_CLI_COMMANDS]->unwrap();
+        unset($GLOBALS['locator']);
+        /** @var list<Cli\WpCliFileData> $files */
+        $files = $config[Config::WP_CLI_FILES]->unwrap();
+
+        return [$commands, $files];
     }
 
     /**

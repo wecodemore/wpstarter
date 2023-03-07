@@ -82,8 +82,8 @@ final class Config implements \ArrayAccess
         self::SKIP_DB_CHECK => false,
         self::SKIP_STEPS => null,
         self::TEMPLATES_DIR => null,
-        self::WP_CLI_COMMANDS => null,
-        self::WP_CLI_FILES => null,
+        self::WP_CLI_COMMANDS => [],
+        self::WP_CLI_FILES => [],
         self::WP_VERSION => null,
     ];
 

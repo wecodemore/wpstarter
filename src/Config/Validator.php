@@ -832,7 +832,12 @@ class Validator
         }
 
         $provider = function () use ($fullpath, $error): Result {
-            $data = @include $fullpath;
+            try {
+                $data = @include $fullpath;
+            } catch (\Throwable $throwable) {
+                return Result::errored("{$error} " . $throwable->getMessage());
+            }
+
             return is_array($data)
                 ? $this->validateWpCliCommands($data)
                 : Result::errored($error);
