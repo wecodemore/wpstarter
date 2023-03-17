@@ -52,7 +52,7 @@ final class WpStarterCommand extends BaseCommand
                 'Ignore "skip-steps" config.'
             )
             ->addOption(
-                'steps-help',
+                'list-steps',
                 null,
                 InputOption::VALUE_NONE,
                 'List available commands.'
@@ -104,8 +104,8 @@ final class WpStarterCommand extends BaseCommand
                 && $input->getOption('skip-custom');
             $ignoreSkipConfig = $input->hasOption('ignore-skip-config')
                 && $input->getOption('ignore-skip-config');
-            $list = $input->hasOption('steps-help')
-                && $input->getOption('steps-help');
+            $list = $input->hasOption('list-steps')
+                && $input->getOption('list-steps');
 
             $flags = $list ? SelectedStepsFactory::MODE_LIST : SelectedStepsFactory::MODE_COMMAND;
             $skip and $flags |= SelectedStepsFactory::MODE_OPT_OUT;
@@ -116,7 +116,7 @@ final class WpStarterCommand extends BaseCommand
             $selected = (array)($input->getArgument('steps') ?: []);
 
             if (($selected && !$skip) && $list) {
-                throw new \Error('The `--steps-help` flag can not be combined step names.');
+                throw new \Error('The `--list-steps` flag can not be combined step names.');
             }
 
             $plugin->run(new SelectedStepsFactory($flags, ...$selected));
