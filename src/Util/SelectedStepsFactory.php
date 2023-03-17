@@ -154,7 +154,7 @@ class SelectedStepsFactory
     /**
      * @return bool
      */
-    public function needsLogo(): bool
+    public function isFullRun(): bool
     {
         return !($this->isSelectedCommandMode() || $this->isListMode());
     }

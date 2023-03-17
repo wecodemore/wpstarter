@@ -243,9 +243,11 @@ final class ComposerPlugin implements
 
         try {
             $this->loadExtensions();
-            $this->checkWp($config);
+            $isFullRun = $factory->isFullRun();
 
-            $factory->needsLogo() and $this->logo();
+            $isFullRun and $this->checkWp($config);
+
+            $isFullRun and $this->logo();
             $this->compatibilityMode($config);
 
             if ($factory->isListMode()) {
@@ -254,7 +256,7 @@ final class ComposerPlugin implements
                 return;
             }
 
-            $this->checkDb($config);
+            $isFullRun and $this->checkDb($config);
 
             $runner = $factory->isSelectedCommandMode()
                 ? Step\Steps::commandMode($this->locator, $this->composer)
