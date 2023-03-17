@@ -119,7 +119,6 @@ class SystemProcess
             $process->mustRun($printer);
             return [$out, $err, $process->isSuccessful(), null];
         } catch (\Throwable $exception) {
-
             return [$out, $err, false, $exception];
         }
     }

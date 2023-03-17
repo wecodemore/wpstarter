@@ -461,6 +461,7 @@ class SelectedStepsFactory
         $io->write('');
         $io->write('Available commands:');
         $io->write('');
+        ksort($availableSteps, \SORT_STRING);
         foreach ($availableSteps as $name => $class) {
             $suffix = isset($commandSteps[$name]) ? '*' : '';
             $io->write("<info>{$name}</info>{$suffix}");
