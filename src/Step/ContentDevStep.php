@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Step;
 
 use Composer\Util\Platform;
-use Composer\Util\Filesystem as ComposerFilesystem;
 use Symfony\Component\Finder\Finder;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Io\Io;
@@ -52,11 +51,6 @@ final class ContentDevStep implements OptionalStep
     private $filesystem;
 
     /**
-     * @var ComposerFilesystem
-     */
-    private $composerFilesystem;
-
-    /**
      * @var string|null
      */
     private $operation;
@@ -77,7 +71,6 @@ final class ContentDevStep implements OptionalStep
     public function __construct(Locator $locator)
     {
         $this->filesystem = $locator->filesystem();
-        $this->composerFilesystem = $locator->composerFilesystem();
     }
 
     /**
@@ -152,7 +145,7 @@ final class ContentDevStep implements OptionalStep
 
         /** @var string $dirName */
         $dirName = $config[Config::CONTENT_DEV_DIR]->unwrap();
-        $src = $this->composerFilesystem->normalizePath($dirName);
+        $src = $this->filesystem->normalizePath($dirName);
         $this->contentDevDir = $src;
         $targetBase = $paths->wpContent();
 

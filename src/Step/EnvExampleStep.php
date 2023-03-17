@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Step;
 
-use Composer\Util\Filesystem as ComposerFilesystem;
 use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Util\Filesystem;
@@ -52,18 +51,12 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep
     private $error = '';
 
     /**
-     * @var ComposerFilesystem
-     */
-    private $composerFilesystem;
-
-    /**
      * @param Locator $locator
      */
     public function __construct(Locator $locator)
     {
         $this->config = $locator->config();
         $this->filesystem = $locator->filesystem();
-        $this->composerFilesystem = $locator->composerFilesystem();
         $this->urlDownloader = $locator->urlDownloader();
     }
 
@@ -86,7 +79,7 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep
         $envFileName = $config[Config::ENV_FILE]->unwrapOrFallback('.env');
         /** @var string $envDir */
         $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
-        $envFile = $this->composerFilesystem->normalizePath("{$envDir}/{$envFileName}");
+        $envFile = $this->filesystem->normalizePath("{$envDir}/{$envFileName}");
 
         return $config[Config::ENV_EXAMPLE]->not(false) && !is_file($paths->root($envFile));
     }
@@ -100,7 +93,7 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep
         /** @var string $envDir */
         $envDir = $this->config[Config::ENV_DIR]->unwrap();
 
-        return $this->composerFilesystem->normalizePath("{$envDir}/.env.example");
+        return $this->filesystem->normalizePath("{$envDir}/.env.example");
     }
 
     /**

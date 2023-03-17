@@ -41,11 +41,6 @@ final class WpConfigStep implements FileCreationStep, BlockingStep
     private $filesystem;
 
     /**
-     * @var \Composer\Util\Filesystem
-     */
-    private $composerFilesystem;
-
-    /**
      * @var \WeCodeMore\WpStarter\Util\Salter
      */
     private $salter;
@@ -63,7 +58,6 @@ final class WpConfigStep implements FileCreationStep, BlockingStep
         $this->io = $locator->io();
         $this->builder = $locator->fileContentBuilder();
         $this->filesystem = $locator->filesystem();
-        $this->composerFilesystem = $locator->composerFilesystem();
         $this->salter = $locator->salter();
         $this->config = $locator->config();
     }
@@ -210,8 +204,8 @@ final class WpConfigStep implements FileCreationStep, BlockingStep
      */
     private function relPath(string $from, string $to, bool $bothDirs = true): string
     {
-        $path = $this->composerFilesystem->normalizePath(
-            $this->composerFilesystem->findShortestPath($from, $to, $bothDirs)
+        $path = $this->filesystem->normalizePath(
+            $this->filesystem->findShortestPath($from, $to, $bothDirs)
         );
 
         return rtrim("/{$path}", '/');

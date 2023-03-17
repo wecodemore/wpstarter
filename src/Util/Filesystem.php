@@ -16,6 +16,9 @@ use Composer\Util\Platform;
 
 /**
  * Wrapper for Composer Filesystem with custom functionalities.
+ *
+ * @method string normalizePath(string $path)
+ * @method string findShortestPath(string $from, string $to, bool $bothDirs = false)
  */
 class Filesystem
 {
@@ -36,6 +39,20 @@ class Filesystem
     public function __construct(ComposerFilesystem $filesystem)
     {
         $this->filesystem = $filesystem;
+    }
+
+    /**
+     * @param string $name
+     * @param array $arguments
+     * @return mixed
+     */
+    public function __call(string $name, array $arguments = [])
+    {
+        if (!method_exists($this->filesystem, $name)) {
+            throw new \Error(sprintf('Call to undefined method %s::%s()', __CLASS__, $name));
+        }
+
+        return $this->filesystem->{$name}(...$arguments);
     }
 
     /**
