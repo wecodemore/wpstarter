@@ -24,6 +24,7 @@ use WeCodeMore\WpStarter\Step\FlushEnvCacheStep;
 use WeCodeMore\WpStarter\Step\IndexStep;
 use WeCodeMore\WpStarter\Step\MoveContentStep;
 use WeCodeMore\WpStarter\Step\MuLoaderStep;
+use WeCodeMore\WpStarter\Step\VcsIgnoreCheckStep;
 use WeCodeMore\WpStarter\Step\WpCliCommandsStep;
 use WeCodeMore\WpStarter\Step\WpCliConfigStep;
 use WeCodeMore\WpStarter\Step\WpConfigStep;
@@ -332,6 +333,7 @@ class SelectedStepsFactoryTest extends TestCase
             DropinsStep::NAME,
             MoveContentStep::NAME,
             ContentDevStep::NAME,
+            VcsIgnoreCheckStep::NAME,
             WpCliConfigStep::NAME,
             WpCliCommandsStep::NAME
         );
@@ -339,7 +341,8 @@ class SelectedStepsFactoryTest extends TestCase
         $locator = $this->factoryLocator(
             $this->factoryConfig(),
             \Mockery::mock(Filesystem::class),
-            \Mockery::mock(Io::class)
+            \Mockery::mock(Io::class),
+            $this->factoryPaths()
         );
 
         $composer = \Mockery::mock(Composer::class);
@@ -405,6 +408,7 @@ class SelectedStepsFactoryTest extends TestCase
                 DropinsStep::NAME,
                 MoveContentStep::NAME,
                 ContentDevStep::NAME,
+                VcsIgnoreCheckStep::NAME,
                 WpCliConfigStep::NAME,
             ],
         ];
@@ -443,12 +447,14 @@ class SelectedStepsFactoryTest extends TestCase
             DropinsStep::NAME,
             MoveContentStep::NAME,
             ContentDevStep::NAME,
-            WpCliConfigStep::NAME
+            WpCliConfigStep::NAME,
+            VcsIgnoreCheckStep::NAME,
         );
 
         $config = [
             Config::SKIP_STEPS => [
                 CheckPathStep::class,
+                VcsIgnoreCheckStep::NAME,
             ],
         ];
 
