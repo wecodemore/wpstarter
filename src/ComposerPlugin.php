@@ -105,6 +105,7 @@ final class ComposerPlugin implements
             Step\ContentDevStep::NAME => Step\ContentDevStep::class,
             Step\WpCliConfigStep::NAME => Step\WpCliConfigStep::class,
             Step\WpCliCommandsStep::NAME => Step\WpCliCommandsStep::class,
+            Step\VcsIgnoreCheckStep::NAME => Step\VcsIgnoreCheckStep::class,
         ];
     }
 

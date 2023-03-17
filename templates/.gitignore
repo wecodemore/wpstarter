@@ -1,0 +1,9 @@
+# WP Starter
+{{{WPSTARTER_IGNORED_PATHS}}}
+
+# Commonly ignored paths
+*.phar
+.idea/
+.vs/
+composer.phar
+.DS_Store

@@ -23,10 +23,12 @@ final class Config implements \ArrayAccess
 {
     public const AUTOLOAD = 'autoload';
     public const CACHE_ENV = 'cache-env';
+    public const CHECK_VCS_IGNORE = 'check-vcs-ignore';
     public const COMMAND_STEPS = 'command-steps';
     public const COMPOSER_UPDATED_PACKAGES = 'composer-updated-packages';
     public const CONTENT_DEV_DIR = 'content-dev-dir';
     public const CONTENT_DEV_OPERATION = 'content-dev-op';
+    public const CREATE_VCS_IGNORE_FILE = 'create-vcs-ignore-file';
     public const CUSTOM_STEPS = 'custom-steps';
     public const DB_CHECK = 'db-check';
     public const DROPINS = 'dropins';
@@ -57,10 +59,12 @@ final class Config implements \ArrayAccess
     public const DEFAULTS = [
         self::AUTOLOAD => 'wpstarter-autoload.php',
         self::CACHE_ENV => true,
+        self::CHECK_VCS_IGNORE => true,
         self::COMMAND_STEPS => null,
         self::COMPOSER_UPDATED_PACKAGES => [],
         self::CONTENT_DEV_DIR => 'content-dev',
         self::CONTENT_DEV_OPERATION => Filesystem::OP_AUTO,
+        self::CREATE_VCS_IGNORE_FILE => true,
         self::CUSTOM_STEPS => null,
         self::DB_CHECK => true,
         self::DROPINS => null,
@@ -91,10 +95,12 @@ final class Config implements \ArrayAccess
     public const VALIDATION_MAP = [
         self::AUTOLOAD => 'validatePath',
         self::CACHE_ENV => 'validateBool',
+        self::CHECK_VCS_IGNORE => 'validateBoolOrAsk',
         self::COMMAND_STEPS => 'validateSteps',
         self::COMPOSER_UPDATED_PACKAGES => 'validateArray',
         self::CONTENT_DEV_DIR => 'validatePath',
         self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
+        self::CREATE_VCS_IGNORE_FILE => 'validateBoolOrAsk',
         self::CUSTOM_STEPS => 'validateSteps',
         self::DB_CHECK => 'validateDbCheck',
         self::DROPINS => 'validateDropins',
