@@ -93,6 +93,40 @@ class SystemProcess
     /**
      * @param string $command
      * @param string|null $cwd
+     * @return array{string, string, bool, \Throwable|null}
+     */
+    public function executeCapturing(string $command, ?string $cwd = null): array
+    {
+        $out = '';
+        $err = '';
+        /** @psalm-suppress UnusedClosureParam */
+        $printer = static function (string $type, string $buffer) use (&$out, &$err): void {
+            /**
+             * @var string $out
+             * @var string $err
+             */
+            (Process::ERR === $type) ? ($err .= $buffer) : ($out .= $buffer);
+        };
+
+        /**
+         * @var string $out
+         * @var string $err
+         */
+        try {
+            is_string($cwd) or $cwd = $this->paths->root();
+
+            $process = $this->factoryProcess($command, $cwd);
+            $process->mustRun($printer);
+            return [$out, $err, $process->isSuccessful(), null];
+        } catch (\Throwable $exception) {
+
+            return [$out, $err, false, $exception];
+        }
+    }
+
+    /**
+     * @param string $command
+     * @param string|null $cwd
      * @return bool
      */
     public function executeSilently(string $command, ?string $cwd = null): bool
@@ -104,8 +138,6 @@ class SystemProcess
 
             return $process->isSuccessful();
         } catch (\Throwable $exception) {
-            $this->io->writeErrorIfVerbose($exception->getMessage());
-
             return false;
         }
     }
