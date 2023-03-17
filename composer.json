@@ -80,7 +80,13 @@
         "psalm": "@php ./vendor/vimeo/psalm/psalm --no-suggestions --find-unused-psalm-suppress --no-diff --no-cache --no-file-cache",
         "tests:unit": "@php ./vendor/phpunit/phpunit/phpunit --testsuite=unit",
         "tests:unit:no-cov": "@php ./vendor/phpunit/phpunit/phpunit --testsuite=unit --no-coverage",
-        "tests:integration": "@php ./vendor/phpunit/phpunit/phpunit --testsuite=integration --no-coverage"
+        "tests:integration": "@php ./vendor/phpunit/phpunit/phpunit --testsuite=integration --no-coverage",
+        "qa": [
+             "@cs",
+             "@phpcompat",
+             "@psalm",
+             "@tests:unit:no-cov"
+        ]
     },
     "extra": {
         "class": "WeCodeMore\\WpStarter\\ComposerPlugin",
