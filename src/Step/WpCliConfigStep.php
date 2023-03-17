@@ -20,7 +20,7 @@ use WeCodeMore\WpStarter\Util;
  * The automatically generated wp-cli-yml file will point the correct WordPress path, allowing
  * to run WP CLI commands from project root without having to pass the `--path` argument every time.
  */
-final class WpCliConfigStep implements FileCreationStepInterface
+final class WpCliConfigStep implements FileCreationStep
 {
     public const NAME = 'wpcliconfig';
 

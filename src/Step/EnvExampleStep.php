@@ -27,7 +27,7 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
  * .env file and includes all the possible configuration values that WordPress uses plus a few
  * that are specific to WP Starter.
  */
-final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
+final class EnvExampleStep implements FileCreationStep, OptionalStep
 {
     public const NAME = 'envexample';
 

@@ -21,7 +21,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  * This could be seen as the "main" WP Starter step, because it allows WordPress to work by creating
  * a wp-config.php file that includes all the necessary configuration.
  */
-final class WpConfigStep implements FileCreationStepInterface, BlockingStep
+final class WpConfigStep implements FileCreationStep, BlockingStep
 {
     public const NAME = 'wpconfig';
 

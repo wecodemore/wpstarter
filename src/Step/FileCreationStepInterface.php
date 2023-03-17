@@ -9,18 +9,9 @@
 
 namespace WeCodeMore\WpStarter\Step;
 
-use WeCodeMore\WpStarter\Util\Paths;
-
 /**
- * A step that creates and saves a file.
+ * @deprecated Use FileCreationStep
  */
-interface FileCreationStepInterface extends Step
+interface FileCreationStepInterface extends FileCreationStep
 {
-    /**
-     * Returns the target path of the file the step will create.
-     *
-     * @param  Paths $paths
-     * @return string
-     */
-    public function targetPath(Paths $paths): string;
 }

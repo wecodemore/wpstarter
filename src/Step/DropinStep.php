@@ -24,7 +24,7 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
  *
  * This step is not run directly from WP Starter, but instantiated and used by `DropinsStep` only.
  */
-final class DropinStep implements FileCreationStepInterface
+final class DropinStep implements FileCreationStep
 {
     public const ACTION_COPY = 'copy';
     public const ACTION_DOWNLOAD = 'download';
