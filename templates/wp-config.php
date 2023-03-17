@@ -97,6 +97,7 @@ ENV_VARIABLES: {
      */
     $envIsCached ? $envLoader->setupEnvConstants() : $envLoader->setupConstants();
     isset($envType) or $envType = $envLoader->determineEnvType();
+    defined('WP_ENVIRONMENT_TYPE') or define('WP_ENVIRONMENT_TYPE', 'production');
 
     $envCacheFile = realpath(WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
     $debugInfo['env-cache-file'] = [
@@ -119,6 +120,11 @@ ENV_VARIABLES: {
         'label' => 'Env type',
         'value' => $envType,
         'debug' => $envType,
+    ];
+    $debugInfo['wp-env-type'] = [
+        'label' => 'WordPress env type',
+        'value' => WP_ENVIRONMENT_TYPE,
+        'debug' => WP_ENVIRONMENT_TYPE,
     ];
 
     unset($envCacheEnabled, $envIsCached, $envCacheFile);
@@ -186,7 +192,6 @@ EARLY_HOOKS : {
 
 DEFAULT_ENV : {
     /** Environment-aware settings. Be creative, but avoid having sensitive settings here. */
-    defined('WP_ENVIRONMENT_TYPE') or define('WP_ENVIRONMENT_TYPE', 'production');
     switch (WP_ENVIRONMENT_TYPE) {
         case 'local':
             defined('WP_LOCAL_DEV') or define('WP_LOCAL_DEV', true);
