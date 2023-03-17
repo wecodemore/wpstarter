@@ -326,16 +326,25 @@ final class Steps implements PostProcessStep, \Countable
      */
     private function shouldProcess(Step $step, Paths $paths, Config $config): bool
     {
+        $name = $step->name();
+
         $comment = '';
         $process = $step->allowed($config, $paths);
-
-        if ($process && ($step instanceof FileCreationStepInterface)) {
-            $path = $step->targetPath($paths);
-            $process = $this->overwriteHelper->shouldOverwrite($path);
-            $comment = $process ? '' : '- ' . basename($path) . ' exists and will be preserved.';
+        if (!$process) {
+            $reason = ($step instanceof ConditionalStep)
+                ? $step->conditionsNotMet()
+                : 'requisites not met';
+            $comment = sprintf("Step '%s' not executed: %s.", $name, $reason);
         }
 
-        if ($process && ($step instanceof OptionalStep)) {
+        if ($process && ($step instanceof FileCreationStep)) {
+            $path = $step->targetPath($paths);
+            $process = $this->overwriteHelper->shouldOverwrite($path);
+            $comment = $process ? '' : basename($path) . ' exists and will be preserved.';
+        }
+
+        $isSelected = $config[Config::IS_WPSTARTER_SELECTED_COMMAND]->is(true);
+        if (!$isSelected && $process && ($step instanceof OptionalStep)) {
             $process = $step->askConfirm($config, $this->io);
             $comment = $process ? '' : $step->skipped();
         }
@@ -344,15 +353,9 @@ final class Steps implements PostProcessStep, \Countable
             return true;
         }
 
-        $name = $step->name();
-
-        if ($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->is(true)) {
-            $comment = sprintf("Step '%s' not executed: requisites not met.", $name);
-        }
-
-        $comment
+        $isSelected
             ? $this->io->writeComment($comment)
-            : $this->io->writeIfVerbose(sprintf("- Step '%s' skipped: requisites not met.", $name));
+            : $this->io->writeIfVerbose("  - {$comment}");
 
         return false;
     }

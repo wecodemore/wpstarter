@@ -25,7 +25,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  * This step creates a MU plugin, placed in the proper folder, that loads all the MU plugins that
  * Composer placed in subfolder.
  */
-final class MuLoaderStep implements FileCreationStep
+final class MuLoaderStep implements FileCreationStep, ConditionalStep
 {
     public const NAME = 'muloader';
     public const TARGET_FILE_NAME = 'wpstarter-mu-loader.php';
@@ -135,5 +135,13 @@ final class MuLoaderStep implements FileCreationStep
     public function success(): string
     {
         return '<comment>MU plugin loader</comment> saved successfully.';
+    }
+
+    /**
+     * @return string
+     */
+    public function conditionsNotMet(): string
+    {
+        return 'No MU plugin found, no need for a loader.';
     }
 }

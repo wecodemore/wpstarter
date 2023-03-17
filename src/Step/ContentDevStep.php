@@ -202,7 +202,7 @@ final class ContentDevStep implements OptionalStep
      */
     public function skipped(): string
     {
-        return '  - Development content publishing skipped.';
+        return 'Development content publishing skipped.';
     }
 
     /**

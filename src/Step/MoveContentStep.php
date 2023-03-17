@@ -26,7 +26,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  * This step, that can be enabled via configuration, moves the default plugins and themes from the
  * WP wp-content folder to the project wp-content folder, so that WordPress can recognize them.
  */
-final class MoveContentStep implements OptionalStep
+final class MoveContentStep implements OptionalStep, ConditionalStep
 {
     public const NAME = 'movecontent';
 
@@ -44,6 +44,11 @@ final class MoveContentStep implements OptionalStep
      * @var string
      */
     private $error = '';
+
+    /**
+     * @var string
+     */
+    private $reason = '';
 
     /**
      * @param Locator $locator
@@ -69,9 +74,33 @@ final class MoveContentStep implements OptionalStep
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        return $config[Config::REGISTER_THEME_FOLDER]->is(false)
-            && $config[Config::MOVE_CONTENT]->not(false)
-            && $paths->wpContent();
+        if (!$config[Config::REGISTER_THEME_FOLDER]->is(false)) {
+            $this->reason = sprintf(
+                'not compatible with a non-false "%s" configuration',
+                Config::REGISTER_THEME_FOLDER
+            );
+
+            return false;
+        }
+
+        if ($config[Config::MOVE_CONTENT]->is(false)) {
+            $this->reason = sprintf(
+                'disabled via "%s" configuration',
+                Config::MOVE_CONTENT
+            );
+
+            return false;
+        }
+
+        if (!$paths->wpContent()) {
+            $this->reason = 'could not determine WordPress content folder';
+
+            return false;
+        }
+
+        $this->reason = '';
+
+        return true;
     }
 
     /**
@@ -128,7 +157,7 @@ final class MoveContentStep implements OptionalStep
      */
     public function skipped(): string
     {
-        return '  - wp-content folder contents moving skipped.';
+        return 'moving wp-content contents skipped.';
     }
 
     /**
@@ -137,5 +166,13 @@ final class MoveContentStep implements OptionalStep
     public function success(): string
     {
         return '<comment>wp-content</comment> folder contents moved successfully.';
+    }
+
+    /**
+     * @return string
+     */
+    public function conditionsNotMet(): string
+    {
+        return $this->reason;
     }
 }

@@ -26,7 +26,7 @@ use WeCodeMore\WpStarter\Cli;
  * integrity via hash) and will direct the commands to the phar or to the binary without having
  * to worry about it.
  */
-final class WpCliCommandsStep implements Step
+final class WpCliCommandsStep implements ConditionalStep
 {
     public const NAME = 'wpcli';
 
@@ -69,7 +69,9 @@ final class WpCliCommandsStep implements Step
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        return true;
+        [$commands, $files] = $this->extractConfig($config);
+
+        return $commands || $files;
     }
 
     /**
@@ -80,13 +82,6 @@ final class WpCliCommandsStep implements Step
     public function run(Config $config, Paths $paths): int
     {
         [$commands, $files] = $this->extractConfig($config);
-        if (!$commands && !$files) {
-            if ($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->is(true)) {
-                $this->io->writeComment('No commands to execute.');
-            }
-
-            return self::NONE;
-        }
 
         $this->io->write('');
         $this->io->writeComment("Running WP CLI commands...");
@@ -145,6 +140,14 @@ final class WpCliCommandsStep implements Step
     public function success(): string
     {
         return '  <comment>WP CLI commands executed.</comment>';
+    }
+
+    /**
+     * @return string
+     */
+    public function conditionsNotMet(): string
+    {
+        return 'no WP CLI commands  to run found';
     }
 
     /**

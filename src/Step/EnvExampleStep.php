@@ -26,7 +26,7 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
  * .env file and includes all the possible configuration values that WordPress uses plus a few
  * that are specific to WP Starter.
  */
-final class EnvExampleStep implements FileCreationStep, OptionalStep
+final class EnvExampleStep implements FileCreationStep, OptionalStep, ConditionalStep
 {
     public const NAME = 'envexample';
 
@@ -49,6 +49,11 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep
      * @var string
      */
     private $error = '';
+
+    /**
+     * @var string
+     */
+    private $reason = '';
 
     /**
      * @param Locator $locator
@@ -75,13 +80,27 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep
      */
     public function allowed(Config $config, Paths $paths): bool
     {
+        if ($config[Config::ENV_EXAMPLE]->is(false)) {
+            $this->reason = sprintf('disabled via "%s" configuration', Config::ENV_EXAMPLE);
+
+            return false;
+        }
+
         /** @var string $envFileName */
         $envFileName = $config[Config::ENV_FILE]->unwrapOrFallback('.env');
         /** @var string $envDir */
         $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
         $envFile = $this->filesystem->normalizePath("{$envDir}/{$envFileName}");
 
-        return $config[Config::ENV_EXAMPLE]->not(false) && !is_file($paths->root($envFile));
+        if (is_file($paths->root($envFile))) {
+            $this->reason = sprintf('environment file already exists', Config::ENV_EXAMPLE);
+
+            return false;
+        }
+
+        $this->reason = '';
+
+        return true;
     }
 
     /**
@@ -205,7 +224,7 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep
      */
     public function skipped(): string
     {
-        return '  - env.example copy skipped.';
+        return 'env.example copy skipped.';
     }
 
     /**
@@ -214,5 +233,13 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep
     public function success(): string
     {
         return '<comment>env.example</comment> saved successfully.';
+    }
+
+    /**
+     * @return string
+     */
+    public function conditionsNotMet(): string
+    {
+        return $this->reason;
     }
 }

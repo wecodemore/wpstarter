@@ -19,14 +19,9 @@ use WeCodeMore\WpStarter\Util\Paths;
 /**
  * Clean environment cache file.
  */
-final class FlushEnvCacheStep implements Step
+final class FlushEnvCacheStep implements ConditionalStep
 {
     public const NAME = 'flushenvcache';
-
-    /**
-     * @var \WeCodeMore\WpStarter\Io\Io
-     */
-    private $io;
 
     /**
      * @var \Composer\Util\Filesystem
@@ -34,16 +29,10 @@ final class FlushEnvCacheStep implements Step
     private $filesystem;
 
     /**
-     * @var string|null
-     */
-    private $envCacheFile = null;
-
-    /**
      * @param Locator $locator
      */
     public function __construct(Locator $locator)
     {
-        $this->io = $locator->io();
         $this->filesystem = $locator->composerFilesystem();
     }
 
@@ -62,7 +51,11 @@ final class FlushEnvCacheStep implements Step
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        return true;
+        /** @var string $envDir */
+        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
+        $envCacheFile = "{$envDir}/" . WordPressEnvBridge::CACHE_DUMP_FILE;
+
+        return file_exists($envCacheFile);
     }
 
     /**
@@ -75,15 +68,6 @@ final class FlushEnvCacheStep implements Step
         /** @var string $envDir */
         $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
         $envCacheFile = "{$envDir}/" . WordPressEnvBridge::CACHE_DUMP_FILE;
-
-        if (!file_exists($envCacheFile)) {
-            $message = 'Environment cache file not found, nothing to clean.';
-            $config[Config::IS_WPSTARTER_SELECTED_COMMAND]->is(true)
-                ? $this->io->writeComment($message)
-                : $this->io->writeIfVerbose("- {$message}");
-
-            return self::NONE;
-        }
 
         return $this->filesystem->remove($envCacheFile) ? self::SUCCESS : self::ERROR;
     }
@@ -102,5 +86,13 @@ final class FlushEnvCacheStep implements Step
     public function success(): string
     {
         return '<comment>Environment cache</comment> cleaned successfully.';
+    }
+
+    /**
+     * @return string
+     */
+    public function conditionsNotMet(): string
+    {
+        return 'environment cache file not found';
     }
 }

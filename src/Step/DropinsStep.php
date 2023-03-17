@@ -28,7 +28,7 @@ use WeCodeMore\WpStarter\Util\Paths;
  * and put in WP content folder. Moreover, if dropins are placed in subfolders of wp-content by
  * Composer (thanks to Composer installers) then this step moves them up to content folder.
  */
-final class DropinsStep implements Step
+final class DropinsStep implements ConditionalStep
 {
     public const NAME = 'dropins';
 
@@ -81,6 +81,11 @@ final class DropinsStep implements Step
     private $success = '';
 
     /**
+     * @var string
+     */
+    private $reason = '';
+
+    /**
      * @param Locator $locator
      */
     public function __construct(Locator $locator)
@@ -107,12 +112,24 @@ final class DropinsStep implements Step
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        if ($paths->wpContent()) {
-            return $config[Config::DROPINS]->unwrapOrFallback([])
-                || $this->packageFinder->findByType('wordpress-dropin');
+        if (!$paths->wpContent()) {
+            $this->reason = 'WordPress content path not determined';
+
+            return false;
         }
 
-        return false;
+        $found = $config[Config::DROPINS]->unwrapOrFallback([])
+            || $this->packageFinder->findByType('wordpress-dropin');
+
+        if (!$found) {
+            $this->reason = 'no dropins found';
+
+            return false;
+        }
+
+        $this->reason = '';
+
+        return true;
     }
 
     /**
@@ -346,5 +363,13 @@ final class DropinsStep implements Step
             's' => Filesystem::OP_SYMLINK,
             'c' => Filesystem::OP_COPY,
         ][$answer] ?? Filesystem::OP_NONE;
+    }
+
+    /**
+     * @return string
+     */
+    public function conditionsNotMet(): string
+    {
+        return $this->reason;
     }
 }
