@@ -37,8 +37,8 @@ final class Config implements \ArrayAccess
     public const ENV_EXAMPLE = 'env-example';
     public const ENV_FILE = 'env-file';
     public const INSTALL_WP_CLI = 'install-wp-cli';
-    public const IS_COMPOSER_UPDATE = 'is-composer-update';
     public const IS_COMPOSER_INSTALL = 'is-composer-install';
+    public const IS_COMPOSER_UPDATE = 'is-composer-update';
     public const IS_WPSTARTER_COMMAND = 'is-wpstarter-command';
     public const IS_WPSTARTER_SELECTED_COMMAND = 'is-wpstarter-selected-command';
     public const MOVE_CONTENT = 'move-content';
@@ -59,8 +59,8 @@ final class Config implements \ArrayAccess
         self::CACHE_ENV => true,
         self::COMMAND_STEPS => null,
         self::COMPOSER_UPDATED_PACKAGES => [],
-        self::CONTENT_DEV_OPERATION => Filesystem::OP_AUTO,
         self::CONTENT_DEV_DIR => 'content-dev',
+        self::CONTENT_DEV_OPERATION => Filesystem::OP_AUTO,
         self::CUSTOM_STEPS => null,
         self::DB_CHECK => true,
         self::DROPINS => null,
@@ -71,9 +71,9 @@ final class Config implements \ArrayAccess
         self::ENV_EXAMPLE => true,
         self::ENV_FILE => '.env',
         self::INSTALL_WP_CLI => true,
-        self::IS_COMPOSER_UPDATE => null,
         self::IS_COMPOSER_INSTALL => null,
         self::IS_WPSTARTER_COMMAND => null,
+        self::IS_COMPOSER_UPDATE => null,
         self::IS_WPSTARTER_SELECTED_COMMAND => null,
         self::MOVE_CONTENT => false,
         self::PREVENT_OVERWRITE => null,
@@ -93,8 +93,8 @@ final class Config implements \ArrayAccess
         self::CACHE_ENV => 'validateBool',
         self::COMMAND_STEPS => 'validateSteps',
         self::COMPOSER_UPDATED_PACKAGES => 'validateArray',
-        self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
         self::CONTENT_DEV_DIR => 'validatePath',
+        self::CONTENT_DEV_OPERATION => 'validateContentDevOperation',
         self::CUSTOM_STEPS => 'validateSteps',
         self::DB_CHECK => 'validateDbCheck',
         self::DROPINS => 'validateDropins',
@@ -105,8 +105,8 @@ final class Config implements \ArrayAccess
         self::ENV_EXAMPLE => 'validateBoolOrAskOrUrlOrPath',
         self::ENV_FILE => 'validateFileName',
         self::INSTALL_WP_CLI => 'validateBool',
-        self::IS_COMPOSER_UPDATE => 'validateBool',
         self::IS_COMPOSER_INSTALL => 'validateBool',
+        self::IS_COMPOSER_UPDATE => 'validateBool',
         self::IS_WPSTARTER_COMMAND => 'validateBool',
         self::IS_WPSTARTER_SELECTED_COMMAND => 'validateBool',
         self::MOVE_CONTENT => 'validateBoolOrAsk',

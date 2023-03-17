@@ -40,7 +40,6 @@ final class ComposerPlugin implements
     public const EXTRA_KEY = 'wpstarter';
     public const EXTENSIONS_TYPE = 'wpstarter-extension';
 
-    public const MODE = 'mode';
     public const MODE_NONE = 0;
     public const MODE_COMMAND = 1;
     public const MODE_COMPOSER_INSTALL = 4;

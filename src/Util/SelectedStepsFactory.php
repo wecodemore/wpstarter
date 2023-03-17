@@ -391,7 +391,8 @@ class SelectedStepsFactory
         $stepName = static::findStepNameByAlias($name, array_keys($availableStepsMap));
         if ($stepName) {
             if ($stepName !== $name) {
-                $io->writeComment("Step name '{$name}' is deprecated, please use '{$stepName}'.");
+                $comment = "Step name '{$name}' is deprecated, please use '{$stepName}'.";
+                $io->writeCommentIfVerbose($comment);
             }
 
             return [$stepName, $availableStepsMap[$stepName]];
