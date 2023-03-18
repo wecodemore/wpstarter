@@ -57,7 +57,11 @@ class MuPluginListTest extends TestCase
         ];
 
         $muPluginsList = new MuPluginList($finder, $this->factoryPaths(), new Filesystem());
+        $actual = $muPluginsList->pluginsList($this->factoryConfig());
 
-        static::assertSame($expected, $muPluginsList->pluginsList($this->factoryConfig()));
+        ksort($expected);
+        ksort($actual);
+
+        static::assertSame($expected, $actual);
     }
 }
