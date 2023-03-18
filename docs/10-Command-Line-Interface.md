@@ -33,6 +33,9 @@ What shown above is just the simplest form of the command that tells WP Starter 
 By running `composer help wpstarter` it is possible to obtain more info about the command option and arguments. The output (stripped from "generic" Composer options) is something like:
 
 ```
+Description:
+  Run WP Starter workflow.
+
 Usage:
   wpstarter [options] [--] [<steps>]...
 
@@ -44,7 +47,7 @@ Options:
                             are those to skip, not those to run.
       --skip-custom         Skip any step defined in "custom-steps" setting.
       --ignore-skip-config  Ignore "skip-steps" config.
-      --steps-help          List available commands.
+      --list-steps          List available steps.
 ```
 
 
@@ -54,10 +57,10 @@ Options:
 The first thing to notice is that it is possible to pass an array of step to run, by listing them after the command, for example:
 
 ```shell
-composer wpstarter publish-content-dev wp-cli
+composer wpstarter publishcontentdev wpcli
 ```
 
-In the example above only *"publish-content-dev"* and *"wp-cli"* steps would be executed.
+In the example above only *"publishcontentdev"* and *"wpcli"* steps would be executed.
 
 ### Skip ("opt-out" mode)
 
@@ -68,10 +71,10 @@ This is useful when the steps to skip are less than the steps to run.
 Note that when using this option, one or more step names are required. By running the command with only `--skip` but no step names, will make the command fail.
 
 ```shell
-composer wpstarter --skip publish-content-dev wp-cli
+composer wpstarter --skip publishcontentdev wpcli
 ```
 
-In the example above, WP starter would run all the default steps, plus all custom steps, but skipping both *"publish-content-dev"*, *"wp-cli"* and also skipping any step listed in the `skip-steps` config.
+In the example above, WP starter would run all the default steps, plus all custom steps, but skipping both *"publishcontentdev"*, *"wpcli"* and also skipping any step listed in the `skip-steps` config.
 
 ### Skip custom
 
@@ -91,7 +94,7 @@ The command above would have the same effect of:
 composer wpstarter --skip step-one step-two
 ```
 
-assuming that "step-one" and "step-two" are all the steps listed in the `custom-steps` setting. 
+assuming that "*step-one*" and "*step-two*" are all the steps listed in the `custom-steps` setting. 
 
 Note that this flag is ignored when running in the "opt-in" mode (i.e. listing one or more steps without using the `--skip` flag).
 Reason is opt-in mode takes precedence over opt-out mode, so if the command is run like:
@@ -117,16 +120,16 @@ Which means run all the default steps, plus the custom steps, no matter what is 
 Or can be used in combination with `--skip` and `--skip-custom`. For example:
 
 ```shell
-composer wpstarter --ignore-skip-config --skip wp-cli
+composer wpstarter --ignore-skip-config --skip wpcli
 ```
 
-means run all the default steps, plus the custom steps, but don't run *"wp-cli"* step. Or even:
+means run all the default steps, plus the custom steps, but don't run *"wpcli"* step. Or even:
 
 ```shell
-composer wpstarter --ignore-skip-config --skip-custom --skip wp-cli
+composer wpstarter --ignore-skip-config --skip-custom --skip wpcli
 ```
 
-which basically means run only all the default steps except just *"wp-cli"*.
+which basically means run only all the default steps except just *"wpcli"*.
 
 Note that this option does nothing when in *"opt-in"* mode: when a series of step to run are provided those are always run, so the  `skip-steps` config is already ignored.
 
@@ -194,10 +197,10 @@ composer wpstarter yarn
 
 and run the step on demand, ignoring the step when WP Starter runs after Composer install/update or even when the command is run in "opt-out" mode.
 
-Note that steps in  `command-steps` can be combined in "opt-in" mode with other steps, either default or custom. E.g.:
+Note that steps in  `command-steps` can be combined in "opt-in" mode with other steps, either default or custom. For example:
 
 ```shell
-composer wpstarter yarn wp-cli step-one
+composer wpstarter yarn wpcli step-one
 ```
 
 will run the three steps with no issue.
@@ -206,11 +209,10 @@ will run the three steps with no issue.
 ## Listing commands
 
 ```shell
-composer wpstarter --steps-help
+composer wpstarter --list-steps
 ```
 
-Does execute nothing, but lists all available steps, including custom, but excluding those disabled
-in config or explicitly passed using the `--skip` flag.
+Does execute nothing, but lists all available steps, including custom, but excluding those disabled in config or explicitly passed using the `--skip` flag.
 
 Can be used in combination with other flags like `--skip`, `--skip-custom`, and `--ignore-skip-config`.
 

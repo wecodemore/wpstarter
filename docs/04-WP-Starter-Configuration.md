@@ -16,6 +16,8 @@ nav_order: 4
 
 **WP Starter can work without any setup at all**, however one of its greatest features is its flexibility that allows for fine-grained customization of every aspect according to the project requirements.
 
+
+
 ## Configuration in `composer.json`
 
 Like other Composer plugins, WP Starter configuration goes into `extra` section of `composer.json`.
@@ -36,7 +38,7 @@ More specifically, it goes into a sub-object `wpstarter` in the  `extra` section
 
 ## Configuration in  `wpstarter.json` 
 
-For better readability and portability it is also possible to have a file named **`wpstarter.json`**, placed besides `composer.json`, that contains only WP Starter configuration (anything that would go in the  `extra.wpstarter` object):
+For better readability and portability it is also possible to have, in the same folder as `composer.json`, a file named **`wpstarter.json`** containing only WP Starter configuration (anything that would go in the  `extra.wpstarter` object):
 
 ```json
 {
@@ -44,7 +46,7 @@ For better readability and portability it is also possible to have a file named 
 }
 ```
 
-WP Starter will recognize the file and will load configuration from there, without the need to have anything set in  `composer.json` or anywhere else.
+If that file is present, WP Starter will recognize it and will load configuration from there.
 
 
 
@@ -64,7 +66,7 @@ To do this, in  `composer.json` it is necessary to use the `extra.wpstarter` con
 }
 ```
 
-This also enables to have the configuration file available in a custom Composer package and make it available to WP Starter by pointing to the file in vendor folder:
+This also enables to have the configuration file available in a separate Composer package and make it available to WP Starter by pointing to the file in vendor folder:
 
 ```json
 {
@@ -78,8 +80,7 @@ This also enables to have the configuration file available in a custom Composer 
 
 ## Configuration precedence
 
-
-The values in `wpstarter.json` takes precedence when `composer.json` contains an `extra.wpstarter` section  (regardless if as an object or as a path to a custom file) with duplicate values to the `wpstarter.json`.
+When having both `wpstarter.json` file and `extra.wpstarter` section in `composer.json`, WP Starter will load configuration from both, but in case the same setting is set in both places, the  `wpstarter.json` file takes precedence, also in the case `extra.wpstarter` is not a literal object but a path to a separate configuration file.
 
 
 
@@ -92,13 +93,11 @@ There are two configuration values that affect WP Starter that **cannot** be pla
 
 These two configuration values might contain a custom path where to place, respectively, WordPress core files and WordPress "content packages": plugin, themes, MU plugins, and dropins.
 
-`"wordpress-install-dir"` is not even a WP Starter specific configuration, but it comes from the WordPress core installer. Regardless of whether the Wordpress core installer is used, this configuration is required to tell WP Starter where WordPress core files are located.
+`"wordpress-install-dir"` is not even a WP Starter specific configuration, but was first introduced by the [John P. Block's WordPress core installer](https://packagist.org/packages/johnpbloch/wordpress-core-installer) and then also supported by [Roots' one](https://packagist.org/packages/roots/wordpress-core-installer).
 
-This configuration defaults to `"./wordpress"` meaning a `wordpress` folder inside project root.
+Regardless of whether any of the above WordPress core installers is used, **`wordpress-install-dir` configuration is required** to tell WP Starter where WordPress core files are located. It defaults to `"./wordpress"` meaning a `wordpress` folder inside project root.
 
-`"wordpress-content-dir"` has been introduced by WP Starter and it is located differently from other WP Starter settings to be in symmetry with `"wordpress-install-dir"`.
-
-This configuration defaults to `"./wp-content"` meaning a `wp-content` folder inside project root.
+`"wordpress-content-dir"` has been introduced by WP Starter and it is located differently from other WP Starter settings to be in symmetry with `"wordpress-install-dir"`. It defaults to `"./wp-content"` meaning a `wp-content` folder inside project root.
 
 
 

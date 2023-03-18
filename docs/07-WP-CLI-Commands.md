@@ -30,7 +30,7 @@ However, by telling WP Starter to take care of WP CLI commands, WP Starter will 
 
 When WP Starter is configured to run WP CLI commands, before running them it makes sure WP CLI is available:
 
-1. first it parses all installed packages to see if WP CLI is installed via Composer
+1. first it parses all Composer-installed packages to see if WP CLI is installed via Composer
 2. if not, it checks a WP CLI phar is available on project root
 3. if not, download WP CLI phar and checks its integrity via SHA512 checksum provided by WP CLI
 
@@ -124,18 +124,21 @@ where `wp-cli-commands.php` could, for example, look something like this:
 
 ```php
 <?php
+
 namespace WeCodeMore\WpStarter;
 
-$env = new Env\WordPressEnvBridge();
+/** @var Util\Locator $locator */
+global $locator;
 
-// If env configuration is invalid nothing to do.
-if (!$env->read(Util\DbChecker::WPDB_ENV_VALID)) {
+$env = $locator->env();
+
+// If env configuration is invalid or WP is already
+// installed, there's nothing to do.
+if (
+    !$env->read(Util\DbChecker::WPDB_ENV_VALID)
+    || $env->read(Util\DbChecker::WP_INSTALLED)
+) {
     return [];
-}
-
-// If WP already installed, let's just tell WP CLI to check it.
-if ($env->read(Util\DbChecker::WP_INSTALLED)) {
-    return ['wp db check'];
 }
 
 $commands = [];
@@ -145,25 +148,35 @@ if (!$env->read(Util\DbChecker::WPDB_EXISTS)) {
     $commands[] = 'wp db create';
 }
 
-// Build install command.
-$user = $env->read('MY_PROJECT_USERNAME') ?: 'admin';
+// Home URL is required.
 $home = $env->read('WP_HOME');
-$siteUrl = $env->read('WP_SITEURL') ?: $home;
-$email = "{$user}@" . parse_url($home, PHP_URL_HOST);
+if (!filter_var($home, FILTER_VALIDATE_URL)) {
+    $locator->io()->writeError('Can not install WP, WP_HOME not provided.');
+
+    return [];
+}
+$user = $env->read('PROJECT_USERNAME') ?: 'admin';
+$host = parse_url($home, PHP_URL_HOST);
+$email = $env->read('PROJECT_ADMIN_EMAIL') ?: "{$user}@{$host}";
+
+// Build and add install command.
 $install = "wp core install";
 $install .= " --title='WP Starter Example' --url={$home}";
 $install .= " --admin_user='{$user}' --admin_email='{$email}'";
-
-// Add install command plus commands to update siteurl option and setup language.
 $commands[] = $install;
-$commands[] = "wp option update siteurl {$siteUrl}";
-$commands[] = 'wp language core install it_IT';
-$commands[] = 'wp site switch-language it_IT';
+
+// Add commands to set up website language if needed.
+$language = $env->read('WP_LANG');
+if (is_string($language) && (trim($language) !== '')) {
+    $language = trim($language);
+    $commands[] = "wp language core install {$language}";
+    $commands[] = "wp site switch-language {$language}";
+}
 
 return $commands;
 ```
 
-So the file checks status of DB and WordPress and tell WP CLI to act accordingly: do nothing if the status is unknown, check the DB if WordPress looks installed, or otherwise install it, by also creating the database if necessary.
+So the file checks status of DB and WordPress and tell WP CLI to act accordingly: do nothing if the status is unknown or WP is already installed, or otherwise install it, by also creating the database if necessary.
 
 To check database status the file uses three "special" env vars, whose names are stored in
 `WeCodeMore\WpStarter\Util\DbChecker` class constants:
@@ -172,7 +185,7 @@ To check database status the file uses three "special" env vars, whose names are
 - `DbChecker::WP_INSTALLED`
 - `DbChecker::WPDB_EXISTS`
 
-To know more about these variables please refers to the _"Environment Variables"_ chapter.
+To know more about these variables please refers to the [_"Environment Variables"_ chapter](02-Environment-Variables.md).
 
 
 ### Precedence
@@ -194,7 +207,7 @@ For example, we can put in `wpstarter.json`:
 ```json
 {
     "scripts": {
-        "post-build-wp-cli-yml": "Me\\MyProject\\Script::example"
+        "post-wpcliconfig": "Me\\MyProject\\Script::example"
     }
 }
 ```
@@ -212,7 +225,8 @@ class Script
 {
     public static function example(int $result, Step $step, Locator $locator)
     {
-        $locator->wpCliProcess()->execute('wp cli version');
+        // Note: when using `wpCliProcess()->execute()` don't start command with "wp"
+        $locator->wpCliProcess()->execute('cli version');
     }
 }
 ```
