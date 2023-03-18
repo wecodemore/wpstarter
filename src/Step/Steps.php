@@ -515,7 +515,7 @@ final class Steps implements PostProcessStep, \Countable
         callable $script,
         string $label,
         Step $step,
-        int $result,
+        int $result
     ): ?ScriptHaltSignal {
 
         try {
