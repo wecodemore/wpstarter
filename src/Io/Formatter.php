@@ -18,7 +18,7 @@ class Formatter
     /**
      * @param int $lineLength
      * @param string ...$lines
-     * @return array<string>
+     * @return list<string>
      */
     public function ensureLinesLength(int $lineLength, string ...$lines): array
     {

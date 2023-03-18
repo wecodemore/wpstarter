@@ -13,7 +13,6 @@ namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Config\Config;
-use WeCodeMore\WpStarter\Io\Question;
 use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\Util\Paths;

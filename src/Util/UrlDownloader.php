@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Util;
 
-use Composer\Util\Filesystem as ComposerFilesystem;
 use Composer\Util\HttpDownloader;
 use Composer\Util\RemoteFilesystem;
 

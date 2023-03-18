@@ -11,9 +11,6 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Cli;
 
-use WeCodeMore\WpStarter\Io\Io;
-use WeCodeMore\WpStarter\Util\Paths;
-
 class PhpProcess
 {
     /**

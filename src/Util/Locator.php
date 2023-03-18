@@ -177,7 +177,7 @@ final class Locator
             $composerIo = $this->composerIo();
 
             /**
-             * @var callable(ComposerIo,ComposerConfig) $factory
+             * @var callable $factory
              * @var HttpDownloader|RemoteFilesystem $client
              */
             $client = $factory($composerIo, $this->composerConfig());

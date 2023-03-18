@@ -448,7 +448,7 @@ class SelectedStepsFactoryTest extends TestCase
             MoveContentStep::NAME,
             ContentDevStep::NAME,
             WpCliConfigStep::NAME,
-            VcsIgnoreCheckStep::NAME,
+            VcsIgnoreCheckStep::NAME
         );
 
         $config = [
