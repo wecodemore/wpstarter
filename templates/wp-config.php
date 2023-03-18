@@ -219,11 +219,6 @@ DEFAULT_ENV : {
             defined('SCRIPT_DEBUG') or define('SCRIPT_DEBUG', false);
             break;
     }
-    $debugInfo['wp-env-type'] = [
-        'label' => 'WP env type (used for defaults)',
-        'value' => WP_ENVIRONMENT_TYPE,
-        'debug' => WP_ENVIRONMENT_TYPE,
-    ];
 } #@@/DEFAULT_ENV
 
 SSL_FIX : {
