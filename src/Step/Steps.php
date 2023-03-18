@@ -452,7 +452,7 @@ final class Steps implements PostProcessStep, \Countable
         ?ScriptHaltSignal $signal,
         string $name,
         string $prefix,
-        bool $exit,
+        bool $exit
     ): array {
 
         if (!$signal) {
