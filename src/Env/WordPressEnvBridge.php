@@ -160,6 +160,7 @@ class WordPressEnvBridge
         'WP_DEBUG_DISPLAY' => Filters::FILTER_BOOL,
         'WP_DEBUG_LOG' => Filters::FILTER_STRING_OR_BOOL,
         'WP_DEFAULT_THEME' => Filters::FILTER_STRING,
+        'WP_DEVELOPMENT_MODE' => Filters::FILTER_STRING,
         'WP_DISABLE_FATAL_ERROR_HANDLER' => Filters::FILTER_BOOL,
         'WP_FEATURE_BETTER_PASSWORDS' => Filters::FILTER_BOOL,
         'WP_HOME' => Filters::FILTER_STRING,
