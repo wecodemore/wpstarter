@@ -195,6 +195,7 @@ DEFAULT_ENV : {
     switch (WP_ENVIRONMENT_TYPE) {
         case 'local':
             defined('WP_LOCAL_DEV') or define('WP_LOCAL_DEV', true);
+            defined('WP_DEVELOPMENT_MODE') or define('WP_DEVELOPMENT_MODE', 'all');
         case 'development':
             defined('WP_DEBUG') or define('WP_DEBUG', true);
             defined('WP_DEBUG_DISPLAY') or define('WP_DEBUG_DISPLAY', true);
@@ -286,7 +287,8 @@ ENV_CACHE : {
         register_shutdown_function(
             static function () use ($envLoader, $envType) {
                 $isLocal = $envType === 'local';
-                if (!apply_filters('wpstarter.skip-cache-env', $isLocal, $envType)) {
+                $isDevMode = defined('WP_DEVELOPMENT_MODE') && WP_DEVELOPMENT_MODE;
+                if (!apply_filters('wpstarter.skip-cache-env', $isLocal || $isDevMode, $envType)) {
                     $envLoader->dumpCached(WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
                 }
             }
