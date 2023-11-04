@@ -120,7 +120,7 @@ final class WpConfigStep implements FileCreationStep, BlockingStep
         }
 
         /** @var string $envDirName */
-        $envDirName = $config[Config::ENV_DIR]->unwrap();
+        $envDirName = $config[Config::ENV_DIR]->unwrapOrFallback('');
         $envDir = $paths->root($envDirName);
         $this->filesystem->createDir($envDir);
         $envRelDir = $this->relPath($from, $envDir);

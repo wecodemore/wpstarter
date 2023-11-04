@@ -96,6 +96,10 @@ class MuPluginList
         // Because we have no indication files are actually plugins, we require the plugin header to
         // be there even if a single PHP file is in a path.
         $muPluginsDir = $this->paths->wpContent('/mu-plugins/');
+        if (!is_dir($muPluginsDir)) {
+            return $list;
+        }
+
         $muPluginsSubDirs = Finder::create()
             ->in($muPluginsDir)
             ->depth(0)

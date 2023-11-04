@@ -110,7 +110,10 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep, Conditiona
     public function targetPath(Paths $paths): string
     {
         /** @var string $envDir */
-        $envDir = $this->config[Config::ENV_DIR]->unwrap();
+        $envDir = $this->config[Config::ENV_DIR]->unwrapOrFallback('');
+        if ($envDir === '') {
+            $envDir = $paths->root('');
+        }
 
         return $this->filesystem->normalizePath("{$envDir}/.env.example");
     }
