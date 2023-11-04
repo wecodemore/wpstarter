@@ -23,7 +23,7 @@ class FiltersTest extends TestCase
      * @param mixed $input
      * @param mixed $expectedOutput
      */
-    public function testFilter(string $mode, $input, $expectedOutput)
+    public function testFilter(string $mode, $input, $expectedOutput): void
     {
         $filter = new Filters();
 

@@ -220,7 +220,7 @@ final class ComposerPlugin implements
         try {
             $config = $this->prepareRun($factory);
         } catch (\Throwable $throwable) {
-            $print = function (string $line) {
+            $print = function (string $line): void {
                 $this->io->writeError(sprintf('  <fg=red>%s</>', trim($line)));
             };
 
@@ -343,7 +343,7 @@ final class ComposerPlugin implements
     private function convertErrorsToExceptions(): void
     {
         set_error_handler(
-            static function (int $code, string $msg, string $file = '', int $line = 0) {
+            static function (int $code, string $msg, string $file = '', int $line = 0): void {
                 if ($file && $line) {
                     $msg = rtrim($msg, '. ') . ", in {$file} line {$line}.";
                 }
@@ -413,7 +413,7 @@ final class ComposerPlugin implements
      * @param Config\Config $config
      * @return void
      */
-    private function checkWp(Config\Config $config)
+    private function checkWp(Config\Config $config): void
     {
         $requireWp = $config[Config\Config::REQUIRE_WP]->not(false);
         /** @var string $fallbackVer */
@@ -465,7 +465,7 @@ final class ComposerPlugin implements
      */
     private function psr4LoaderFor(string $namespace, string $dir): callable
     {
-        return static function (string $class) use ($namespace, $dir) {
+        return static function (string $class) use ($namespace, $dir): void {
             if (stripos($class, $namespace) === 0) {
                 /** @psalm-ignore-falsable-return */
                 $file = substr(str_replace('\\', '/', $class), strlen($namespace));

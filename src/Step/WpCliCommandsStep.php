@@ -211,7 +211,7 @@ final class WpCliCommandsStep implements ConditionalStep
 
         array_walk(
             $commands,
-            function (string $command, int $i) {
+            function (string $command, int $i): void {
                 $num = $i + 1;
                 $commandDesc = ltrim($this->commandDesc("  {$command}"));
                 $this->io->writeIfVerbose("  <comment>{$num}) \$ wp {$commandDesc}</comment>");

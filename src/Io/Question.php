@@ -63,9 +63,12 @@ class Question
      * @param array<string> $lines
      * @param array<string, string> $answers
      * @param string|null $default
+     *
+     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration.IncorrectVoidReturn
      */
     public function __construct(array $lines, array $answers = [], ?string $default = null)
     {
+        // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration.IncorrectVoidReturn
         $this->lines = array_filter(
             $lines,
             static function (string $line): bool {

@@ -43,13 +43,13 @@
     "require-dev": {
         "roave/security-advisories": "dev-latest",
         "composer/package-versions-deprecated": "^1.11.99",
-        "composer/composer": "^2.5.4",
+        "composer/composer": "^2.6.5",
         "symfony/process": "^3.4.47 || ^5.4.19",
         "wp-cli/wp-cli": "^2.7.1",
-        "inpsyde/php-coding-standards": "^1.0.0",
-        "vimeo/psalm": "^4.30.0",
-        "phpunit/phpunit": "^7.5.20 || ^9.6.3",
-        "mockery/mockery": "^1.3.6",
+        "inpsyde/php-coding-standards": "^2@dev",
+        "vimeo/psalm": "^4.30.0 || ^5.15.0",
+        "phpunit/phpunit": "^7.5.20 || ^9.6.13",
+        "mockery/mockery": "^1.6.6",
         "mikey179/vfsstream": "^1.6.11"
     },
     "autoload": {

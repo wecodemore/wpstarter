@@ -177,10 +177,10 @@ class WordPressEnvBridgeTest extends TestCase
 
         $env = $bridge->readMany('DB_NAME', 'DB_HOST', 'FOO', 'NEW');
 
-        static::assertSame('wp', $env['DB_NAME']);            // example.env
+        static::assertSame('wp', $env['DB_NAME']); // example.env
         static::assertSame('192.168.1.255', $env['DB_HOST']); // more.env
-        static::assertSame('I come first.', $env['FOO']);     // actual.env
-        static::assertSame('new!', $env['NEW']);              // offsetSet
+        static::assertSame('I come first.', $env['FOO']); // actual.env
+        static::assertSame('new!', $env['NEW']); // offsetSet
     }
 
     /**
@@ -318,7 +318,7 @@ class WordPressEnvBridgeTest extends TestCase
 
         $cleanLoaded = \Closure::bind(
             /** @bound */
-            function (bool $setCache) use (&$oldCache) {
+            function (bool $setCache) use (&$oldCache): void {
                 $setCache and $oldCache = static::$cache;
                 static::$cache = [];
                 static::$loadedVars = null;

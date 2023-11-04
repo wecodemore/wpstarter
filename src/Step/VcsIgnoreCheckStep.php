@@ -241,11 +241,12 @@ class VcsIgnoreCheckStep implements OptionalStep, ConditionalStep
             }
         }
 
+        /** @var list<non-empty-string> $children */
         foreach ($parents as $parent => $children) {
-            $count = count($children);
-            if ($count < 1) {
+            if (!$children) {
                 continue;
             }
+            $count = count($children);
             if ($count > 1) {
                 $fullpath = "{$root}/{$parent}";
                 $relPath = is_dir($fullpath) ? "{$parent}/" : $parent;
@@ -277,7 +278,9 @@ class VcsIgnoreCheckStep implements OptionalStep, ConditionalStep
             if (strpos($relPath, '..') === 0) {
                 continue;
             }
-            (strpos($relPath, './') === 0) and $relPath = substr($relPath, 2);
+            if (strpos($relPath, './') === 0) {
+                $relPath = substr($relPath, 2) ?: '';
+            }
             $relative[] = ($relPath !== '') ? $relPath : $path;
         }
 

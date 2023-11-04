@@ -87,9 +87,12 @@ final class Result
     /**
      * @param mixed $value
      * @param \Throwable|null $error
+     *
+     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration.IncorrectVoidReturn
      */
     private function __construct($value = null, \Throwable $error = null)
     {
+        // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration.IncorrectVoidReturn
         if ($value instanceof Result) {
             $this->value = $value->value;
             $this->error = $value->error;

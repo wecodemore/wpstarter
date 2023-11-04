@@ -45,7 +45,7 @@ class IoTest extends TestCase
             ->twice()
             ->with(\Mockery::type('string'))
             ->andReturnUsing(
-                static function (string $error) {
+                static function (string $error): void {
                     static $i;
                     $i = $i ?? 0;
                     $i++;
@@ -93,7 +93,7 @@ class IoTest extends TestCase
             ->twice()
             ->with(\Mockery::type('string'))
             ->andReturnUsing(
-                static function (string $error) {
+                static function (string $error): void {
                     static $i;
                     $i = $i ?? 0;
                     $i++;

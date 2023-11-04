@@ -229,7 +229,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
 
         $paths = $locator->paths();
         $io = $locator->io();
-        $installer =  new PharInstaller($io, $urlDownloader);
+        $installer = new PharInstaller($io, $urlDownloader);
         $finder = $locator->packageFinder();
 
         return new PhpToolProcessFactory($paths, $io, $installer, $finder, $locator->phpProcess());

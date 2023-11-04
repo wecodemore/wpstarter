@@ -18,6 +18,8 @@ use WeCodeMore\WpStarter\Util\Filesystem;
  *
  * A single place that can be used to access validated configuration read from JSON configuration,
  * but also to pass arbitrary data across steps.
+ *
+ * @template-implements \ArrayAccess<mixed, mixed>
  */
 final class Config implements \ArrayAccess
 {

@@ -18,6 +18,7 @@ use Symfony\Component\Dotenv\Dotenv;
  */
 class WordPressEnvBridge
 {
+    /** @var array<string, Filters::FILTER_*|null> */
     public const WP_CONSTANTS = [
         'ABSPATH' => Filters::FILTER_STRING,
         'ADMIN_COOKIE_PATH' => Filters::FILTER_STRING,

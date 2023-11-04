@@ -99,7 +99,6 @@ class SystemProcess
     {
         $out = '';
         $err = '';
-        /** @psalm-suppress UnusedClosureParam */
         $printer = static function (string $type, string $buffer) use (&$out, &$err): void {
             /**
              * @var string $out

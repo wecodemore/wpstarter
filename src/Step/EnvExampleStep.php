@@ -93,7 +93,7 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep, Conditiona
         $envFile = $this->filesystem->normalizePath("{$envDir}/{$envFileName}");
 
         if (is_file($paths->root($envFile))) {
-            $this->reason = sprintf('environment file already exists', Config::ENV_EXAMPLE);
+            $this->reason = 'environment file already exists';
 
             return false;
         }

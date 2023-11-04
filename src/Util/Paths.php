@@ -19,6 +19,8 @@ use Composer\Util\Filesystem;
  *
  * Many paths can be configured, this helper provides a way to do the configuration parsing only
  * once that use helper methods to obtain relative or absolute paths to specific folders.
+ *
+ * @template-implements \ArrayAccess<mixed, mixed>
  */
 final class Paths implements \ArrayAccess
 {

@@ -20,7 +20,7 @@ use WeCodeMore\WpStarter\Util\Requirements;
 
 class RequirementsTest extends TestCase
 {
-    public function testGenericCommandInstanceCreation()
+    public function testGenericCommandInstanceCreation(): void
     {
         $composer = \Mockery::mock(\Composer\Composer::class);
         $composerConfig = \Mockery::mock(\Composer\Config::class);
@@ -39,7 +39,7 @@ class RequirementsTest extends TestCase
         static::assertFalse($config[Config::IS_COMPOSER_INSTALL]->unwrap());
     }
 
-    public function testSelectedStepsCommandInstanceCreation()
+    public function testSelectedStepsCommandInstanceCreation(): void
     {
         $composer = \Mockery::mock(\Composer\Composer::class);
         $composerConfig = \Mockery::mock(\Composer\Config::class);
@@ -58,7 +58,7 @@ class RequirementsTest extends TestCase
         static::assertFalse($config[Config::IS_COMPOSER_INSTALL]->unwrap());
     }
 
-    public function testComposerInstallInstanceCreation()
+    public function testComposerInstallInstanceCreation(): void
     {
         $composer = \Mockery::mock(\Composer\Composer::class);
         $composerConfig = \Mockery::mock(\Composer\Config::class);
@@ -80,7 +80,7 @@ class RequirementsTest extends TestCase
         static::assertSame([$pkg1, $pkg2], $config[Config::COMPOSER_UPDATED_PACKAGES]->unwrap());
     }
 
-    public function testComposerUpdateInstanceCreation()
+    public function testComposerUpdateInstanceCreation(): void
     {
         $composer = \Mockery::mock(\Composer\Composer::class);
         $composerConfig = \Mockery::mock(\Composer\Config::class);
@@ -103,7 +103,7 @@ class RequirementsTest extends TestCase
     /**
      * When no configs are there, and config file is not there, configuration ends up as default.
      */
-    public function testConfigsAreEmptyIfNoExtraValue()
+    public function testConfigsAreEmptyIfNoExtraValue(): void
     {
         // custom root to make sure wpstarter.json in fixtures root is not loaded
 
@@ -113,7 +113,7 @@ class RequirementsTest extends TestCase
     /**
      * Settings in extra settings are loaded.
      */
-    public function testConfigsContainsExtraIfThere()
+    public function testConfigsContainsExtraIfThere(): void
     {
         $extra = [ComposerPlugin::EXTRA_KEY => ['foo' => 'bar']];
 
@@ -125,12 +125,12 @@ class RequirementsTest extends TestCase
     /**
      * Settings form a JSON file passed as configs are loaded.
      */
-    public function testConfigsLoadedFromFileIfNamePassed()
+    public function testConfigsLoadedFromFileIfNamePassed(): void
     {
         // @see /tests/fixtures/paths-root/custom-starter.json
         $extra = [ComposerPlugin::EXTRA_KEY => 'custom-starter.json'];
 
-        $config =  $this->executeExtractConfig($extra);
+        $config = $this->executeExtractConfig($extra);
 
         static::assertSame('copy', $config['content-dev-op']);
         static::assertSame('./public/boot-hooks.php', $config['early-hook-file']);
@@ -139,10 +139,10 @@ class RequirementsTest extends TestCase
     /**
      * Settings form default JSON are loaded if file is found.
      */
-    public function testConfigsLoadedFromDefaultFileIfThere()
+    public function testConfigsLoadedFromDefaultFileIfThere(): void
     {
         // @see /tests/fixtures/paths-root/wpstarter.json
-        $config =  $this->executeExtractConfig([]);
+        $config = $this->executeExtractConfig([]);
 
         static::assertSame(false, $config['unknown-dropins']);
         static::assertSame('4.5.1', $config['wp-version']);
@@ -151,7 +151,7 @@ class RequirementsTest extends TestCase
     /**
      * Settings loaded from default JSON are loaded and merged with settings in extra.
      */
-    public function testConfigsLoadedFromDefaultFileAreMerged()
+    public function testConfigsLoadedFromDefaultFileAreMerged(): void
     {
         $extra = [
             ComposerPlugin::EXTRA_KEY => [
@@ -161,7 +161,7 @@ class RequirementsTest extends TestCase
         ];
 
         // @see /tests/fixtures/paths-root/wpstarter.json
-        $config =  $this->executeExtractConfig($extra);
+        $config = $this->executeExtractConfig($extra);
 
         static::assertSame(false, $config['unknown-dropins'], 'File wins over extra');
         static::assertSame('bar', $config['foo']);
