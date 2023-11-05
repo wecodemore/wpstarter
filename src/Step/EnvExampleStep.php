@@ -89,7 +89,7 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep, Conditiona
         /** @var string $envFileName */
         $envFileName = $config[Config::ENV_FILE]->unwrapOrFallback('.env');
         /** @var string $envDir */
-        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
+        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback('');
         $envFile = $this->filesystem->normalizePath("{$envDir}/{$envFileName}");
 
         if (is_file($paths->root($envFile))) {
