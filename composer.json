@@ -92,7 +92,8 @@
         "qa": [
              "@cs",
              "@psalm",
-             "@tests:unit:no-cov"
+             "@tests:unit:no-cov",
+             "@tests:integration"
         ]
     },
     "extra": {

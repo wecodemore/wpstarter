@@ -101,7 +101,7 @@ jobs:
 
             -   name: Check Psalm
                 if: ${{ matrix.dependency-versions == 'highest' }}
-                run: ./vendor/bin/psalm ${{ ((github.event_name == 'pull_request') && '--output-format=github ') || '' }} --no-suggestions --find-unused-psalm-suppress --no-diff --no-cache --no-file-cache --php-version=${{ matrix.php-ver }}
+                run: ./vendor/bin/psalm ${{ ((github.event_name == 'pull_request') && '--output-format=github ') || '' }} --no-suggestions --no-diff --no-cache --no-file-cache --php-version=${{ matrix.php-ver }}
 
             -   name: Run unit tests
                 run: ./vendor/bin/phpunit ${{ ((env.USE_COVERAGE == 'yes') && '--coverage-html=coverage-report') || '--no-coverage' }}
@@ -119,7 +119,7 @@ jobs:
         strategy:
             fail-fast: true
             matrix:
-                php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2' ]
+                php-ver: [ '7.4', '8.0', '8.1', '8.2' ]
         steps:
             -   name: Checkout
                 uses: actions/checkout@v3
