@@ -64,8 +64,8 @@ Of course, this is the bare minimum. WP Starter is quite powerful and flexible a
 
 ## Requirements
 
-- PHP 7.1+
-- Composer
+- PHP 7.4+
+- Composer 2.0+
 
 
 ------

@@ -53,33 +53,7 @@ jobs:
 
             -   name: Annotate code styles for PRs
                 if: ${{ github.event_name == 'pull_request' }}
-                run: cs2pr --graceful-warnings phpcs-report.xml
-
-    static-qa:
-        runs-on: ubuntu-latest
-        if: ${{ !contains(github.event.head_commit.message, 'skip qa') }}
-        strategy:
-            fail-fast: false
-            matrix:
-                php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2' ]
-        steps:
-            -   name: Checkout
-                uses: actions/checkout@v3
-
-            -   name: Setup PHP
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: ${{ matrix.php-ver }}
-                    coverage: none
-
-            -   name: Setup Composer auth for GitHub
-                run: composer config github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
-
-            -   name: Install dependencies
-                uses: ramsey/composer-install@v2
-
-            -   name: Check Psalm
-                run: ./vendor/bin/psalm ${{ ((github.event_name == 'pull_request') && '--output-format=github ') || '' }} --no-suggestions --find-unused-psalm-suppress --no-diff --no-cache --no-file-cache  --php-version=${{ matrix.php-ver }}
+                run: cs2pr --graceful-warnings phpcs-report.xm
 
     unit-tests:
         runs-on: ubuntu-latest
@@ -89,30 +63,19 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2' ]
-                composer-ver: [ '^1', '~2.0.0', '~2.1.0', '~2.2.0', '~2.3.0', '~2.4.0', '~2.5.0', '~2.6.0' ]
+                php-ver: [ '7.4', '8.0', '8.1', '8.2' ]
+                composer-ver: [ '2.0', '2.1', '2.2', '2.3', '2.4', '2.5', '2.6' ]
+                dependency-versions: [ 'lowest', 'highest' ]
                 exclude:
-                    -   php-ver: '7.1'
-                        composer-ver: '~2.3.0'
-                    -   php-ver: '7.1'
-                        composer-ver: '~2.4.0'
-                    -   php-ver: '7.1'
-                        composer-ver: '~2.5.0'
-                    -   php-ver: '7.1'
-                        composer-ver: '~2.6.0'
                     -   php-ver: '8.1'
-                        composer-ver: '^1'
-                    -   php-ver: '8.1'
-                        composer-ver: '~2.0.0'
+                        composer-ver: '2.0'
                     -   php-ver: '8.2'
-                        composer-ver: '^1'
+                        composer-ver: '2.0'
                     -   php-ver: '8.2'
-                        composer-ver: '~2.0.0'
-                    -   php-ver: '8.2'
-                        composer-ver: '~2.1.0'
+                        composer-ver: '2.1'
         steps:
             -   name: Update "USE_COVERAGE" env var based on matrix
-                if: ${{ matrix.php-ver == '8.0' && matrix.composer-ver == '~2.5.0' }}
+                if: ${{ (matrix.php-ver == '8.0') && (matrix.dependency-versions == 'highest') && (matrix.composer-ver == '2.5') }}
                 run: echo "USE_COVERAGE=yes" >> $GITHUB_ENV
 
             -   name: Checkout
@@ -129,17 +92,19 @@ jobs:
             -   name: Adjust Composer dependencies
                 run:  |
                     composer remove --dev --no-update "roave/security-advisories"
-                    composer require --dev --no-update "composer/composer:${{ matrix.composer-ver }}"
+                    composer require --dev --no-update "composer/composer:~${{ env.COMPOSER_VER }}.0"
 
             -   name: Install dependencies
                 uses: ramsey/composer-install@v2
                 with:
-                    dependency-versions: highest
+                    dependency-versions: ${{ matrix.dependency-versions }}
+
+            -   name: Check Psalm
+                if: ${{ matrix.dependency-versions == 'highest' }}
+                run: ./vendor/bin/psalm ${{ ((github.event_name == 'pull_request') && '--output-format=github ') || '' }} --no-suggestions --find-unused-psalm-suppress --no-diff --no-cache --no-file-cache --php-version=${{ matrix.php-ver }}
 
             -   name: Run unit tests
-                run: |
-                    ./vendor/bin/phpunit --atleast-version 9 && ./vendor/bin/phpunit --migrate-configuration || echo 'Config does not need updates.'
-                    ./vendor/bin/phpunit ${{ ((env.USE_COVERAGE == 'yes') && '--coverage-html=coverage-report') || '--no-coverage' }}
+                run: ./vendor/bin/phpunit ${{ ((env.USE_COVERAGE == 'yes') && '--coverage-html=coverage-report') || '--no-coverage' }}
 
             -   name: Upload coverage report
                 uses: actions/upload-artifact@v3
