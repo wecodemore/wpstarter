@@ -71,7 +71,6 @@ jobs:
                 with:
                     php-version: ${{ matrix.php-ver }}
                     coverage: none
-                    tools: cs2pr
 
             -   name: Setup Composer auth for GitHub
                 run: composer config github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
@@ -91,7 +90,7 @@ jobs:
             fail-fast: false
             matrix:
                 php-ver: [ '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2' ]
-                composer-ver: [ '^1', '~2.0.0', '~2.1.0', '~2.2.0', '~2.3.0', '~2.4.0', '~2.5.0' ]
+                composer-ver: [ '^1', '~2.0.0', '~2.1.0', '~2.2.0', '~2.3.0', '~2.4.0', '~2.5.0', '~2.6.0' ]
                 exclude:
                     -   php-ver: '7.1'
                         composer-ver: '~2.3.0'
@@ -99,6 +98,8 @@ jobs:
                         composer-ver: '~2.4.0'
                     -   php-ver: '7.1'
                         composer-ver: '~2.5.0'
+                    -   php-ver: '7.1'
+                        composer-ver: '~2.6.0'
                     -   php-ver: '8.1'
                         composer-ver: '^1'
                     -   php-ver: '8.1'
@@ -111,7 +112,7 @@ jobs:
                         composer-ver: '~2.1.0'
         steps:
             -   name: Update "USE_COVERAGE" env var based on matrix
-                if: ${{ matrix.php-ver == '7.4' && matrix.composer-ver == '~2.3.0' }}
+                if: ${{ matrix.php-ver == '8.0' && matrix.composer-ver == '~2.5.0' }}
                 run: echo "USE_COVERAGE=yes" >> $GITHUB_ENV
 
             -   name: Checkout

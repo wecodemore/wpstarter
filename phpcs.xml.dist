@@ -18,6 +18,7 @@
         <exclude name="WordPress.PHP.DiscouragedPHPFunctions"/>
         <exclude name="WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler"/>
         <exclude name="WordPress.WP.CapitalPDangit.MisspelledInText"/>
+        <exclude name="WordPress.WP.CapitalPDangit.Misspelled"/>
     </rule>
 
     <rule ref="Inpsyde.CodeQuality.Psr4">

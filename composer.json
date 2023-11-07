@@ -59,7 +59,7 @@
         "inpsyde/wp-stubs-versions": "dev-latest",
         "vimeo/psalm": "^4.30.0 || ^5.15.0",
         "phpunit/phpunit": "^7.5.20 || ^9.6.13",
-        "mockery/mockery": "^1.6.6",
+        "mockery/mockery": "^1.3.6",
         "mikey179/vfsstream": "^1.6.11"
     },
     "autoload": {
