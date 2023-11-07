@@ -55,7 +55,7 @@
         "composer/composer": "^2.6.5",
         "symfony/process": "^3.4.47 || ^5.4.19",
         "wp-cli/wp-cli": "^2.7.1",
-        "inpsyde/php-coding-standards": "^2@dev",
+        "inpsyde/php-coding-standards": "^1 || ^2@dev",
         "inpsyde/wp-stubs-versions": "dev-latest",
         "vimeo/psalm": "^4.30.0 || ^5.15.0",
         "phpunit/phpunit": "^7.5.20 || ^9.6.13",
