@@ -69,10 +69,18 @@ jobs:
                 exclude:
                     -   php-ver: '8.1'
                         composer-ver: '2.0'
+                    -   php-ver: '8.1'
+                        composer-ver: '2.1'
+                    -   php-ver: '8.1'
+                        composer-ver: '2.2'
                     -   php-ver: '8.2'
                         composer-ver: '2.0'
                     -   php-ver: '8.2'
                         composer-ver: '2.1'
+                    -   php-ver: '8.2'
+                        composer-ver: '2.2'
+                    -   php-ver: '8.2'
+                        composer-ver: '2.3'
         steps:
             -   name: Update "USE_COVERAGE" env var based on matrix
                 if: ${{ (matrix.php-ver == '8.0') && (matrix.dependency-versions == 'highest') && (matrix.composer-ver == '2.5') }}
