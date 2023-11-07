@@ -8,7 +8,7 @@
  * are required, you can get them from your web host.
  */
 
-use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
+use WeCodeMore\WpStarter\Env\{WordPressEnvBridge, Helpers};
 
 DEBUG_INFO_INIT: {
     $debugInfo = [];
@@ -49,27 +49,6 @@ AUTOLOAD: {
     ];
 } #@@/AUTOLOAD
 
-WPS_GETENV_FUNCTION: {
-    function wpstarter_getenv(?string $key) {
-        static $env;
-        if ($env && ($key === null)) {
-            throw new TypeError('wpstarter_env(): Argument #1 ($key) must be of type string, null given.');
-        }
-        if ($key === '') {
-            throw new InvalidArgumentException('wpstarter_env(): Argument #1 ($key) must be a non-empty string.');
-        }
-        if (!$env) {
-            $envCacheEnabled = filter_var('{{{CACHE_ENV}}}', FILTER_VALIDATE_BOOLEAN);
-            $envCacheFile = WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE;
-            $env = $envCacheEnabled
-                ? WordPressEnvBridge::buildFromCacheDump($envCacheFile)
-                : new WordPressEnvBridge();
-        }
-        return ($key === null) ? $env : $env->read($key);
-    }
-    $envLoader = wpstarter_getenv(null);
-} #@@/WPS_GETENV_FUNCTION
-
 ENV_VARIABLES: {
     /**
      * Environment variables will be loaded from file, unless `WPSTARTER_ENV_LOADED` env var is
@@ -78,14 +57,9 @@ ENV_VARIABLES: {
      * Environment variables that are set in the *real* environment (e.g. via webserver) will not be
      * overridden from file, even if `WPSTARTER_ENV_LOADED` is not set.
      */
-    $envIsCached = $envLoader->hasCachedValues();
-    if (!$envIsCached) {
-        $envLoader->load('{{{ENV_FILE_NAME}}}', WPSTARTER_ENV_PATH);
-        $envType = $envLoader->determineEnvType();
-        if ($envType !== 'example') {
-            $envLoader->loadAppended("{{{ENV_FILE_NAME}}}.{$envType}", WPSTARTER_ENV_PATH);
-        }
-    }
+    filter_var('{{{CACHE_ENV}}}', FILTER_VALIDATE_BOOLEAN) and Helpers::enableCache();
+    [$envType, $envIsCached] = Helpers::loadEnvFiles('{{{ENV_FILE_NAME}}}', WPSTARTER_ENV_PATH);
+
     /**
      * Define all WordPress constants from environment variables.
      *
@@ -95,29 +69,27 @@ ENV_VARIABLES: {
      * In that case, `wp_get_environment_type()` will return "development", but `WP_ENV` will still
      * be "dev" (or "develop", or "develop-1").
      */
-    $envIsCached ? $envLoader->setupEnvConstants() : $envLoader->setupConstants();
-    isset($envType) or $envType = $envLoader->determineEnvType();
     defined('WP_ENVIRONMENT_TYPE') or define('WP_ENVIRONMENT_TYPE', 'production');
 
     $envCacheFile = realpath(WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
-    $debugInfo['env-cache-file'] = [
-        'label' => 'Env cache file',
-        'value' => $envCacheFile ?: 'None',
-        'debug' => $envCacheFile,
-    ];
-    $envCacheEnabled = filter_var('{{{CACHE_ENV}}}', FILTER_VALIDATE_BOOLEAN);
-    $debugInfo['env-cache-enabled'] = [
-        'label' => 'Env cache enabled',
+    $envCacheEnabled = Helpers::isEnvCacheEnabled();
+    $debugInfo['env-cache-config'] = [
+        'label' => 'Env cache enabled in configuration',
         'value' => $envCacheEnabled ? 'Yes' : 'No',
         'debug' => $envCacheEnabled,
     ];
-    $debugInfo['cached-env'] = [
+    $debugInfo['env-loaded-from-cache'] = [
         'label' => 'Is env loaded from cache',
         'value' => $envIsCached ? 'Yes' : 'No',
         'debug' => $envIsCached,
     ];
-    $debugInfo['env-type'] = [
-        'label' => 'Env type',
+    $debugInfo['env-loaded-cache-file'] = [
+        'label' => 'Env cache file',
+        'value' => $envCacheFile ?: '*None*',
+        'debug' => $envCacheFile,
+    ];
+    $debugInfo['wpstarter-env-type'] = [
+        'label' => 'WP Starter env type',
         'value' => $envType,
         'debug' => $envType,
     ];
@@ -136,10 +108,10 @@ ENV_VARIABLES: {
     }
     $debugInfo['env-php-file'] = [
         'label' => 'Env-specific PHP file',
-        'value' => $hasPhpEnvFile ? $phpEnvFilePath : 'None',
+        'value' => $hasPhpEnvFile ? $phpEnvFilePath : '*None*',
         'debug' => $hasPhpEnvFile ? $phpEnvFilePath : '',
     ];
-    unset($phpEnvFilePath, $hasPhpEnvFile);
+    unset($phpEnvFilePath, $hasPhpEnvFile, $envType);
 } #@@/ENV_VARIABLES
 
 KEYS: {
@@ -167,7 +139,7 @@ DB_SETUP : {
      * WordPress Database Table prefix.
      */
     global $table_prefix;
-    $table_prefix = $envLoader->read('DB_TABLE_PREFIX') ?: 'wp_';
+    $table_prefix = Helpers::readVar('DB_TABLE_PREFIX') ?: 'wp_';
 } #@@/DB_SETUP
 
 EARLY_HOOKS : {
@@ -184,7 +156,7 @@ EARLY_HOOKS : {
     }
     $debugInfo['early-hooks-file'] = [
         'label' => 'Early hooks file',
-        'value' => $earlyHookFile ? __DIR__ . '{{{EARLY_HOOKS_FILE}}}' : 'None',
+        'value' => $earlyHookFile ? __DIR__ . '{{{EARLY_HOOKS_FILE}}}' : '*None*',
         'debug' => $earlyHookFile ? __DIR__ . '{{{EARLY_HOOKS_FILE}}}' : '',
     ];
     unset($earlyHookFile);
@@ -223,7 +195,7 @@ DEFAULT_ENV : {
 } #@@/DEFAULT_ENV
 
 SSL_FIX : {
-    $doSslFix = $envLoader->read('WP_FORCE_SSL_FORWARDED_PROTO')
+    $doSslFix = Helpers::readVar('WP_FORCE_SSL_FORWARDED_PROTO')
         && array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER)
         && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https';
     $doSslFix and $_SERVER['HTTPS'] = 'on';
@@ -274,8 +246,8 @@ ADMIN_COLOR : {
     /** Allow changing admin color scheme. Useful to distinguish environments in the dashboard. */
     add_filter(
         'get_user_option_admin_color',
-        static function ($color) use ($envLoader) {
-            return $envLoader->read('WP_ADMIN_COLOR') ?: $color;
+        static function ($color): string {
+            return (string)(Helpers::readVar('WP_ADMIN_COLOR') ?: $color);
         },
         999
     );
@@ -283,14 +255,10 @@ ADMIN_COLOR : {
 
 ENV_CACHE : {
     /** On shutdown, we dump environment so that on subsequent requests we can load it faster */
-    if ('{{{CACHE_ENV}}}' && $envLoader->isWpSetup()) {
+    if (Helpers::isEnvCacheEnabled() && Helpers::isWpEnvSetup()) {
         register_shutdown_function(
-            static function () use ($envLoader, $envType) {
-                $isLocal = $envType === 'local';
-                $isDevMode = defined('WP_DEVELOPMENT_MODE') && WP_DEVELOPMENT_MODE;
-                if (!apply_filters('wpstarter.skip-cache-env', $isLocal || $isDevMode, $envType)) {
-                    $envLoader->dumpCached(WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
-                }
+            static function (): void {
+                Helpers::dumpEnvCache(WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
             }
         );
     }
@@ -300,6 +268,12 @@ DEBUG_INFO : {
     add_filter(
         'debug_information',
         static function ($info) use ($debugInfo): array {
+            $shouldCache = Helpers::shouldCacheEnv();
+            $debugInfo['env-should-cache'] = [
+                'label' => 'Should cache env',
+                'value' => $shouldCache ? 'Yes' : 'No',
+                'debug' => $shouldCache,
+            ];
             is_array($info) or $info = [];
             $info['wp-starter'] = ['label' => 'WP Starter', 'fields' => $debugInfo];
 
@@ -307,15 +281,12 @@ DEBUG_INFO : {
         },
         30
     );
+    unset($debugInfo);
 } #@@/DEBUG_INFO
 
 BEFORE_BOOTSTRAP : {
     /** A pre-defined section to extend configuration. */
 } #@@/BEFORE_BOOTSTRAP
-
-CLEAN_UP : {
-    unset($debugInfo, $envType, $envLoader);
-} #@@/CLEAN_UP
 
 WP_CLI_HACK : {
     if (defined('WP_STARTER_WP_CONFIG_PATH') && defined('WP_CLI') && \WP_CLI) {
