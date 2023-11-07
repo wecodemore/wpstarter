@@ -321,7 +321,7 @@ final class Paths implements \ArrayAccess
         if (strpos($wpContentFullDir, $cwd) !== 0 || ($cwd === $wpContentFullDir)) {
             $to = ($cwd === $wpContentFullDir) ? 'root dir' : 'a dir outside root';
             throw new \Exception(
-                "Config for WP config dir is pointing to {$to}, WP Starter does not support that."
+                "Config for WP content dir is pointing to {$to}, WP Starter does not support that."
             );
         }
 
