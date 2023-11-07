@@ -92,7 +92,7 @@ jobs:
             -   name: Adjust Composer dependencies
                 run:  |
                     composer remove --dev --no-update "roave/security-advisories"
-                    composer require --dev --no-update "composer/composer:~${{ env.COMPOSER_VER }}.0"
+                    composer require --dev --no-update "composer/composer:~${{ matrix.composer-ver }}.0"
 
             -   name: Install dependencies
                 uses: ramsey/composer-install@v2

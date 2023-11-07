@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     bootstrap="./tests/bootstrap.php"
     colors="true"
     convertErrorsToExceptions="true"
     convertNoticesToExceptions="true"
     convertWarningsToExceptions="true"
-    convertDeprecationsToExceptions="true">
+    convertDeprecationsToExceptions="true"
+    xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd">
 
-    <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
+    <coverage processUncoveredFiles="true">
+        <include>
             <directory suffix=".php">./src</directory>
-        </whitelist>
-    </filter>
+        </include>
+    </coverage>
 
     <testsuites>
         <testsuite name="unit">
@@ -21,4 +23,5 @@
             <directory>./tests/integration</directory>
         </testsuite>
     </testsuites>
+
 </phpunit>
