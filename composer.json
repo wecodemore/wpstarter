@@ -47,13 +47,13 @@
         "ext-SPL": "*",
         "composer-plugin-api": "^2",
         "composer/installers": "^2",
-        "symfony/dotenv": "^3.4 || ^5 || ^6"
+        "symfony/dotenv": "^5 || ^6"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",
         "composer/composer": "^2.6.5",
-        "symfony/process": "^5.4.19",
-        "wp-cli/wp-cli": "^2.7.1",
+        "symfony/process": "^v5.4.28",
+        "wp-cli/wp-cli": "^v2.9.0",
         "inpsyde/php-coding-standards": "^2@dev",
         "inpsyde/wp-stubs-versions": "dev-latest",
         "vimeo/psalm": "^5.15.0",

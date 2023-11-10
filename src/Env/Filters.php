@@ -188,7 +188,7 @@ final class Filters
             return $value;
         }
 
-        if (!is_string($value) || !is_numeric($value)) {
+        if (!is_string($value) || !preg_match('~^[0-7]+$~', $value)) {
             throw new \Exception('Invalid octal mod.');
         }
 

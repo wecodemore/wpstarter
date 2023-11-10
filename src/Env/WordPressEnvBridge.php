@@ -15,6 +15,8 @@ use Symfony\Component\Dotenv\Dotenv;
 
 /**
  * Handle WordPress related environment variables using Symfony Env component.
+ *
+ * phpcs:disable Inpsyde.CodeQuality.PropertyPerClassLimit
  */
 class WordPressEnvBridge
 {
@@ -250,12 +252,12 @@ class WordPressEnvBridge
     /**
      * @var Dotenv|null
      */
-    private static $defaultDotEnv;
+    private static $defaultDotEnv = null;
 
     /**
-     * @var array<string, int|bool>|null
+     * @var array<string, int>|null
      */
-    private static $loadedVars;
+    private static $loadedVars = null;
 
     /**
      * @var array<string, array{string, bool|int|float|string|null}>
@@ -270,7 +272,7 @@ class WordPressEnvBridge
     /**
      * @var Filters|null
      */
-    private $filters;
+    private $filters = null;
 
     /**
      * @var bool
@@ -283,19 +285,24 @@ class WordPressEnvBridge
     private $customFiltersConfig = [];
 
     /**
-     * @var list<string>
+     * @var list<string>|null
      */
-    private $definedConstants = [];
+    private $definedConstants = null;
 
     /**
      * @var string|null
      */
-    private $envType;
+    private $envType = null;
 
     /**
      * @var bool
      */
     private $wordPressSetup = false;
+
+    /**
+     * @var bool
+     */
+    private $usePutEnv = false;
 
     /**
      * @param string $file
@@ -317,12 +324,20 @@ class WordPressEnvBridge
     /**
      * Symfony stores a variable with the keys of variables it loads.
      *
-     * @return array
+     * @return array<string, int>
      */
     public static function loadedVars(): array
     {
         if (self::$loadedVars === null) {
-            self::$loadedVars = array_flip(explode(',', (getenv('SYMFONY_DOTENV_VARS') ?: '')));
+            $vars = $_SERVER['WPSTARTER_DOTENV_VARS'] ?? $_ENV['WPSTARTER_DOTENV_VARS'] ?? null;
+            if ($vars === null) {
+                self::$loadedVars = [];
+
+                return [];
+            }
+
+            /** @var array<string, int> $loadedVars */
+            self::$loadedVars = array_flip(explode(',', $vars));
             unset(self::$loadedVars['']);
         }
 
@@ -338,13 +353,19 @@ class WordPressEnvBridge
     }
 
     /**
-     * @param string $file Environment file path relative to `$path`
-     * @param string|null $path Environment file path
      * @return void
      */
-    public function load(string $file = '.env', ?string $path = null): void
+    public function usePutEnv(): void
     {
-        $this->loadFile($this->fullpathFor($file, $path));
+        $this->usePutEnv = true;
+    }
+
+    /**
+     * @return void
+     */
+    public function dontUsePutEnv(): void
+    {
+        $this->usePutEnv = false;
     }
 
     /**
@@ -372,38 +393,15 @@ class WordPressEnvBridge
     }
 
     /**
+     * @param string $file
      * @param string $path
      * @return void
      */
-    public function loadFile(string $path): void
+    public function load(string $file, string $path): void
     {
-        $loaded = $_ENV['WPSTARTER_ENV_LOADED'] ?? $_SERVER['WPSTARTER_ENV_LOADED'] ?? null;
-        if ($loaded !== null) {
+        $loaded = $_ENV['WPSTARTER_ENV_LOADED'] ?? $_SERVER['WPSTARTER_ENV_LOADED'] ?? false;
+        if (filter_var($loaded, FILTER_VALIDATE_BOOLEAN)) {
             self::$loadedVars = [];
-
-            return;
-        }
-
-        if (self::$loadedVars !== null) {
-            return;
-        }
-
-        $path = $this->fullpathFor('', $path);
-        if ($path) {
-            $this->dotenv()->load($path);
-            self::loadedVars();
-        }
-    }
-
-    /**
-     * @param string $file
-     * @param string|null $path
-     * @return void
-     */
-    public function loadAppended(string $file, ?string $path = null): void
-    {
-        if (self::$loadedVars === null) {
-            $this->load($file, $path);
 
             return;
         }
@@ -416,12 +414,26 @@ class WordPressEnvBridge
         $contents = @file_get_contents($fullpath);
         /** @var array<string, string> $values */
         $values = $contents ? $this->dotenv()->parse($contents, $fullpath) : [];
+
+        $index = count(self::loadedVars());
         foreach ($values as $name => $value) {
-            if ($this->isWritable($name)) {
-                $this->write($name, $value);
-                self::$loadedVars[$name] = true;
+            if (!$this->isWritable($name)) {
+                continue;
+            }
+            $this->doWrite($name, $value, false);
+            if (!isset(self::$loadedVars[$name])) {
+                self::$loadedVars[$name] = $index;
+                $index++;
             }
         }
+
+        if (!self::$loadedVars) {
+            return;
+        }
+
+        $keysLoaded = implode(',', array_keys(self::$loadedVars));
+        $_SERVER['WPSTARTER_DOTENV_VARS'] = $keysLoaded;
+        $_ENV['WPSTARTER_DOTENV_VARS'] = $keysLoaded;
     }
 
     /**
@@ -430,7 +442,7 @@ class WordPressEnvBridge
      */
     public function has(string $name): bool
     {
-        return $this->read($name) !== null;
+        return isset(self::$cache[$name]) || ($this->doRead($name) !== null);
     }
 
     /**
@@ -445,63 +457,19 @@ class WordPressEnvBridge
      * @param string $name
      * @return mixed
      *
-     * phpcs:disable Generic.Metrics.CyclomaticComplexity
      * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
     public function read(string $name)
     {
-        // phpcs:enable Generic.Metrics.CyclomaticComplexity
         // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
-
         $cached = self::$cache[$name] ?? null;
         if ($cached !== null) {
             return $cached[1];
         }
 
-        if ($this->fromCache && (self::$loadedVars === null)) {
-            self::loadedVars();
-        }
+        $value = $this->doRead($name);
 
-        // We don't check $_SERVER for keys starting with 'HTTP_' because clients can write there.
-        $serverSafe = strpos($name, 'HTTP_') !== 0;
-
-        // We consider anything not loaded by Symfony Dot Env as "actual" environment, and because
-        // of thread safety issues, we don't use getenv() for those "actual" environment variables.
-        $loadedVar = self::$loadedVars && $this->isLoadedVar($name);
-
-        $readGetEnv = false;
-        switch (true) {
-            case ($loadedVar && $serverSafe):
-                // Both $_SERVER and getenv() are ok.
-                $value = $_ENV[$name] ?? $_SERVER[$name] ?? null;
-                $readGetEnv = true;
-                break;
-            case ($loadedVar && !$serverSafe):
-                // $_SERVER is not ok, getenv() is.
-                $value = $_ENV[$name] ?? null;
-                $readGetEnv = true;
-                break;
-            case ($serverSafe):
-                // $_SERVER is ok, getenv() is not.
-                $value = $_ENV[$name] ?? $_SERVER[$name] ?? null;
-                break;
-            default:
-                // Neither $_SERVER nor getenv() are ok.
-                $value = $_ENV[$name] ?? null;
-                break;
-        }
-
-        if (($value === null) && $readGetEnv) {
-            $value = getenv($name);
-            ($value === false) and $value = null;
-        }
-
-        // Superglobals can contain anything, but environment variables must be strings.
-        // We can cast later scalar values.
-        // `is_scalar()` also discards null, and that is fine because we want to return null if
-        // that's the value we got here.
-
-        return is_scalar($value) ? $this->maybeFilterThenCache($name, (string)$value) : null;
+        return ($value === null) ? null : $this->maybeFilterThenCache($name, (string)$value);
     }
 
     /**
@@ -529,11 +497,7 @@ class WordPressEnvBridge
             throw new \BadMethodCallException("{$name} is not a writable ENV var.");
         }
 
-        putenv("{$name}={$value}");
-        $_ENV[$name] = $value;
-        (strpos($name, 'HTTP_') !== 0) and $_SERVER[$name] = $value;
-
-        $this->maybeFilterThenCache($name, $value);
+        $this->doWrite($name, $value, true);
     }
 
     /**
@@ -547,29 +511,26 @@ class WordPressEnvBridge
         }
 
         // Make sure cached env contains all loaded vars.
-        $symfonyLoaded = '';
-        if (self::$loadedVars) {
-            foreach (array_keys(self::$loadedVars) as $key) {
-                $symfonyLoaded .= $symfonyLoaded ? ",{$key}" : $key;
-                $this->read($key);
-            }
-        }
+        $loaded = $this->collectVariables();
 
         if (!static::$cache) {
             return false;
         }
 
-        $content = "<?php\n";
+        $content = "<?php\n\n";
 
-        // Store the loaded vars keys in SYMFONY_DOTENV_VARS var so that self::loadedVars() on
-        // the cached instance will work.
-        $symfonyLoaded and $content .= "putenv('SYMFONY_DOTENV_VARS={$symfonyLoaded}');\n\n";
+        if ($loaded) {
+            // Store the loaded vars keys in WPSTARTER_DOTENV_VARS var so that self::loadedVars() on
+            // the cached instance will work.
+            $content .= "\$_SERVER['WPSTARTER_DOTENV_VARS']='{$loaded}';\n";
+            $content .= "\$_ENV['WPSTARTER_DOTENV_VARS']='{$loaded}';\n\n";
+        }
 
         foreach (self::$cache as $key => list($value, $filtered)) {
             $slashed = str_replace("'", "\'", $value);
             // For defined constants, dump the `define` with filtered value, if any.
             if (
-                in_array($key, $this->definedConstants, true)
+                in_array($key, $this->definedConstants ?? [], true)
                 || array_key_exists($key, self::WP_CONSTANTS)
             ) {
                 $define = $value !== $filtered
@@ -585,7 +546,7 @@ class WordPressEnvBridge
             }
 
             // For env loaded from file, dump the variable definition.
-            $content .= "putenv('{$key}={$slashed}');\n";
+            $content .= $this->usePutEnv ? "putenv('{$key}={$slashed}');\n" : '';
             $content .= "\$_ENV['{$key}'] = '{$slashed}';\n";
             (strpos($key, 'HTTP_') !== 0) and $content .= "\$_SERVER['{$key}'] = '{$slashed}';\n\n";
         }
@@ -661,11 +622,49 @@ class WordPressEnvBridge
 
     /**
      * @param string $name
-     * @return bool
+     * @param string $value
+     * @param bool $filterAndCache
+     * @return void
      */
-    private function isLoadedVar(string $name): bool
+    private function doWrite(string $name, string $value, bool $filterAndCache): void
     {
-        return array_key_exists($name, self::loadedVars());
+        $_ENV[$name] = $value;
+        (strpos($name, 'HTTP_') !== 0) and $_SERVER[$name] = $value;
+        $this->usePutEnv and putenv("{$name}={$value}");
+        $filterAndCache and $this->maybeFilterThenCache($name, $value);
+    }
+
+    /**
+     * @param string $name
+     * @return scalar|null
+     *
+     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
+     */
+    private function doRead(string $name)
+    {
+        // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
+        $value = $_ENV[$name] ?? null;
+
+        // We don't check $_SERVER for keys starting with 'HTTP_' because clients can write there.
+        if (($value === null) && (strpos($name, 'HTTP_') !== 0)) {
+            $value = $_SERVER[$name] ?? null;
+        }
+
+        if ($value === null) {
+            (self::$loadedVars === null) and self::loadedVars();
+            if (!isset(self::$loadedVars[$name])) {
+                // Maybe someone used `putenv`, so we're going to use `getenv`, but this is
+                // discouraged. We're going to cache this on read to hopeful reduce issues.
+                $value = getenv($name);
+                ($value === false) and $value = null;
+            }
+        }
+
+        // Superglobals can contain anything, but environment variables must be strings.
+        // We can cast later scalar values.
+        // `is_scalar()` also discards null, and that is fine because we are going to return null if
+        // that's the $value we got here.
+        return is_scalar($value) ? $value : null;
     }
 
     /**
@@ -708,7 +707,6 @@ class WordPressEnvBridge
     private function defineConstantFromVar(string $name): bool
     {
         $value = $this->read($name);
-
         if ($value === null) {
             return false;
         }
@@ -749,7 +747,17 @@ class WordPressEnvBridge
      */
     private function isWritable(string $name): bool
     {
-        return !$this->has($name) || $this->isLoadedVar($name);
+        if (isset(static::$cache[$name])) {
+            return false;
+        }
+
+        if (!$this->has($name)) {
+            return true;
+        }
+
+        $loaded = self::loadedVars();
+
+        return isset($loaded[$name]);
     }
 
     /**
@@ -770,6 +778,22 @@ class WordPressEnvBridge
     }
 
     /**
+     * @return string
+     */
+    private function collectVariables(): string
+    {
+        $loaded = '';
+        if (self::$loadedVars) {
+            foreach (array_keys(self::$loadedVars) as $key) {
+                $loaded .= $loaded ? ",{$key}" : $key;
+                $this->read($key);
+            }
+        }
+
+        return $loaded;
+    }
+
+    /**
      * @return Dotenv
      */
     private function dotEnv(): Dotenv
@@ -777,10 +801,6 @@ class WordPressEnvBridge
         $dotEnv = $this->dotenv ?? self::$defaultDotEnv;
         if (!$dotEnv) {
             self::$defaultDotEnv = new Dotenv();
-            /** @psalm-suppress RedundantCondition */
-            if (is_callable([self::$defaultDotEnv, 'usePutenv'])) {
-                self::$defaultDotEnv->usePutenv(true);
-            }
             $dotEnv = self::$defaultDotEnv;
         }
 

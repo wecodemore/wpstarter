@@ -25,12 +25,23 @@ abstract class Helpers
     /** @var bool|null */
     private static $shouldCache = null;
 
+    /** @var bool */
+    private static bool $usePutenv = false;
+
     /**
      * @return void
      */
     final public static function enableCache(): void
     {
         self::$cacheEnabled = true;
+    }
+
+    /**
+     * @return void
+     */
+    final public static function usePutenv(): void
+    {
+        self::$usePutenv = true;
     }
 
     /**
@@ -77,7 +88,7 @@ abstract class Helpers
             $loader->load($fileName, $path);
             $envType = static::envType(true);
             if ($envType !== 'example') {
-                $loader->loadAppended("{$fileName}.{$envType}", $path);
+                $loader->load("{$fileName}.{$envType}", $path);
             }
 
             $loader->setupConstants();
@@ -91,12 +102,15 @@ abstract class Helpers
     }
 
     /**
-     * @param string $path
      * @return void
      */
-    final public static function dumpEnvCache(string $path): void
+    final public static function dumpEnvCache(): void
     {
+        if (!defined('WPSTARTER_ENV_PATH')) {
+            return;
+        }
         if (static::shouldCacheEnv()) {
+            $path = WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE;
             static::envBridge()->dumpCached($path);
         }
     }
@@ -106,7 +120,7 @@ abstract class Helpers
      */
     final public static function shouldCacheEnv(): bool
     {
-        if (!self::$cacheEnabled) {
+        if (!self::$cacheEnabled || !static::envBridge()->isWpSetup()) {
             return false;
         }
 
@@ -132,23 +146,21 @@ abstract class Helpers
     }
 
     /**
-     * @return bool
-     */
-    final public static function isWpEnvSetup(): bool
-    {
-        return static::envBridge()->isWpSetup();
-    }
-
-    /**
      * @return WordPressEnvBridge
      */
     private static function envBridge(): WordPressEnvBridge
     {
         if (!static::$bridge) {
+            if (!defined('WPSTARTER_ENV_PATH') || !self::$cacheEnabled) {
+                static::$bridge = new WordPressEnvBridge();
+                static::$usePutenv and static::$bridge->usePutEnv();
+
+                return static::$bridge;
+            }
+
             $envCacheFile = WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE;
-            static::$bridge = self::$cacheEnabled
-                ? WordPressEnvBridge::buildFromCacheDump($envCacheFile)
-                : new WordPressEnvBridge();
+            static::$bridge = WordPressEnvBridge::buildFromCacheDump($envCacheFile);
+            static::$usePutenv and static::$bridge->usePutEnv();
         }
 
         return static::$bridge;

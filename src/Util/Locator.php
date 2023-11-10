@@ -335,7 +335,7 @@ final class Locator
             $bridge = new WordPressEnvBridge();
             $bridge->load($file, $dir);
             $environment = $bridge->determineEnvType();
-            ($environment !== 'example') and $bridge->loadAppended("{$file}.{$environment}", $dir);
+            ($environment !== 'example') and $bridge->load("{$file}.{$environment}", $dir);
             $this->objects[__FUNCTION__] = $bridge;
         }
 

@@ -68,7 +68,23 @@ In PHP there are two functions: [`getevn`](http://php.net/manual/en/function.get
 
 There's nothing in PHP core that parse env files, but is no surprise that there are different libraries to do that.
 
-WP Starter uses one of these libraries: the **[Symfony Dotenv Component](https://symfony.com/doc/3.4/components/dotenv.html).**
+WP Starter uses one of these libraries: the **[Symfony Dotenv Component](https://symfony.com/components/Dotenv).**
+
+
+
+### About `putenv()` and `getenv()`
+
+These two PHP functions are problematic as they are not thread safe. So **recent versions of WP Starter** (as well as recent version of Symfony Dotenv Component) **do not use `putenv()` by default** to store in the environment the values loaded via `.env` files.
+
+Even if `.env` files are discouraged in production where thread safety is important, we still prefer to have a safe behavior by default and not use  `putenv()`. This means that environment variables loaded from WP Starter `.env` files will not be available to `getenv()`.
+
+There are different ways those values could be read instead:
+
+- Because WP Starter converts environment variables to constants (after converting to the correct type), one approach is to access values constants.
+- Directly access super globals: `$_ENV['var_name'] ?? $_SERVER['var_name'] ?? null`.
+- Make use of WP Starter helper, like ` WeCodeMore\WpStarter\Env\Helpers::readVar('var_name');` This approach has the benefit of obtaining "filtered values". E. g. obtaining the intended type instead of always a string. 
+
+If any of the above can be used for some reason, it is still possible to let WP Starter use `putenv()` to load environments by setting the `use-putenv` configuration to `true`.
 
 
 
@@ -81,6 +97,8 @@ The env vars loaded from the file will never overwrite variables that are set in
 Moreover, **if the "actual environment" contains all the variables WP Starter and WordPress need, there's no need to load and parse env files, which is the suggested way to go in production**.
 
 Configuring WP Starter to **bypass** the loading of env files is accomplished via the **`WPSTARTER_ENV_LOADED`** env variable, which when set tells WP Starter to assume all variables are in the actual environment.
+
+
 
 ### Important security note about `.env` file
 
@@ -121,7 +139,7 @@ If there's a plugin that supports a constant like `"AWESOME_PLUGIN_CONFIG"`, by 
 So you might need to write code like:
 
 ```php
-$config = getenv('AWESOME_PLUGIN_CONFIG');
+$config = $_ENV['AWESOME_PLUGIN_CONFIG'] ?? $_SERVER['AWESOME_PLUGIN_CONFIG'] ?? null;
 if ($config) {
     define('AWESOME_PLUGIN_CONFIG', $config);
 }
@@ -130,6 +148,8 @@ if ($config) {
 There are many places in which such code can be placed, for example a MU plugin.
 
 Alternatively WP Starter can be instructed to do something like this automatically.
+
+
 
 ### Let WP Starter define constants for custom env vars
 
@@ -165,6 +185,8 @@ As described above, all WordPress configuration constants are natively supported
 
 Moreover, there are a few env variables that have a special meaning for WP Starter.
 
+
+
 ### DB check env vars
 
 During its bootstrap process, before doing any operation on the system, WP Starter checks if the environment is already setup for database connection.
@@ -180,6 +202,8 @@ The three env vars are registered in the order they are listed above: if one is 
 
 Sometime it might be desirable to bypass this WP Starter check and there's a way to accomplish that via the `skip-db-check` setting.
 Learn more about that in the [_"WP-Starter-Configuration"_ chapter](04-WP-Starter-Configuration.md).
+
+
 
 ### WordPress Configuration
 
@@ -226,9 +250,7 @@ The filter is executed very late (so could be added in MU plugins, plugins and e
 For example, to only allow cache in production a code like the following can be used:
 
 ```php
-add_filter('wpstarter.skip-cache-env', function ($skip, $envName) {
-    return $skip || $envName !== 'production';
-});
+add_filter('wpstarter.skip-cache-env', fn ($skip, $envName) => $skip || $envName !== 'production');
 ```
 
 

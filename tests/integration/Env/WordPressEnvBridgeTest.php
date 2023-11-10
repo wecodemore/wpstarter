@@ -38,7 +38,7 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadFile(): void
+    public function testLoad(): void
     {
         $bridge = new WordPressEnvBridge();
 
@@ -50,21 +50,6 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame('xxx_', $bridge->read('DB_TABLE_PREFIX'));
         static::assertSame('wp_user', $bridge->read('DB_USER'));
         static::assertSame('', $bridge->read('COOKIE_DOMAIN'));
-    }
-
-    /**
-     * @test
-     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
-     */
-    public function testLoadFileMoreTimesDoNothing(): void
-    {
-        $bridge = new WordPressEnvBridge();
-
-        $bridge->load('example.env', $this->fixturesPath());
-        $bridge->load('more.env', $this->fixturesPath());
-
-        static::assertSame('localhost', $bridge->read('DB_HOST'));
-        static::assertNull($bridge->read('FOO'));
     }
 
     /**
@@ -88,29 +73,29 @@ class WordPressEnvBridgeTest extends TestCase
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testGetEnvIsSkippedForNotLoadedVars(): void
+    public function testMultipleLoads(): void
     {
-        putenv('PUT_THE_ENV=HERE');
-
         $bridge = new WordPressEnvBridge();
+        $bridge->load('example.env', $this->fixturesPath());
         $bridge->load('more.env', $this->fixturesPath());
 
-        static::assertSame('HERE', getenv('PUT_THE_ENV'));
-        static::assertNull($bridge->read('PUT_THE_ENV'));
+        static::assertSame('192.168.1.255', $bridge->read('DB_HOST'));
+        static::assertSame('BAR BAR', $bridge->read('BAZ'));
     }
 
     /**
      * @test
      * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
      */
-    public function testLoadAppended(): void
+    public function testMultipleLoadsDontOverrideIfRead(): void
     {
         $bridge = new WordPressEnvBridge();
-        $bridge->load('example.env', $this->fixturesPath());
-        $bridge->loadAppended('more.env', $this->fixturesPath());
 
-        static::assertSame('192.168.1.255', $bridge->read('DB_HOST'));
-        static::assertSame('BAR BAR', $bridge->read('BAZ'));
+        $bridge->load('example.env', $this->fixturesPath());
+        static::assertSame('localhost', $bridge->read('DB_HOST'));
+
+        $bridge->load('more.env', $this->fixturesPath());
+        static::assertSame('localhost', $bridge->read('DB_HOST'));
     }
 
     /**
@@ -121,45 +106,10 @@ class WordPressEnvBridgeTest extends TestCase
     {
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
-        $bridge->loadAppended('not-more.env', $this->fixturesPath());
+        $bridge->load('not-more.env', $this->fixturesPath());
 
         static::assertSame('localhost', $bridge->read('DB_HOST'));
         static::assertNull($bridge->read('BAZ'));
-    }
-
-    /**
-     * @test
-     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
-     */
-    public function testLoadAppendedAlwaysLoadsIfLoadWasCalledAndEnvLoaded(): void
-    {
-        $_ENV['WPSTARTER_ENV_LOADED'] = 1;
-
-        $bridge = new WordPressEnvBridge();
-        $bridge->load('example.env', $this->fixturesPath());
-
-        static::assertNull($bridge->read('DB_HOST'));
-
-        $bridge->loadAppended('more.env', $this->fixturesPath());
-
-        static::assertSame('192.168.1.255', $bridge->read('DB_HOST'));
-    }
-
-    /**
-     * @test
-     * @covers \WeCodeMore\WpStarter\Env\WordPressEnvBridge
-     */
-    public function testLoadAppendedNotLoadsIfLoadWasNotCalledAndEnvLoaded(): void
-    {
-        $_ENV['WPSTARTER_ENV_LOADED'] = 1;
-
-        $bridge = new WordPressEnvBridge();
-
-        static::assertNull($bridge->read('DB_HOST'));
-
-        $bridge->loadAppended('more.env', $this->fixturesPath());
-
-        static::assertNull($bridge->read('DB_HOST'));
     }
 
     /**
@@ -172,14 +122,14 @@ class WordPressEnvBridgeTest extends TestCase
 
         $bridge = new WordPressEnvBridge();
         $bridge->load('example.env', $this->fixturesPath());
-        $bridge->loadAppended('more.env', $this->fixturesPath());
+        $bridge->load('more.env', $this->fixturesPath());
         $bridge->write('NEW', 'new!');
 
         $env = $bridge->readMany('DB_NAME', 'DB_HOST', 'FOO', 'NEW');
 
         static::assertSame('wp', $env['DB_NAME']); // example.env
         static::assertSame('192.168.1.255', $env['DB_HOST']); // more.env
-        static::assertSame('I come first.', $env['FOO']); // actual.env
+        static::assertSame('I come first.', $env['FOO']); // actual env
         static::assertSame('new!', $env['NEW']); // offsetSet
     }
 
@@ -291,7 +241,7 @@ class WordPressEnvBridgeTest extends TestCase
         $_ENV['FS_CHMOD_DIR'] = '0644';
 
         $bridge = new WordPressEnvBridge();
-        $bridge->loadFile($this->fixturesPath() . '/example.env');
+        $bridge->load('example.env', $this->fixturesPath());
         $bridge->write('FOO', 'Bar!');
 
         static::assertFalse($bridge->hasCachedValues());
@@ -304,7 +254,6 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame('Awesome!', $bridge->read('MY_AWESOME_VAR'));
         // and also works with "manual" added env.
         static::assertSame('Bar!', $bridge->read('FOO'));
-        static::assertSame('Bar!', getenv('FOO'));
         static::assertSame('Bar!', $_ENV['FOO'] ?? '');
 
         $loadedVars = WordPressEnvBridge::loadedVars();
@@ -322,7 +271,7 @@ class WordPressEnvBridgeTest extends TestCase
                 $setCache and $oldCache = static::$cache;
                 static::$cache = [];
                 static::$loadedVars = null;
-                putenv('SYMFONY_DOTENV_VARS');
+                unset($_SERVER['WPSTARTER_DOTENV_VARS'], $_ENV['WPSTARTER_DOTENV_VARS']);
             },
             $bridge,
             WordPressEnvBridge::class
@@ -345,18 +294,15 @@ class WordPressEnvBridgeTest extends TestCase
         unset($_ENV['DB_NAME']);
         unset($_SERVER['DB_NAME']);
         // ...and prove it is clean
-        static::assertSame(false, getenv('MY_BAD_VAR'));
         static::assertNull($_ENV['MY_BAD_VAR'] ?? null);
         static::assertNull($_ENV['MY_BAD_VAR'] ?? null);
-        static::assertSame(false, getenv('DB_HOST'));
         static::assertNull($_ENV['DB_HOST'] ?? null);
         static::assertNull($_ENV['DB_HOST'] ?? null);
-        static::assertSame(false, getenv('DB_NAME'));
         static::assertNull($_ENV['DB_NAME'] ?? null);
         static::assertNull($_ENV['DB_NAME'] ?? null);
 
         $cachedBridge = WordPressEnvBridge::buildFromCacheDump($cacheFile);
-        $cachedContent = file_get_contents($cacheFile);
+        $contents = file_get_contents($cacheFile);
 
         static::assertFalse($cachedBridge->isWpSetup());
         static::assertTrue($cachedBridge->hasCachedValues());
@@ -374,13 +320,18 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame($oldCache, $newCache);
 
         // These variables were accessed via read() and should be part of the dump
-        static::assertStringContainsString("putenv('MY_AWESOME_VAR=Awesome!');", $cachedContent);
-        static::assertStringContainsString("putenv('DB_NAME=wp');", $cachedContent);
-        static::assertStringContainsString("define('DB_NAME', 'wp');", $cachedContent);
+        static::assertStringContainsString("define('DB_NAME', 'wp');", $contents);
+        static::assertStringContainsString("\$_SERVER['DB_NAME'] = 'wp';", $contents);
+        static::assertStringContainsString("\$_ENV['DB_NAME'] = 'wp';", $contents);
+        static::assertStringContainsString("\$_SERVER['MY_AWESOME_VAR'] = 'Awesome!';", $contents);
+        static::assertStringContainsString("\$_ENV['MY_AWESOME_VAR'] = 'Awesome!';", $contents);
+
         // ... and these variables were NOT accessed via read() but still should be part of the dump
-        static::assertStringContainsString("putenv('MY_BAD_VAR=Bad!');", $cachedContent);
-        static::assertStringContainsString("putenv('EMPTY_TRASH_DAYS=12');", $cachedContent);
-        static::assertStringContainsString("define('EMPTY_TRASH_DAYS', 12);", $cachedContent);
+        static::assertStringContainsString("\$_SERVER['MY_BAD_VAR'] = 'Bad!';", $contents);
+        static::assertStringContainsString("\$_ENV['MY_BAD_VAR'] = 'Bad!';", $contents);
+        static::assertStringContainsString("\$_SERVER['EMPTY_TRASH_DAYS'] = '12';", $contents);
+        static::assertStringContainsString("\$_ENV['EMPTY_TRASH_DAYS'] = '12';", $contents);
+        static::assertStringContainsString("define('EMPTY_TRASH_DAYS', 12);", $contents);
 
         // WP constants are set for actual env, accessed loaded env, and not accessed loaded env
         static::assertTrue(defined('WP_POST_REVISIONS'));
@@ -397,15 +348,12 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame(7, WP_POST_REVISIONS);
         static::assertSame('0644', $_ENV['FS_CHMOD_DIR'] ?? null);
         static::assertSame(0644, FS_CHMOD_DIR);
-        static::assertSame('Bar!', getenv('FOO'));
         static::assertSame('Bar!', $_ENV['FOO'] ?? null);
         static::assertSame('Bar!', $_SERVER['FOO'] ?? null);
 
         // Loaded env can be read, we proved they were not there before cache
-        static::assertSame('Bad!', getenv('MY_BAD_VAR'));
         static::assertSame('Bad!', $_ENV['MY_BAD_VAR'] ?? null);
         static::assertSame('Bad!', $_SERVER['MY_BAD_VAR'] ?? null);
-        static::assertSame('localhost', getenv('DB_HOST'));
         static::assertSame('localhost', $_ENV['DB_HOST'] ?? null);
         static::assertSame('localhost', $_SERVER['DB_HOST'] ?? null);
 
@@ -437,7 +385,7 @@ class WordPressEnvBridgeTest extends TestCase
         $_ENV['FS_CHMOD_DIR'] = '0644';
 
         $bridge = new WordPressEnvBridge();
-        $bridge->loadFile($this->fixturesPath() . '/example.env');
+        $bridge->load('example.env', $this->fixturesPath());
         $bridge->write('FOO', 'Bar!');
 
         $bridge->write(
@@ -463,6 +411,7 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame(0644, FS_CHMOD_DIR);
         static::assertSame('on', SUNRISE);
 
+        static::assertSame('One!', PLUGIN_CONFIG_ONE);
         static::assertSame(2, PLUGIN_CONFIG_TWO);
         static::assertTrue(PLUGIN_CONFIG_THREE);
         static::assertSame('4', PLUGIN_CONFIG_FOUR);
@@ -510,37 +459,32 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame("on", SUNRISE);
 
         // Variables from actual env are not set in env in the dump file...
-        static::assertFalse(getenv('WP_POST_REVISIONS'));
         static::assertNull($_ENV['WP_POST_REVISIONS'] ?? null);
-        static::assertFalse(getenv('FS_CHMOD_DIR'));
         static::assertNull($_ENV['FS_CHMOD_DIR'] ?? null);
-        static::assertFalse(getenv('FOO'));
         static::assertNull($_ENV['FOO'] ?? null);
+        static::assertNull($_SERVER['WP_POST_REVISIONS'] ?? null);
+        static::assertNull($_SERVER['FS_CHMOD_DIR'] ?? null);
+        static::assertNull($_SERVER['FOO'] ?? null);
         // but because there were accessed, cache still contains them.
         static::assertSame(7, $cachedBridge->read('WP_POST_REVISIONS'));
         static::assertSame(0644, $cachedBridge->read('FS_CHMOD_DIR'));
         static::assertSame('Bar!', $cachedBridge->read('FOO'));
 
         // These loaded env vars were accessed in previous test (via setupWordPress()).
-        static::assertSame('xxx_', getenv('DB_TABLE_PREFIX'));
         static::assertSame('xxx_', $_ENV['DB_TABLE_PREFIX'] ?? null);
         static::assertSame('xxx_', $_SERVER['DB_TABLE_PREFIX'] ?? null);
         static::assertSame('xxx_', $cachedBridge->read('DB_TABLE_PREFIX'));
-        static::assertSame('wp', getenv('DB_NAME'));
         static::assertSame('wp', $_ENV['DB_NAME'] ?? null);
         static::assertSame('wp', $_SERVER['DB_NAME'] ?? null);
         static::assertSame('wp', $cachedBridge->read('DB_NAME'));
-        static::assertSame('', getenv('COOKIE_DOMAIN'));
         static::assertSame('', $_ENV['COOKIE_DOMAIN'] ?? null);
         static::assertSame('', $_SERVER['COOKIE_DOMAIN'] ?? null);
         static::assertSame('', $cachedBridge->read('COOKIE_DOMAIN'));
-        static::assertSame('', getenv('COOKIE_DOMAIN'));
         static::assertSame('on', $_ENV['SUNRISE'] ?? null);
         static::assertSame('on', $_SERVER['SUNRISE'] ?? null);
         static::assertSame('on', $cachedBridge->read('SUNRISE'));
 
         // These loaded env vars were NOT accessed in previous test, but they can be accessed now.
-        static::assertSame('Bad!', getenv('MY_BAD_VAR'));
         static::assertSame('Bad!', $_ENV['MY_BAD_VAR'] ?? null);
         static::assertSame('Bad!', $_SERVER['MY_BAD_VAR'] ?? null);
         static::assertSame('Bad!', $cachedBridge->read('MY_BAD_VAR'));

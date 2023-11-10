@@ -58,6 +58,7 @@ ENV_VARIABLES: {
      * overridden from file, even if `WPSTARTER_ENV_LOADED` is not set.
      */
     filter_var('{{{CACHE_ENV}}}', FILTER_VALIDATE_BOOLEAN) and Helpers::enableCache();
+    filter_var('{{{ENV_USE_PUTENV}}}', FILTER_VALIDATE_BOOLEAN) and Helpers::usePutenv();
     [$envType, $envIsCached] = Helpers::loadEnvFiles('{{{ENV_FILE_NAME}}}', WPSTARTER_ENV_PATH);
 
     /**
@@ -255,13 +256,7 @@ ADMIN_COLOR : {
 
 ENV_CACHE : {
     /** On shutdown, we dump environment so that on subsequent requests we can load it faster */
-    if (Helpers::isEnvCacheEnabled() && Helpers::isWpEnvSetup()) {
-        register_shutdown_function(
-            static function (): void {
-                Helpers::dumpEnvCache(WPSTARTER_ENV_PATH . WordPressEnvBridge::CACHE_DUMP_FILE);
-            }
-        );
-    }
+    register_shutdown_function([Helpers::class, 'dumpEnvCache']);
 } #@@/ENV_CACHE
 
 DEBUG_INFO : {
