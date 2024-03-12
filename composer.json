@@ -38,16 +38,16 @@
         "ext-SPL": "*",
         "composer-plugin-api": "^1.10 || ^2",
         "composer/installers": "^1.12.0 || ^2",
-        "symfony/dotenv": "^3.4 || ^5 || ^6"
+        "symfony/dotenv": "^3.4 || ^5 || ^6 || ^7"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",
         "composer/package-versions-deprecated": "^1.11.99",
         "composer/composer": "^2.5.4",
-        "symfony/process": "^3.4.47 || ^5.4.19",
+        "symfony/process": "^3.4.47 || ^5.4.19 || ^6 || ^7",
         "wp-cli/wp-cli": "^2.7.1",
         "inpsyde/php-coding-standards": "^1.0.0",
-        "vimeo/psalm": "^4.30.0",
+        "vimeo/psalm": "^4.30.0 || ^5",
         "phpunit/phpunit": "^7.5.20 || ^9.6.3",
         "mockery/mockery": "^1.3.6",
         "mikey179/vfsstream": "^1.6.11"
