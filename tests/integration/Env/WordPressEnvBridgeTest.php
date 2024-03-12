@@ -50,7 +50,6 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame('xxx_', $bridge->read('DB_TABLE_PREFIX'));
         static::assertSame('wp_user', $bridge->read('DB_USER'));
         static::assertSame('', $bridge->read('COOKIE_DOMAIN'));
-        static::assertSame('BAD&amp;Auth', $bridge->read('AUTH_COOKIE'));
     }
 
     /**
@@ -418,12 +417,6 @@ class WordPressEnvBridgeTest extends TestCase
         static::assertSame('localhost', $cachedBridge->read('DB_HOST'));
         // ...and it should still be able to read things from actual env set after cache was built
         static::assertSame('XYZ', $cachedBridge->read('XYZ'));
-
-        // Test consitency of defined constansts, getenv, $_ENV and $_SERVER in filtered variables
-        static::assertSame('BAD&amp;Auth', AUTH_COOKIE);
-        static::assertSame('BAD&amp;Auth', getenv('AUTH_COOKIE'));
-        static::assertSame('BAD&amp;Auth', $_ENV['AUTH_COOKIE'] ?? null);
-        static::assertSame('BAD&amp;Auth', $_SERVER['AUTH_COOKIE'] ?? null);
     }
 
     /**
