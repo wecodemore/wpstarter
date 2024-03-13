@@ -46,7 +46,7 @@ class WordPressEnvBridgeTest extends TestCase
 
         static::assertSame('localhost', $bridge->read('DB_HOST'));
         static::assertSame('wp', $bridge->read('DB_NAME'));
-        static::assertSame('my secret!', $bridge->read('DB_PASSWORD'));
+        static::assertSame('foo&bar!baz<qux', $bridge->read('DB_PASSWORD'));
         static::assertSame('xxx_', $bridge->read('DB_TABLE_PREFIX'));
         static::assertSame('wp_user', $bridge->read('DB_USER'));
         static::assertSame('', $bridge->read('COOKIE_DOMAIN'));

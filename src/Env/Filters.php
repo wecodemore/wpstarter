@@ -33,6 +33,7 @@ final class Filters
     public const FILTER_INT_OR_BOOL = 'int|bool';
     public const FILTER_STRING_OR_BOOL = 'string|bool';
     public const FILTER_STRING = 'string';
+    public const FILTER_RAW_STRING = 'raw-string';
     public const FILTER_OCTAL_MOD = 'mod';
     public const FILTER_TABLE_PREFIX = 'table-prefix';
 
@@ -87,6 +88,8 @@ final class Filters
                 return $this->filterFloat($value);
             case self::FILTER_STRING:
                 return $this->filterString($value);
+            case self::FILTER_RAW_STRING:
+                return $this->filterRawString($value);
             case self::FILTER_INT_OR_BOOL:
                 return $this->filterIntOrBool($value);
             case self::FILTER_STRING_OR_BOOL:
@@ -155,6 +158,19 @@ final class Filters
         }
 
         return htmlspecialchars(strip_tags((string)$value), ENT_QUOTES, 'UTF-8', false);
+    }
+
+    /**
+     * @param mixed $value
+     * @return string
+     */
+    private function filterRawString($value): string
+    {
+        if (!is_scalar($value)) {
+            throw new \Exception('Invalid scalar.');
+        }
+
+        return addslashes((string)$value);
     }
 
     /**
