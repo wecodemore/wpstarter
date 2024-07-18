@@ -131,7 +131,7 @@ abstract class Helpers
             if (!did_action('plugins_loaded')) {
                 return !$skip;
             }
-            static::$shouldCache = !apply_filters('wpstarter.skip-cache-env', $skip);
+            static::$shouldCache = !apply_filters('wpstarter.skip-cache-env', $skip, $env);
         }
 
         return static::$shouldCache;
