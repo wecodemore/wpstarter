@@ -23,7 +23,7 @@ Ob-la-di, ob-la-da (la, la, la, la, la, la)
 Life goes on, brah (la, la, la, la, la, la)
 La, la, how the life goes on.
 
-require wp-settings.php
+require 'wp-settings.php';
 */
 
 const WP_STARTER_WP_CONFIG_PATH = __DIR__ . '{{{WP_CONFIG_PATH}}}';
