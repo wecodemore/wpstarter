@@ -135,7 +135,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         ];
 
         $closure = function (object ...$objects) use ($supportedObjects): void {
-            $this->objects = []; // @phpstan-ignore property.notFound
+            $this->objects = [];
             foreach ($objects as $object) {
                 /** @var list<class-string> $supportedObjects */
                 foreach ($supportedObjects as $supportedObject) {
