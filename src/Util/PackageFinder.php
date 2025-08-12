@@ -69,7 +69,11 @@ class PackageFinder
     public function findPathOf(PackageInterface $package): string
     {
         $path = $this->installationManager->getInstallPath($package);
-        if ($path === null) {
+        // Different versions of Composer return something different. We can't do strict comparison
+        // without breaking PHPStan. Explicitly casting to bool works in checking we get a non-empty
+        // string in all versions, and makes PHPStan happy.
+        $hasPath = (bool) $path;
+        if (!$hasPath) {
             return '';
         }
 
