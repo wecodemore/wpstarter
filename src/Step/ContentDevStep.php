@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Step;
 
+use Composer\Util\Filesystem as ComposerFilesystem;
 use Composer\Util\Platform;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Io\Question;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -47,30 +49,11 @@ final class ContentDevStep implements OptionalStep
     public const OP_NONE = 'none';
     public const OPERATIONS = [self::OP_COPY, self::OP_SYMLINK, self::OP_NONE];
 
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var \Composer\Util\Filesystem
-     */
-    private $composerFilesystem;
-
-    /**
-     * @var string|null
-     */
-    private $operation;
-
-    /**
-     * @var string
-     */
-    private $error = 'Some errors occurred while publishing content-dev dir.';
-
-    /**
-     * @var string
-     */
-    private $contentDevDir = '';
+    private Filesystem $filesystem;
+    private ComposerFilesystem $composerFilesystem;
+    private ?string $operation = null;
+    private string $error = 'Some errors occurred while publishing content-dev dir.';
+    private string $contentDevDir = '';
 
     /**
      * @param Locator $locator
@@ -139,64 +122,35 @@ final class ContentDevStep implements OptionalStep
     public function run(Config $config, Paths $paths): int
     {
         $operation = $this->operation;
-        if (!$operation) {
+        if (($operation ?? '') === '') {
             $operation = $config[Config::CONTENT_DEV_OPERATION]->unwrapOrFallback(self::OP_SYMLINK);
         }
+        assert(is_string($operation));
 
-        if ($operation === self::OP_NONE || $operation === self::ASK) {
+        if (($operation === self::OP_NONE) || ($operation === self::ASK)) {
             return Step::NONE;
         }
 
         /** @var string $srcBase */
         $srcBase = $config[Config::CONTENT_DEV_DIR]->unwrap();
-        $this->contentDevDir = $srcBase;
         $targetBase = $paths->wpContent();
 
-        $scrDirs = [
-            "{$srcBase}/plugins",
-            "{$srcBase}/themes",
-            "{$srcBase}/mu-plugins",
-            "{$srcBase}/languages",
-        ];
+        $this->contentDevDir = $srcBase;
+        [$dirsCount, $dirsErrors] = $this->symlinkOrCopyDirs($operation, $targetBase);
+        [$filesCount, $fileErrors] = $this->symlinkOrCopyFiles($operation, $targetBase);
 
-        $errorsOnDirs = $operation === self::OP_COPY
-            ? $this->copyDirs($scrDirs, $targetBase)
-            : $this->symlinkDirs($scrDirs, $targetBase);
-
-        $scrFiles = array_map(
-            static function (string $dropin) use ($srcBase): string {
-                return "{$srcBase}/{$dropin}";
-            },
-            DropinsStep::DROPINS
-        );
-
-        $errorsOnFiles = $operation === self::OP_COPY
-            ? $this->copyFiles($scrFiles, $targetBase)
-            : $this->symlinkFiles($scrFiles, $targetBase);
-
-        $errors = $errorsOnDirs + $errorsOnFiles;
-        if ($errors) {
-            $this->error = sprintf(
-                "%s occurred while %sing content-dev dir '%s' to '%s'.",
-                $errors > 1 ? "{$errors} errors" : 'One error',
-                (string)$operation,
-                $srcBase,
-                $targetBase
-            );
-            if ($operation === self::OP_SYMLINK && Platform::isWindows()) {
-                $this->error .= "\nOn Windows make sure to run terminal as administrator.";
-            }
-        }
-
-        if (!$errors) {
+        $totalErrors = $dirsErrors + $fileErrors;
+        if ($totalErrors === 0) {
             return Step::SUCCESS;
         }
 
-        if ($errors >= (count($scrDirs) + count($scrFiles))) {
-            return Step::ERROR;
+        if (($operation === self::OP_SYMLINK) && Platform::isWindows()) {
+            $this->error .= "\nOn Windows, make sure to run terminal as administrator.";
         }
 
-        return Step::SUCCESS | Step::ERROR;
+        return ($totalErrors >= ($dirsCount + $filesCount))
+            ? Step::ERROR
+            : Step::SUCCESS | Step::ERROR;
     }
 
     /**
@@ -213,7 +167,7 @@ final class ContentDevStep implements OptionalStep
     public function success(): string
     {
         $message = '<comment>Development content</comment> published successfully';
-        $message .= $this->contentDevDir ? " from '/{$this->contentDevDir }'." : '.';
+        $message .= ($this->contentDevDir !== '') ? " from '/{$this->contentDevDir }'." : '.';
 
         return $message;
     }
@@ -224,6 +178,76 @@ final class ContentDevStep implements OptionalStep
     public function skipped(): string
     {
         return '  - Development content publishing skipped.';
+    }
+
+    /**
+     * @param string $operation
+     * @param string $targetBase
+     * @return array{int, int}
+     */
+    private function symlinkOrCopyDirs(string $operation, string $targetBase): array
+    {
+        $scrDirs = [
+            "{$this->contentDevDir}/plugins",
+            "{$this->contentDevDir}/themes",
+            "{$this->contentDevDir}/mu-plugins",
+            "{$this->contentDevDir}/languages",
+        ];
+
+        $errors = ($operation === self::OP_COPY)
+            ? $this->copyDirs($scrDirs, $targetBase)
+            : $this->symlinkDirs($scrDirs, $targetBase);
+
+        if ($errors === 0) {
+            $this->error = '';
+
+            return [count($scrDirs), 0];
+        }
+
+        $this->error = sprintf(
+            "%s occurred while %sing directories '%s' to '%s'.",
+            $errors > 1 ? "{$errors} errors" : 'One error',
+            $operation,
+            implode("', '", $scrDirs),
+            $targetBase
+        );
+
+        return [count($scrDirs), $errors];
+    }
+
+    /**
+     * @param string $operation
+     * @param string $targetBase
+     * @return array{int, int}
+     */
+    private function symlinkOrCopyFiles(string $operation, string $targetBase): array
+    {
+        $scrFiles = [];
+        foreach (DropinsStep::DROPINS as $dropin) {
+            $scrFiles[] = "{$this->contentDevDir}/{$dropin}";
+        }
+
+        $errors = ($operation === self::OP_COPY)
+            ? $this->copyFiles($scrFiles, $targetBase)
+            : $this->symlinkFiles($scrFiles, $targetBase);
+
+        if ($errors === 0) {
+            return [count($scrFiles), 0];
+        }
+
+        if ($this->error !== '') {
+            $this->error .= "\n";
+        }
+
+        $this->error .= sprintf(
+            "%s occurred while %sing files '%s' to '%s'.",
+            $errors > 1 ? "{$errors} errors" : 'One error',
+            $operation,
+            implode("', '", $scrFiles),
+            $targetBase
+        );
+
+        return [count($scrFiles), $errors];
     }
 
     /**
@@ -265,8 +289,8 @@ final class ContentDevStep implements OptionalStep
         foreach ($devContentSubfolders as $devContentSubfolder) {
             $items = is_dir($devContentSubfolder)
                 ? glob("{$devContentSubfolder}/*", GLOB_NOSORT)
-                : null;
-            if (!$items) {
+                : false;
+            if (($items === false) || ($items === [])) {
                 continue;
             }
 
@@ -338,7 +362,7 @@ final class ContentDevStep implements OptionalStep
      * @param string $target
      * @return void
      */
-    private function maybeUnlinkTarget(string $source, string $target)
+    private function maybeUnlinkTarget(string $source, string $target): void
     {
         if (is_file($source) && is_link($target)) {
             $this->composerFilesystem->unlink($target);

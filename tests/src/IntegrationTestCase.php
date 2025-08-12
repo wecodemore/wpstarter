@@ -24,12 +24,8 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
 {
-    use PhpUnitCrossVersion;
-
-    /**
-     * @var OutputInterface[]
-     */
-    private $outputs = [];
+    /** @var array<int, CollectingOutput> */
+    private array $outputs = [];
 
     /**
      * @param int $verbosity
@@ -37,7 +33,7 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      */
     public function collectOutput(int $verbosity = OutputInterface::VERBOSITY_NORMAL): string
     {
-        if ($this->outputs[$verbosity] ?? null) {
+        if (isset($this->outputs[$verbosity])) {
             $output = $this->outputs[$verbosity]->output;
             $this->outputs[$verbosity]->output = '';
 
@@ -55,23 +51,9 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
         int $verbosity = OutputInterface::VERBOSITY_NORMAL
     ): OutputInterface {
 
-        if ($this->outputs[$verbosity] ?? null) {
-            return $this->outputs[$verbosity];
+        if (!isset($this->outputs[$verbosity])) {
+            $this->outputs[$verbosity] = new CollectingOutput($verbosity);
         }
-
-        $this->outputs[$verbosity] = new class(
-            $verbosity,
-            false,
-            new OutputFormatter(false, Composer\Factory::createAdditionalStyles())
-        ) extends Output {
-
-            public $output = '';
-
-            protected function doWrite($message, $newline) // phpcs:ignore
-            {
-                $this->output .= $message . ($newline ? "\n" : '');
-            }
-        };
 
         return $this->outputs[$verbosity];
     }
@@ -97,28 +79,22 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      * @param string|null $cwd
      * @param int $verbosity
      * @param string $input
-     * @param array $extra
+     * @param array<string, mixed> $extra
      * @return Paths
      */
     public function createPaths(
-        string $cwd = null,
+        ?string $cwd = null,
         int $verbosity = OutputInterface::VERBOSITY_NORMAL,
         string $input = '',
         array $extra = []
     ): Paths {
 
-        return $cwd
-            ? Paths::withRoot(
-                $cwd,
-                $this->createComposerConfig($input, $verbosity, $cwd),
-                $extra,
-                new Composer\Util\Filesystem()
-            )
-            : new Paths(
-                $this->createComposerConfig($input, $verbosity, $cwd),
-                $extra,
-                new Composer\Util\Filesystem()
-            );
+        $config = $this->createComposerConfig($input, $verbosity, $cwd);
+        $filesystem = new Composer\Util\Filesystem();
+
+        return (($cwd !== null) && ($cwd !== ''))
+            ? Paths::withRoot($cwd, $config, $extra, $filesystem)
+            : new Paths($config, $extra, $filesystem);
     }
 
     /**
@@ -130,12 +106,15 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
     public function createComposerConfig(
         string $input = '',
         int $verbosity = OutputInterface::VERBOSITY_NORMAL,
-        string $cwd = null
+        ?string $cwd = null
     ): Composer\Config {
+
+        $path = getenv('PACKAGE_PATH');
+        assert(is_string($path));
 
         return Composer\Factory::createConfig(
             $this->createComposerIo($input, $verbosity),
-            $cwd ?? getenv('PACKAGE_PATH')
+            $cwd ?? $path
         );
     }
 
@@ -154,25 +133,12 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      */
     public function createUrlDownloader(): UrlDownloader
     {
-        $ver = Composer\Composer::RUNTIME_API_VERSION;
-        if (version_compare($ver, '2', '<')) {
-            return UrlDownloader::newV1(
-                Factory::createRemoteFilesystem(
-                    $this->createComposerIo(),
-                    $this->createComposerConfig()
-                ),
-                new Filesystem(),
-                false
-            );
-        }
-
-        return UrlDownloader::newV2(
+        return UrlDownloader::new(
             Factory::createHttpDownloader(
                 $this->createComposerIo(),
                 $this->createComposerConfig()
             ),
-            new Filesystem(),
-            false
+            new Filesystem()
         );
     }
 }

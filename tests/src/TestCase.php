@@ -21,12 +21,11 @@ use WeCodeMore\WpStarter\Util;
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
     use MockeryPHPUnitIntegration;
-    use PhpUnitCrossVersion;
 
     /**
      * @before
      */
-    protected function before()
+    protected function before(): void
     {
         parent::setUp();
         $this->startMockery();
@@ -35,7 +34,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * @after
      */
-    protected function after()
+    protected function after(): void
     {
         $this->closeMockery();
         parent::tearDown();
@@ -46,7 +45,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function fixturesPath(): string
     {
-        return str_replace('\\', '/', getenv('TESTS_FIXTURES_PATH'));
+        $path = getenv('TESTS_FIXTURES_PATH');
+        assert(is_string($path));
+
+        return str_replace('\\', '/', $path);
     }
 
     /**
@@ -54,12 +56,15 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected function packagePath(): string
     {
-        return str_replace('\\', '/', getenv('PACKAGE_PATH'));
+        $path = getenv('PACKAGE_PATH');
+        assert(is_string($path));
+
+        return str_replace('\\', '/', $path);
     }
 
     /**
-     * @param array $configs
-     * @param array $extra
+     * @param array<mixed> $configs
+     * @param array<string, mixed> $extra
      * @param string $vendorDir
      * @param string $binDir
      * @return Config\Config
@@ -75,7 +80,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param array $extra
+     * @param array<string, mixed> $extra
      * @param string $vendorDir
      * @param string $binDir
      * @return Config\Validator
@@ -99,16 +104,14 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param mixed ...$objects
+     * @param object ...$objects
      * @return Util\Locator
      *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-     * phpcs:disable Generic.Metrics.NestingLevel
+     * phpcs:disable Inpsyde.CodeQuality.NestingLevel
      */
-    protected function factoryLocator(...$objects): Util\Locator
+    protected function factoryLocator(object ...$objects): Util\Locator
     {
-        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-        // phpcs:enable Generic.Metrics.NestingLevel
+        // phpcs:enable Inpsyde.CodeQuality.NestingLevel
 
         $reflection = new \ReflectionClass(Util\Locator::class);
         /** @var Util\Locator $locator */
@@ -131,9 +134,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
             Cli\PharInstaller::class,
         ];
 
-        $closure = function (...$objects) use ($supportedObjects) {
-            $this->objects = [];
+        $closure = function (object ...$objects) use ($supportedObjects): void {
+            $this->objects = []; // @phpstan-ignore property.notFound
             foreach ($objects as $object) {
+                /** @var list<class-string> $supportedObjects */
                 foreach ($supportedObjects as $supportedObject) {
                     if (is_a($object, $supportedObject)) {
                         $this->objects[$supportedObject] = $object;
@@ -149,10 +153,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param array|null $extra
+     * @param array<string, mixed>|null $extra
      * @return Util\Paths
      */
-    protected function factoryPaths(array $extra = null): Util\Paths
+    protected function factoryPaths(?array $extra = null): Util\Paths
     {
         $root = $this->fixturesPath() . '/paths-root';
 
@@ -160,7 +164,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $config->shouldReceive('get')->with('vendor-dir')->andReturn("{$root}/vendor");
         $config->shouldReceive('get')->with('bin-dir')->andReturn("{$root}/vendor/bin");
 
-        is_array($extra) or $extra = [
+        $extra ??= [
             'wordpress-install-dir' => 'public/wp',
             'wordpress-content-dir' => 'public/wp-content',
         ];

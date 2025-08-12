@@ -16,30 +16,11 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 class PhpToolProcess
 {
-    /**
-     * @var PhpTool
-     */
-    private $tool;
-
-    /**
-     * @var string
-     */
-    private $toolPath;
-
-    /**
-     * @var PhpProcess
-     */
-    private $phpProcess;
-
-    /**
-     * @var Paths
-     */
-    private $paths;
-
-    /**
-     * @var Io
-     */
-    private $io;
+    private PhpTool $tool;
+    private string $toolPath;
+    private PhpProcess $phpProcess;
+    private Paths $paths;
+    private Io $io;
 
     /**
      * @param string $phpPath
@@ -64,7 +45,7 @@ class PhpToolProcess
     }
 
     /**
-     * @param array $environment
+     * @param array<string, string> $environment
      * @return PhpToolProcess
      */
     public function withEnvironment(array $environment): PhpToolProcess
@@ -82,7 +63,7 @@ class PhpToolProcess
     {
         return $this->phpProcess->execute(
             $this->tool->prepareCommand(
-                $this->toolPath ? "{$this->toolPath} {$command}" : $command,
+                ($this->toolPath !== '') ? "{$this->toolPath} {$command}" : $command,
                 $this->paths,
                 $this->io
             )

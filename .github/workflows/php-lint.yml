@@ -1,0 +1,39 @@
+name: PHP Lint
+
+on:
+    push:
+        paths:
+            - '**workflows/php-lint.yml'
+            - '**.php'
+    pull_request:
+        paths:
+            - '**workflows/php-lint.yml'
+            - '**.php'
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+
+    lint:
+        runs-on: ubuntu-latest
+        if: ${{ !contains(github.event.head_commit.message, 'skip lint') }}
+        strategy:
+            fail-fast: true
+            matrix:
+                php-ver: [ '7.4', '8.0', '8.1', '8.2', '8.3', '8.4' ]
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v4
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.php-ver }}
+                    ini-values: zend.assertions=1, error_reporting=E_ALL, display_errors=On
+                    tools: parallel-lint
+
+            -   name: Check syntax error in sources
+                run: parallel-lint ./src/

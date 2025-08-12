@@ -34,9 +34,8 @@ class PackageFinderTest extends IntegrationTestCase
             $names[] = $plugin->getName();
         }
 
-        static::assertCount(3, $names);
+        static::assertCount(2, $names);
         static::assertTrue(in_array('composer/installers', $names, true));
-        static::assertTrue(in_array('composer/package-versions-deprecated', $names, true));
         static::assertTrue(
             in_array('dealerdirect/phpcodesniffer-composer-installer', $names, true)
         );

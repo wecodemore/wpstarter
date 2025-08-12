@@ -13,6 +13,7 @@ namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Io\Io;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -23,25 +24,10 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
 {
     public const NAME = 'check-paths';
 
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var string
-     */
-    private $error = '';
-
-    /**
-     * @var bool
-     */
-    private $themeDir = true;
-
-    /**
-     * @var string
-     */
-    private $envInWebRoot = '';
+    private Filesystem $filesystem;
+    private string $error = '';
+    private bool $themeDir = true;
+    private string $envInWebRoot = '';
 
     /**
      * @param Locator $locator
@@ -86,7 +72,7 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
 
         $this->filesystem->createDir($wpContent);
         // no love for this, but https://core.trac.wordpress.org/ticket/31620 makes it necessary.
-        if ($config[Config::MOVE_CONTENT]->not(true) && $paths->wpContent()) {
+        if ($config[Config::MOVE_CONTENT]->not(true) && ($paths->wpContent() !== '')) {
             $this->themeDir = $this->filesystem->createDir("{$wpContent}/themes");
             // missing plugins' dir isn't as serious as themes' dir, it causes a PHP warning.
             $this->filesystem->createDir("{$wpContent}/plugins");
@@ -100,12 +86,12 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
 
         $error = '';
         foreach ($toCheck as $name => $path) {
-            if (!realpath($path)) {
+            if (realpath($path) === false) {
                 $error .= "{$name} path '{$path}' not found.\n";
             }
         }
 
-        if ($error) {
+        if ($error !== '') {
             $this->error = trim($error);
 
             return self::ERROR;
@@ -134,9 +120,9 @@ final class CheckPathStep implements BlockingStep, PostProcessStep
      * @param Io $io
      * @return void
      */
-    public function postProcess(Io $io)
+    public function postProcess(Io $io): void
     {
-        if ($this->envInWebRoot) {
+        if ($this->envInWebRoot !== '') {
             $io->writeCommentBlock(
                 "The .env file is currently placed in webroot folder: '{$this->envInWebRoot}'.",
                 'It is strongly suggested having .env file outside of webroot for security reasons.'

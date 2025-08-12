@@ -13,25 +13,16 @@ namespace WeCodeMore\WpStarter\Io;
 
 class Question
 {
-    /**
-     * @var array<string>
-     */
-    private $lines;
+    /** @var list<string> */
+    private array $lines;
 
-    /**
-     * @var array<string, string>
-     */
-    private $answers = [];
+    /** @var array<string, string> */
+    private array $answers = [];
 
-    /**
-     * @var string
-     */
-    private $default = '';
+    private string $default = '';
 
-    /**
-     * @var array<string>|null
-     */
-    private $question;
+    /** @var list<string>|null */
+    private ?array $question = null;
 
     /**
      * @param array<string> $lines
@@ -40,40 +31,33 @@ class Question
      */
     public function __construct(array $lines, array $answers = [], ?string $default = null)
     {
-        $this->lines = array_filter(
-            $lines,
-            static function (string $line): bool {
-                return (bool)trim($line);
+        $this->lines = [];
+        foreach ($lines as $line) {
+            $trimLine = trim($line);
+            if ($trimLine !== '') {
+                $this->lines[] = $trimLine;
             }
-        );
-
-        if (!$this->lines) {
-            return;
         }
 
-        $validAnswers = array_filter(
-            $answers,
-            static function (string $value, string $key): bool {
-                return trim($value) && trim($key);
-            },
-            ARRAY_FILTER_USE_BOTH
-        );
-
-        if (!$validAnswers) {
-            return;
+        $defaultKey = null;
+        foreach ($answers as $key => $value) {
+            $key = trim($key);
+            $value = trim($value);
+            if (($key !== '') && ($value !== '')) {
+                $defaultKey ??= $key;
+                $this->answers[strtolower($key)] = $value;
+            }
         }
 
-        $validAnswers = array_change_key_case($validAnswers, CASE_LOWER);
-        $answerKeys = array_map('trim', array_keys($validAnswers));
-
-        $this->answers = array_combine($answerKeys, array_values($validAnswers)) ?: [];
+        if ($this->answers === []) {
+            return;
+        }
 
         if ($default !== null) {
             $default = strtolower(trim($default));
             array_key_exists($default, $this->answers) or $default = null;
         }
-
-        $this->default = $default ?? $answerKeys[0];
+        $this->default = ($default ?? $defaultKey ?? '');
     }
 
     /**
@@ -98,13 +82,13 @@ class Question
      */
     public function defaultAnswerText(): string
     {
-        return $this->default ? $this->answers[$this->default] : '';
+        return ($this->default !== '') ? $this->answers[$this->default] : '';
     }
 
     /**
-     * @return array<string>
+     * @return list<string>
      *
-     * @psalm-assert array<string> $this->question
+     * @phpstan-assert list<string> $this->question
      */
     public function questionLines(): array
     {
@@ -112,17 +96,17 @@ class Question
             return $this->question;
         }
 
-        if (!$this->lines || !$this->answers) {
+        if (($this->lines === []) || ($this->answers === [])) {
             $this->question = [];
 
             return [];
         }
 
-        $this->question = array_values($this->lines);
+        $this->question = $this->lines;
         array_unshift($this->question, 'QUESTION:');
         $this->question[] = "";
         $this->question[] = implode(' | ', $this->answers);
-        $this->default and $this->question[] = "Default: '{$this->default}'";
+        ($this->default !== '') and $this->question[] = "Default: '{$this->default}'";
 
         return $this->question;
     }

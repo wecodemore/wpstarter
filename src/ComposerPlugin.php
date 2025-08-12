@@ -21,14 +21,12 @@ use Composer\Package\PackageInterface;
 use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
 use Composer\Plugin\Capability\CommandProvider;
-use Composer\Script\Event;
 use Composer\Util\Filesystem;
 
 /**
  * Composer plugin class to run all the WP Starter steps on Composer install or update and also adds
  * 'wpstarter' command to allow doing same thing "on demand".
  *
- * @psalm-suppress MissingConstructor
  * phpcs:disable Inpsyde.CodeQuality.NoAccessors
  */
 final class ComposerPlugin implements
@@ -46,38 +44,18 @@ final class ComposerPlugin implements
     public const MODE_COMPOSER_INSTALL = 4;
     public const MODE_COMPOSER_UPDATE = 8;
 
-    /**
-     * @var bool
-     */
-    private static $autoload = false;
+    private static bool $autoload = false;
+
+    private IOInterface $io;
+    private Composer $composer;
+    private Util\Locator $locator;
+    private int $mode = self::MODE_NONE;
+
+    /** @var list<PackageInterface> */
+    private array $updatedPackages = [];
 
     /**
-     * @var IOInterface
-     */
-    private $io;
-
-    /**
-     * @var Composer
-     */
-    private $composer;
-
-    /**
-     * @var Util\Locator
-     */
-    private $locator;
-
-    /**
-     * @var int
-     */
-    private $mode = self::MODE_NONE;
-
-    /**
-     * @var PackageInterface[]
-     */
-    private $updatedPackages = [];
-
-    /**
-     * @return array<string, string>
+     * @return array<non-falsy-string, non-falsy-string>
      */
     public static function getSubscribedEvents(): array
     {
@@ -90,7 +68,7 @@ final class ComposerPlugin implements
     }
 
     /**
-     * @return array
+     * @return array<non-falsy-string, class-string<Step\Step>>
      */
     public static function defaultSteps(): array
     {
@@ -107,6 +85,12 @@ final class ComposerPlugin implements
             Step\WpCliConfigStep::NAME => Step\WpCliConfigStep::class,
             Step\WpCliCommandsStep::NAME => Step\WpCliCommandsStep::class,
         ];
+    }
+
+    /**
+     */
+    public function __construct()
+    {
     }
 
     /**
@@ -130,7 +114,7 @@ final class ComposerPlugin implements
      * @param IOInterface $io
      * @return void
      */
-    public function activate(Composer $composer, IOInterface $io)
+    public function activate(Composer $composer, IOInterface $io): void
     {
         $this->composer = $composer;
         $this->io = $io;
@@ -145,7 +129,7 @@ final class ComposerPlugin implements
      *
      * @return void
      */
-    public function setupAutoload()
+    public function setupAutoload(): void
     {
         static::$autoload or spl_autoload_register(
             $this->psr4LoaderFor(__NAMESPACE__, __DIR__),
@@ -160,7 +144,7 @@ final class ComposerPlugin implements
      * @param PackageEvent $event
      * @return void
      */
-    public function onPrePackageOperation(PackageEvent $event)
+    public function onPrePackageOperation(PackageEvent $event): void
     {
         $operation = $event->getOperation();
 
@@ -171,18 +155,17 @@ final class ComposerPlugin implements
             $package = $operation->getPackage();
         }
 
-        if ($package && ($package->getType() !== 'composer-plugin')) {
+        if (($package !== null) && ($package->getType() !== 'composer-plugin')) {
             $this->updatedPackages[] = $package;
         }
     }
 
     /**
-     * @param Event $event
      * @return void
      */
-    public function onAutorunBecauseInstall(Event $event)
+    public function onAutorunBecauseInstall(): void
     {
-        $this->mode or $this->mode = self::MODE_COMPOSER_INSTALL;
+        ($this->mode === self::MODE_NONE) and $this->mode = self::MODE_COMPOSER_INSTALL;
         $this->setupAutoload();
         if ($this->composer->getPackage()->getType() === self::EXTENSIONS_TYPE) {
             return;
@@ -192,13 +175,12 @@ final class ComposerPlugin implements
     }
 
     /**
-     * @param Event $event
      * @return void
      */
-    public function onAutorunBecauseUpdate(Event $event)
+    public function onAutorunBecauseUpdate(): void
     {
         $this->mode = self::MODE_COMPOSER_UPDATE;
-        $this->onAutorunBecauseInstall($event);
+        $this->onAutorunBecauseInstall();
     }
 
     /**
@@ -207,10 +189,10 @@ final class ComposerPlugin implements
      *
      * phpcs:disable Inpsyde.CodeQuality.FunctionLength
      */
-    public function run(Util\SelectedStepsFactory $factory)
+    public function run(Util\SelectedStepsFactory $factory): void
     {
         // phpcs:enable Inpsyde.CodeQuality.FunctionLength
-        $this->mode or $this->mode = self::MODE_COMMAND;
+        ($this->mode === self::MODE_NONE) and $this->mode = self::MODE_COMMAND;
 
         /*
          * Why two try/catch blocks: the 2nd `catch` relies on the Locator, that is built inside
@@ -220,7 +202,7 @@ final class ComposerPlugin implements
         try {
             $config = $this->prepareRun($factory);
         } catch (\Throwable $throwable) {
-            $print = function (string $line) {
+            $print = function (string $line): void {
                 $this->io->writeError(sprintf('  <fg=red>%s</>', trim($line)));
             };
 
@@ -251,7 +233,7 @@ final class ComposerPlugin implements
             if ($factory->isListMode()) {
                 $factory->selectAndFactory($this->locator, $this->composer);
 
-                return;
+                return; // @phpstan-ignore finally.exitPoint
             }
 
             if ($config[Config\Config::SKIP_DB_CHECK]->is(false)) {
@@ -279,7 +261,7 @@ final class ComposerPlugin implements
         } finally {
             restore_error_handler();
             if ($this->mode === self::MODE_COMMAND) {
-                exit($exit);
+                exit($exit); // @phpstan-ignore finally.exitPoint
             }
         }
     }
@@ -287,7 +269,6 @@ final class ComposerPlugin implements
     /**
      * @param Util\SelectedStepsFactory $factory
      * @return Config\Config
-     * @throws \Exception
      */
     private function prepareRun(Util\SelectedStepsFactory $factory): Config\Config
     {
@@ -326,9 +307,9 @@ final class ComposerPlugin implements
 
         $config = $requirements->config();
 
-        /** @var string|null $autoload */
-        $autoload = $config[Config\Config::AUTOLOAD]->unwrapOrFallback();
-        if ($autoload && is_file($autoload)) {
+        /** @var string $autoload */
+        $autoload = $config[Config\Config::AUTOLOAD]->unwrapOrFallback('');
+        if (($autoload !== '') && is_file($autoload)) {
             require_once $autoload;
         }
 
@@ -340,11 +321,11 @@ final class ComposerPlugin implements
     /**
      * @return void
      */
-    private function convertErrorsToExceptions()
+    private function convertErrorsToExceptions(): void
     {
         set_error_handler(
-            static function (int $code, string $msg, string $file = '', int $line = 0) {
-                if ($file && $line) {
+            static function (int $code, string $msg, string $file = '', int $line = 0): void {
+                if (($file !== '') && ($line > 0)) {
                     $msg = rtrim($msg, '. ') . ", in {$file} line {$line}.";
                 }
 
@@ -357,7 +338,7 @@ final class ComposerPlugin implements
     /**
      * @return void
      */
-    private function loadExtensions()
+    private function loadExtensions(): void
     {
         $packages = $this->locator->packageFinder()->findByType(self::EXTENSIONS_TYPE);
 
@@ -370,19 +351,12 @@ final class ComposerPlugin implements
      * @param PackageInterface $package
      * @return void
      */
-    private function loadExtensionAutoload(PackageInterface $package)
+    private function loadExtensionAutoload(PackageInterface $package): void
     {
-        $autoload = $package->getExtra()['wpstarter-autoload'] ?? null;
-        if (!$autoload || !is_array($autoload)) {
-            return;
-        }
+        $psr4 = $this->loadPsr4AutoloadConfig($package);
+        $files = $this->loadFilesAutoloadConfig($package);
 
-        $files = $autoload['files'] ?? [];
-        $psr4 = $autoload['psr-4'] ?? [];
-        is_array($files) or $files = [];
-        is_array($psr4) or $psr4 = [];
-
-        if (!$files && !$psr4) {
+        if (($files === []) && ($psr4 === [])) {
             return;
         }
 
@@ -390,9 +364,6 @@ final class ComposerPlugin implements
         $filesystem = $this->locator->composerFilesystem();
 
         foreach ($psr4 as $namespace => $dir) {
-            if (!is_string($namespace) || !is_string($dir)) {
-                continue;
-            }
             $fullpath = $filesystem->normalizePath("{$packagePath}/{$dir}");
             is_dir($fullpath) and spl_autoload_register(
                 $this->psr4LoaderFor(rtrim($namespace, '\\/'), $fullpath),
@@ -402,20 +373,67 @@ final class ComposerPlugin implements
         }
 
         foreach ($files as $file) {
-            if (is_string($file)) {
-                $fullpath = $filesystem->normalizePath("{$packagePath}/{$file}");
-                file_exists($fullpath) and require_once $fullpath;
-            }
+            $fullpath = $filesystem->normalizePath("{$packagePath}/{$file}");
+            file_exists($fullpath) and require_once $fullpath;
         }
     }
 
     /**
-     * @param Config\Config $config
-     * @return string
+     * @param PackageInterface $package
+     * @return array<non-empty-string, non-empty-string>
      */
-    private function checkWp(Config\Config $config): string
+    private function loadPsr4AutoloadConfig(PackageInterface $package): array
     {
-        $requireWp = $config[Config\Config::REQUIRE_WP]->not(false);
+        $autoload = $package->getExtra()['wpstarter-autoload'] ?? null;
+        $psr4Config = is_array($autoload) ? ($autoload['psr-4'] ?? null) : null;
+        if (!is_array($psr4Config) || ($psr4Config === [])) {
+            return [];
+        }
+
+        $psr4 = [];
+        foreach ($psr4Config as $namespace => $dir) {
+            if (
+                is_string($namespace)
+                && ($namespace !== '')
+                && is_string($dir)
+                && ($dir !== '')
+            ) {
+                $psr4[$namespace] = $dir;
+            }
+        }
+
+        return $psr4;
+    }
+
+    /**
+     * @param PackageInterface $package
+     * @return list<non-empty-string>
+     */
+    private function loadFilesAutoloadConfig(PackageInterface $package): array
+    {
+        $autoload = $package->getExtra()['wpstarter-autoload'] ?? null;
+        $filesConfig = is_array($autoload) ? ($autoload['files'] ?? null) : null;
+        if (!is_array($filesConfig) || ($filesConfig === [])) {
+            return [];
+        }
+
+        $files = [];
+        foreach ($filesConfig as $fileConfig) {
+            if (is_string($fileConfig) && ($fileConfig !== '')) {
+                $files[] = $fileConfig;
+            }
+        }
+
+        return $files;
+    }
+
+    /**
+     * @param Config\Config $config
+     * @return void
+     */
+    private function checkWp(Config\Config $config): void
+    {
+        $requireWp = $config[Config\Config::REQUIRE_WP]->is(true);
         /** @var string $fallbackVer */
         $fallbackVer = $config[Config\Config::WP_VERSION]->unwrapOrFallback('');
         $wpVersion = '';
@@ -428,31 +446,29 @@ final class ComposerPlugin implements
             $wpVersion = $wpVersionDiscover->discover();
         }
 
-        if (!$wpVersion && $requireWp) {
+        if (($wpVersion === '') && $requireWp) {
             throw new \RuntimeException('WordPress is required but not found.');
         }
 
         // If WP version found and no version is in configs, let's set it with the finding.
-        if ($wpVersion && !$fallbackVer) {
+        if (($wpVersion !== '') && ($fallbackVer === '')) {
             $config[Config\Config::WP_VERSION] = $fallbackVer;
         }
-
-        return $wpVersion;
     }
 
     /**
      * @param Util\SelectedStepsFactory $factory
-     * @return Step\Step[]
+     * @return list<Step\Step>
      */
     private function factoryStepsToRun(Util\SelectedStepsFactory $factory): array
     {
         $steps = $factory->selectAndFactory($this->locator, $this->composer);
-        if (!$steps) {
+        if ($steps === []) {
             throw new \Exception($factory->lastFatalError() ?: 'Nothing to run.');
         }
 
         $error = $factory->lastError();
-        if ($error) {
+        if ($error !== '') {
             $io = $this->locator->io();
             $io->writeError("\n{$error}\n");
         }
@@ -463,13 +479,12 @@ final class ComposerPlugin implements
     /**
      * @param string $namespace
      * @param string $dir
-     * @return callable(string): void
+     * @return callable(string):void
      */
     private function psr4LoaderFor(string $namespace, string $dir): callable
     {
-        return static function (string $class) use ($namespace, $dir) {
+        return static function (string $class) use ($namespace, $dir): void {
             if (stripos($class, $namespace) === 0) {
-                /** @psalm-ignore-falsable-return */
                 $file = substr(str_replace('\\', '/', $class), strlen($namespace));
                 require_once $dir . "{$file}.php";
             }
@@ -479,15 +494,15 @@ final class ComposerPlugin implements
     /**
      * @return void
      */
-    private function logo()
+    private function logo(): void
     {
         // phpcs:disable
         $logo = <<<LOGO
-<fg=magenta>    __      __ ___  </><fg=yellow>   ___  _____  _    ___  _____  ___  ___  </>
-<fg=magenta>    \ \    / /| _ \ </><fg=yellow>  / __||_   _|/_\  | _ \|_   _|| __|| _ \ </>
-<fg=magenta>     \ \/\/ / |  _/ </><fg=yellow>  \__ \  | | / _ \ |   /  | |  | _| |   / </>
-<fg=magenta>      \_/\_/  |_|   </><fg=yellow>  |___/  |_|/_/ \_\|_|_\  |_|  |___||_|_\ </>
-LOGO;
+        <fg=magenta>    __      __ ___  </><fg=yellow>   ___  _____  _    ___  _____  ___  ___  </>
+        <fg=magenta>    \ \    / /| _ \ </><fg=yellow>  / __||_   _|/_\  | _ \|_   _|| __|| _ \ </>
+        <fg=magenta>     \ \/\/ / |  _/ </><fg=yellow>  \__ \  | | / _ \ |   /  | |  | _| |   / </>
+        <fg=magenta>      \_/\_/  |_|   </><fg=yellow>  |___/  |_|/_/ \_\|_|_\  |_|  |___||_|_\ </>
+        LOGO;
         // phpcs:enable
 
         $this->io->write("\n{$logo}\n");
@@ -498,7 +513,7 @@ LOGO;
      * @param IOInterface $io
      * @return void
      */
-    public function deactivate(Composer $composer, IOInterface $io)
+    public function deactivate(Composer $composer, IOInterface $io): void
     {
         // noop
     }
@@ -508,7 +523,7 @@ LOGO;
      * @param IOInterface $io
      * @return void
      */
-    public function uninstall(Composer $composer, IOInterface $io)
+    public function uninstall(Composer $composer, IOInterface $io): void
     {
         // noop
     }

@@ -1,0 +1,52 @@
+name: PHP Coding Standards
+
+on:
+    push:
+        paths:
+            - '**workflows/php-cs.yml'
+            - '**.php'
+            -  '**phpcs.xml.dist'
+            - '**composer.json'
+    pull_request:
+        paths:
+            - '**workflows/php-cs.yml'
+            - '**.php'
+            - '**phpcs.xml.dist'
+            - '**composer.json'
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+
+    coding-styles:
+        runs-on: ubuntu-latest
+        if: ${{ !contains(github.event.head_commit.message, 'skip cs') }}
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v4
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: 8.1
+                    coverage: none
+                    tools: cs2pr
+
+            -   name: Adjust Composer dependencies
+                run: |
+                    composer remove --dev --no-update "*/*"
+                    composer require --dev --no-update "inpsyde/php-coding-standards:^2"
+
+            -   name: Install dependencies
+                uses: ramsey/composer-install@v3
+
+            -   name: Check code styles
+                run: ./vendor/bin/phpcs -q ${{ ((github.event_name == 'pull_request') && '--report-checkstyle="phpcs-report.xml" ') || '' }}--report-full --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1
+
+            -   name: Annotate code styles for PRs
+                if: ${{ github.event_name == 'pull_request' }}
+                run: cs2pr --graceful-warnings phpcs-report.xml

@@ -19,10 +19,7 @@ use Composer\Util\Platform;
  */
 class Filesystem
 {
-    /**
-     * @var ComposerFilesystem
-     */
-    private $filesystem;
+    private ComposerFilesystem $filesystem;
 
     /**
      * @param ComposerFilesystem $filesystem
@@ -186,7 +183,7 @@ class Filesystem
             }
 
             $stat = @stat($parentDir);
-            $permissions = $stat ? $stat['mode'] & 0007777 : 0755;
+            $permissions = is_array($stat) ? ($stat['mode'] & 0007777) : 0755;
 
             if (!@mkdir($targetPath, $permissions, true) && !is_dir($targetPath)) {
                 return false;
@@ -250,7 +247,7 @@ class Filesystem
     {
         try {
             $sourcePath = realpath($sourcePath);
-            if (!$sourcePath || !is_file($sourcePath)) {
+            if (($sourcePath === false) || !is_file($sourcePath)) {
                 return false;
             }
 
@@ -281,7 +278,7 @@ class Filesystem
     {
         try {
             $sourcePath = realpath($sourcePath);
-            if (!$sourcePath || !is_dir($sourcePath)) {
+            if (($sourcePath === false) || !is_dir($sourcePath)) {
                 return false;
             }
 

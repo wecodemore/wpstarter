@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Io\Io;
@@ -22,5 +24,5 @@ interface PostProcessStep extends Step
      * @param Io $io
      * @return void
      */
-    public function postProcess(Io $io);
+    public function postProcess(Io $io): void;
 }

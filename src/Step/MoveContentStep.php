@@ -13,6 +13,7 @@ namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Io\Io;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -30,20 +31,9 @@ final class MoveContentStep implements OptionalStep
 {
     public const NAME = 'move-content';
 
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Paths
-     */
-    private $paths;
-
-    /**
-     * @var string
-     */
-    private $error = '';
+    private Filesystem $filesystem;
+    private Paths $paths;
+    private string $error = '';
 
     /**
      * @param Locator $locator
@@ -71,7 +61,7 @@ final class MoveContentStep implements OptionalStep
     {
         return $config[Config::REGISTER_THEME_FOLDER]->is(false)
             && $config[Config::MOVE_CONTENT]->not(false)
-            && $paths->wpContent();
+            && ($paths->wpContent() !== '');
     }
 
     /**

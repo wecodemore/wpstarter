@@ -20,18 +20,12 @@ use WeCodeMore\WpStarter\Util\Requirements;
 
 class RequirementsTest extends TestCase
 {
-    public function testGenericCommandInstanceCreation()
+    /**
+     * @test
+     */
+    public function testGenericCommandInstanceCreation(): void
     {
-        $composer = \Mockery::mock(\Composer\Composer::class);
-        $composerConfig = \Mockery::mock(\Composer\Config::class);
-        $composerConfig->allows('get')->andReturn('');
-        $composer->allows('getPackage->getExtra')->andReturn([]);
-        $composer->allows('getConfig')->andReturn($composerConfig);
-
-        $io = new NullIO();
-        $filesystem = new \Composer\Util\Filesystem();
-        $instance = Requirements::forGenericCommand($composer, $io, $filesystem);
-        $config = $instance->config();
+        $config = $this->factoryRequirements()->config();
 
         static::assertTrue($config[Config::IS_WPSTARTER_COMMAND]->unwrap());
         static::assertFalse($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->unwrap());
@@ -39,18 +33,15 @@ class RequirementsTest extends TestCase
         static::assertFalse($config[Config::IS_COMPOSER_INSTALL]->unwrap());
     }
 
-    public function testSelectedStepsCommandInstanceCreation()
+    /**
+     * @test
+     */
+    public function testSelectedStepsCommandInstanceCreation(): void
     {
-        $composer = \Mockery::mock(\Composer\Composer::class);
-        $composerConfig = \Mockery::mock(\Composer\Config::class);
-        $composerConfig->allows('get')->andReturn('');
-        $composer->allows('getPackage->getExtra')->andReturn([]);
-        $composer->allows('getConfig')->andReturn($composerConfig);
+        [$composer, $io, $filesystem] = $this->factoryRequirementsDependencies();
 
-        $io = new NullIO();
-        $filesystem = new \Composer\Util\Filesystem();
-        $instance = Requirements::forSelectedStepsCommand($composer, $io, $filesystem);
-        $config = $instance->config();
+        $requirements = Requirements::forSelectedStepsCommand($composer, $io, $filesystem);
+        $config = $requirements->config();
 
         static::assertTrue($config[Config::IS_WPSTARTER_COMMAND]->unwrap());
         static::assertTrue($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->unwrap());
@@ -58,20 +49,17 @@ class RequirementsTest extends TestCase
         static::assertFalse($config[Config::IS_COMPOSER_INSTALL]->unwrap());
     }
 
-    public function testComposerInstallInstanceCreation()
+    /**
+     * @test
+     */
+    public function testComposerInstallInstanceCreation(): void
     {
-        $composer = \Mockery::mock(\Composer\Composer::class);
-        $composerConfig = \Mockery::mock(\Composer\Config::class);
-        $composerConfig->allows('get')->andReturn('');
-        $composer->allows('getPackage->getExtra')->andReturn([]);
-        $composer->allows('getConfig')->andReturn($composerConfig);
+        [$composer, $io, $filesystem] = $this->factoryRequirementsDependencies();
 
-        $io = new NullIO();
-        $filesystem = new \Composer\Util\Filesystem();
         $pkg1 = new Package('one', '1.0.0.0', '1.0.0');
         $pkg2 = new Package('two', '2.0.0.0', '2.0');
-        $instance = Requirements::forComposerInstall($composer, $io, $filesystem, $pkg1, $pkg2);
-        $config = $instance->config();
+        $requirements = Requirements::forComposerInstall($composer, $io, $filesystem, $pkg1, $pkg2);
+        $config = $requirements->config();
 
         static::assertFalse($config[Config::IS_WPSTARTER_COMMAND]->unwrap());
         static::assertFalse($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->unwrap());
@@ -80,18 +68,15 @@ class RequirementsTest extends TestCase
         static::assertSame([$pkg1, $pkg2], $config[Config::COMPOSER_UPDATED_PACKAGES]->unwrap());
     }
 
-    public function testComposerUpdateInstanceCreation()
+    /**
+     * @test
+     */
+    public function testComposerUpdateInstanceCreation(): void
     {
-        $composer = \Mockery::mock(\Composer\Composer::class);
-        $composerConfig = \Mockery::mock(\Composer\Config::class);
-        $composerConfig->allows('get')->andReturn('');
-        $composer->allows('getPackage->getExtra')->andReturn([]);
-        $composer->allows('getConfig')->andReturn($composerConfig);
+        [$composer, $io, $filesystem] = $this->factoryRequirementsDependencies();
 
-        $io = new NullIO();
-        $filesystem = new \Composer\Util\Filesystem();
-        $instance = Requirements::forComposerUpdate($composer, $io, $filesystem);
-        $config = $instance->config();
+        $requirements = Requirements::forComposerUpdate($composer, $io, $filesystem);
+        $config = $requirements->config();
 
         static::assertFalse($config[Config::IS_WPSTARTER_COMMAND]->unwrap());
         static::assertFalse($config[Config::IS_WPSTARTER_SELECTED_COMMAND]->unwrap());
@@ -101,57 +86,92 @@ class RequirementsTest extends TestCase
     }
 
     /**
-     * When no configs are there, and config file is not there, configuration ends up as default.
+     * @test
      */
-    public function testConfigsAreEmptyIfNoExtraValue()
+    public function testEnsureConfigAreAllDefaultWhenThereIsNoExtraValue(): void
     {
-        // custom root to make sure wpstarter.json in fixtures root is not loaded
+        // This will fail because being paths that does not exists wil fail validation.
+        $expectedFailures = [
+            Config::AUTOLOAD,
+            Config::CONTENT_DEV_DIR,
+            Config::EARLY_HOOKS_FILE,
+            Config::ENV_BOOTSTRAP_DIR,
+            Config::ENV_DIR,
+            Config::TEMPLATES_DIR,
+        ];
 
-        static::assertSame([], $this->executeExtractConfig([], '/'));
+        // These keys will not match Config defaults because changed by requirements.
+        $byRequirements = [
+            Config::IS_COMPOSER_UPDATE => false,
+            Config::IS_COMPOSER_INSTALL => false,
+            Config::IS_WPSTARTER_COMMAND => true,
+            Config::IS_WPSTARTER_SELECTED_COMMAND => false,
+        ];
+
+        $config = $this->factoryRequirements()->config();
+        foreach (Config::DEFAULTS as $key => $value) {
+            if (in_array($key, $expectedFailures, true)) {
+                $rand = bin2hex(random_bytes(12));
+                static::assertSame($rand, $config->offsetGet($key)->unwrapOrFallback($rand));
+                continue;
+            }
+            if (isset($byRequirements[$key])) {
+                static::assertSame($byRequirements[$key], $config->offsetGet($key)->unwrap());
+                continue;
+            }
+            static::assertSame($value, $config->offsetGet($key)->unwrap());
+        }
     }
 
     /**
-     * Settings in extra settings are loaded.
+     * @test
      */
-    public function testConfigsContainsExtraIfThere()
+    public function testCustomDataIsPreserved(): void
     {
         $extra = [ComposerPlugin::EXTRA_KEY => ['foo' => 'bar']];
 
-        // custom root to make sure wpstarter.json in fixtures root is not loaded
+        $config = $this->factoryRequirements($extra)->config();
 
-        static::assertSame(['foo' => 'bar'], $this->executeExtractConfig($extra, '/'));
+        static::assertTrue($config['foo']->is('bar'));
+
+        // default values are there as well...
+        static::assertTrue($config[Config::CONTENT_DEV_OPERATION]->is('symlink'));
     }
 
     /**
-     * Settings form a JSON file passed as configs are loaded.
+     * @test
      */
-    public function testConfigsLoadedFromFileIfNamePassed()
+    public function testConfigsLoadedFromFileIfNamePassed(): void
     {
-        // @see /tests/fixtures/paths-root/custom-starter.json
         $extra = [ComposerPlugin::EXTRA_KEY => 'custom-starter.json'];
+        $root = $this->fixturesPath() . '/paths-root';
 
-        $config =  $this->executeExtractConfig($extra);
+        $config = $this->factoryRequirements($extra, $root)->config();
 
-        static::assertSame('copy', $config['content-dev-op']);
-        static::assertSame('./public/boot-hooks.php', $config['early-hook-file']);
+        /** @see /tests/fixtures/paths-root/custom-starter.json */
+        static::assertTrue($config[Config::CONTENT_DEV_OPERATION]->is('copy'));
+        static::assertTrue($config[Config::ENV_FILE]->is('my.env'));
+        static::assertTrue($config[Config::REQUIRE_WP]->is(false));
+        static::assertTrue($config[Config::MOVE_CONTENT]->is(true));
     }
 
     /**
-     * Settings form default JSON are loaded if file is found.
+     * @test
      */
-    public function testConfigsLoadedFromDefaultFileIfThere()
+    public function testConfigsLoadedFromDefaultFileIfThere(): void
     {
-        // @see /tests/fixtures/paths-root/wpstarter.json
-        $config =  $this->executeExtractConfig([]);
+        $root = $this->fixturesPath() . '/paths-root';
+        $config = $this->factoryRequirements([], $root)->config();
 
-        static::assertSame(false, $config['unknown-dropins']);
-        static::assertSame('4.5.1', $config['wp-version']);
+        /** @see /tests/fixtures/paths-root/wpstarter.json */
+        static::assertTrue($config[Config::UNKNOWN_DROPINS]->is(false));
+        static::assertTrue($config[Config::WP_VERSION]->is('4.5.1'));
     }
 
     /**
-     * Settings loaded from default JSON are loaded and merged with settings in extra.
+     * @test
      */
-    public function testConfigsLoadedFromDefaultFileAreMerged()
+    public function testConfigsLoadedFromDefaultFileAreMerged(): void
     {
         $extra = [
             ComposerPlugin::EXTRA_KEY => [
@@ -160,31 +180,44 @@ class RequirementsTest extends TestCase
             ],
         ];
 
-        // @see /tests/fixtures/paths-root/wpstarter.json
-        $config =  $this->executeExtractConfig($extra);
+        $root = $this->fixturesPath() . '/paths-root';
+        $config = $this->factoryRequirements($extra, $root)->config();
 
-        static::assertSame(false, $config['unknown-dropins'], 'File wins over extra');
-        static::assertSame('bar', $config['foo']);
-        static::assertSame('4.5.1', $config['wp-version']);
+        /** @see /tests/fixtures/paths-root/wpstarter.json */
+        static::assertTrue($config[Config::UNKNOWN_DROPINS]->is(false), 'File win over extra');
+        static::assertTrue($config[Config::WP_VERSION]->is('4.5.1'));
     }
 
     /**
-     * For unit tests only makes sense to test the extractConfig() method, which is private.
-     *
-     * @param array $extra
-     * @param string $customRoot
-     * @return mixed
+     * @param array<mixed> $extra
+     * @param non-falsy-string|null $root
+     * @return Requirements
      */
-    private function executeExtractConfig(array $extra, string $customRoot = null): array
+    private function factoryRequirements(array $extra = [], ?string $root = null): Requirements
     {
-        $tester = \Closure::bind(
-            function (string $rootPath) use ($extra): array {
-                return $this->extractConfig($rootPath, $extra);
-            },
-            (new \ReflectionClass(Requirements::class))->newInstanceWithoutConstructor(),
-            Requirements::class
-        );
+        [$composer, $io, $filesystem] = $this->factoryRequirementsDependencies($extra);
+        if ($root === null) {
+            return Requirements::forGenericCommand($composer, $io, $filesystem);
+        }
 
-        return $tester($customRoot ?: $this->fixturesPath() . '/paths-root', $extra);
+        return Requirements::forCustomRoot($composer, $io, $filesystem, $root);
+    }
+
+    /**
+     * @return array{\Composer\Composer, \Composer\IO\IOInterface, \Composer\Util\Filesystem}
+     */
+    private function factoryRequirementsDependencies(array $extra = []): array
+    {
+        $composerConfig = \Mockery::mock(\Composer\Config::class);
+        $composerConfig->allows('get')->andReturn('');
+
+        $composer = \Mockery::mock(\Composer\Composer::class);
+        $composer->allows('getPackage->getExtra')->andReturn($extra);
+        $composer->allows('getConfig')->andReturn($composerConfig);
+
+        $io = new NullIO();
+        $filesystem = new \Composer\Util\Filesystem();
+
+        return [$composer, $io, $filesystem];
     }
 }

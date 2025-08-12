@@ -17,25 +17,12 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 class SystemProcess
 {
-    /**
-     * @var callable|null
-     */
-    private $printer;
-
-    /**
-     * @var Paths
-     */
-    private $paths;
-
-    /**
-     * @var array
-     */
-    private $environment = [];
-
-    /**
-     * @var Io
-     */
-    private $io;
+    /** @var callable|null */
+    private $printer = null;
+    private Paths $paths;
+    private Io $io;
+    /** @var array<string, string> */
+    private array $environment = [];
 
     /**
      * @param Paths $paths
@@ -48,7 +35,7 @@ class SystemProcess
     }
 
     /**
-     * @param array $environment
+     * @param array<string, string> $environment
      * @return SystemProcess
      */
     public function withEnvironment(array $environment): SystemProcess
@@ -66,15 +53,12 @@ class SystemProcess
     public function execute(string $command, ?string $cwd = null): bool
     {
         try {
-            is_string($cwd) or $cwd = $this->paths->root();
+            $cwd ??= $this->paths->root();
 
             $process = $this->factoryProcess($command, $cwd);
 
-            $this->printer or $this->printer = function (string $type, string $buffer) {
-                $lines = array_filter(array_map('rtrim', explode("\n", $buffer)));
-                Process::ERR === $type
-                    ? array_walk($lines, [$this->io, 'writeError'])
-                    : array_walk($lines, [$this->io, 'write']);
+            $this->printer ??= function (string $type, string $buffer): void {
+                $this->printer($type, $buffer);
             };
 
             $process->mustRun($this->printer);
@@ -96,7 +80,7 @@ class SystemProcess
     public function executeSilently(string $command, ?string $cwd = null): bool
     {
         try {
-            is_string($cwd) or $cwd = $this->paths->root();
+            $cwd ??= $this->paths->root();
             $process = $this->factoryProcess($command, $cwd);
             $process->disableOutput()->mustRun();
 
@@ -109,17 +93,30 @@ class SystemProcess
     }
 
     /**
+     * @param string $type
+     * @param string $buffer
+     * @return void
+     */
+    private function printer(string $type, string $buffer): void
+    {
+        foreach (explode("\n", $buffer) as $rawLine) {
+            $line = rtrim($rawLine);
+            if ($line === '') {
+                continue;
+            }
+            (Process::ERR === $type)
+                ? $this->io->writeError($line)
+                : $this->io->write($line);
+        }
+    }
+
+    /**
      * @param string $command
      * @param string|null $cwd
      * @return Process
      */
     private function factoryProcess(string $command, ?string $cwd = null): Process
     {
-        if (method_exists(Process::class, 'fromShellCommandline')) {
-            return Process::fromShellCommandline($command, $cwd, $this->environment ?: null);
-        }
-
-        /** @psalm-suppress InvalidArgument */
-        return new Process($command, $cwd, $this->environment ?: null);
+        return Process::fromShellCommandline($command, $cwd, $this->environment ?: null);
     }
 }

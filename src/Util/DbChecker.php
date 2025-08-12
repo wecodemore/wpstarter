@@ -23,15 +23,8 @@ class DbChecker
     public const WPDB_EXISTS = 'WPDB_EXISTS';
     public const WPDB_ENV_VALID = 'WPDB_ENV_VALID';
 
-    /**
-     * @var WordPressEnvBridge
-     */
-    private $env;
-
-    /**
-     * @var Io
-     */
-    private $io;
+    private WordPressEnvBridge $env;
+    private Io $io;
 
     /**
      * @param WordPressEnvBridge $env
@@ -50,7 +43,7 @@ class DbChecker
     {
         $this->check();
 
-        return (bool)$this->env->read(self::WPDB_EXISTS);
+        return (bool) $this->env->read(self::WPDB_EXISTS);
     }
 
     /**
@@ -60,7 +53,7 @@ class DbChecker
     {
         $this->check();
 
-        return (bool)$this->env->read(self::WP_INSTALLED);
+        return (bool) $this->env->read(self::WP_INSTALLED);
     }
 
     /**
@@ -70,64 +63,45 @@ class DbChecker
     {
         $this->check();
 
-        return (bool)$this->env->read(self::WPDB_ENV_VALID);
+        return (bool) $this->env->read(self::WPDB_ENV_VALID);
     }
 
     /**
      * @return void
      */
-    public function check()
+    public function check(): void
     {
-        if (
-            $this->env->has(self::WPDB_ENV_VALID)
-            || $this->env->has(self::WPDB_EXISTS)
-            || $this->env->has(self::WP_INSTALLED)
-        ) {
-            return;
-        }
-
-        /** @var array<string, string> $env */
-        $env = $this->env->readMany(
-            'DB_HOST',
-            'DB_USER',
-            'DB_NAME',
-            'DB_PASSWORD',
-            'DB_TABLE_PREFIX'
-        );
-
-        if (!$env['DB_USER'] || !$env['DB_NAME']) {
-            $this->write('Environment not ready, DB status can\'t be checked.');
+        [$user, $dbname, $host, $password, $prefix] = $this->readEnv();
+        if (($user === null) || ($dbname === null)) {
             $this->setupEnv(false, false, false);
 
             return;
         }
 
-        empty($env['DB_HOST']) and $env['DB_HOST'] = 'localhost';
-        empty($env['DB_TABLE_PREFIX']) and $env['DB_TABLE_PREFIX'] = 'wp_';
-
         $dbExists = false;
         $wpInstalled = false;
+        $db = null;
 
         try {
-            $db = @\mysqli_connect($env['DB_HOST'], $env['DB_USER'], $env['DB_PASSWORD'] ?: '');
+            $db = @\mysqli_connect($host ?? 'localhost', $user, $password ?? '');
+            $success = (bool) $db;
 
-            if (!$db || $db->connect_errno) {
+            if (!$success || ($db->connect_errno > 0)) {
                 $this->setupEnv(false, false, false);
-                $db and \mysqli_close($db);
+                is_resource($db) and \mysqli_close($db);
 
                 return;
             }
 
-            $dbExists = @\mysqli_select_db($db, $env['DB_NAME']);
-
-
+            $dbExists = @\mysqli_select_db($db, $dbname);
             if ($dbExists) {
-                $result = @mysqli_query($db, "SELECT 1 FROM {$env['DB_TABLE_PREFIX']}users");
-                $wpInstalled = ($result instanceof \mysqli_result) && $result->field_count;
+                $result = @mysqli_query($db, "SELECT 1 FROM `{$prefix}users`");
+                $wpInstalled = ($result instanceof \mysqli_result) && ($result->field_count > 0);
             }
-            @\mysqli_close($db);
         } catch (\Throwable $exception) {
             $this->write($exception->getMessage());
+        } finally {
+            is_resource($db) and @\mysqli_close($db);
         }
 
         $this->setupEnv(true, $dbExists, $wpInstalled);
@@ -146,12 +120,71 @@ class DbChecker
     }
 
     /**
+     * @return array{
+     *     null|non-empty-string,
+     *     null|non-empty-string,
+     *     null|non-empty-string,
+     *     null|non-empty-string,
+     *     non-empty-string
+     * }
+     */
+    private function readEnv(): array
+    {
+        if (
+            $this->env->has(self::WPDB_ENV_VALID)
+            || $this->env->has(self::WPDB_EXISTS)
+            || $this->env->has(self::WP_INSTALLED)
+        ) {
+            return [null, null, null, null, 'wp_'];
+        }
+
+        /** @var array<string, mixed> $data */
+        $data = $this->env->readMany(
+            'DB_USER',
+            'DB_NAME',
+            'DB_HOST',
+            'DB_PASSWORD',
+            'DB_TABLE_PREFIX'
+        );
+
+        $user = $this->readEnvVar('DB_USER', $data);
+        $dbname = $this->readEnvVar('DB_NAME', $data);
+        if (($user === null) || ($dbname === null)) {
+            $this->write('Environment not ready, DB status can\'t be checked.');
+            $this->setupEnv(false, false, false);
+
+            return [null, null, null, null, 'wp_'];
+        }
+
+        $host = $this->readEnvVar('DB_HOST', $data) ?? 'localhost';
+        $password = $this->readEnvVar('DB_PASSWORD', $data);
+        $prefix = $this->readEnvVar('DB_TABLE_PREFIX', $data) ?? 'wp_';
+
+        return [$user, $dbname, $host, $password, $prefix];
+    }
+
+    /**
+     * @param "DB_HOST"|"DB_USER"|"DB_NAME"|"DB_PASSWORD"|"DB_TABLE_PREFIX" $key
+     * @param array<string, mixed> $data
+     * @return non-empty-string|null
+     */
+    private function readEnvVar(string $key, array $data): ?string
+    {
+        $value = $data[$key];
+        if (!is_string($value) || ($value === '')) {
+            $value = null;
+        }
+
+        return $value;
+    }
+
+    /**
      * @param bool $valid
      * @param bool $exists
      * @param bool $installed
      * @return void
      */
-    private function setupEnv(bool $valid, bool $exists, bool $installed)
+    private function setupEnv(bool $valid, bool $exists, bool $installed): void
     {
         $this->env->write(self::WPDB_ENV_VALID, $valid ? '1' : '');
         $this->env->write(self::WPDB_EXISTS, $exists ? '1' : '');
@@ -162,7 +195,7 @@ class DbChecker
      * @param string $line
      * @return void
      */
-    private function write(string $line)
+    private function write(string $line): void
     {
         $this->io->writeIfVerbose("- <info>[WPDB Check]</info> <comment>{$line}</comment>");
     }

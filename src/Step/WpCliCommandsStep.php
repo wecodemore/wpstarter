@@ -30,25 +30,14 @@ final class WpCliCommandsStep implements Step
 {
     public const NAME = 'wp-cli';
 
-    /**
-     * @var Io
-     */
-    private $io;
+    private Io $io;
+    private Cli\PhpToolProcess $process;
 
-    /**
-     * @var Cli\PhpToolProcess
-     */
-    private $process;
+    /** @var list<string> */
+    private array $commands = [];
 
-    /**
-     * @var string[]
-     */
-    private $commands = [];
-
-    /**
-     * @var Cli\WpCliFileData[]
-     */
-    private $files = [];
+    /** @var list<Cli\WpCliFileData> */
+    private array $files = [];
 
     /**
      * @param Locator $locator
@@ -74,17 +63,15 @@ final class WpCliCommandsStep implements Step
      */
     public function allowed(Config $config, Paths $paths): bool
     {
+        /** @var array<string> $commands */
         $commands = $config[Config::WP_CLI_COMMANDS]->unwrapOrFallback([]);
+        /** @var array<Cli\WpCliFileData> $files */
         $files = $config[Config::WP_CLI_FILES]->unwrapOrFallback([]);
 
-        if ($commands || $files) {
-            $this->commands = $commands;
-            $this->files = $files;
+        $this->commands = array_values($commands);
+        $this->files = array_values($files);
 
-            return true;
-        }
-
-        return false;
+        return ($this->commands !== []) || ($this->files !== []);
     }
 
     /**
@@ -94,7 +81,7 @@ final class WpCliCommandsStep implements Step
      */
     public function run(Config $config, Paths $paths): int
     {
-        if ((!$this->commands && !$this->files)) {
+        if (($this->commands === []) && ($this->files === [])) {
             return self::NONE;
         }
 
@@ -112,18 +99,16 @@ final class WpCliCommandsStep implements Step
         }
 
         $fileCommands = [];
-        if ($this->files) {
-            foreach ($this->files as $file) {
-                $command = $this->buildEvalFileCommand($file, $paths);
-                $command and $fileCommands[] = $command;
-            }
+        foreach ($this->files as $file) {
+            $command = $this->buildEvalFileCommand($file, $paths);
+            ($command !== '') and $fileCommands[] = $command;
         }
 
         $commands = array_merge($fileCommands, $this->commands);
         $this->initMessage(...$commands);
 
         $continue = true;
-        while ($continue && $commands) {
+        while ($continue && ($commands !== [])) {
             $command = array_shift($commands);
             $commandDesc = $this->commandDesc($command);
             $dashes = str_repeat('-', 54 - strlen($commandDesc));
@@ -172,9 +157,8 @@ final class WpCliCommandsStep implements Step
         }
 
         $command = "eval-file {$fullpath}";
-        /** @var array<string> $args */
         $args = $fileData->args();
-        $args and $command .= ' ' . implode(' ', $args);
+        ($args !== []) and $command .= ' ' . implode(' ', $args);
         $fileData->skipWordpress() and $command .= ' --skip-wordpress';
 
         return $command;
@@ -183,20 +167,20 @@ final class WpCliCommandsStep implements Step
     /**
      * @param string ...$commands
      * @return void
+     *
+     * @no-named-arguments
      */
-    private function initMessage(string ...$commands)
+    private function initMessage(string ...$commands): void
     {
         $count = count($commands);
         $this->io->writeIfVerbose(sprintf('Will run %d command%s:', $count, $count > 1 ? 's' : ''));
 
-        array_walk(
-            $commands,
-            function (string $command, int $i) {
-                $num = $i + 1;
-                $commandDesc = ltrim($this->commandDesc("  {$command}"));
-                $this->io->writeIfVerbose("  <comment>{$num}) \$ wp {$commandDesc}</comment>");
-            }
-        );
+        $num = 1;
+        foreach ($commands as $command) {
+            $commandDesc = ltrim($this->commandDesc("  {$command}"));
+            $this->io->writeIfVerbose("  <comment>{$num}) \$ wp {$commandDesc}</comment>");
+            $num++;
+        }
 
         $this->io->writeIfVerbose('');
     }
@@ -211,6 +195,6 @@ final class WpCliCommandsStep implements Step
             return $command;
         }
 
-        return (substr($command, 0, 48) ?: '') . '...';
+        return substr($command, 0, 48) . '...';
     }
 }

@@ -1,0 +1,24 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+parameters:
+	level: 10
+	paths:
+		- src
+		- tests/src
+	strictRules:
+		disallowedShortTernary: false
+	ignoreErrors:
+		-
+			message: '~Mockery~'
+			paths:
+				- tests/src/*
+		-
+			message: '~andReturn\(\) on mixed~'
+			paths:
+				- tests/src/*
+		-
+			identifiers:
+				- logicalAnd.resultUnused
+				- logicalAnd.rightNotBoolean
+				- logicalOr.resultUnused
+				- logicalOr.rightNotBoolean

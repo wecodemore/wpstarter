@@ -21,75 +21,46 @@ use Composer\Util\RemoteFilesystem;
  */
 class UrlDownloader
 {
-    /**
-     * @var HttpDownloader|null
-     */
-    private $httpDownloader;
-
-    /**
-     * @var RemoteFilesystem|null
-     */
-    private $remoteFilesystem;
-
-    /**
-     * @var Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var string
-     */
-    private $error = '';
-
-    /**
-     * @var bool
-     */
-    private $isVerbose;
+    private HttpDownloader $httpDownloader;
+    private Filesystem $filesystem;
+    private string $error = '';
 
     /**
      * @param HttpDownloader $httpDownloader
      * @param Filesystem $filesystem
-     * @param bool $isVerbose
      * @return UrlDownloader
+     *
+     * @deprecated use UrlDownloader::new
      */
     public static function newV2(
-        \Composer\Util\HttpDownloader $httpDownloader,
-        Filesystem $filesystem,
-        bool $isVerbose
+        HttpDownloader $httpDownloader,
+        Filesystem $filesystem
     ): UrlDownloader {
 
-        $instance = new self($filesystem, $isVerbose);
-        $instance->httpDownloader = $httpDownloader;
-
-        return $instance;
+        return self::new($httpDownloader, $filesystem);
     }
 
     /**
-     * @param RemoteFilesystem $remoteFilesystem
+     * @param HttpDownloader $httpDownloader
      * @param Filesystem $filesystem
-     * @param bool $isVerbose
      * @return UrlDownloader
      */
-    public static function newV1(
-        \Composer\Util\RemoteFilesystem $remoteFilesystem,
-        Filesystem $filesystem,
-        bool $isVerbose
+    public static function new(
+        HttpDownloader $httpDownloader,
+        Filesystem $filesystem
     ): UrlDownloader {
 
-        $instance = new self($filesystem, $isVerbose);
-        $instance->remoteFilesystem = $remoteFilesystem;
-
-        return $instance;
+        return new self($httpDownloader, $filesystem);
     }
 
     /**
+     * @param HttpDownloader $httpDownloader
      * @param Filesystem $filesystem
-     * @param RemoteFilesystem $remoteFilesystem
      */
-    private function __construct(Filesystem $filesystem, bool $isVerbose)
+    private function __construct(HttpDownloader $httpDownloader, Filesystem $filesystem)
     {
+        $this->httpDownloader = $httpDownloader;
         $this->filesystem = $filesystem;
-        $this->isVerbose = $isVerbose;
     }
 
     /**
@@ -103,14 +74,14 @@ class UrlDownloader
     {
         $this->error = '';
 
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
             $this->error = "Invalid URL {$url}.";
 
             return false;
         }
 
         $directory = dirname($filename);
-        if (!$directory) {
+        if ($directory === '') {
             $this->error = "Invalid target path to download {$url}.";
 
             return false;
@@ -137,7 +108,7 @@ class UrlDownloader
     {
         $this->error = '';
 
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
             $this->error = "Invalid URL {$url}.";
 
             return '';
@@ -167,24 +138,13 @@ class UrlDownloader
     private function retrieveContents(string $url): string
     {
         $result = null;
-
-        if ($this->remoteFilesystem) {
-            /**
-             * @noinspection PhpUndefinedMethodInspection
-             * @psalm-suppress UndefinedMethod
-             */
-            $origin = (string)RemoteFilesystem::getOrigin($url);
-            /** @psalm-suppress InternalMethod */
-            $result = $this->remoteFilesystem->getContents($origin, $url, $this->isVerbose);
-        } elseif ($this->httpDownloader) {
-            $response = $this->httpDownloader->get($url);
-            $statusCode = $response->getStatusCode();
-            if ($statusCode > 199 && $statusCode < 300) {
-                $result = $response->getBody();
-            }
+        $response = $this->httpDownloader->get($url);
+        $statusCode = $response->getStatusCode();
+        if ($statusCode > 199 && $statusCode < 300) {
+            $result = $response->getBody();
         }
 
-        if (!$result || !is_string($result)) {
+        if (!is_string($result) || ($result === '')) {
             throw new \Exception("Could not obtain a response from '{$url}'.");
         }
 
@@ -198,25 +158,9 @@ class UrlDownloader
      */
     private function copyUrl(string $url, string $filename): bool
     {
-        if ($this->remoteFilesystem) {
-            /**
-             * @noinspection PhpUndefinedMethodInspection
-             * @psalm-suppress UndefinedMethod
-             * @psalm-suppress InternalMethod
-             */
-            return (bool)$this->remoteFilesystem->copy(
-                (string)RemoteFilesystem::getOrigin($url),
-                $url,
-                $filename,
-                $this->isVerbose
-            );
-        } elseif ($this->httpDownloader) {
-            $response = $this->httpDownloader->copy($url, $filename);
-            $statusCode = $response->getStatusCode();
+        $response = $this->httpDownloader->copy($url, $filename);
+        $statusCode = $response->getStatusCode();
 
-            return $statusCode > 199 && $statusCode < 300;
-        }
-
-        return false;
+        return $statusCode > 199 && $statusCode < 300;
     }
 }

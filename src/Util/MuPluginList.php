@@ -19,15 +19,8 @@ use Composer\Package\PackageInterface;
  */
 class MuPluginList
 {
-    /**
-     * @var PackageFinder
-     */
-    private $packageFinder;
-
-    /**
-     * @var Paths
-     */
-    private $paths;
+    private PackageFinder $packageFinder;
+    private Paths $paths;
 
     /**
      * @param PackageFinder $packageFinder
@@ -40,7 +33,7 @@ class MuPluginList
     }
 
     /**
-     * @return array<string, string>
+     * @return array<non-falsy-string, non-falsy-string>
      */
     public function pluginsList(): array
     {
@@ -49,13 +42,14 @@ class MuPluginList
         $packages = $this->packageFinder->findByType('wordpress-muplugin');
         foreach ($packages as $package) {
             $paths = $this->pathsForPluginPackage($package);
-            if (!$paths) {
+            if ($paths === []) {
                 continue;
             }
 
             $name = $package->getName();
             $multi = count($paths) > 1;
             foreach ($paths as $path) {
+                /** @var non-falsy-string $key */
                 $key = $multi ? "{$name}_" . pathinfo($path, PATHINFO_FILENAME) : $name;
                 $list[$key] = $path;
             }
@@ -66,12 +60,12 @@ class MuPluginList
 
     /**
      * @param PackageInterface $package
-     * @return array<string>
+     * @return list<non-falsy-string>
      */
     private function pathsForPluginPackage(PackageInterface $package): array
     {
         $path = $this->packageFinder->findPathOf($package);
-        if (!$path) {
+        if ($path === '') {
             return [];
         }
 
@@ -84,8 +78,9 @@ class MuPluginList
             return [];
         }
 
+        /** @var list<non-falsy-string>|false $files */
         $files = glob("{$path}/*.php");
-        if (!$files) {
+        if (($files === false) || ($files === [])) {
             return [];
         }
 
@@ -111,19 +106,25 @@ class MuPluginList
      */
     private function isPluginFile(string $file): bool
     {
-        $data = null;
-        $handle = @fopen($file, 'r');
-        if ($handle) {
-            $data = @fread($handle, 8192);
-            @fclose($handle);
+        $data = false;
+        $handle = null;
+        try {
+            $handle = @fopen($file, 'r');
+            if (is_resource($handle)) {
+                $data = @fread($handle, 8192);
+            }
+        } catch (\Throwable $throwable) {
+            return false;
+        } finally {
+            is_resource($handle) and @fclose($handle);
         }
 
-        if (!$data) {
+        if ($data === false) {
             return false;
         }
 
         $data = str_replace("\r", "\n", $data);
 
-        return preg_match('/^[ \t\/*#@]*Plugin Name:(.*)$/mi', $data, $match) && !empty($match[1]);
+        return preg_match('/^[ \t\/*#@]*Plugin Name:(.*)$/mi', $data) === 1;
     }
 }

@@ -21,13 +21,36 @@ class SalterTest extends TestCase
      */
     public function testKeys(): void
     {
-        $salter = new Salter();
-        $keys = $salter->keys();
+        $length = random_int(32, 128);
+
+        $keys = (new Salter($length))->keys();
 
         foreach (Salter::KEYS as $key) {
-            static::assertArrayHasKey($key, $keys);
-            static::assertIsString($keys[$key]);
-            static::assertSame(64, strlen($keys[$key]));
+            static::assertSame($length, strlen($keys[$key] ?? ''));
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function testMinCharactersIs8(): void
+    {
+        $keys = (new Salter(1))->keys();
+
+        foreach (Salter::KEYS as $key) {
+            static::assertSame(8, strlen($keys[$key] ?? ''));
+        }
+    }
+
+    /**
+     * @test
+     */
+    public function testMaxCharactersIs256(): void
+    {
+        $keys = (new Salter(1024))->keys();
+
+        foreach (Salter::KEYS as $key) {
+            static::assertSame(256, strlen($keys[$key] ?? ''));
         }
     }
 }

@@ -12,9 +12,13 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Io\Io;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\OverwriteHelper;
+use WeCodeMore\WpStarter\Util\PackageFinder;
 use WeCodeMore\WpStarter\Util\Paths;
+use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 /**
  * Step to process dropins.
@@ -43,40 +47,13 @@ final class DropinsStep implements Step
         'blog-suspended.php',
     ];
 
-    /**
-     * @var \WeCodeMore\WpStarter\Io\Io
-     */
-    private $io;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\PackageFinder
-     */
-    private $packageFinder;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\UrlDownloader
-     */
-    private $urlDownloader;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var OverwriteHelper
-     */
-    private $overwriteHelper;
-
-    /**
-     * @var string
-     */
-    private $error = '';
-
-    /**
-     * @var string
-     */
-    private $success = '';
+    private Io $io;
+    private PackageFinder $packageFinder;
+    private UrlDownloader $urlDownloader;
+    private Filesystem $filesystem;
+    private OverwriteHelper $overwriteHelper;
+    private string $error = '';
+    private string $success = '';
 
     /**
      * @param Locator $locator
@@ -105,7 +82,7 @@ final class DropinsStep implements Step
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        return $config[Config::DROPINS]->notEmpty() && $paths->wpContent();
+        return $config[Config::DROPINS]->notEmpty() && ($paths->wpContent() !== '');
     }
 
     /**
@@ -154,7 +131,7 @@ final class DropinsStep implements Step
     private function publishDropinsFromPackages(Paths $paths): int
     {
         $installed = $this->packageFinder->findByType('wordpress-dropin');
-        if (!$installed) {
+        if ($installed === []) {
             return Step::NONE;
         }
 
@@ -172,7 +149,7 @@ final class DropinsStep implements Step
             return Step::SUCCESS;
         }
 
-        if ($all && !$done) {
+        if ($done === 0) {
             return Step::ERROR;
         }
 
@@ -186,15 +163,15 @@ final class DropinsStep implements Step
      */
     private function publishCustomDropins(Config $config, Paths $paths): int
     {
-        /** @var array<string, string> $customDropins */
+        /** @var array<non-falsy-string, non-falsy-string> $customDropins */
         $customDropins = $config[Config::DROPINS]->unwrapOrFallback([]);
-        if (!$customDropins) {
+        if ($customDropins === []) {
             return Step::NONE;
         }
 
         foreach ($customDropins as $basename => $url) {
             if ($basename === $url) {
-                $basename = filter_var($url, FILTER_VALIDATE_URL)
+                $basename = (filter_var($url, FILTER_VALIDATE_URL) !== false)
                     ? trim((parse_url($url, PHP_URL_PATH) ?: ''), '/') ?: $url
                     : basename($url);
             }
@@ -204,11 +181,11 @@ final class DropinsStep implements Step
                 : $this->error .= "{$basename} is not a valid dropin name. Skipped.\n";
         }
 
-        if (!$this->error) {
+        if ($this->error === '') {
             return Step::SUCCESS;
         }
 
-        if (!$this->success) {
+        if ($this->success === '') {
             return Step::ERROR;
         }
 
@@ -253,13 +230,18 @@ final class DropinsStep implements Step
 
     /**
      * @param string $basename
-     * @param string $url
+     * @param non-falsy-string $url
      * @param Config $config
      * @param Paths $paths
      * @return void
      */
-    private function runDropinStep(string $basename, string $url, Config $config, Paths $paths)
-    {
+    private function runDropinStep(
+        string $basename,
+        string $url,
+        Config $config,
+        Paths $paths
+    ): void {
+
         $step = new DropinStep(
             $basename,
             $url,
