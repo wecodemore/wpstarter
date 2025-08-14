@@ -91,7 +91,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
 
         /** @var string $earlyHookFile */
         $earlyHookFile = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback('');
-        if ($earlyHookFile === '') {
+        if ($earlyHookFile !== '') {
             $earlyHookFile = $this->relPath("{$from}/index.php", $earlyHookFile, false);
         }
 
