@@ -76,7 +76,7 @@ final class Steps implements PostProcessStep, \Countable
         $this->steps = $steps;
 
         /** @var array<string, array<mixed>> $scripts */
-        $scripts = $locator->config()[Config::SCRIPTS]->unwrap();
+        $scripts = $locator->config()[Config::SCRIPTS]->unwrap() ?? [];
         $this->scripts = $scripts;
     }
 
