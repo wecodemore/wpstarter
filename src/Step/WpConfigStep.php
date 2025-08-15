@@ -97,7 +97,7 @@ final class WpConfigStep implements FileCreationStepInterface, BlockingStep
 
         /** @var string $envBootstrapDir */
         $envBootstrapDir = $config[Config::ENV_BOOTSTRAP_DIR]->unwrapOrFallback('');
-        if ($envBootstrapDir === '') {
+        if ($envBootstrapDir !== '') {
             $envBootstrapDir = $this->relPath($from, $paths->root($envBootstrapDir));
         }
 
