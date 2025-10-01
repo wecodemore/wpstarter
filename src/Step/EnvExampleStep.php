@@ -13,6 +13,7 @@ namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\UrlDownloader;
@@ -29,25 +30,10 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
 {
     public const NAME = 'build-env-example';
 
-    /**
-     * @var Config
-     */
-    private $config;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var UrlDownloader
-     */
-    private $urlDownloader;
-
-    /**
-     * @var string
-     */
-    private $error = '';
+    private Config $config;
+    private Filesystem $filesystem;
+    private UrlDownloader $urlDownloader;
+    private string $error = '';
 
     /**
      * @param Locator $locator
@@ -117,21 +103,26 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
     {
         /** @var string|bool $source */
         $source = $this->config[Config::ENV_EXAMPLE]->unwrapOrFallback(false);
-        if (!$source) {
+        if (($source === '') || ($source === false)) {
             return Step::NONE;
         }
 
         $destination = $this->targetPath($paths);
 
-        if (is_string($source) && filter_var($source, FILTER_VALIDATE_URL)) {
+        $isAsk = $source === OptionalStep::ASK;
+        $isUrl = !$isAsk
+            && is_string($source)
+            && (filter_var($source, FILTER_VALIDATE_URL) !== false);
+        $isCustomPath = is_string($source) && !$isAsk && !$isUrl;
+
+        if ($isUrl) {
+            /** @var non-empty-string $source */
             return $this->download($source, $destination);
         }
 
-        $isAsk = $source === OptionalStep::ASK;
-
-        if (!$isAsk && is_string($source)) {
+        if ($isCustomPath) {
             $realpath = realpath($source);
-            if (!$realpath) {
+            if ($realpath === false) {
                 $this->error = "{$source} is not a valid valid relative path to env-example file.";
 
                 return Step::ERROR;
@@ -140,6 +131,10 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
             return $this->copy($paths, $destination, $realpath);
         }
 
+        // If here, `$source` was either `true` or `"ask"`.
+        // In the latter case, being this an `OptionalStep` we already asked, and if the user
+        // did not confirm, this method would not run. So we can assume that here there's no
+        // difference between `true` or `"ask"`: in both cases we have to copy the default source.
         return $this->copy($paths, $destination);
     }
 

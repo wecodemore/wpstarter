@@ -11,7 +11,10 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Step;
 
+use Composer\Util\Filesystem as ComposerFilesystem;
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Util\FileContentBuilder;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -25,20 +28,9 @@ final class IndexStep implements FileCreationStepInterface, BlockingStep
 {
     public const NAME = 'build-index';
 
-    /**
-     * @var \WeCodeMore\WpStarter\Util\FileContentBuilder
-     */
-    private $builder;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var \Composer\Util\Filesystem
-     */
-    private $composerFilesystem;
+    private FileContentBuilder $builder;
+    private Filesystem $filesystem;
+    private ComposerFilesystem $composerFilesystem;
 
     /**
      * @param Locator $locator

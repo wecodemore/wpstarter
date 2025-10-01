@@ -18,11 +18,13 @@ class Formatter
     /**
      * @param int $lineLength
      * @param string ...$lines
-     * @return array<string>
+     * @return list<string>
+     *
+     * @no-named-arguments
      */
     public function ensureLinesLength(int $lineLength, string ...$lines): array
     {
-        if (!$lines) {
+        if ($lines === []) {
             return [];
         }
 
@@ -30,7 +32,7 @@ class Formatter
         $normalized = [];
 
         foreach ($lines as $line) {
-            if (!$this->trimLine($line)) {
+            if ($this->trimLine($line) === '') {
                 $normalized[] = $line;
                 continue;
             }
@@ -46,7 +48,9 @@ class Formatter
 
     /**
      * @param string ...$lines
-     * @return array<string>
+     * @return list<string>
+     *
+     * @no-named-arguments
      */
     public function ensureDefaultLinesLength(string ...$lines): array
     {
@@ -58,6 +62,8 @@ class Formatter
      * @param string $after
      * @param string ...$lines
      * @return list<string>
+     *
+     * @no-named-arguments
      */
     public function createCenteredBlock(
         string $before = '',
@@ -73,6 +79,8 @@ class Formatter
      * @param string $after
      * @param string ...$lines
      * @return list<string>
+     *
+     * @no-named-arguments
      */
     public function createFilledBlock(
         string $before = '',
@@ -85,7 +93,9 @@ class Formatter
 
     /**
      * @param string ...$items
-     * @return string[]
+     * @return list<non-empty-string>
+     *
+     * @no-named-arguments
      */
     public function createList(string ...$items): array
     {
@@ -95,7 +105,9 @@ class Formatter
     /**
      * @param string $prefix
      * @param string ...$items
-     * @return string[]
+     * @return list<non-empty-string>
+     *
+     * @no-named-arguments
      */
     public function createListWithPrefix(string $prefix, string ...$items): array
     {
@@ -105,15 +117,15 @@ class Formatter
 
         $list = [];
         foreach ($items as $item) {
-            if (!$item) {
+            if ($item === '') {
                 continue;
             }
 
             $length = self::DEFAULT_LINE_LENGTH - (strlen($this->trimLine($prefix)) + 1);
             $innerLines = $this->ensureLinesLength($length, $item);
-            $list[] = $prefix . (string)array_shift($innerLines);
+            $list[] = $prefix . (array_shift($innerLines) ?? '');
             foreach ($innerLines as $innerLine) {
-                $innerLine and $list[] = $filler . $innerLine;
+                ($innerLine !== '') and $list[] = $filler . $innerLine;
             }
         }
 
@@ -123,25 +135,24 @@ class Formatter
     /**
      * @param string $text
      * @param int $length
-     * @return array<string>
+     * @return list<non-empty-string>
      */
     private function normalizeLength(string $text, int $length = self::DEFAULT_LINE_LENGTH): array
     {
-        /** @var array<string> $words */
-        $words = (array)(preg_split('~\s+~', $text) ?: []);
+        $words = preg_split('~\s+~', $text) ?: [];
         $buffer = '';
         $normalized = [];
         foreach ($words as $word) {
-            if (!$word) {
+            if ($word === '') {
                 continue;
             }
-            if (!$this->trimLine($word)) {
+            if ($this->trimLine($word) === '') {
                 $buffer .= $word;
                 continue;
             }
             if (strlen(strip_tags($buffer . $word)) > ($length - 4)) {
                 $trimmedBuffer = trim($buffer);
-                $trimmedBuffer and $normalized[] = $trimmedBuffer;
+                ($trimmedBuffer !== '') and $normalized[] = $trimmedBuffer;
                 $buffer = $word;
                 continue;
             }
@@ -150,7 +161,7 @@ class Formatter
         }
 
         $leftOver = trim($buffer);
-        $leftOver and $normalized[] = $leftOver;
+        ($leftOver !== '') and $normalized[] = $leftOver;
 
         return $normalized;
     }
@@ -161,6 +172,8 @@ class Formatter
      * @param bool $centered
      * @param string ...$lines
      * @return list<string>
+     *
+     * @no-named-arguments
      */
     private function createBlock(
         string $before = '',
@@ -169,7 +182,7 @@ class Formatter
         string ...$lines
     ): array {
 
-        if (!$lines) {
+        if ($lines === []) {
             return [];
         }
 
@@ -180,12 +193,12 @@ class Formatter
 
         // Will later ensure empty lines on top and on bottom, so remove if they're already there.
         $count = count($lines);
-        $firstLineIsEmpty = !$this->trimLine($lines[0]);
-        $lastLineIsEmpty = $count > 1 && !$this->trimLine($lines[$count - 1]);
+        $firstLineIsEmpty = $this->trimLine($lines[0]) === '';
+        $lastLineIsEmpty = ($count > 1) && ($this->trimLine($lines[$count - 1]) === '');
         $firstLineIsEmpty and array_shift($lines);
         $lastLineIsEmpty and array_pop($lines);
 
-        if (!$lines) {
+        if ($lines === []) {
             return [];
         }
 
@@ -203,7 +216,9 @@ class Formatter
 
         $block = [''];
         foreach ($lines as $i => $line) {
-            $filled = $line ? $spaces[$i][0] . $line . $spaces[$i][1] : $whiteLine;
+            $filled = ($line !== '')
+                ? ($spaces[$i][0] . $line . $spaces[$i][1])
+                : $whiteLine;
             $block[] = "{$before}  {$filled}  {$after}";
         }
         $block[] = '';
@@ -213,21 +228,22 @@ class Formatter
 
     /**
      * @param string ...$lines
-     * @return array<string>
+     * @return list<string>
+     *
+     * @no-named-arguments
      */
     private function splitLinesByLineEnding(string ...$lines): array
     {
         $split = [];
         foreach ($lines as $line) {
-            if (!$this->trimLine($line)) {
+            if ($this->trimLine($line) === '') {
                 $split[] = '';
             }
 
-            /** @var array<string> $innerLines */
-            $innerLines = (array)(preg_split('~\n+~', trim($line)) ?: []);
+            $innerLines = preg_split('~\n+~', trim($line)) ?: [];
             foreach ($innerLines as $innerLine) {
                 $trimmedInner = trim($innerLine);
-                $trimmedInner and $split[] = $trimmedInner;
+                ($trimmedInner !== '') and $split[] = $trimmedInner;
             }
         }
 
@@ -262,33 +278,35 @@ class Formatter
     /**
      * @param int $maxLength
      * @param string ...$lines
-     * @return array{0:string,1:string}[]
+     * @return list<array{string,string}>
+     *
+     * @no-named-arguments
      */
     private function calculateSpacesToCenterLines(int $maxLength, string ...$lines): array
     {
         $halfSpace = $maxLength / 2;
-        $leftSpaceForEmpty = str_repeat(' ', (int)floor($halfSpace));
-        $rightSpaceForEmpty = str_repeat(' ', (int)ceil($halfSpace));
+        $leftSpaceForEmpty = str_repeat(' ', (int) floor($halfSpace));
+        $rightSpaceForEmpty = str_repeat(' ', (int) ceil($halfSpace));
 
         $spacesMap = [];
-        foreach ($lines as $i => $line) {
+        foreach ($lines as $line) {
             $trimmed = $this->trimLine($line);
-            if (!$trimmed) {
-                $spacesMap[$i] = [$leftSpaceForEmpty, $rightSpaceForEmpty];
+            if ($trimmed === '') {
+                $spacesMap[] = [$leftSpaceForEmpty, $rightSpaceForEmpty];
                 continue;
             }
 
             $missingSpaceLength = $maxLength - strlen($trimmed);
             if ($missingSpaceLength < 2) {
-                $spacesMap[$i] = [' ', ' '];
+                $spacesMap[] = [' ', ' '];
                 continue;
             }
 
             $missingSpaceLengthHalf = $missingSpaceLength / 2;
 
-            $spacesMap[$i] = [
-                str_repeat(' ', (int)floor($missingSpaceLengthHalf)),
-                str_repeat(' ', (int)ceil($missingSpaceLengthHalf)),
+            $spacesMap[] = [
+                str_repeat(' ', (int) floor($missingSpaceLengthHalf)),
+                str_repeat(' ', (int) ceil($missingSpaceLengthHalf)),
             ];
         }
 
@@ -298,27 +316,29 @@ class Formatter
     /**
      * @param int $maxLength
      * @param string ...$lines
-     * @return array{0:string,1:string}[]
+     * @return list<array{string,string}>
+     *
+     * @no-named-arguments
      */
     private function calculateSpacesToFillLines(int $maxLength, string ...$lines): array
     {
         $baseSpace = str_repeat(' ', $maxLength);
 
         $spacesMap = [];
-        foreach ($lines as $i => $line) {
+        foreach ($lines as $line) {
             $trimmed = $this->trimLine($line);
-            if (!$trimmed) {
-                $spacesMap[$i] = ['', $baseSpace];
+            if ($trimmed === '') {
+                $spacesMap[] = ['', $baseSpace];
                 continue;
             }
 
             $missingSpaceLength = $maxLength - strlen($trimmed);
             if ($missingSpaceLength < 1) {
-                $spacesMap[$i] = ['', ''];
+                $spacesMap[] = ['', ''];
                 continue;
             }
 
-            $spacesMap[$i] = ['', str_repeat(' ', $missingSpaceLength)];
+            $spacesMap[] = ['', str_repeat(' ', $missingSpaceLength)];
         }
 
         return $spacesMap;

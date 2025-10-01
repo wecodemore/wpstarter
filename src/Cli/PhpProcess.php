@@ -16,15 +16,8 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 class PhpProcess
 {
-    /**
-     * @var string
-     */
-    private $phpPath;
-
-    /**
-     * @var SystemProcess
-     */
-    private $process;
+    private string $phpPath;
+    private SystemProcess $process;
 
     /**
      * @param string $phpPath
@@ -38,7 +31,7 @@ class PhpProcess
     }
 
     /**
-     * @param array $environment
+     * @param array<string, string> $environment
      * @return PhpProcess
      */
     public function withEnvironment(array $environment): PhpProcess

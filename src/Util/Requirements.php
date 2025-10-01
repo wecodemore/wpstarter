@@ -28,25 +28,10 @@ final class Requirements
 {
     public const CONFIG_FILE = 'wpstarter.json';
 
-    /**
-     * @var Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var Paths
-     */
-    private $paths;
-
-    /**
-     * @var Config
-     */
-    private $config;
-
-    /**
-     * @var Io
-     */
-    private $io;
+    private Filesystem $filesystem;
+    private Paths $paths;
+    private Config $config;
+    private Io $io;
 
     /**
      * @param Composer $composer
@@ -92,7 +77,16 @@ final class Requirements
         PackageInterface ...$updatedPackages
     ): Requirements {
 
-        return new static($composer, $io, $filesystem, false, true, false, ...$updatedPackages);
+        return new static(
+            $composer,
+            $io,
+            $filesystem,
+            false,
+            true,
+            false,
+            null,
+            ...$updatedPackages
+        );
     }
 
     /**
@@ -109,7 +103,33 @@ final class Requirements
         PackageInterface ...$updatedPackages
     ): Requirements {
 
-        return new static($composer, $io, $filesystem, false, true, true, ...$updatedPackages);
+        return new static(
+            $composer,
+            $io,
+            $filesystem,
+            false,
+            true,
+            true,
+            null,
+            ...$updatedPackages
+        );
+    }
+
+    /**
+     * @param Composer $composer
+     * @param IOInterface $io
+     * @param Filesystem $filesystem
+     * @param non-falsy-string $root
+     * @return Requirements
+     */
+    public static function forCustomRoot(
+        Composer $composer,
+        IOInterface $io,
+        Filesystem $filesystem,
+        string $root
+    ): Requirements {
+
+        return new static($composer, $io, $filesystem, false, false, false, $root);
     }
 
     /**
@@ -119,6 +139,7 @@ final class Requirements
      * @param bool $isSelectedCommandMode
      * @param bool $isComposer
      * @param bool $isComposerUpdate
+     * @param non-falsy-string|null $root
      * @param PackageInterface ...$updatedPackages
      */
     private function __construct(
@@ -128,14 +149,18 @@ final class Requirements
         bool $isSelectedCommandMode,
         bool $isComposer,
         bool $isComposerUpdate,
+        ?string $root = null,
         PackageInterface ...$updatedPackages
     ) {
 
         $this->filesystem = $filesystem;
 
+        /** @var array<string, mixed> $extra */
         $extra = $composer->getPackage()->getExtra();
 
-        $this->paths = new Paths($composer->getConfig(), $extra, $filesystem);
+        $this->paths = ($root === null)
+            ? new Paths($composer->getConfig(), $extra, $filesystem)
+            : Paths::withRoot($root, $composer->getConfig(), $extra, $filesystem);
         $root = $this->paths->root();
 
         $config = $this->extractConfig($root, $extra);
@@ -149,9 +174,9 @@ final class Requirements
         $this->io = new Io($io, new Formatter());
 
         $templatesDirConfig = $this->config[Config::TEMPLATES_DIR];
-        /** @var string|null $templatesDir */
-        $templatesDir = $templatesDirConfig->unwrapOrFallback();
-        $templatesDir and $this->paths->useCustomTemplatesDir($templatesDir);
+        /** @var string $templatesDir */
+        $templatesDir = $templatesDirConfig->unwrapOrFallback('');
+        ($templatesDir !== '') and $this->paths->useCustomTemplatesDir($templatesDir);
     }
 
     /**
@@ -188,39 +213,48 @@ final class Requirements
 
     /**
      * @param string $rootPath
-     * @param array $extra
-     * @return array
+     * @param array<mixed> $extra
+     * @return array<mixed>
      */
     private function extractConfig(string $rootPath, array $extra): array
     {
-        $configs = empty($extra[ComposerPlugin::EXTRA_KEY])
-            ? []
-            : $extra[ComposerPlugin::EXTRA_KEY];
+        $configs = array_key_exists(ComposerPlugin::EXTRA_KEY, $extra)
+            ? $extra[ComposerPlugin::EXTRA_KEY]
+            : [];
 
-        $file = self::CONFIG_FILE;
+        $configFile = self::CONFIG_FILE;
         $overrideFile = null;
         if (is_string($configs)) {
-            $file = ltrim($configs, '/\\');
+            $configFile = ltrim($configs, '/\\');
             $overrideFile = "{$rootPath}/" . self::CONFIG_FILE;
             $configs = [];
         }
 
-        // Extract config from a separate JSON files
-        $fileConfigs = null;
-        $overrideConfigs = null;
-        if (is_file("{$rootPath}/{$file}") && is_readable("{$rootPath}/{$file}")) {
-            $content = @file_get_contents("{$rootPath}/{$file}");
-            $fileConfigs = $content ? @json_decode($content, true) : null;
+        if (!is_array($configs)) {
+            $configs = [];
         }
-        if ($overrideFile && is_file($overrideFile) && is_readable($overrideFile)) {
+
+        $fileConfigs = [];
+        $overrideConfigs = [];
+
+        if (is_file("{$rootPath}/{$configFile}") && is_readable("{$rootPath}/{$configFile}")) {
+            $content = @file_get_contents("{$rootPath}/{$configFile}");
+            $fileConfigs = ($content !== false) ? @json_decode($content, true) : [];
+        }
+
+        if (($overrideFile !== null) && is_file($overrideFile) && is_readable($overrideFile)) {
             $overrideContent = @file_get_contents($overrideFile);
-            $overrideConfigs = $overrideContent ? @json_decode($overrideContent, true) : null;
+            $overrideConfigs = ($overrideContent !== false)
+                ? @json_decode($overrideContent, true)
+                : [];
         }
 
-        is_array($configs) or $configs = [];
-
-        $fileConfigs and $configs = array_merge($configs, (array)$fileConfigs);
-        $overrideConfigs and $configs = array_merge($configs, (array)$overrideConfigs);
+        if (($fileConfigs !== []) && is_array($fileConfigs)) {
+            $configs = array_merge($configs, $fileConfigs);
+        }
+        if (($overrideConfigs !== []) && is_array($overrideConfigs)) {
+            $configs = array_merge($configs, $overrideConfigs);
+        }
 
         return $configs;
     }

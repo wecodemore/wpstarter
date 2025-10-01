@@ -19,6 +19,8 @@ use Composer\Util\Filesystem;
  *
  * Many paths can be configured, this helper provides a way to do the configuration parsing only
  * once that use helper methods to obtain relative or absolute paths to specific folders.
+ *
+ * @template-implements \ArrayAccess<string, string>
  */
 final class Paths implements \ArrayAccess
 {
@@ -30,35 +32,27 @@ final class Paths implements \ArrayAccess
     public const WP_CONTENT = 'wp-content';
     public const WP_STARTER = 'wp-starter';
 
-    /**
-     * @var Config
-     */
-    private $config;
+    private Config $config;
+    private Filesystem $filesystem;
 
-    /**
-     * @var array
-     */
-    private $extra;
+    /** @var array<string, mixed> */
+    private array $extra;
 
-    /**
-     * @var Filesystem
-     */
-    private $filesystem;
+    /** @var list<string> */
+    private array $customTemplatesDir = [];
 
-    /**
-     * @var string[]
-     */
-    private $customTemplatesDir = [];
+    /** @var non-falsy-string|null */
+    private ?string $customRoot = null;
 
     /**
      * @var array<string,string>|null
      */
-    private $paths;
+    private ?array $paths = null;
 
     /**
      * @param string $root
      * @param Config $config
-     * @param array $extra
+     * @param array<string, mixed> $extra
      * @param Filesystem $filesystem
      * @return Paths
      */
@@ -74,14 +68,15 @@ final class Paths implements \ArrayAccess
         }
 
         $instance = new static($config, $extra, $filesystem);
-        $instance->paths = $instance->parse($root);
+        /** @var non-falsy-string $root */
+        $instance->customRoot = $root;
 
         return $instance;
     }
 
     /**
      * @param Config $config
-     * @param array $extra
+     * @param array<string, mixed> $extra
      * @param Filesystem $filesystem
      */
     public function __construct(Config $config, array $extra, Filesystem $filesystem)
@@ -95,7 +90,7 @@ final class Paths implements \ArrayAccess
      * @param string $templatesRootDir
      * @return void
      */
-    public function useCustomTemplatesDir(string $templatesRootDir)
+    public function useCustomTemplatesDir(string $templatesRootDir): void
     {
         if (is_dir($templatesRootDir)) {
             $this->customTemplatesDir[] = rtrim($templatesRootDir, '/');
@@ -115,7 +110,7 @@ final class Paths implements \ArrayAccess
             );
         }
 
-        return $this->to($this->paths[$pathName], $to);
+        return $this->to($this->paths[$pathName], $to); // @phpstan-ignore offsetAccess.notFound
     }
 
     /**
@@ -136,12 +131,12 @@ final class Paths implements \ArrayAccess
         }
 
         $subdir = $this->filesystem->findShortestPath(
-            $this->paths[self::ROOT],
-            $this->paths[$pathName]
+            $this->paths[self::ROOT], // @phpstan-ignore offsetAccess.notFound
+            $this->paths[$pathName] // @phpstan-ignore offsetAccess.notFound
         );
 
         $to = $this->to('', $to);
-        $to and $subdir = rtrim($subdir, '/\\') . $to;
+        ($to !== '') and $subdir = rtrim($subdir, '/\\') . $to;
 
         return $subdir;
     }
@@ -228,10 +223,9 @@ final class Paths implements \ArrayAccess
      * @param mixed $offset
      * @return bool
      *
-     * @psalm-assert array<string, string> $this->paths
+     * @hpstan-assert array<string, string> $this->paths
      */
-    #[\ReturnTypeWillChange]
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         if (!is_array($this->paths)) {
             $this->paths = $this->parse();
@@ -250,8 +244,7 @@ final class Paths implements \ArrayAccess
      * @param string $offset
      * @return string
      */
-    #[\ReturnTypeWillChange]
-    public function offsetGet($offset)
+    public function offsetGet($offset): string
     {
         if (!$this->offsetExists($offset)) {
             throw new \OutOfRangeException(
@@ -259,15 +252,14 @@ final class Paths implements \ArrayAccess
             );
         }
 
-        return $this->paths[$offset];
+        return $this->paths[$offset]; // @phpstan-ignore offsetAccess.notFound
     }
 
     /**
-     * @param string $offset
+     * @param string|null $offset
      * @param string $value
      */
-    #[\ReturnTypeWillChange]
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         if ($this->offsetExists($offset)) {
             throw new \BadMethodCallException(
@@ -287,24 +279,27 @@ final class Paths implements \ArrayAccess
      *
      * @param string $offset
      */
-    #[\ReturnTypeWillChange]
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         throw new \BadMethodCallException(sprintf('%s class does not support unset.', __CLASS__));
     }
 
     /**
-     * @param string|null $root
      * @return array<string, string>
      */
-    private function parse(?string $root = null): array
+    private function parse(): array
     {
-        $vendorDir = (string)$this->config->get('vendor-dir');
-        $binDir = (string)$this->config->get('bin-dir');
-        $cwd = $this->cwd($root, $vendorDir);
+        $vendorDir = $this->config->get('vendor-dir');
+        $binDir = $this->config->get('bin-dir');
+        assert(is_string($vendorDir));
+        assert(is_string($binDir));
+        $cwd = $this->cwd($vendorDir);
 
         $wpInstallDir = $this->extra['wordpress-install-dir'] ?? 'wordpress';
         $wpContentDir = $this->extra['wordpress-content-dir'] ?? 'wp-content';
+        assert(is_string($wpInstallDir));
+        assert(is_string($wpContentDir));
+
         $wpFullDir = $this->filesystem->normalizePath("{$cwd}/{$wpInstallDir}");
         $wpContentFullDir = $this->filesystem->normalizePath("{$cwd}/{$wpContentDir}");
         $wpParentDir = ($wpFullDir === $cwd) ? $wpFullDir : dirname($wpFullDir);
@@ -316,7 +311,7 @@ final class Paths implements \ArrayAccess
             );
         }
 
-        if (strpos($wpContentFullDir, $cwd) !== 0 || ($cwd === $wpContentFullDir)) {
+        if ((strpos($wpContentFullDir, $cwd) !== 0) || ($cwd === $wpContentFullDir)) {
             $to = ($cwd === $wpContentFullDir) ? 'root dir' : 'a dir outside root';
             throw new \Exception(
                 "Config for WP config dir is pointing to {$to}, WP Starter does not support that."
@@ -349,7 +344,7 @@ final class Paths implements \ArrayAccess
     private function to(string $base, string $to): string
     {
         $path = $base;
-        if ($to) {
+        if ($to !== '') {
             $trail = in_array(substr($to, -1, 1), ['\\', '/'], true);
             $to = '/' . trim($this->filesystem->normalizePath($to), '/');
             $path = $this->filesystem->normalizePath($base . $to);
@@ -360,15 +355,14 @@ final class Paths implements \ArrayAccess
     }
 
     /**
-     * @param string|null $root
      * @param string $vendorDir
      * @return string
      */
-    private function cwd(?string $root, string $vendorDir): string
+    private function cwd(string $vendorDir): string
     {
-        $cwd = $root ?: getcwd();
-        if (!$cwd) {
-            // if the directory containing this file is inside vendor, WP Starter is required as a
+        $cwd = $this->customRoot ?? getcwd();
+        if ($cwd === false) {
+            // If the directory containing this file is inside vendor, WP Starter is required as a
             // dependency, otherwise is the root. In the first case the CWD can be determined as
             // the dir containing the vendor, in the second case as the root of the package.
             $cwd = strpos($this->filesystem->normalizePath(__DIR__), $vendorDir) === 0

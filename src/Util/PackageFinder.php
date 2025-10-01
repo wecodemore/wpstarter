@@ -18,25 +18,11 @@ use Composer\Util\Filesystem as ComposerFilesystem;
 
 class PackageFinder
 {
-    /**
-     * @var RepositoryInterface
-     */
-    private $packageRepo;
-
-    /**
-     * @var InstallationManager
-     */
-    private $installationManager;
-
-    /**
-     * @var ComposerFilesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var array<PackageInterface>|null
-     */
-    private $packages;
+    private RepositoryInterface $packageRepo;
+    private InstallationManager $installationManager;
+    private ComposerFilesystem $filesystem;
+    /** @var array<PackageInterface>|null */
+    private ?array $packages = null;
 
     /**
      * @param RepositoryInterface $packageRepo
@@ -56,11 +42,11 @@ class PackageFinder
 
     /**
      * @param string $type
-     * @return PackageInterface[]
+     * @return list<PackageInterface>
      */
     public function findByType(string $type): array
     {
-        if (!$type) {
+        if ($type === '') {
             return [];
         }
 
@@ -83,6 +69,13 @@ class PackageFinder
     public function findPathOf(PackageInterface $package): string
     {
         $path = $this->installationManager->getInstallPath($package);
+        // Different versions of Composer return something different. We can't do strict comparison
+        // without breaking PHPStan. Explicitly casting to bool works in checking we get a non-empty
+        // string in all versions, and makes PHPStan happy.
+        $hasPath = (bool) $path;
+        if (!$hasPath) {
+            return '';
+        }
 
         return $this->filesystem->normalizePath($path);
     }
@@ -93,7 +86,7 @@ class PackageFinder
      */
     public function findByVendor(string $vendor): array
     {
-        if (!$vendor) {
+        if ($vendor === '') {
             return [];
         }
 
@@ -120,7 +113,7 @@ class PackageFinder
      */
     public function findByName(string $name): ?PackageInterface
     {
-        if (!$name) {
+        if ($name === '') {
             return null;
         }
 
@@ -146,7 +139,7 @@ class PackageFinder
      */
     public function search(string $name): array
     {
-        if (!$name) {
+        if ($name === '') {
             return [];
         }
 
@@ -174,7 +167,7 @@ class PackageFinder
     /**
      * @return array<PackageInterface>
      *
-     * @psalm-assert array<PackageInterface> $this->packages
+     * @phpstan-assert array<PackageInterface> $this->packages
      */
     private function all(): array
     {

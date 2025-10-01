@@ -45,7 +45,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
         $factory = $this->factoryPhpToolProcessFactory();
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMsgRegex('/^Failed installation/');
+        $this->expectExceptionMessageMatches('/^Failed installation/');
 
         $factory->create(new DummyPhpTool());
     }
@@ -163,7 +163,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
         $tool->pharIsValid = false;
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMsgRegex('/Failed phar download/');
+        $this->expectExceptionMessageMatches('/Failed phar download/');
 
         $factory->create($tool);
     }
@@ -191,7 +191,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
 
         $process->execute('cli version');
 
-        static::assertStringMatchesRegex('/^WP-CLI [0-9\.]+$/', trim($this->collectOutput()));
+        static::assertMatchesRegularExpression('/^WP-CLI [0-9\.]+$/', trim($this->collectOutput()));
     }
 
     /**
@@ -212,7 +212,7 @@ class PhpToolProcessFactoryTest extends IntegrationTestCase
      * @return PhpToolProcessFactory
      */
     private function factoryPhpToolProcessFactory(
-        UrlDownloader $urlDownloader = null
+        ?UrlDownloader $urlDownloader = null
     ): PhpToolProcessFactory {
 
         $urlDownloader or $urlDownloader = $this->createUrlDownloader();

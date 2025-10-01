@@ -18,15 +18,13 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 class DummyPhpTool implements PhpTool
 {
-    // phpcs:disable
-    public $niceName = 'dummy';
-    public $packageName = '';
-    public $pharUrl = '';
-    public $pharTarget = '';
-    public $filesystemBootstrap = null;
-    public $minVersion = '0';
-    public $pharIsValid = false;
-    // phpcs:enable
+    public string $niceName = 'dummy';
+    public string $packageName = '';
+    public string $pharUrl = '';
+    public string $pharTarget = '';
+    public ?string $filesystemBootstrap = null;
+    public string $minVersion = '0';
+    public bool $pharIsValid = false;
 
     /**
      * @return string
@@ -67,7 +65,7 @@ class DummyPhpTool implements PhpTool
      */
     public function filesystemBootstrap(string $packageVendorPath): string
     {
-        if ($packageVendorPath && $this->filesystemBootstrap === null) {
+        if (($packageVendorPath !== '') && ($this->filesystemBootstrap === null)) {
             $this->filesystemBootstrap = $packageVendorPath;
         }
 
@@ -102,12 +100,15 @@ class DummyPhpTool implements PhpTool
     {
         $io->write("Dummy!");
 
-        if ($this->filesystemBootstrap) {
+        $hasBootstrap = (($this->filesystemBootstrap ?? '') !== '');
+
+        if ($hasBootstrap) {
+            assert(is_string($this->filesystemBootstrap));
             Assert::stringStartsWith("{$this->filesystemBootstrap} ")->evaluate($command);
             $command = substr($command, strlen($this->filesystemBootstrap) + 1);
         }
 
-        if (!$this->filesystemBootstrap && $this->pharTarget) {
+        if (!$hasBootstrap && ($this->pharTarget !== '')) {
             Assert::stringStartsWith("{$this->pharTarget} ")->evaluate($command);
             $command = substr($command, strlen($this->pharTarget) + 1);
         }

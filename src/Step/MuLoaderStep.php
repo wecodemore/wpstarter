@@ -11,8 +11,12 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Step;
 
+use Composer\Util\Filesystem as ComposerFilesystem;
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Util\FileContentBuilder;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Locator;
+use WeCodeMore\WpStarter\Util\MuPluginList;
 use WeCodeMore\WpStarter\Util\Paths;
 
 /**
@@ -30,30 +34,13 @@ final class MuLoaderStep implements FileCreationStepInterface
     public const NAME = 'build-mu-loader';
     public const TARGET_FILE_NAME = 'wpstarter-mu-loader.php';
 
-    /**
-     * @var \WeCodeMore\WpStarter\Util\MuPluginList
-     */
-    private $list;
+    private MuPluginList $list;
+    private FileContentBuilder $builder;
+    private Filesystem $filesystem;
 
-    /**
-     * @var \WeCodeMore\WpStarter\Util\FileContentBuilder
-     */
-    private $builder;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var array<string, string>
-     */
-    private $muPlugins = [];
-
-    /**
-     * @var \Composer\Util\Filesystem
-     */
-    private $composerFilesystem;
+    /** @var array<string, string> */
+    private array $muPlugins = [];
+    private ComposerFilesystem $composerFilesystem;
 
     /**
      * @param Locator $locator
@@ -83,7 +70,7 @@ final class MuLoaderStep implements FileCreationStepInterface
     {
         $this->muPlugins = $this->list->pluginsList();
 
-        return (bool)$this->muPlugins;
+        return (bool) $this->muPlugins;
     }
 
     /**

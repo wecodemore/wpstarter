@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Step;
 
+use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -23,20 +25,8 @@ final class FlushEnvCacheStep implements Step
 {
     public const NAME = 'flush-env-cache';
 
-    /**
-     * @var \WeCodeMore\WpStarter\Io\Io
-     */
-    private $io;
-
-    /**
-     * @var \Composer\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var string|null
-     */
-    private $envCacheFile = null;
+    private Io $io;
+    private Filesystem $filesystem;
 
     /**
      * @param Locator $locator

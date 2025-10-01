@@ -10,18 +10,10 @@ class WpConfigSectionEditor
     public const PREPEND = -1;
     public const REPLACE = 0;
 
-    /**
-     * @var Paths
-     */
-    private $paths;
+    private Paths $paths;
+    private ?string $wpPath = null;
 
     /**
-     * @var string|null
-     */
-    private $wpPath;
-
-    /**
-     * @param \Composer\Util\Filesystem $filesystem
      * @param Paths $paths
      */
     public function __construct(Paths $paths)
@@ -30,44 +22,40 @@ class WpConfigSectionEditor
     }
 
     /**
-     * @param string $pathToFile
      * @param string $section
      * @param string $newContent
      * @return void
      */
-    public function append(string $section, string $newContent)
+    public function append(string $section, string $newContent): void
     {
         $this->edit($section, $newContent, self::APPEND);
     }
 
     /**
-     * @param string $pathToFile
      * @param string $section
      * @param string $newContent
      * @return void
      */
-    public function prepend(string $section, string $newContent)
+    public function prepend(string $section, string $newContent): void
     {
         $this->edit($section, $newContent, self::PREPEND);
     }
 
     /**
-     * @param string $pathToFile
      * @param string $section
      * @param string $newContent
      * @return void
      */
-    public function replace(string $section, string $newContent)
+    public function replace(string $section, string $newContent): void
     {
         $this->edit($section, $newContent, self::REPLACE);
     }
 
     /**
-     * @param string $pathToFile
      * @param string $section
      * @return void
      */
-    public function delete(string $section)
+    public function delete(string $section): void
     {
         $this->replace($section, '');
     }
@@ -78,22 +66,18 @@ class WpConfigSectionEditor
      * @param int $editMode
      * @return void
      */
-    private function edit(string $section, string $newContent, int $editMode)
+    private function edit(string $section, string $newContent, int $editMode): void
     {
         $content = $this->currentContent();
 
         $newContentLines = array_map('rtrim', explode("\n", $newContent));
-        $newContent = implode("\n    ", $newContentLines);
-
-        $newSection = "    " . trim($newContent);
-        if (trim($newContent) === '') {
-            $newSection = '';
-        }
+        $newContent = trim(implode("\n    ", $newContentLines));
+        $newSection = ($newContent === '') ? '' : "    {$newContent}";
 
         $isReplace = $editMode === self::REPLACE;
-        ($newSection && $isReplace) and $newSection = "\n{$newSection}\n";
+        (($newSection !== '') && $isReplace) and $newSection = "\n{$newSection}\n";
 
-        if (!$newSection) {
+        if ($newSection === '') {
             if (!$isReplace) {
                 return;
             }
@@ -102,7 +86,7 @@ class WpConfigSectionEditor
         }
 
         if (!$isReplace) {
-            $newSection = $editMode === self::APPEND
+            $newSection = ($editMode === self::APPEND)
                 ? '$2' . "{$newSection}\n"
                 : "\n{$newSection}" . '$2';
         }
@@ -115,13 +99,13 @@ class WpConfigSectionEditor
             $content
         );
 
-        if ($replaced === null || ($original === $replaced)) {
-            throw new \Exception("Failed replacing section {$section} in wp-config.php.");
+        if (($replaced === null) || ($original === $replaced)) {
+            throw new \Exception("Failed replacing section '{$section}' in wp-config.php.");
         }
 
         $pathToFile = $this->wpConfigPath();
-        if (!file_put_contents($pathToFile, $replaced)) {
-            throw new \Exception("Error writing {$pathToFile} with edited {$section} section.");
+        if (file_put_contents($pathToFile, $replaced) === false) {
+            throw new \Exception("Error writing '{$pathToFile}' with edited '{$section}' section.");
         }
     }
 
@@ -130,7 +114,7 @@ class WpConfigSectionEditor
      */
     private function wpConfigPath(): string
     {
-        if ($this->wpPath) {
+        if ($this->wpPath !== null) {
             return $this->wpPath;
         }
 
@@ -145,13 +129,14 @@ class WpConfigSectionEditor
     }
 
     /**
-     * @return string
+     * @return non-empty-string
      */
     private function currentContent(): string
     {
         $pathToFile = $this->wpConfigPath();
         $content = file_get_contents($pathToFile);
-        if (!$content) {
+        $content = ($content === false) ? '' : trim($content);
+        if ($content === '') {
             throw new \Exception("Could not read {$pathToFile} content.");
         }
 

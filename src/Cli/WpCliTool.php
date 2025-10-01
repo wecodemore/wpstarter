@@ -20,20 +20,9 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class WpCliTool implements PhpTool
 {
-    /**
-     * @var bool
-     */
-    private $downloadEnabled;
-
-    /**
-     * @var UrlDownloader
-     */
-    private $urlDownloader;
-
-    /**
-     * @var Io
-     */
-    private $io;
+    private bool $downloadEnabled;
+    private UrlDownloader $urlDownloader;
+    private Io $io;
 
     /**
      * @param Config $config
@@ -42,7 +31,7 @@ class WpCliTool implements PhpTool
      */
     public function __construct(Config $config, UrlDownloader $urlDownloader, Io $io)
     {
-        $this->downloadEnabled = (bool)$config[Config::INSTALL_WP_CLI]->unwrapOrFallback(true);
+        $this->downloadEnabled = (bool) $config[Config::INSTALL_WP_CLI]->unwrapOrFallback(true);
         $this->urlDownloader = $urlDownloader;
         $this->io = $io;
     }
@@ -87,7 +76,7 @@ class WpCliTool implements PhpTool
         }
 
         $candidates = [];
-        if (preg_match('~/wp-cli-(.+?)\.phar$~', $this->pharUrl(), $matches)) {
+        if (preg_match('~/wp-cli-(.+?)\.phar$~', $this->pharUrl(), $matches) === 1) {
             $version = $matches[1];
             $path = $paths->root($matches[0]);
             if (file_exists($path)) {
@@ -102,17 +91,16 @@ class WpCliTool implements PhpTool
 
         $constraint = '>=' . $this->minVersion();
 
-        /** @var \SplFileInfo $existingFile */
         foreach ($existingFiles as $existingFile) {
             $fileName = $existingFile->getBasename('.phar');
             $fullPath = $paths->root("/{$fileName}.phar");
-            $version = (string)substr($fileName, 7);
+            $version = substr($fileName, 7);
             if (Semver::satisfies($version, $constraint)) {
                 $candidates[$version] = $fullPath;
             }
         }
 
-        if (!$candidates) {
+        if ($candidates === []) {
             return $default;
         }
 
@@ -149,15 +137,15 @@ class WpCliTool implements PhpTool
 
         $this->io->write(sprintf('Checking %s via %s hash...', $this->niceName(), $algorithm));
         $releaseHash = trim($this->urlDownloader->fetch($hashUrl));
-        if (!$releaseHash) {
+        if ($releaseHash === '') {
             $io->writeErrorBlock("Failed to download {$algorithm} hash content from {$hashUrl}.");
             $io->writeErrorBlock($this->urlDownloader->error());
 
             return false;
         }
 
-        $pharHash = hash($algorithm, (string)file_get_contents($pharPath));
-        if (!$pharHash || !hash_equals($releaseHash, $pharHash)) {
+        $pharHash = hash($algorithm, (string) file_get_contents($pharPath));
+        if (!hash_equals($releaseHash, $pharHash)) {
             $io->writeErrorBlock("{$algorithm} hash check failed for downloaded WP CLI phar.");
 
             return false;

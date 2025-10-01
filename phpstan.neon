@@ -1,0 +1,15 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+parameters:
+	level: 10
+	paths:
+		- src
+	strictRules:
+		disallowedShortTernary: false
+	ignoreErrors:
+		-
+			identifiers:
+				- logicalAnd.resultUnused
+				- logicalAnd.rightNotBoolean
+				- logicalOr.resultUnused
+				- logicalOr.rightNotBoolean

@@ -22,26 +22,14 @@ namespace WeCodeMore\WpStarter\Config;
  */
 final class Result
 {
-    /**
-     * @var mixed
-     */
-    private $value;
-
-    /**
-     * @var \Throwable|null
-     */
-    private $error;
-
-    /**
-     * @var boolean
-     */
-    private $promise = false;
+    /** @var mixed */
+    private $value; // phpcs:ignore
+    private ?\Throwable $error;
+    private bool $promise = false;
 
     /**
      * @param mixed $value
      * @return Result
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     public static function ok($value): Result
     {
@@ -87,15 +75,11 @@ final class Result
     }
 
     /**
-     * @param mixed|null $value
+     * @param mixed $value
      * @param \Throwable|null $error
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
-    private function __construct($value = null, \Throwable $error = null)
+    private function __construct($value = null, ?\Throwable $error = null)
     {
-        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-
         if ($value instanceof Result) {
             $this->value = $value->value;
             $this->error = $value->error;
@@ -103,12 +87,12 @@ final class Result
             return;
         }
 
-        if ($value instanceof \Throwable && !$error) {
+        if (($value instanceof \Throwable) && ($error === null)) {
             $error = $value;
             $value = null;
         }
 
-        $this->value = $error ? null : $value;
+        $this->value = ($error === null) ? $value : null;
         $this->error = $error;
     }
 
@@ -119,35 +103,27 @@ final class Result
     {
         $this->maybeResolve();
 
-        return !$this->error && ($this->value !== null);
+        return ($this->error === null) && ($this->value !== null);
     }
 
     /**
      * @param mixed $compare
      * @return bool
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     public function is($compare): bool
     {
         $this->maybeResolve();
 
-        // phpcs:enable
-
-        return !$this->error && ($this->value === $compare);
+        return ($this->error === null) && ($this->value === $compare);
     }
 
     /**
      * @param mixed $compare
      * @return bool
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     public function not($compare): bool
     {
         $this->maybeResolve();
-
-        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
 
         return !$this->is($compare);
     }
@@ -161,44 +137,33 @@ final class Result
      */
     public function either($thing, ...$things): bool
     {
-        $this->maybeResolve();
-
         // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
+        $this->maybeResolve();
 
         array_unshift($things, $thing);
 
-        return !$this->error && in_array($this->value, $things, true);
+        return ($this->error === null) && in_array($this->value, $things, true);
     }
 
     /**
      * @param mixed $fallback
      * @return mixed
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
     public function unwrapOrFallback($fallback = null)
     {
         $this->maybeResolve();
-
-        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-        // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
 
         return $this->notEmpty() ? $this->value : $fallback;
     }
 
     /**
      * @return mixed
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
     public function unwrap()
     {
-        // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
-
         $this->maybeResolve();
 
-        if ($this->error) {
+        if ($this->error !== null) {
             throw $this->error;
         }
 
@@ -208,7 +173,7 @@ final class Result
     /**
      * @return void
      */
-    private function maybeResolve()
+    private function maybeResolve(): void
     {
         if (!$this->promise) {
             return;
@@ -224,13 +189,13 @@ final class Result
 
             $resolved = $value;
             $error = null;
-            while ($resolved instanceof Result && !$error) {
+            while (($resolved instanceof Result) && ($error === null)) {
                 $resolved->maybeResolve();
                 $error = $resolved->error;
                 $resolved = $resolved->value;
             }
 
-            if ($error) {
+            if ($error instanceof \Throwable) {
                 $this->error = $error;
                 $this->value = null;
 

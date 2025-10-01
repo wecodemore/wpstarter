@@ -11,6 +11,14 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Cli;
 
+/**
+ * @phpstan-type ParsedData = array{
+ *     file: string,
+ *     args: list<non-empty-string>,
+ *     skip-wordpress:bool,
+ *     valid:bool
+ * }
+ */
 final class WpCliFileData
 {
     public const FILE = 'file';
@@ -24,18 +32,14 @@ final class WpCliFileData
         self::VALID => false,
     ];
 
-    /**
-     * @var array
-     */
-    private $raw;
+    /** @var array<mixed> */
+    private array $raw;
+
+    /** @var ParsedData|null */
+    private ?array $parsed = null;
 
     /**
-     * @var array{file:string,args:array,skip-wordpress:bool,valid:bool}|null
-     */
-    private $parsed;
-
-    /**
-     * @param array $fileData
+     * @param array<mixed> $fileData
      * @return WpCliFileData
      */
     public static function fromArray(array $fileData): WpCliFileData
@@ -53,7 +57,7 @@ final class WpCliFileData
     }
 
     /**
-     * @param array $fileData
+     * @param array<mixed> $fileData
      */
     private function __construct(array $fileData)
     {
@@ -65,7 +69,7 @@ final class WpCliFileData
      */
     public function valid(): bool
     {
-        $this->setup();
+        $this->parse();
 
         return $this->parsed[self::VALID];
     }
@@ -75,7 +79,7 @@ final class WpCliFileData
      */
     public function file(): string
     {
-        $this->setup();
+        $this->parse();
 
         return $this->parsed[self::FILE];
     }
@@ -85,17 +89,17 @@ final class WpCliFileData
      */
     public function skipWordpress(): bool
     {
-        $this->setup();
+        $this->parse();
 
         return $this->parsed[self::SKIP_WORDPRESS];
     }
 
     /**
-     * @return array
+     * @return list<non-empty-string>
      */
     public function args(): array
     {
-        $this->setup();
+        $this->parse();
 
         return $this->parsed[self::ARGS];
     }
@@ -103,22 +107,23 @@ final class WpCliFileData
     /**
      * @return void
      *
-     * @psalm-assert array $this->parsed
+     * @phpstan-assert ParsedData $this->parsed
      */
-    private function setup()
+    private function parse(): void
     {
-        if (is_array($this->parsed)) {
+        if ($this->parsed !== null) {
             return;
         }
 
         $data = array_replace(self::DEFAULTS, $this->raw);
 
         $file = $data[self::FILE] ?? null;
-        if (!$file || !is_string($file) || !is_file($file)) {
+        if (($file === '') || !is_string($file) || !is_file($file)) {
             $this->parsed = self::DEFAULTS;
 
             return;
         }
+        /** @var non-falsy-string $file */
 
         $ext = pathinfo($file, PATHINFO_EXTENSION);
         if (strtolower($ext) !== 'php') {
@@ -127,13 +132,19 @@ final class WpCliFileData
             return;
         }
 
-        $baseArgs = $data[self::ARGS] ?? [];
-        $args = is_array($baseArgs) ? array_filter($baseArgs, 'is_string') : [];
-        $skip = (bool)filter_var($data[self::SKIP_WORDPRESS], FILTER_VALIDATE_BOOLEAN);
+        $rawArgs = $data[self::ARGS] ?? [];
+        $args = [];
+        if (is_array($rawArgs)) {
+            foreach ($rawArgs as $rawArg) {
+                (is_string($rawArg) && ($rawArg !== '')) and $args[] = $rawArg;
+            }
+        }
+
+        $skip = filter_var($data[self::SKIP_WORDPRESS], FILTER_VALIDATE_BOOLEAN);
 
         $this->parsed = [
             self::FILE => $file,
-            self::ARGS => array_filter($args),
+            self::ARGS => $args,
             self::SKIP_WORDPRESS => $skip,
             self::VALID => true,
         ];

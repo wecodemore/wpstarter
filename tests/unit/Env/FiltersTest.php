@@ -23,7 +23,7 @@ class FiltersTest extends TestCase
      * @param mixed $input
      * @param mixed $expectedOutput
      */
-    public function testFilter(string $mode, $input, $expectedOutput)
+    public function testFilter(string $mode, $input, $expectedOutput): void
     {
         $filter = new Filters();
 
@@ -42,13 +42,9 @@ class FiltersTest extends TestCase
 
     /**
      * @return list<array{string, mixed, mixed}>
-     *
-     * phpcs:disable Inpsyde.CodeQuality.FunctionLength
      */
     public static function filterDataProvider(): array
     {
-        // phpcs:enable Inpsyde.CodeQuality.FunctionLength
-
         return [
             [Filters::FILTER_BOOL, 1, true],
             [Filters::FILTER_BOOL, 'true', true],
