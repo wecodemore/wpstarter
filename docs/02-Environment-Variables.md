@@ -64,7 +64,7 @@ By convention those files are often named `.env`.
 
 ## PHP and env vars
 
-In PHP there are two functions: [`getevn`](http://php.net/manual/en/function.getenv.php) and [`putenv`](http://php.net/manual/en/function.getenv.php) that allow to, respectively, read and write env vars on the server in an OS-agnostic way.
+In PHP there are two functions: [`getenv`](http://php.net/manual/en/function.getenv.php) and [`putenv`](http://php.net/manual/en/function.getenv.php) that allow to, respectively, read and write env vars on the server in an OS-agnostic way.
 
 There's nothing in PHP core that parse env files, but is no surprise that there are different libraries to do that.
 
@@ -139,7 +139,7 @@ WP Starter supports an environment variable called `WP_STARTER_ENV_TO_CONST` con
 WP_STARTER_ENV_TO_CONST="AWESOME_PLUGIN_CONFIG,ANOTHER_VAR,YET_ANOTHER"
 ```
 
-With such env variable set, WP Start will declare constants for the three env variables.
+With such env variable set, WP Starter will declare constants for the three env variables.
 
 Please note that env variables are always strings, while PHP constants can be any static type. For WordPress constants that is not an issue because WP Starter knows the expected type can cast the value before define the constant. For custom variables a different type can be specified using the `NAME:TYPE` syntax . For example:
 
