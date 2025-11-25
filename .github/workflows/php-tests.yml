@@ -36,6 +36,8 @@ jobs:
                 exclude:
                     - php-ver: '8.4'
                       composer-ver: '~2.3.0'
+                    - php-ver: '8.5'
+                      composer-ver: '~2.3.0'
 
         steps:
             -   name: Update "USE_COVERAGE" env var based on matrix
