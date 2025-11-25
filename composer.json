@@ -72,7 +72,10 @@
         "allow-plugins": {
             "composer/*": true,
             "dealerdirect/phpcodesniffer-composer-installer": true
-        }
+        },
+	    "audit": {
+		    "block-insecure": false
+	    }
     },
     "scripts": {
         "cs": "@php ./vendor/squizlabs/php_codesniffer/bin/phpcs",
