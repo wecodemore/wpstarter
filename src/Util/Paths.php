@@ -256,11 +256,17 @@ final class Paths implements \ArrayAccess
     }
 
     /**
-     * @param string|null $offset
+     * @param string $offset
      * @param string $value
      */
     public function offsetSet($offset, $value): void
     {
+        if (!is_string($offset)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s offset must be a string, %s given.', __CLASS__, gettype($offset))
+            );
+        }
+
         if ($this->offsetExists($offset)) {
             throw new \BadMethodCallException(
                 sprintf(
