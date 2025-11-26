@@ -101,7 +101,7 @@ class DbChecker
         } catch (\Throwable $exception) {
             $this->write($exception->getMessage());
         } finally {
-            ($db instanceof \mysqli) and \mysqli_close($db);
+            ($db instanceof \mysqli) and @\mysqli_close($db);
         }
 
         $this->setupEnv(true, $dbExists, $wpInstalled);
