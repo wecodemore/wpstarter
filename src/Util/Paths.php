@@ -256,7 +256,7 @@ final class Paths implements \ArrayAccess
     }
 
     /**
-     * @param string $offset
+     * @param string|null $offset
      * @param string $value
      */
     public function offsetSet($offset, $value): void
