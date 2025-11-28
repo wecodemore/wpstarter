@@ -5,6 +5,11 @@ WP Starter
 
 WP Starter is the easiest and fastest way to bootstrap WordPress sites entirely based on [Composer](https://getcomposer.org/).
 
+[![PHP Coding Standards](https://github.com/wecodemore/wpstarter/actions/workflows/php-cs.yml/badge.svg?branch=version-3)](https://github.com/wecodemore/wpstarter/actions/workflows/php-cs.yml)
+[![PHP Lint](https://github.com/wecodemore/wpstarter/actions/workflows/php-lint.yml/badge.svg?branch=version-3)](https://github.com/wecodemore/wpstarter/actions/workflows/php-lint.yml)
+[![PHP Static Analysis](https://github.com/wecodemore/wpstarter/actions/workflows/php-sa.yml/badge.svg?branch=version-3)](https://github.com/wecodemore/wpstarter/actions/workflows/php-sa.yml)
+[![PHP Tests](https://github.com/wecodemore/wpstarter/actions/workflows/php-tests.yml/badge.svg?branch=version-3)](https://github.com/wecodemore/wpstarter/actions/workflows/php-tests.yml)
+
 ---
 
 
