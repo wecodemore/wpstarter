@@ -88,7 +88,7 @@ class DbChecker
 
             if (!$success || ($db->connect_errno > 0)) {
                 $this->setupEnv(false, false, false);
-                is_resource($db) and \mysqli_close($db);
+                ($db instanceof \mysqli) and \mysqli_close($db);
 
                 return;
             }
@@ -101,7 +101,7 @@ class DbChecker
         } catch (\Throwable $exception) {
             $this->write($exception->getMessage());
         } finally {
-            is_resource($db) and @\mysqli_close($db);
+            ($db instanceof \mysqli) and @\mysqli_close($db);
         }
 
         $this->setupEnv(true, $dbExists, $wpInstalled);
