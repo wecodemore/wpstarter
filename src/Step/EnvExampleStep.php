@@ -30,30 +30,11 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep, Conditiona
 {
     public const NAME = 'envexample';
 
-    /**
-     * @var Config
-     */
-    private $config;
-
-    /**
-     * @var Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var UrlDownloader
-     */
-    private $urlDownloader;
-
-    /**
-     * @var string
-     */
-    private $error = '';
-
-    /**
-     * @var string
-     */
-    private $reason = '';
+    private Config $config;
+    private Filesystem $filesystem;
+    private UrlDownloader $urlDownloader;
+    private string $error = '';
+    private string $reason = '';
 
     /**
      * @param Locator $locator
@@ -93,7 +74,7 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep, Conditiona
         $envFile = $this->filesystem->normalizePath("{$envDir}/{$envFileName}");
 
         if (is_file($paths->root($envFile))) {
-            $this->reason = sprintf('environment file already exists', Config::ENV_EXAMPLE);
+            $this->reason = 'environment file already exists';
 
             return false;
         }
@@ -143,21 +124,26 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep, Conditiona
     {
         /** @var string|bool $source */
         $source = $this->config[Config::ENV_EXAMPLE]->unwrapOrFallback(false);
-        if (!$source) {
+        if (($source === '') || ($source === false)) {
             return Step::NONE;
         }
 
         $destination = $this->targetPath($paths);
 
-        if (is_string($source) && filter_var($source, FILTER_VALIDATE_URL)) {
+        $isAsk = $source === OptionalStep::ASK;
+        $isUrl = !$isAsk
+            && is_string($source)
+            && (filter_var($source, FILTER_VALIDATE_URL) !== false);
+        $isCustomPath = is_string($source) && !$isAsk && !$isUrl;
+
+        if ($isUrl) {
+            /** @var non-empty-string $source */
             return $this->download($source, $destination);
         }
 
-        $isAsk = $source === OptionalStep::ASK;
-
-        if (!$isAsk && is_string($source)) {
+        if ($isCustomPath) {
             $realpath = realpath($source);
-            if (!$realpath) {
+            if ($realpath === false) {
                 $this->error = "{$source} is not a valid valid relative path to env-example file.";
 
                 return Step::ERROR;
@@ -166,6 +152,10 @@ final class EnvExampleStep implements FileCreationStep, OptionalStep, Conditiona
             return $this->copy($paths, $destination, $realpath);
         }
 
+        // If here, `$source` was either `true` or `"ask"`.
+        // In the latter case, being this an `OptionalStep` we already asked, and if the user
+        // did not confirm, this method would not run. So we can assume that here there's no
+        // difference between `true` or `"ask"`: in both cases we have to copy the default source.
         return $this->copy($paths, $destination);
     }
 

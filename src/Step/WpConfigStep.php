@@ -12,8 +12,12 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Io\Io;
+use WeCodeMore\WpStarter\Util\FileContentBuilder;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
+use WeCodeMore\WpStarter\Util\Salter;
 
 /**
  * Step that generates and saves wp-config.php in webroot.
@@ -25,30 +29,11 @@ final class WpConfigStep implements FileCreationStep, BlockingStep
 {
     public const NAME = 'wpconfig';
 
-    /**
-     * @var \WeCodeMore\WpStarter\Io\Io
-     */
-    private $io;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\FileContentBuilder
-     */
-    private $builder;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Salter
-     */
-    private $salter;
-
-    /**
-     * @var Config
-     */
-    private $config;
+    private Io $io;
+    private FileContentBuilder $builder;
+    private Filesystem $filesystem;
+    private Salter $salter;
+    private Config $config;
 
     /**
      * @param Locator $locator
@@ -105,17 +90,18 @@ final class WpConfigStep implements FileCreationStep, BlockingStep
 
         $autoload = $paths->vendor('autoload.php');
 
+        /** @var bool $cacheEnv */
         $cacheEnv = $config[Config::CACHE_ENV]->unwrapOrFallback(true);
 
         /** @var string $earlyHookFile */
         $earlyHookFile = $config[Config::EARLY_HOOKS_FILE]->unwrapOrFallback('');
-        if ($earlyHookFile) {
+        if ($earlyHookFile !== '') {
             $earlyHookFile = $this->relPath("{$from}/index.php", $earlyHookFile, false);
         }
 
         /** @var string $envBootstrapDir */
         $envBootstrapDir = $config[Config::ENV_BOOTSTRAP_DIR]->unwrapOrFallback('');
-        if ($envBootstrapDir) {
+        if ($envBootstrapDir !== '') {
             $envBootstrapDir = $this->relPath($from, $paths->root($envBootstrapDir));
         }
 
@@ -128,6 +114,7 @@ final class WpConfigStep implements FileCreationStep, BlockingStep
 
         $register = $config[Config::REGISTER_THEME_FOLDER]->unwrapOrFallback(false);
         ($register === OptionalStep::ASK) and $register = $this->askForRegister();
+        /** @var bool $register */
 
         $contentRelDir = $this->relPath($from, $paths->wpContent());
         $contentRelUrlPath = $this->relPath($wpParent, $paths->wpContent());

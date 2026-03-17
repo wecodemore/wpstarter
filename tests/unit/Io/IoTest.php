@@ -45,7 +45,7 @@ class IoTest extends TestCase
             ->twice()
             ->with(\Mockery::type('string'))
             ->andReturnUsing(
-                static function (string $error) {
+                static function (string $error): void {
                     static $i;
                     $i = $i ?? 0;
                     $i++;
@@ -69,7 +69,7 @@ class IoTest extends TestCase
         $question = Question::newWithValidator(
             ['URL?'],
             static function (string $value): bool {
-                return (bool)filter_var($value, FILTER_VALIDATE_URL);
+                return (bool) filter_var($value, FILTER_VALIDATE_URL);
             },
             'https://example.com'
         );
@@ -93,7 +93,7 @@ class IoTest extends TestCase
             ->twice()
             ->with(\Mockery::type('string'))
             ->andReturnUsing(
-                static function (string $error) {
+                static function (string $error): void {
                     static $i;
                     $i = $i ?? 0;
                     $i++;
@@ -136,7 +136,7 @@ class IoTest extends TestCase
         $question = Question::newWithValidator(
             ['URL?'],
             static function (string $value): bool {
-                return (bool)filter_var($value, FILTER_VALIDATE_URL);
+                return (bool) filter_var($value, FILTER_VALIDATE_URL);
             },
             'https://example.com'
         );

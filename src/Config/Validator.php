@@ -28,15 +28,8 @@ use WeCodeMore\WpStarter\Util\Filesystem;
  */
 class Validator
 {
-    /**
-     * @var Paths
-     */
-    private $paths;
-
-    /**
-     * @var ComposerFilesystem
-     */
-    private $filesystem;
+    private Paths $paths;
+    private ComposerFilesystem $filesystem;
 
     /**
      * @param Paths $paths
@@ -56,7 +49,7 @@ class Validator
      * - the word "ask", which means ask the user in case of existing file;
      * - a boolean(-like), which enables or not overwrite protection.
      *
-     * @param string|bool|array|null $value
+     * @param string|bool|array<mixed>|null $value
      * @return Result
      */
     public function validateOverwrite($value): Result
@@ -83,7 +76,7 @@ class Validator
      */
     public function validateSteps($value): Result
     {
-        if (!$value) {
+        if ($this->isEmpty($value)) {
             return Result::none();
         }
 
@@ -102,7 +95,7 @@ class Validator
             $steps[trim($name)] = $step;
         }
 
-        if (!$steps) {
+        if ($this->isEmpty($steps)) {
             return Result::errored('No valid step classes provided.');
         }
 
@@ -121,7 +114,7 @@ class Validator
      */
     public function validateScripts($value): Result
     {
-        if (!$value) {
+        if ($this->isEmpty($value)) {
             return Result::ok([]);
         }
 
@@ -135,7 +128,7 @@ class Validator
         $allScripts = [];
 
         foreach ($value as $name => $scripts) {
-            if (!is_string($name) || !preg_match('~^(?:pre|post)\-.+$~i', $name)) {
+            if (!is_string($name) || (preg_match('~^(?:pre|post)\-.+$~i', $name) !== 1)) {
                 return Result::errored($error);
             }
 
@@ -150,11 +143,14 @@ class Validator
                 return Result::errored($error);
             }
 
-            $validScripts = array_filter($scripts, [$this, 'isCallback']);
-            $validScripts and $allScripts[$name] = array_values($validScripts);
+            $callbacks = [];
+            foreach ($scripts as $script) {
+                $this->isCallback($script) and $callbacks[] = $script;
+            }
+            ($callbacks !== []) and $allScripts[$name] = $callbacks;
         }
 
-        if (!$allScripts) {
+        if ($allScripts === []) {
             return Result::errored('No valid scripts provided.');
         }
 
@@ -188,7 +184,7 @@ class Validator
     {
         // phpcs:enable Generic.Metrics.CyclomaticComplexity
 
-        if (!$value) {
+        if ($this->isEmpty($value)) {
             return Result::none();
         }
 
@@ -197,13 +193,13 @@ class Validator
         }
 
         $dropins = [];
-        foreach ((array)$value as $basename => $dropin) {
+        foreach ((array) $value as $basename => $dropin) {
             $dropin = $this->validateUrlOrPath($dropin)->unwrapOrFallback(null);
             if (($dropin === '') || !is_string($dropin)) {
                 continue;
             }
             if (is_numeric($basename)) {
-                $basename = filter_var($dropin, FILTER_VALIDATE_URL)
+                $basename = filter_var($dropin, FILTER_VALIDATE_URL) !== false
                     ? trim((parse_url($dropin, PHP_URL_PATH) ?: ''), '/') ?: ''
                     : basename($dropin);
             }
@@ -212,7 +208,9 @@ class Validator
             }
         }
 
-        return $dropins ? Result::ok($dropins) : Result::errored('No valid dropins provided.');
+        return $dropins !== []
+            ? Result::ok($dropins)
+            : Result::errored('No valid dropins provided.');
     }
 
     /**
@@ -250,18 +248,22 @@ class Validator
      */
     public function validateWpCliCommands($value): Result
     {
-        if (!$value) {
+        if ($value === null) {
             return Result::none();
+        }
+
+        if ($this->isEmpty($value)) {
+            return Result::ok([]);
         }
 
         $error = 'WP CLI commands must be either provided as array of commands, or path to a PHP '
             . 'file returning the array, or path to a JSON file containing the array.';
 
         if (is_string($value)) {
-            /** @var string|null $path */
-            $path = $this->validatePath($value)->unwrapOrFallback();
+            /** @var string $path */
+            $path = $this->validatePath($value)->unwrapOrFallback('');
 
-            return $path
+            return ($path !== '')
                 ? $this->validateWpCliCommandsListFile($path)
                 : Result::errored($error);
         }
@@ -270,18 +272,13 @@ class Validator
             return Result::errored($error);
         }
 
-        $commands = array_reduce(
-            $value,
-            function (array $commands, $command): array {
-                $command = $this->validateWpCliCommand($command);
-                $command->notEmpty() and $commands[] = $command->unwrap();
+        $commands = [];
+        foreach ($value as $command) {
+            $validCommand = $this->validateWpCliCommand($command);
+            $validCommand->notEmpty() and $commands[] = $validCommand->unwrap();
+        }
 
-                return $commands;
-            },
-            []
-        );
-
-        if (!$commands) {
+        if ($commands === []) {
             return Result::errored($error);
         }
 
@@ -298,7 +295,7 @@ class Validator
      */
     public function validateWpCliCommand($value): Result
     {
-        if (!$value) {
+        if ($this->isEmpty($value)) {
             return Result::none();
         }
 
@@ -311,10 +308,10 @@ class Validator
         }
 
         $value = substr($value, 3) ?: '';
-        $hasPath = preg_match('~^(.+)(\-\-path=[^ ]+)(.+)?$~', $value, $matches);
-        $hasPath and $value = trim($matches[1] . $matches[3]);
+        $hasPath = preg_match('~^(.+)(\-\-path=[^ ]+)(.+)?$~', $value, $matches) === 1;
+        $hasPath and $value = trim($matches[1] . ($matches[3] ?? ''));
 
-        return Result::ok((string)new StringInput($value));
+        return Result::ok((string) new StringInput($value));
     }
 
     /**
@@ -328,8 +325,12 @@ class Validator
      */
     public function validateWpCliFiles($value): Result
     {
-        if (!$value) {
+        if ($value === null) {
             return Result::none();
+        }
+
+        if ($this->isEmpty($value)) {
+            return Result::ok([]);
         }
 
         is_string($value) and $value = [$value];
@@ -351,7 +352,7 @@ class Validator
             $data->valid() and $valid[] = $data;
         }
 
-        if (!$valid) {
+        if ($valid === []) {
             return Result::errored('No valid file has been provided to be evaluated by WP CLI.');
         }
 
@@ -379,8 +380,8 @@ class Validator
             return Result::errored('WP version is expected to be a string or an integer.');
         }
 
-        $normalized = WpVersion::normalize((string)$value);
-        if (!$normalized) {
+        $normalized = WpVersion::normalize((string) $value);
+        if ($normalized === '') {
             return Result::errored("{$value} does not represent a valid WP version.");
         }
 
@@ -479,13 +480,12 @@ class Validator
      */
     public function validatePath($value): Result
     {
-        $path = $this->validateDirName($value)->unwrapOrFallback();
+        /** @var string $path */
+        $path = $this->validateDirName($value)->unwrapOrFallback('');
 
-        if (!$path) {
+        if ($path === '') {
             return Result::errored('Given value must be the path to an existing file or folder.');
         }
-
-        /** @var string $path */
 
         if (is_file($path) || is_dir($path)) {
             if (!$this->filesystem->isAbsolutePath($path)) {
@@ -522,7 +522,7 @@ class Validator
         }
 
         $normalized = $this->filesystem->normalizePath($value);
-        if (!$normalized) {
+        if ($normalized === '') {
             return Result::errored("{$value} is not a valid file name.");
         }
 
@@ -532,15 +532,12 @@ class Validator
             return Result::errored("{$value} is not a valid file name.");
         }
 
-        $hasInvalidChars = preg_match(
-            '~(\$|\+|\!|\*|\(|\)|,|\{|\}|\||\^|\[|\]|`|"|\>|\<|\#|;|\?|\:|&|\')~',
-            $normalized
-        );
+        $invalidCharsRegex = '~(\$|\+|\!|\*|\(|\)|,|\{|\}|\||\^|\[|\]|`|"|\>|\<|\#|;|\?|\:|&|\')~';
 
         if (
-            $hasInvalidChars
-            || !str_replace([' ', '.', '~', '%', '@', '='], '', $normalized)
-            || substr_count($normalized, '..')
+            (preg_match($invalidCharsRegex, $normalized) === 1)
+            || (str_replace([' ', '.', '~', '%', '@', '='], '', $normalized) === '')
+            || (substr_count($normalized, '..') > 0)
         ) {
             return Result::errored("{$value} is not a valid file name.");
         }
@@ -571,7 +568,7 @@ class Validator
         }
 
         $normalized = $this->filesystem->normalizePath($value);
-        if (!$normalized) {
+        if ($normalized === '') {
             return Result::errored("{$value} is not a valid folder name.");
         }
 
@@ -580,11 +577,14 @@ class Validator
         $startWithSlash and $trimmed = (substr($trimmed, 1) ?: '');
 
         $relStartMatch = [];
-        while (!$startWithSlash && preg_match('~^\.{1,2}/(.+)?~', $trimmed, $relStartMatch)) {
-            $trimmed = $relStartMatch[1];
+        while (
+            !$startWithSlash
+            && (preg_match('~^\.{1,2}/(.+)?~', $trimmed, $relStartMatch) === 1)
+        ) {
+            $trimmed = $relStartMatch[1] ?? '';
         }
 
-        if (!substr_count($trimmed, '/')) {
+        if (substr_count($trimmed, '/') === 0) {
             if (!$this->validateFileName($trimmed)->notEmpty()) {
                 return Result::errored("{$value} is not a valid folder name.");
             }
@@ -592,10 +592,13 @@ class Validator
             return Result::ok($normalized);
         }
 
-        // extract a prefix being a protocol://, protocol:, protocol://drive: or simply drive:
+        // Extract a prefix being a protocol://, protocol:, protocol://drive: or simply drive:
         $regex = '{^(?:[0-9a-z]{2,}+:(?://(?:[a-z]:)?)?|[a-z]:)(?:/?(.+))+}i';
-        if (($trimmed === $normalized) && preg_match($regex, $trimmed, $driveStartMatch)) {
-            $trimmed = $driveStartMatch[1] ?? '';
+        if (
+            ($trimmed === $normalized)
+            && (preg_match($regex, $trimmed, $driveStartMatch) === 1)
+        ) {
+            $trimmed = $driveStartMatch[1];
         }
 
         foreach (explode('/', $trimmed) as $part) {
@@ -620,21 +623,21 @@ class Validator
      */
     public function validateGlobPath($value): Result
     {
-        if (!is_string($value) || !$value) {
+        if (!is_string($value) || ($value === '')) {
             return Result::errored("Glob path must be in a non-empty string.");
         }
 
         if (
-            !str_replace(['*', '.', '/', '?'], '', $value)
-            && !substr_count($value, '..')
-            && !substr_count($value, '//')
+            (str_replace(['*', '.', '/', '?'], '', $value) === '')
+            && (substr_count($value, '..') === 0)
+            && (substr_count($value, '//') === 0)
         ) {
             return Result::ok($value);
         }
 
         $path1 = str_replace(['*', '?', '[', ']'], ['aa', 'a', '', ''], $value);
 
-        $valid = substr_count($path1, '/') || substr_count($path1, '\\')
+        $valid = ((substr_count($path1, '/') > 0) || (substr_count($path1, '\\') > 0))
             ? $this->validateDirName($path1)
             : $this->validateFileName($path1);
 
@@ -656,7 +659,7 @@ class Validator
      */
     public function validateGlobPathArray($value): Result
     {
-        if (!$value) {
+        if ($this->isEmpty($value)) {
             return Result::none();
         }
 
@@ -670,7 +673,7 @@ class Validator
             $validatedPath->notEmpty() and $validated[] = $validatedPath->unwrap();
         }
 
-        if (!$validated) {
+        if ($validated === []) {
             return Result::errored(
                 'None of the items of provided array represent a valid glob path.'
             );
@@ -687,7 +690,7 @@ class Validator
      */
     public function validateUrl($value): Result
     {
-        if (!$value) {
+        if ($this->isEmpty($value)) {
             return Result::none();
         }
 
@@ -695,7 +698,7 @@ class Validator
             return Result::errored('URL must be in a string.');
         }
 
-        if (!filter_var($value, FILTER_VALIDATE_URL)) {
+        if (filter_var($value, FILTER_VALIDATE_URL) === false) {
             return Result::errored("{$value} is not a valid URL.");
         }
 
@@ -736,7 +739,7 @@ class Validator
     public function validateInt($value): Result
     {
         return is_numeric($value)
-            ? Result::ok((int)$value)
+            ? Result::ok((int) $value)
             : Result::errored('Given value does not represent an integer.');
     }
 
@@ -770,16 +773,17 @@ class Validator
             return false;
         }
 
-        /** @psalm-suppress RedundantCondition */
+        /** @phpstan-ignore function.alreadyNarrowedType */
         if (is_callable($script)) {
             return true;
         }
 
         /** @var string|array{string|object, string}|object $script */
 
+        /** @phpstan-ignore deadCode.unreachable */
         if (is_array($script)) {
-            return is_string($script[0])
-                && $this->isValidEntityName($script[0])
+            /** @var array{non-empty-string, non-empty-string} $script */
+            return $this->isValidEntityName($script[0])
                 && $this->isValidEntityName($script[1], false);
         }
 
@@ -787,7 +791,7 @@ class Validator
             return false;
         }
 
-        if (preg_match('/^([^:]+)::([^:])+$/', $script, $matches)) {
+        if (preg_match('/^([^:]+)::([^:])+$/', $script, $matches) === 1) {
             return $this->isValidEntityName($matches[1])
                 && $this->isValidEntityName($matches[2], false);
         }
@@ -796,15 +800,26 @@ class Validator
     }
 
     /**
+     * @param mixed $value
+     * @return bool
+     */
+    private function isEmpty($value): bool
+    {
+        $bool = (bool) $value;
+
+        return !$bool;
+    }
+
+    /**
      * Validate the path of a file containing WP CLI commands.
      *
      * It is expected a string, that is a path to a PHP or JSON file. The file must return (if PHP)
      * or contain (if JSON) an array of WP CLI commands as they would be run in the terminal.
      *
-     * @param mixed $value
+     * @param string|null $value
      * @return Result
      */
-    private function validateWpCliCommandsListFile($value): Result
+    private function validateWpCliCommandsListFile(?string $value): Result
     {
         if ($value === null) {
             return Result::none();
@@ -824,7 +839,7 @@ class Validator
             return Result::errored("{$error} {$fullpath} is not a file or is not readable.");
         }
 
-        $extension = strtolower((string)pathinfo($fullpath, PATHINFO_EXTENSION));
+        $extension = strtolower(pathinfo($fullpath, PATHINFO_EXTENSION));
         $isJson = $extension === 'json';
         if ($extension !== 'php' && !$isJson) {
             return Result::errored($error);
@@ -860,7 +875,7 @@ class Validator
     {
         $parts = $namespace ? explode('\\', ltrim($value, '\\')) : [$value];
         foreach ($parts as $part) {
-            if (!preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $part)) {
+            if (preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $part) !== 1) {
                 return false;
             }
         }

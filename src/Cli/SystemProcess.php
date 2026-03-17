@@ -18,25 +18,12 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 class SystemProcess
 {
-    /**
-     * @var array<int, callable>
-     */
-    private $printers = [];
-
-    /**
-     * @var Paths
-     */
-    private $paths;
-
-    /**
-     * @var array
-     */
-    private $environment = [];
-
-    /**
-     * @var Io
-     */
-    private $io;
+    /** @var array<int, callable> */
+    private array $printers = [];
+    private Paths $paths;
+    /** @var array<string, string> */
+    private array $environment = [];
+    private Io $io;
 
     /**
      * @param Paths $paths
@@ -49,7 +36,7 @@ class SystemProcess
     }
 
     /**
-     * @param array $environment
+     * @param array<string, string> $environment
      * @return SystemProcess
      */
     public function withEnvironment(array $environment): SystemProcess
@@ -76,7 +63,7 @@ class SystemProcess
         }
 
         try {
-            is_string($cwd) or $cwd = $this->paths->root();
+            $cwd ??= $this->paths->root();
 
             $process = $this->factoryProcess($command, $cwd);
             $process->mustRun($this->factoryPrinter($verbosity));
@@ -113,7 +100,7 @@ class SystemProcess
          * @var string $err
          */
         try {
-            is_string($cwd) or $cwd = $this->paths->root();
+            $cwd ??= $this->paths->root();
 
             $process = $this->factoryProcess($command, $cwd);
             $process->mustRun($printer);
@@ -131,7 +118,7 @@ class SystemProcess
     public function executeSilently(string $command, ?string $cwd = null): bool
     {
         try {
-            is_string($cwd) or $cwd = $this->paths->root();
+            $cwd ??= $this->paths->root();
             $process = $this->factoryProcess($command, $cwd);
             $process->disableOutput()->mustRun();
 
@@ -148,12 +135,7 @@ class SystemProcess
      */
     private function factoryProcess(string $command, ?string $cwd = null): Process
     {
-        if (method_exists(Process::class, 'fromShellCommandline')) {
-            return Process::fromShellCommandline($command, $cwd, $this->environment ?: null);
-        }
-
-        /** @psalm-suppress InvalidArgument */
-        return new Process($command, $cwd, $this->environment ?: null);
+        return Process::fromShellCommandline($command, $cwd, $this->environment ?: null);
     }
 
     /**
@@ -171,7 +153,10 @@ class SystemProcess
         $this->printers[$key] = function (string $type, string $buffer) use ($ifVerbose): void {
             $write = $ifVerbose ? 'writeIfVerbose' : 'write';
             $writeError = $ifVerbose ? 'writeErrorIfVerbose' : 'writeError';
-            $lines = array_filter(array_map('rtrim', explode("\n", $buffer)));
+            $lines = array_filter(
+                array_map('rtrim', explode("\n", $buffer)),
+                static fn (string $line): bool => $line !== ''
+            );
             Process::ERR === $type
                 ? array_walk($lines, [$this->io, $writeError])
                 : array_walk($lines, [$this->io, $write]);

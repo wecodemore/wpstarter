@@ -12,11 +12,14 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
+use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Io\Question;
 use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\OverwriteHelper;
+use WeCodeMore\WpStarter\Util\PackageFinder;
 use WeCodeMore\WpStarter\Util\Paths;
+use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 /**
  * Step to process dropins.
@@ -45,45 +48,14 @@ final class DropinsStep implements ConditionalStep
         'blog-suspended.php',
     ];
 
-    /**
-     * @var \WeCodeMore\WpStarter\Io\Io
-     */
-    private $io;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\PackageFinder
-     */
-    private $packageFinder;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\UrlDownloader
-     */
-    private $urlDownloader;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var OverwriteHelper
-     */
-    private $overwriteHelper;
-
-    /**
-     * @var string
-     */
-    private $error = '';
-
-    /**
-     * @var string
-     */
-    private $success = '';
-
-    /**
-     * @var string
-     */
-    private $reason = '';
+    private Io $io;
+    private PackageFinder $packageFinder;
+    private UrlDownloader $urlDownloader;
+    private Filesystem $filesystem;
+    private OverwriteHelper $overwriteHelper;
+    private string $error = '';
+    private string $success = '';
+    private string $reason = '';
 
     /**
      * @param Locator $locator
@@ -112,14 +84,16 @@ final class DropinsStep implements ConditionalStep
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        if (!$paths->wpContent()) {
+        if ($paths->wpContent() === '') {
             $this->reason = 'WordPress content path not determined';
 
             return false;
         }
 
-        $found = $config[Config::DROPINS]->unwrapOrFallback([])
-            || $this->packageFinder->findByType('wordpress-dropin');
+        $configuredDropins = $config[Config::DROPINS]->unwrapOrFallback([]);
+        $packageDropins = $this->packageFinder->findByType('wordpress-dropin');
+
+        $found = $configuredDropins !== null || $packageDropins !== [];
 
         if (!$found) {
             $this->reason = 'no dropins found';
@@ -184,7 +158,7 @@ final class DropinsStep implements ConditionalStep
     private function publishDropinsFromPackages(Paths $paths, string $operation): int
     {
         $installed = $this->packageFinder->findByType('wordpress-dropin');
-        if (!$installed) {
+        if ($installed === []) {
             return Step::NONE;
         }
 
@@ -202,7 +176,7 @@ final class DropinsStep implements ConditionalStep
             return Step::SUCCESS;
         }
 
-        if ($all && !$done) {
+        if ($done === 0) {
             return Step::ERROR;
         }
 
@@ -217,9 +191,9 @@ final class DropinsStep implements ConditionalStep
      */
     private function publishCustomDropins(Config $config, Paths $paths, string $operation): int
     {
-        /** @var array<string, string> $customDropins */
+        /** @var array<non-falsy-string, non-falsy-string> $customDropins */
         $customDropins = $config[Config::DROPINS]->unwrapOrFallback([]);
-        if (!$customDropins) {
+        if ($customDropins === []) {
             return Step::NONE;
         }
 
@@ -227,11 +201,11 @@ final class DropinsStep implements ConditionalStep
             $this->runDropinStep($basename, $url, $config, $paths, $operation);
         }
 
-        if (!$this->error) {
+        if ($this->error === '') {
             return Step::SUCCESS;
         }
 
-        if (!$this->success) {
+        if ($this->success === '') {
             return Step::ERROR;
         }
 
@@ -354,7 +328,7 @@ final class DropinsStep implements ConditionalStep
         );
 
         $answer = $this->io->ask($question);
-        if (($answer === 'n') || !$answer) {
+        if (($answer === 'n') || $answer === null) {
             return Filesystem::OP_NONE;
         }
 

@@ -26,25 +26,11 @@ use WeCodeMore\WpStarter\Step\OptionalStep;
  */
 class OverwriteHelper
 {
-    /**
-     * @var bool|string|array
-     */
-    private $preventFor;
-
-    /**
-     * @var Io
-     */
-    private $io;
-
-    /**
-     * @var string
-     */
-    private $root;
-
-    /**
-     * @var \Composer\Util\Filesystem
-     */
-    private $filesystem;
+    /** @var "ask"|array<string>|bool */
+    private $preventFor; // phpcs:ignore
+    private Io $io;
+    private string $root;
+    private \Composer\Util\Filesystem $filesystem;
 
     /**
      * @param Config $config
@@ -59,13 +45,16 @@ class OverwriteHelper
         \Composer\Util\Filesystem $filesystem
     ) {
 
-        $this->preventFor = $config[Config::PREVENT_OVERWRITE]->unwrapOrFallback(false);
+        /** @var OptionalStep::ASK|array<string>|bool $preventForConfig */
+        $preventForConfig = $config[Config::PREVENT_OVERWRITE]->unwrapOrFallback(false);
+        $this->preventFor = $preventForConfig;
 
         if (is_array($this->preventFor)) {
-            $trim = static function (string $path) use ($filesystem): string {
-                return trim($filesystem->normalizePath($path), '/');
-            };
-            $this->preventFor = array_map($trim, $this->preventFor);
+            $preventFor = [];
+            foreach ($this->preventFor as $path) {
+                $preventFor[] = trim($filesystem->normalizePath($path), '/');
+            }
+            $this->preventFor = $preventFor;
         }
         $this->io = $io;
         $this->root = $filesystem->normalizePath($root);
@@ -76,7 +65,7 @@ class OverwriteHelper
      * Return true if a file does not exist or exists but should be overwritten according to config.
      * Ask user if necessary.
      *
-     * @param  string $file
+     * @param string $file
      * @return bool
      */
     public function shouldOverwrite(string $file): bool
@@ -89,6 +78,8 @@ class OverwriteHelper
             return true;
         }
 
+        $path = $this->filesystem->normalizePath($file);
+
         if ($this->preventFor === OptionalStep::ASK) {
             $name = basename($file);
             $lines = ["{$name} found in target folder", 'Do you want to overwrite it?'];
@@ -97,9 +88,8 @@ class OverwriteHelper
         }
 
         if (is_array($this->preventFor)) {
-            $path = $this->filesystem->normalizePath($file);
             preg_match('#^' . preg_quote($this->root, '#') . '/(.+)#', $path, $matches);
-            if (empty($matches[1])) {
+            if (!isset($matches[1])) {
                 return false;
             }
 
@@ -115,13 +105,13 @@ class OverwriteHelper
      * Check if a file is set to not be overwritten using shell patterns.
      *
      * @param string $path
-     * @param array $patterns
+     * @param array<mixed> $patterns
      * @return bool
      */
     private function patternCheck(string $path, array $patterns): bool
     {
         $overwrite = true;
-        while ($overwrite === true && !empty($patterns)) {
+        while (($overwrite === true) && ($patterns !== [])) {
             $pattern = array_shift($patterns);
             $overwrite = is_string($pattern) && !fnmatch($pattern, $path, FNM_NOESCAPE);
         }

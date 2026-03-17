@@ -16,20 +16,13 @@ use Composer\IO\NullIO;
 
 class TestIo extends NullIO
 {
-    /**
-     * @var list<string>
-     */
-    public $outputs = [];
+    /** @var list<string> */
+    public array $outputs = [];
 
-    /**
-     * @var list<string>
-     */
-    public $errors = [];
+    /** @var list<string> */
+    public array $errors = [];
 
-    /**
-     * @var int
-     */
-    public $verbosity;
+    public int $verbosity;
 
     /**
      * @param int $verbosity
@@ -96,7 +89,7 @@ class TestIo extends NullIO
      * @param int $verbosity
      * @return void
      */
-    public function write($messages, $newline = true, $verbosity = self::NORMAL): void
+    public function write($messages, bool $newline = true, int $verbosity = self::NORMAL): void
     {
         $this->executeTestWrite($messages, $newline, $verbosity, false);
     }
@@ -107,7 +100,7 @@ class TestIo extends NullIO
      * @param int $verbosity
      * @return void
      */
-    public function writeError($messages, $newline = true, $verbosity = self::NORMAL): void
+    public function writeError($messages, bool $newline = true, int $verbosity = self::NORMAL): void
     {
         $this->executeTestWrite($messages, $newline, $verbosity, true);
     }
@@ -120,7 +113,7 @@ class TestIo extends NullIO
     private function hasMessageThatMatches(string $regex, array $messages): bool
     {
         foreach ($messages as $message) {
-            if (preg_match($regex, $message)) {
+            if (preg_match($regex, $message) === 1) {
                 return true;
             }
         }
@@ -142,6 +135,7 @@ class TestIo extends NullIO
         }
         is_string($messages) and $messages = [$messages];
         if (is_array($messages)) {
+            /** @var string $message */
             foreach ($messages as $message) {
                 $isError
                     ? $this->errors[] = $newline ? "{$message}\n" : $message

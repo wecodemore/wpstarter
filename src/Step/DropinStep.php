@@ -28,55 +28,17 @@ final class DropinStep implements FileCreationStep
     public const ACTION_COPY = 'copy';
     public const ACTION_DOWNLOAD = 'download';
 
-    /**
-     * @var string
-     */
-    private $name;
-
-    /**
-     * @var string
-     */
-    private $url;
-
-    /**
-     * @var string
-     */
-    private $operation;
-
-    /**
-     * @var Io
-     */
-    private $io;
-
-    /**
-     * @var UrlDownloader
-     */
-    private $urlDownloader;
-
-    /**
-     * @var OverwriteHelper
-     */
-    private $overwrite;
-
-    /**
-     * @var Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var array{string, string}|array{null, null}
-     */
-    private $actionAndSource = [null, null];
-
-    /**
-     * @var string
-     */
-    private $error = '';
-
-    /**
-     * @var string
-     */
-    private $success = '';
+    private string $name;
+    private string $url;
+    private string $operation;
+    private Io $io;
+    private UrlDownloader $urlDownloader;
+    private OverwriteHelper $overwrite;
+    private Filesystem $filesystem;
+    /** @var array{non-falsy-string, non-falsy-string}|array{null, null} */
+    private array $actionAndSource = [null, null];
+    private string $error = '';
+    private string $success = '';
 
     /**
      * @param string $name
@@ -121,9 +83,9 @@ final class DropinStep implements FileCreationStep
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        list($action, $source) = $this->determineActionAndSource();
+        [$action, $source] = $this->determineActionAndSource();
 
-        if (!$action || !$source) {
+        if (($action === null) || ($source === null)) {
             $this->io->writeErrorBlock("{$this->url} is not a valid URL nor a valid path.");
 
             return false;
@@ -141,10 +103,10 @@ final class DropinStep implements FileCreationStep
      */
     public function run(Config $config, Paths $paths): int
     {
-        list($action, $source) = $this->actionAndSource;
+        [$action, $source] = $this->actionAndSource;
 
         $isDownload = $action === self::ACTION_DOWNLOAD;
-        if ((!$isDownload && ($action !== self::ACTION_COPY)) || !$source) {
+        if ((!$isDownload && ($action !== self::ACTION_COPY)) || ($source === null)) {
             return self::NONE;
         }
 
@@ -237,17 +199,21 @@ final class DropinStep implements FileCreationStep
     /**
      * Check if a string is a valid relative path or an url.
      *
-     * @return array{string, string}|array{null, null}
+     * @return array{non-falsy-string, non-falsy-string}|array{null, null}
      */
     private function determineActionAndSource(): array
     {
-        if (filter_var($this->url, FILTER_VALIDATE_URL)) {
-            return [self::ACTION_DOWNLOAD, $this->url];
+        $url = $this->url;
+
+        if (filter_var($url, FILTER_VALIDATE_URL) !== false && $url !== '') {
+            /** @var non-falsy-string $url */
+            return [self::ACTION_DOWNLOAD, $url];
         }
 
-        $realpath = realpath($this->url);
+        $realpath = realpath($url);
 
-        if ($realpath && is_file($realpath)) {
+        if (($realpath !== false) && is_file($realpath)) {
+            /** @var non-falsy-string $realpath */
             return [self::ACTION_COPY, $realpath];
         }
 

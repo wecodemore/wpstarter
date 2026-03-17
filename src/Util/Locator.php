@@ -15,8 +15,6 @@ use Composer\Composer;
 use Composer\IO\IOInterface as ComposerIo;
 use Composer\Util\Filesystem as ComposerFilesystem;
 use Composer\Config as ComposerConfig;
-use Composer\Util\HttpDownloader;
-use Composer\Util\RemoteFilesystem;
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\PhpExecutableFinder;
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
@@ -29,15 +27,9 @@ use WeCodeMore\WpStarter\Io\Io;
  */
 final class Locator
 {
-    /**
-     * @var array
-     */
-    private $objects;
-
-    /**
-     * @var string
-     */
-    private $php;
+    /** @var array<string, object>  */
+    private array $objects;
+    private string $php;
 
     /**
      * @param Requirements $requirements
@@ -51,7 +43,7 @@ final class Locator
     ) {
 
         $php = (new PhpExecutableFinder())->find();
-        if (!$php) {
+        if (($php === false) || ($php === '')) {
             throw new \Exception('PHP executable not found.');
         }
 
@@ -69,154 +61,115 @@ final class Locator
 
     /**
      * @return Config
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function config(): Config
     {
+        /** @var Config */
         return $this->objects[Config::class];
     }
 
     /**
      * @return Paths
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function paths(): Paths
     {
+        /** @var Paths */
         return $this->objects[Paths::class];
     }
 
     /**
      * @return Io
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function io(): Io
     {
+        /** @var Io */
         return $this->objects[Io::class];
     }
 
     /**
      * @return ComposerIo
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function composerIo(): ComposerIo
     {
+        /** @var ComposerIo */
         return $this->objects[ComposerIo::class];
     }
 
     /**
      * @return ComposerFilesystem
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function composerFilesystem(): ComposerFilesystem
     {
+        /** @var ComposerFilesystem */
         return $this->objects[ComposerFilesystem::class];
     }
 
     /**
      * @return ComposerConfig
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function composerConfig(): ComposerConfig
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             /** @var Composer $composer */
             $composer = $this->objects[Composer::class];
             $this->objects[__FUNCTION__] = $composer->getConfig();
         }
 
+        /** @var ComposerConfig */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return Filesystem
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function filesystem(): Filesystem
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new Filesystem($this->composerFilesystem());
         }
 
+        /** @var Filesystem */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return UrlDownloader
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function urlDownloader(): UrlDownloader
     {
-        if (empty($this->objects[__FUNCTION__])) {
-            $factory = null;
-            if (method_exists(\Composer\Factory::class, 'createHttpDownloader')) {
-                $factory = [\Composer\Factory::class, 'createHttpDownloader'];
-            } elseif (method_exists(\Composer\Factory::class, 'createRemoteFilesystem')) {
-                $factory = [\Composer\Factory::class, 'createRemoteFilesystem'];
-            }
-
-            if (!$factory) {
-                throw new \Exception('Could not instantiate HttpDownloader');
-            }
-
-            $composerIo = $this->composerIo();
-
-            /**
-             * @var callable $factory
-             * @var HttpDownloader|RemoteFilesystem $client
-             */
-            $client = $factory($composerIo, $this->composerConfig());
-
-            $filesystem = $this->filesystem();
-            $verbose = $composerIo->isVerbose();
-
-            $this->objects[__FUNCTION__] = ($client instanceof HttpDownloader)
-                ? UrlDownloader::newV2($client, $filesystem, $verbose)
-                : UrlDownloader::newV1($client, $filesystem, $verbose);
+        if (!isset($this->objects[__FUNCTION__])) {
+            $this->objects[__FUNCTION__] = UrlDownloader::new(
+                \Composer\Factory::createHttpDownloader(
+                    $this->composerIo(),
+                    $this->composerConfig()
+                ),
+                $this->filesystem(),
+            );
         }
 
+        /** @var UrlDownloader */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return FileContentBuilder
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function fileContentBuilder(): FileContentBuilder
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new FileContentBuilder();
         }
 
+        /** @var FileContentBuilder */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return OverwriteHelper
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function overwriteHelper(): OverwriteHelper
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new OverwriteHelper(
                 $this->config(),
                 $this->io(),
@@ -225,51 +178,45 @@ final class Locator
             );
         }
 
+        /** @var OverwriteHelper */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return Salter
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function salter(): Salter
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new Salter();
         }
 
+        /** @var Salter */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return Cli\PharInstaller
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function pharInstaller(): Cli\PharInstaller
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new Cli\PharInstaller(
                 $this->io(),
                 $this->urlDownloader()
             );
         }
 
+        /** @var Cli\PharInstaller */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return PackageFinder
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function packageFinder(): PackageFinder
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             /** @var Composer $composer */
             $composer = $this->objects[Composer::class];
             $this->objects[__FUNCTION__] = new PackageFinder(
@@ -279,36 +226,32 @@ final class Locator
             );
         }
 
+        /** @var PackageFinder */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return WpConfigSectionEditor
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function wpConfigSectionEditor(): WpConfigSectionEditor
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new WpConfigSectionEditor(
                 $this->paths(),
                 $this->composerFilesystem()
             );
         }
 
+        /** @var WpConfigSectionEditor */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return MuPluginList
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function muPluginsList(): MuPluginList
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new MuPluginList(
                 $this->packageFinder(),
                 $this->paths(),
@@ -316,18 +259,16 @@ final class Locator
             );
         }
 
+        /** @var MuPluginList */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return WordPressEnvBridge
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function env(): WordPressEnvBridge
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             /** @var string $file */
             $file = $this->config()[Config::ENV_FILE]->unwrapOrFallback('.env');
             /** @var string $dir */
@@ -339,66 +280,58 @@ final class Locator
             $this->objects[__FUNCTION__] = $bridge;
         }
 
+        /** @var WordPressEnvBridge */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return Cli\SystemProcess
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function systemProcess(): Cli\SystemProcess
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new Cli\SystemProcess($this->paths(), $this->io());
         }
 
+        /** @var Cli\SystemProcess */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return ExecutableFinder
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function executableFinder(): ExecutableFinder
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new ExecutableFinder();
         }
 
+        /** @var ExecutableFinder */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return Cli\PhpProcess
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function phpProcess(): Cli\PhpProcess
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new Cli\PhpProcess(
                 $this->php,
                 $this->systemProcess()
             );
         }
 
+        /** @var Cli\PhpProcess */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return Cli\PhpToolProcessFactory
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function phpToolProcessFactory(): Cli\PhpToolProcessFactory
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new Cli\PhpToolProcessFactory(
                 $this->paths(),
                 $this->io(),
@@ -408,35 +341,31 @@ final class Locator
             );
         }
 
+        /** @var Cli\PhpToolProcessFactory */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return Cli\PhpToolProcess
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function wpCliProcess(): Cli\PhpToolProcess
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $tool = new Cli\WpCliTool($this->config(), $this->urlDownloader(), $this->io());
             $factory = $this->phpToolProcessFactory();
             $this->objects[__FUNCTION__] = $factory->create($tool, $this->php);
         }
 
+        /** @var Cli\PhpToolProcess */
         return $this->objects[__FUNCTION__];
     }
 
     /**
      * @return DbChecker
-     *
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function dbChecker(): DbChecker
     {
-        if (empty($this->objects[__FUNCTION__])) {
+        if (!isset($this->objects[__FUNCTION__])) {
             $this->objects[__FUNCTION__] = new DbChecker(
                 $this->env(),
                 $this->io(),
@@ -445,6 +374,7 @@ final class Locator
             );
         }
 
+        /** @var DbChecker */
         return $this->objects[__FUNCTION__];
     }
 }
