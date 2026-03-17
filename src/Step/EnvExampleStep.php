@@ -60,10 +60,13 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      */
     public function allowed(Config $config, Paths $paths): bool
     {
-        /** @var string $envFile */
-        $envFile = $config[Config::ENV_FILE]->unwrapOrFallback('.env');
+        /** @var string $envFileName */
+        $envFileName = $config[Config::ENV_FILE]->unwrapOrFallback('.env');
+        /** @var string $envDir */
+        $envDir = $config[Config::ENV_DIR]->unwrapOrFallback($paths->root());
+        $envFile = $this->filesystem->normalizePath("{$envDir}/{$envFileName}");
 
-        return $config[Config::ENV_EXAMPLE]->not(false) && !is_file($paths->root($envFile));
+        return $config[Config::ENV_EXAMPLE]->not(false) && !is_file($envFile);
     }
 
     /**
@@ -72,7 +75,10 @@ final class EnvExampleStep implements FileCreationStepInterface, OptionalStep
      */
     public function targetPath(Paths $paths): string
     {
-        return $paths->root('.env.example');
+        /** @var string $envDir */
+        $envDir = $this->config[Config::ENV_DIR]->unwrap();
+
+        return $this->filesystem->normalizePath("{$envDir}/.env.example");
     }
 
     /**
