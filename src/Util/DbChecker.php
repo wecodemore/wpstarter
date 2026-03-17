@@ -250,7 +250,7 @@ class DbChecker
         try {
             $db = @\mysqli_connect($host, $user, $password ?: '');
 
-            if ($db === false || $db->connect_errno !== 0) {
+            if (!$db instanceof \mysqli || $db->connect_errno !== 0) {
                 $this->setupEnv(false, false, false);
                 $db instanceof \mysqli and \mysqli_close($db);
 

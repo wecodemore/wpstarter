@@ -308,8 +308,8 @@ class Io
         $before = "<bg={$background};fg={$frontground}>";
 
         $block = $centered
-            ? $this->formatter->createCenteredBlock($before, '</>', ...array_values($lines))
-            : $this->formatter->createFilledBlock($before, '</>', ...array_values($lines));
+            ? $this->formatter->createCenteredBlock($before, '</>', ...$lines)
+            : $this->formatter->createFilledBlock($before, '</>', ...$lines);
 
         $isError ? $this->io->writeError($block) : $this->io->write($block);
     }
