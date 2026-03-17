@@ -13,3 +13,7 @@ parameters:
 				- logicalAnd.rightNotBoolean
 				- logicalOr.resultUnused
 				- logicalOr.rightNotBoolean
+		-
+			identifier: arrayValues.list
+			path: src/Io/Io.php
+			reportUnmatched: false
