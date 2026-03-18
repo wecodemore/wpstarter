@@ -239,7 +239,11 @@ final class Locator
     public function muPluginsList(): MuPluginList
     {
         if (!isset($this->objects[__FUNCTION__])) {
-            $this->objects[__FUNCTION__] = new MuPluginList($this->packageFinder(), $this->paths());
+            $this->objects[__FUNCTION__] = new MuPluginList(
+                $this->packageFinder(),
+                $this->paths(),
+                $this->composerFilesystem()
+            );
         }
         /** @var MuPluginList */
         return $this->objects[__FUNCTION__];

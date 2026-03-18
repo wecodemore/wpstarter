@@ -228,6 +228,15 @@ class Filesystem
 
     /**
      * @param string $path
+     * @return string
+     */
+    public function normalizePath(string $path): string
+    {
+        return $this->filesystem->normalizePath($path);
+    }
+
+    /**
+     * @param string $path
      * @return bool
      */
     public function isLink(string $path): bool
