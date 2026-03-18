@@ -162,7 +162,7 @@ class VcsIgnoreCheckStep implements OptionalStep, ConditionalStep
         $from = $paths->root();
 
         /** @var string $envDirName */
-        $envDirName = $config[Config::ENV_DIR]->unwrap();
+        $envDirName = $config[Config::ENV_DIR]->unwrapOrFallback('');
         /** @var string $envFileName */
         $envFileName = $config[Config::ENV_FILE]->unwrapOrFallback('.env');
 
