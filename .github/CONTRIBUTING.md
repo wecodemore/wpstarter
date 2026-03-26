@@ -39,7 +39,7 @@ By cloning the repository and running:
 ./vendor/bin/phpcs
 ```
 
-it is possible to check code is compliant via [PHPCS](https://github.com/squizlabs/PHP_CodeSniffer).
+it is possible to check code is compliant via [PHPCS](https://github.com/PHPCSStandards/PHP_CodeSniffer).
 
 Be sure to install Composer dependencies first.
 
