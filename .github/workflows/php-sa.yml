@@ -1,0 +1,56 @@
+name: PHP Static Analysis
+
+on:
+    push:
+        paths:
+            - '**workflows/php-sa.yml'
+            - '**.php'
+            - '**phpstan.neon'
+            - '**composer.json'
+    pull_request:
+        paths:
+            - '**workflows/php-sa.yml'
+            - '**.php'
+            - '**phpstan.neon'
+            - '**composer.json'
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+
+    unit-tests:
+        runs-on: ubuntu-latest
+        if: ${{ !contains(github.event.head_commit.message, 'skip sa') }}
+        strategy:
+            fail-fast: false
+            matrix:
+                php-ver: [ '7.4', '8.0', '8.1', '8.2', '8.3', '8.4' ]
+                composer-ver: [ '~2.9.0', '^2' ]
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v5
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.php-ver }}
+                    ini-values: zend.assertions=1, error_reporting=E_ALL, display_errors=On
+                    coverage: none
+
+            -   name: Adjust Composer dependencies
+                run:  |
+                    composer remove --dev --no-update "*/*"
+                    composer require --dev --no-update "composer/composer:${{ matrix.composer-ver }}"
+                    composer require --dev --no-update "symfony/process:^5.4||^6||^7"
+                    composer require --dev --no-update "phpstan/phpstan:^2"
+                    composer require --dev --no-update "phpstan/phpstan-strict-rules:^2"
+
+            -   name: Install dependencies
+                uses: ramsey/composer-install@v3
+
+            -   name: Run tests
+                run: ./vendor/bin/phpstan

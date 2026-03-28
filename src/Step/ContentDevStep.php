@@ -45,25 +45,10 @@ final class ContentDevStep implements OptionalStep
 {
     public const NAME = 'publishcontentdev';
 
-    /**
-     * @var Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var string|null
-     */
-    private $operation;
-
-    /**
-     * @var string
-     */
-    private $error = 'Some errors occurred while publishing content-dev dir.';
-
-    /**
-     * @var string
-     */
-    private $contentDevDir = '';
+    private Filesystem $filesystem;
+    private ?string $operation = null;
+    private string $error = 'Some errors occurred while publishing content-dev dir.';
+    private string $contentDevDir = '';
 
     /**
      * @param Locator $locator
@@ -112,7 +97,7 @@ final class ContentDevStep implements OptionalStep
         );
 
         $answer = $io->ask($question);
-        if (($answer === 'n') || !$answer) {
+        if (($answer === 'n') || $answer === null) {
             return false;
         }
 
@@ -133,11 +118,12 @@ final class ContentDevStep implements OptionalStep
     public function run(Config $config, Paths $paths): int
     {
         $operation = $this->operation;
-        if (!$operation) {
+        if (($operation ?? '') === '') {
             /** @var string $operation */
             $operation = $config[Config::CONTENT_DEV_OPERATION]
                 ->unwrapOrFallback(Filesystem::OP_AUTO);
         }
+        assert(is_string($operation));
 
         if (($operation === Filesystem::OP_NONE) || ($operation === self::ASK)) {
             return Step::NONE;
@@ -192,7 +178,7 @@ final class ContentDevStep implements OptionalStep
     public function success(): string
     {
         $message = '<comment>Development content</comment> published successfully';
-        $message .= $this->contentDevDir ? " from '/{$this->contentDevDir }'." : '.';
+        $message .= $this->contentDevDir !== '' ? " from '/{$this->contentDevDir }'." : '.';
 
         return $message;
     }

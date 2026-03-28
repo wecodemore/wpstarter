@@ -28,10 +28,7 @@ class Filesystem
     public const OP_NONE = 'none';
     public const OPERATIONS = [self::OP_AUTO, self::OP_COPY, self::OP_SYMLINK, self::OP_NONE];
 
-    /**
-     * @var ComposerFilesystem
-     */
-    private $filesystem;
+    private ComposerFilesystem $filesystem;
 
     /**
      * @param ComposerFilesystem $filesystem
@@ -43,7 +40,7 @@ class Filesystem
 
     /**
      * @param string $name
-     * @param array $arguments
+     * @param array<mixed> $arguments
      * @return mixed
      */
     public function __call(string $name, array $arguments = [])
@@ -52,7 +49,7 @@ class Filesystem
             throw new \Error(sprintf('Call to undefined method %s::%s()', __CLASS__, $name));
         }
 
-        return $this->filesystem->{$name}(...$arguments);
+        return $this->filesystem->{$name}(...$arguments); // @phpstan-ignore method.dynamicName
     }
 
     /**
@@ -200,7 +197,7 @@ class Filesystem
         }
 
         $realpath = realpath($sourcePath);
-        if (!$realpath) {
+        if ($realpath === false) {
             return false;
         }
 
@@ -258,7 +255,7 @@ class Filesystem
             }
 
             $stat = @stat($parentDir);
-            $permissions = $stat ? $stat['mode'] & 0007777 : 0755;
+            $permissions = is_array($stat) ? ($stat['mode'] & 0007777) : 0755;
 
             if (!@mkdir($targetPath, $permissions, true) && !is_dir($targetPath)) {
                 return false;
@@ -339,7 +336,7 @@ class Filesystem
     {
         try {
             $sourcePath = realpath($sourcePath);
-            if (!$sourcePath || !is_file($sourcePath)) {
+            if (($sourcePath === false) || !is_file($sourcePath)) {
                 return false;
             }
 
@@ -370,7 +367,7 @@ class Filesystem
     {
         try {
             $sourcePath = realpath($sourcePath);
-            if (!$sourcePath || !is_dir($sourcePath)) {
+            if (($sourcePath === false) || !is_dir($sourcePath)) {
                 return false;
             }
 

@@ -15,6 +15,7 @@ use Composer\Composer;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Io\Io;
 use WeCodeMore\WpStarter\Util\Locator;
+use WeCodeMore\WpStarter\Util\OverwriteHelper;
 use WeCodeMore\WpStarter\Util\Paths;
 use WeCodeMore\WpStarter\Util\SelectedStepsFactory;
 
@@ -27,65 +28,21 @@ use WeCodeMore\WpStarter\Util\SelectedStepsFactory;
  */
 final class Steps implements PostProcessStep, \Countable
 {
-    /**
-     * @var Locator
-     */
-    private $locator;
-
-    /**
-     * @var Composer
-     */
-    private $composer;
-
-    /**
-     * @var \SplObjectStorage<Step,null>
-     */
-    private $steps;
-
-    /**
-     * @var Io
-     */
-    private $io;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\OverwriteHelper
-     */
-    private $overwriteHelper;
-
-    /**
-     * @var bool
-     */
-    private $isCommandMode;
-
-    /**
-     * @var \SplObjectStorage<PostProcessStep,null>|null
-     */
-    private $postProcessSteps = null;
-
-    /**
-     * @var array<string, array>|null
-     */
-    private $scripts = null;
-
-    /**
-     * @var int
-     */
-    private $errors = 0;
-
-    /**
-     * @var bool
-     */
-    private $running = false;
-
-    /**
-     * @var string
-     */
-    private $runningScripts = '';
-
-    /**
-     * @var bool
-     */
-    private $runningSteps = false;
+    private Locator $locator;
+    private Composer $composer;
+    /** @var \SplObjectStorage<Step, null> */
+    private \SplObjectStorage $steps;
+    private Io $io;
+    private OverwriteHelper $overwriteHelper;
+    private bool $isCommandMode;
+    /** @var \SplObjectStorage<PostProcessStep, null>|null */
+    private ?\SplObjectStorage $postProcessSteps = null;
+    /** @var array<string, array<mixed>>|null */
+    private ?array $scripts = null;
+    private int $errors = 0;
+    private bool $running = false;
+    private string $runningScripts = '';
+    private bool $runningSteps = false;
 
     /**
      * @param Locator $locator
@@ -118,12 +75,14 @@ final class Steps implements PostProcessStep, \Countable
         $this->composer = $composer;
         $this->io = $locator->io();
         $this->overwriteHelper = $locator->overwriteHelper();
-        $this->steps = new \SplObjectStorage();
+        /** @var \SplObjectStorage<Step,null> $steps */
+        $steps = new \SplObjectStorage();
+        $this->steps = $steps;
         $this->isCommandMode = $isCommandMode;
     }
 
     /**
-     * @return int
+     * @return int<0, max>
      */
     public function count(): int
     {
@@ -142,12 +101,16 @@ final class Steps implements PostProcessStep, \Countable
      * @param Step $step
      * @param Step ...$steps
      * @return Steps
+     *
+     * @no-named-arguments
      */
     public function addStep(Step $step, Step ...$steps): Steps
     {
-        if (!$this->running || $this->runningScripts === 'pre') {
+        if (!$this->running || ($this->runningScripts === 'pre')) {
             $this->steps->attach($step);
-            array_walk($steps, [$this->steps, 'attach']);
+            foreach ($steps as $aStep) {
+                $this->steps->attach($aStep);
+            }
         }
 
         return $this;
@@ -193,7 +156,9 @@ final class Steps implements PostProcessStep, \Countable
             return Step::NONE;
         }
 
-        $this->scripts = $config[Config::SCRIPTS]->unwrap();
+        /** @var array<string, array<mixed>>|null $scripts */
+        $scripts = $config[Config::SCRIPTS]->unwrap();
+        $this->scripts = $scripts;
 
         $this->running = true;
 
@@ -202,7 +167,7 @@ final class Steps implements PostProcessStep, \Countable
         $this->runningScripts = '';
 
         // We check here because "pre" scripts can add or remove steps.
-        if (!$this->count()) {
+        if ($this->count() < 1) {
             return Step::NONE;
         }
 
@@ -265,7 +230,7 @@ final class Steps implements PostProcessStep, \Countable
      */
     public function postProcess(Io $io): void
     {
-        if ($this->running || !$this->postProcessSteps) {
+        if ($this->running || ($this->postProcessSteps === null)) {
             return;
         }
 
@@ -287,14 +252,18 @@ final class Steps implements PostProcessStep, \Countable
     private function runStep(Step $step, Config $config, Paths $paths): bool
     {
         $name = $step->name();
-        if (!$name) {
+        if ($name === '') {
             return true;
         }
 
         $this->io->writeIfVerbose("- Initializing '{$name}' step.");
 
         if ($step instanceof PostProcessStep) {
-            $this->postProcessSteps or $this->postProcessSteps = new \SplObjectStorage();
+            if ($this->postProcessSteps === null) {
+                /** @var \SplObjectStorage<PostProcessStep,null> $storage */
+                $storage = new \SplObjectStorage();
+                $this->postProcessSteps = $storage;
+            }
             $this->postProcessSteps->attach($step);
         }
 
@@ -399,22 +368,23 @@ final class Steps implements PostProcessStep, \Countable
         $name = $step->name();
         $scriptLabel = sprintf("'%s' scripts for '%s' step", rtrim($prefix, '-'), $name);
         $scriptName = $this->findScriptName($name, $prefix);
-        $allStepScripts = $this->scripts[$scriptName] ?? null;
-        if (!$allStepScripts) {
+        $allStepScripts = $this->scripts[$scriptName] ?? [];
+        if ($allStepScripts === []) {
             return true;
         }
 
+        /** @var array<callable(): mixed> $validStepScripts */
         $validStepScripts = array_filter($allStepScripts, 'is_callable');
 
         $invalidScriptsCount = count($allStepScripts) - count($validStepScripts);
-        if ($invalidScriptsCount) {
-            $message = $invalidScriptsCount > 1
+        if ($invalidScriptsCount > 0) {
+            $message = ($invalidScriptsCount > 1)
                 ? "Found {$invalidScriptsCount} invalid script callbacks for {$scriptLabel}, they"
                 : "Found one invalid script callback for {$scriptLabel}, it";
             $this->io->writeErrorIfVerbose("{$message} will be ignored.");
         }
 
-        if (!$validStepScripts) {
+        if ($validStepScripts === []) {
             return true;
         }
 
@@ -422,7 +392,7 @@ final class Steps implements PostProcessStep, \Countable
 
         $continue = true;
         $exit = true;
-        while ($continue && $validStepScripts) {
+        while ($continue && $validStepScripts !== []) {
             $script = array_shift($validStepScripts);
             [$stepHalted, $propagationStopped] = $this->handleScriptSignal(
                 $this->runStepScript($script, $scriptLabel, $step, $result),
@@ -455,7 +425,7 @@ final class Steps implements PostProcessStep, \Countable
         bool $exit
     ): array {
 
-        if (!$signal) {
+        if ($signal === null) {
             return [false, false];
         }
 
@@ -465,7 +435,7 @@ final class Steps implements PostProcessStep, \Countable
         ($stepHalted && $propagationStopped) and $what .= ' and stopped scripts propagation';
         $message = "A '{$prefix}' script for '{$name}' step {$what}";
         $reason = $signal->reason();
-        $message .= $reason ? ": {$reason}" : '.';
+        $message .= $reason !== '' ? ": {$reason}" : '.';
         $this->io->writeComment($message);
 
         return [$stepHalted, $propagationStopped];
@@ -488,7 +458,7 @@ final class Steps implements PostProcessStep, \Countable
             }
             $noPrefix = substr($scriptName, strlen($prefix));
             $canonicalStepName = SelectedStepsFactory::findStepNameByAlias($noPrefix, [$name]);
-            if (!$canonicalStepName) {
+            if ($canonicalStepName === null) {
                 continue;
             }
             $canonicalScript = $prefix . $canonicalStepName;

@@ -30,20 +30,9 @@ final class WpCliCommandsStep implements ConditionalStep
 {
     public const NAME = 'wpcli';
 
-    /**
-     * @var Locator
-     */
-    private $locator;
-
-    /**
-     * @var Io
-     */
-    private $io;
-
-    /**
-     * @var Cli\PhpToolProcess|null
-     */
-    private $process = null;
+    private Locator $locator;
+    private Io $io;
+    private ?Cli\PhpToolProcess $process = null;
 
     /**
      * @param Locator $locator
@@ -71,7 +60,7 @@ final class WpCliCommandsStep implements ConditionalStep
     {
         [$commands, $files] = $this->extractConfig($config);
 
-        return $commands || $files;
+        return $commands !== [] || $files !== [];
     }
 
     /**
@@ -97,18 +86,16 @@ final class WpCliCommandsStep implements ConditionalStep
         }
 
         $fileCommands = [];
-        if ($files) {
-            foreach ($files as $file) {
-                $command = $this->buildEvalFileCommand($file, $paths);
-                $command and $fileCommands[] = $command;
-            }
+        foreach ($files as $file) {
+            $command = $this->buildEvalFileCommand($file, $paths);
+            ($command !== '') and $fileCommands[] = $command;
         }
 
         $commands = array_merge($fileCommands, $commands);
         $this->initMessage(...$commands);
 
         $continue = true;
-        while ($continue && $commands) {
+        while ($continue && ($commands !== [])) {
             $command = array_shift($commands);
             $commandDesc = $this->commandDesc($command);
             $dashes = str_repeat('-', 54 - strlen($commandDesc));
@@ -172,7 +159,7 @@ final class WpCliCommandsStep implements ConditionalStep
      */
     private function process(): Cli\PhpToolProcess
     {
-        $this->process or $this->process = $this->locator->wpCliProcess();
+        $this->process ??= $this->locator->wpCliProcess();
 
         return $this->process;
     }
@@ -192,9 +179,8 @@ final class WpCliCommandsStep implements ConditionalStep
         }
 
         $command = "eval-file {$fullpath}";
-        /** @var array<string> $args */
         $args = $fileData->args();
-        $args and $command .= ' ' . implode(' ', $args);
+        ($args !== []) and $command .= ' ' . implode(' ', $args);
         $fileData->skipWordpress() and $command .= ' --skip-wordpress';
 
         return $command;
@@ -203,20 +189,20 @@ final class WpCliCommandsStep implements ConditionalStep
     /**
      * @param string ...$commands
      * @return void
+     *
+     * @no-named-arguments
      */
     private function initMessage(string ...$commands): void
     {
         $count = count($commands);
         $this->io->writeIfVerbose(sprintf('Will run %d command%s:', $count, $count > 1 ? 's' : ''));
 
-        array_walk(
-            $commands,
-            function (string $command, int $i) {
-                $num = $i + 1;
-                $commandDesc = ltrim($this->commandDesc("  {$command}"));
-                $this->io->writeIfVerbose("  <comment>{$num}) \$ wp {$commandDesc}</comment>");
-            }
-        );
+        $num = 1;
+        foreach ($commands as $command) {
+            $commandDesc = ltrim($this->commandDesc("  {$command}"));
+            $this->io->writeIfVerbose("  <comment>{$num}) \$ wp {$commandDesc}</comment>");
+            $num++;
+        }
 
         $this->io->writeIfVerbose('');
     }
@@ -231,6 +217,6 @@ final class WpCliCommandsStep implements ConditionalStep
             return $command;
         }
 
-        return (substr($command, 0, 48) ?: '') . '...';
+        return substr($command, 0, 48) . '...';
     }
 }

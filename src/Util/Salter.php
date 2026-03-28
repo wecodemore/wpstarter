@@ -30,57 +30,59 @@ class Salter
         'NONCE_SALT',
     ];
 
-    /**
-     * @var string
-     */
-    private $chars;
+    /** @var int<8, 256> */
+    private int $length;
 
-    /**
-     * @var int
-     */
-    private $max;
+    /** @var array<value-of<Salter::KEYS>, non-falsy-string>|null */
+    private ?array $keyValues = null;
 
-    /**
-     * @var array<string, string>|null
-     */
-    private $result;
-
-    public function __construct()
+    public function __construct(int $keyLength = 64)
     {
-        $this->chars = self::CHARS_1 . self::CHARS_2;
-        $this->max = strlen($this->chars) - 1;
+        $this->length = min(256, max(8, $keyLength));
     }
 
     /**
-     * @return array
+     * @return array<value-of<Salter::KEYS>, non-falsy-string>
      *
-     * @psalm-assert array<string, string> $this->result
+     * @phpstan-assert array<value-of<Salter::KEYS>, non-falsy-string> $this->keyValues
      */
     public function keys(): array
     {
-        if (!is_array($this->result)) {
-            $this->result = [];
+        if (!is_array($this->keyValues)) {
+            $this->keyValues = [];
             foreach (self::KEYS as $key) {
-                $this->result[$key] = $this->buildKey(64);
+                $this->keyValues[$key] = $this->buildKey();
             }
         }
 
-        return $this->result;
+        return $this->keyValues;
     }
 
     /**
      * Build random key.
      *
-     * @param int $length
-     * @return string
+     * @return non-falsy-string
      */
-    private function buildKey(int $length): string
+    private function buildKey(): string
     {
+        static $poolOneLength, $poolTwoLength;
+        isset($poolOneLength) or $poolOneLength = strlen(self::CHARS_1) - 1;
+        isset($poolTwoLength) or $poolTwoLength = strlen(self::CHARS_2) - 1;
+        /**
+         * @var positive-int $poolOneLength
+         * @var positive-int $poolTwoLength
+         */
+
         $key = '';
-        while (strlen($key) < $length) {
-            $key .= $this->chars[random_int(0, $this->max)];
+        for ($i = 0; $i < $this->length; $i++) {
+            [$pool, $maxLength] = (random_int(1, 1024) > 512)
+                ? [self::CHARS_1, $poolOneLength]
+                : [self::CHARS_2, $poolTwoLength];
+
+            $key .= $pool[random_int(0, $maxLength)];
         }
 
-        return $key;
+        /** @var non-falsy-string $key */
+        return $key; // @phpstan-ignore varTag.nativeType
     }
 }

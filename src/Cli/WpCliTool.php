@@ -25,25 +25,10 @@ class WpCliTool implements PhpTool
     private const PHAR_URL_FORMAT = self::PHAR_URL_BASE . '/v%1$s/wp-cli-%1$s.phar';
     private const PHAR_URL_REGEX = 'v[^/]+/wp\-cli\-[^/]+\.phar';
 
-    /**
-     * @var bool
-     */
-    private $downloadEnabled;
-
-    /**
-     * @var UrlDownloader
-     */
-    private $urlDownloader;
-
-    /**
-     * @var Io
-     */
-    private $io;
-
-    /**
-     * @var string|null
-     */
-    private $pharUrl = null;
+    private bool $downloadEnabled;
+    private UrlDownloader $urlDownloader;
+    private Io $io;
+    private ?string $pharUrl = null;
 
     /**
      * @param Config $config
@@ -52,7 +37,7 @@ class WpCliTool implements PhpTool
      */
     public function __construct(Config $config, UrlDownloader $urlDownloader, Io $io)
     {
-        $this->downloadEnabled = (bool)$config[Config::INSTALL_WP_CLI]->unwrapOrFallback(true);
+        $this->downloadEnabled = (bool) $config[Config::INSTALL_WP_CLI]->unwrapOrFallback(true);
         $this->urlDownloader = $urlDownloader;
         $this->io = $io;
     }
@@ -93,7 +78,7 @@ class WpCliTool implements PhpTool
 
         try {
             $found = $this->findLatestReleaseUrl();
-            $found
+            is_string($found) && $found !== ''
                 ? ($this->pharUrl = $found)
                 : $this->io->writeError('Could not find latest WP CLI version via GitHub API.');
         } catch (\Throwable $throwable) {
@@ -101,7 +86,9 @@ class WpCliTool implements PhpTool
             $this->io->writeError($throwable->getMessage());
         }
 
-        $found or $this->io->writeComment("Will fallback to WP CLI '{$min}' version.");
+        is_string($found) && $found !== '' or $this->io->writeComment(
+            "Will fallback to WP CLI '{$min}' version."
+        );
 
         return $this->pharUrl;
     }
@@ -118,7 +105,7 @@ class WpCliTool implements PhpTool
         }
 
         $candidates = [];
-        if (preg_match('~/wp-cli-(.+?)\.phar$~', $this->pharUrl(), $matches)) {
+        if (preg_match('~/wp-cli-(.+?)\.phar$~', $this->pharUrl(), $matches) === 1) {
             $version = $matches[1];
             $path = $paths->root($matches[0]);
             if (file_exists($path)) {
@@ -133,17 +120,16 @@ class WpCliTool implements PhpTool
 
         $constraint = '>=' . $this->minVersion();
 
-        /** @var \SplFileInfo $existingFile */
         foreach ($existingFiles as $existingFile) {
             $fileName = $existingFile->getBasename('.phar');
             $fullPath = $paths->root("/{$fileName}.phar");
-            $version = (string)substr($fileName, 7);
+            $version = substr($fileName, 7);
             if (Semver::satisfies($version, $constraint)) {
                 $candidates[$version] = $fullPath;
             }
         }
 
-        if (!$candidates) {
+        if ($candidates === []) {
             return $default;
         }
 
@@ -180,15 +166,15 @@ class WpCliTool implements PhpTool
 
         $this->io->write(sprintf('Checking %s via %s hash...', $this->niceName(), $algorithm));
         $releaseHash = trim($this->urlDownloader->fetch($hashUrl));
-        if (!$releaseHash) {
+        if ($releaseHash === '') {
             $io->writeErrorBlock("Failed to download {$algorithm} hash content from {$hashUrl}.");
             $io->writeErrorBlock($this->urlDownloader->error());
 
             return false;
         }
 
-        $pharHash = hash($algorithm, (string)file_get_contents($pharPath));
-        if (!$pharHash || !hash_equals($releaseHash, $pharHash)) {
+        $pharHash = hash($algorithm, (string) file_get_contents($pharPath));
+        if (!hash_equals($releaseHash, $pharHash)) {
             $io->writeErrorBlock("{$algorithm} hash check failed for downloaded WP CLI phar.");
 
             return false;
@@ -231,10 +217,10 @@ class WpCliTool implements PhpTool
                 preg_quote(self::PHAR_URL_BASE, '~'),
                 self::PHAR_URL_REGEX
             );
-            if (preg_match($regex, $url) && filter_var($url, FILTER_VALIDATE_URL)) {
+            if (preg_match($regex, $url) === 1 && filter_var($url, FILTER_VALIDATE_URL) !== false) {
                 /** @var string|false $sanitizesUrl */
                 $sanitizesUrl = filter_var($url, FILTER_SANITIZE_URL);
-                $sanitizesUrl and $found = $sanitizesUrl;
+                $sanitizesUrl !== false and $found = $sanitizesUrl;
                 break;
             }
         }

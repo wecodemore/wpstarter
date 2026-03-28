@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter;
 
 use Composer\Command\BaseCommand;
-use Composer\Composer;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -68,20 +67,10 @@ final class WpStarterCommand extends BaseCommand
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // phpcs:enable Inpsyde.CodeQuality.ReturnTypeDeclaration
-
-        /**
-         * @psalm-suppress DeprecatedMethod
-         * @var Composer $composer
-         */
-        $composer = method_exists($this, 'requireComposer')
-            ? $this->requireComposer(false, false)
-            : $this->getComposer(true, false);
+        $composer = $this->requireComposer(false, false);
 
         if ($composer->getPackage()->getType() === ComposerPlugin::EXTENSIONS_TYPE) {
             $this->writeError(
@@ -98,14 +87,10 @@ final class WpStarterCommand extends BaseCommand
             $plugin->setupAutoload();
             $plugin->activate($composer, $this->getIO());
 
-            $skip = $input->hasOption('skip')
-                && $input->getOption('skip');
-            $skipCustom = $input->hasOption('skip-custom')
-                && $input->getOption('skip-custom');
-            $ignoreSkipConfig = $input->hasOption('ignore-skip-config')
-                && $input->getOption('ignore-skip-config');
-            $list = $input->hasOption('list-steps')
-                && $input->getOption('list-steps');
+            $skip = $this->hasNonEmptyOption($input, 'skip');
+            $skipCustom = $this->hasNonEmptyOption($input, 'skip-custom');
+            $ignoreSkipConfig = $this->hasNonEmptyOption($input, 'ignore-skip-config');
+            $list = $this->hasNonEmptyOption($input, 'steps-help');
 
             $flags = $list ? SelectedStepsFactory::MODE_LIST : SelectedStepsFactory::MODE_COMMAND;
             $skip and $flags |= SelectedStepsFactory::MODE_OPT_OUT;
@@ -113,9 +98,9 @@ final class WpStarterCommand extends BaseCommand
             $ignoreSkipConfig and $flags |= SelectedStepsFactory::IGNORE_SKIP_STEPS_CONFIG;
 
             /** @var list<string> $selected */
-            $selected = (array)($input->getArgument('steps') ?: []);
+            $selected = (array) ($input->getArgument('steps') ?: []);
 
-            if (($selected && !$skip) && $list) {
+            if ((($selected !== []) && !$skip) && $list) {
                 throw new \Error('The `--list-steps` flag can not be combined step names.');
             }
 
@@ -130,13 +115,27 @@ final class WpStarterCommand extends BaseCommand
     }
 
     /**
+     * @param InputInterface $input
+     * @param string $option
+     * @return bool
+     */
+    private function hasNonEmptyOption(InputInterface $input, string $option): bool
+    {
+        if (!$input->hasOption($option)) {
+            return false;
+        }
+
+        return (bool) $input->getOption($option);
+    }
+
+    /**
      * @param OutputInterface $output
      * @param string $message
      * @return void
      */
     private function writeError(OutputInterface $output, string $message): void
     {
-        if (!$message) {
+        if ($message === '') {
             return;
         }
         $words = explode(' ', $message);
@@ -144,7 +143,7 @@ final class WpStarterCommand extends BaseCommand
         $line = '';
         foreach ($words as $word) {
             if (strlen($line . $word) < 60) {
-                $line .= $line ? " {$word}" : $word;
+                $line .= ($line === '') ? $word : " {$word}";
                 continue;
             }
 
@@ -152,15 +151,16 @@ final class WpStarterCommand extends BaseCommand
             $line = $word;
         }
 
-        /** @var non-empty-list<string> $lines */
-        $line and $lines[] = "  {$line}  ";
+        /** @var non-empty-list<non-falsy-string> $lines */
+        ($line !== '') and $lines[] = "  {$line}  ";
         $lenMax = max(array_map('strlen', $lines));
         $empty = '<error>' . str_repeat(' ', $lenMax) . '</error>';
         $errors = ['', $empty];
-        foreach ($lines as $line) {
-            $lineLen = strlen($line);
-            ($lineLen < $lenMax) and $line .= str_repeat(' ', $lenMax - $lineLen);
-            $errors[] = "<error>{$line}</error>";
+        foreach ($lines as $oneLine) {
+            $errorLine = $oneLine;
+            $lineLen = strlen($oneLine);
+            ($lineLen < $lenMax) and $errorLine .= str_repeat(' ', $lenMax - $lineLen);
+            $errors[] = "<error>{$errorLine}</error>";
         }
 
         $errors[] = $empty;

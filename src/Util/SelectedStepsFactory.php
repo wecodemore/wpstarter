@@ -26,55 +26,17 @@ class SelectedStepsFactory
     public const SKIP_CUSTOM_STEPS = 2;
     public const IGNORE_SKIP_STEPS_CONFIG = 4;
 
-    /**
-     * @var bool
-     */
-    private $commandMode;
-
-    /**
-     * @var bool
-     */
-    private $listMode;
-
-    /**
-     * @var bool
-     */
-    private $optOutMode;
-
-    /**
-     * @var bool
-     */
-    private $skipCustomSteps;
-
-    /**
-     * @var bool
-     */
-    private $ignoreSkipConfig;
-
-    /**
-     * @var array<string>
-     */
-    private $commandStepNames;
-
-    /**
-     * @var int
-     */
-    private $inputErrors = 0;
-
-    /**
-     * @var int
-     */
-    private $configErrors = 0;
-
-    /**
-     * @var bool
-     */
-    private $emptyOptOutInput = false;
-
-    /**
-     * @var int
-     */
-    private $maybeWantIgnoreConfig = 0;
+    /** @var array<string> */
+    private array $commandStepNames;
+    private bool $commandMode;
+    private bool $listMode;
+    private bool $optOutMode;
+    private bool $skipCustomSteps;
+    private bool $ignoreSkipConfig;
+    private int $inputErrors = 0;
+    private int $configErrors = 0;
+    private bool $emptyOptOutInput = false;
+    private int $maybeWantIgnoreConfig = 0;
 
     /**
      * @return SelectedStepsFactory
@@ -140,7 +102,7 @@ class SelectedStepsFactory
      */
     public function isSelectedCommandMode(): bool
     {
-        return $this->commandStepNames && !$this->optOutMode;
+        return ($this->commandStepNames !== []) && !$this->optOutMode;
     }
 
     /**
@@ -162,7 +124,7 @@ class SelectedStepsFactory
     /**
      * @param Locator $locator
      * @param Composer $composer
-     * @return array<Step>
+     * @return list<Step>
      */
     public function selectAndFactory(Locator $locator, Composer $composer): array
     {
@@ -181,7 +143,7 @@ class SelectedStepsFactory
             return [];
         }
 
-        if (!$availableSteps) {
+        if ($availableSteps === []) {
             return [];
         }
 
@@ -233,11 +195,11 @@ class SelectedStepsFactory
         /** @var array<string, string> $commandSteps */
         $commandSteps = $config[Config::COMMAND_STEPS]->unwrapOrFallback([]);
 
-        $targetSteps = ($this->skipCustomSteps || !$customSteps)
+        $targetSteps = ($this->skipCustomSteps || ($customSteps === []))
             ? $defaultSteps
             : array_merge($defaultSteps, $customSteps);
 
-        if ($commandSteps && ($this->isListMode() || $this->isSelectedCommandMode())) {
+        if (($commandSteps !== []) && ($this->isListMode() || $this->isSelectedCommandMode())) {
             $targetSteps = array_merge($targetSteps, $commandSteps);
         }
 
@@ -248,7 +210,7 @@ class SelectedStepsFactory
     }
 
     /**
-     * @param array $allSteps
+     * @param array<string, string> $allSteps
      * @return array<string, class-string<Step>>
      */
     private function filterOutInvalidSteps(array $allSteps): array
@@ -259,8 +221,7 @@ class SelectedStepsFactory
         $stepClassesMap = array_filter(
             $allSteps,
             static function (string $step) use (&$errors): bool {
-                if (!is_a($step, Step::class, true)) {
-                    /** @psalm-suppress MixedOperand */
+                if (!is_subclass_of($step, Step::class)) {
                     $errors++;
 
                     return false;
@@ -270,7 +231,6 @@ class SelectedStepsFactory
             }
         );
 
-        /** @psalm-suppress MixedOperand */
         $this->configErrors += $errors;
 
         return $stepClassesMap;
@@ -289,7 +249,7 @@ class SelectedStepsFactory
     ): array {
 
         // In opt-out mode, steps to opt-out are required
-        if ($this->optOutMode && !$this->commandStepNames) {
+        if ($this->optOutMode && ($this->commandStepNames === [])) {
             $this->emptyOptOutInput = true;
 
             return [];
@@ -301,7 +261,7 @@ class SelectedStepsFactory
             ? []
             : $config[Config::SKIP_STEPS]->unwrapOrFallback([]);
 
-        if (!$skipNamesByInput && !$skipNamesByConfig) {
+        if (($skipNamesByInput === []) && ($skipNamesByConfig === [])) {
             return $allAvailableStepNameToClassMap;
         }
 
@@ -312,13 +272,13 @@ class SelectedStepsFactory
         foreach ($allAvailableStepNameToClassMap as $name => $class) {
             $skipped = false;
             // In explicitly skipped, let's skip it
-            if (($skipNamesByInput && in_array($name, $skipNamesByInput, true))) {
+            if (in_array($name, $skipNamesByInput, true)) {
                 $skippedByInput++;
                 $skipped = true;
             }
 
             // In other cases, let's skip what in skip config (unless ignore-skip config is set)
-            if ($skipNamesByConfig && in_array($name, $skipNamesByConfig, true)) {
+            if (in_array($name, $skipNamesByConfig, true)) {
                 $skippedByConfig++;
                 $skipped = true;
                 ($this->commandMode || $this->listMode) or $io->writeIfVerbose(
@@ -374,7 +334,7 @@ class SelectedStepsFactory
                 continue;
             }
 
-            $this->inputErrors ++;
+            $this->inputErrors++;
         }
 
         return $validCommandStepNamesToClasses;
@@ -389,7 +349,7 @@ class SelectedStepsFactory
     private function findStepName(string $name, array $availableStepsMap, Io $io): array
     {
         $stepName = static::findStepNameByAlias($name, array_keys($availableStepsMap));
-        if ($stepName) {
+        if ($stepName !== null) {
             if ($stepName !== $name) {
                 $comment = "Step name '{$name}' is deprecated, please use '{$stepName}'.";
                 $io->writeCommentIfVerbose($comment);
@@ -405,7 +365,7 @@ class SelectedStepsFactory
      * @param array<string, class-string<Step>> $stepsToFactory
      * @param Locator $locator
      * @param Composer $composer
-     * @return array<Step>
+     * @return list<Step>
      */
     private function factory(array $stepsToFactory, Locator $locator, Composer $composer): array
     {
@@ -415,7 +375,7 @@ class SelectedStepsFactory
         foreach ($stepsToFactory as $stepName => $stepClass) {
             try {
                 $step = new $stepClass($locator, $composer);
-            } catch (\Throwable $throwable) {
+            } catch (\Throwable $throwable) { // @phpstan-ignore catch.neverThrown
                 $this->configErrors++;
                 continue;
             }
@@ -465,15 +425,15 @@ class SelectedStepsFactory
         foreach ($availableSteps as $name => $class) {
             $suffix = isset($commandSteps[$name]) ? '*' : '';
             $io->write("<info>{$name}</info>{$suffix}");
-            $ref = new \ReflectionClass($class);
             $desc = "The '{$name}' step command.";
-            if (preg_match('~/\*\*\s*(?:\*\s*)?([^\*]+)~', $ref->getDocComment() ?: '', $matches)) {
+            $doc = (new \ReflectionClass($class))->getDocComment() ?: '';
+            if (preg_match('~/\*\*\s*(?:\*\s*)?([^\*]+)~', $doc, $matches) === 1) {
                 $desc = trim(rtrim($matches[1], '\\*'));
             }
             $io->write($desc);
             $io->write('');
         }
-        if ($commandSteps) {
+        if ($commandSteps !== []) {
             $io->write('<comment>* Command only</comment>');
             $io->write('');
         }
@@ -489,25 +449,25 @@ class SelectedStepsFactory
      */
     private function printExclusionInList(Io $io, Config $config): void
     {
-        $skipByInput = $this->optOutMode ? $this->commandStepNames : null;
-        /** @var null|array $skipByConfig */
+        $skipByInput = $this->optOutMode ? $this->commandStepNames : [];
+        /** @var array<string> $skipByConfig */
         $skipByConfig = $this->ignoreSkipConfig
-            ? null
+            ? []
             : $config[Config::SKIP_STEPS]->unwrapOrFallback([]);
-        if (!$skipByInput && !$skipByConfig) {
+        if (($skipByInput === []) && ($skipByConfig === [])) {
             return;
         }
 
         $message = 'Please note %d step%s not included because %s';
         $args = [];
-        if ($skipByConfig) {
+        if ($skipByConfig !== []) {
             $count = count($skipByConfig);
             $args[] = $count;
             $args[] = ($count === 1) ? ' is' : 's are';
             $args[] = "excluded in project's composer.json";
         }
-        if ($skipByInput) {
-            $skipByConfig and $message .= ', moreover %d step%s not included because %s';
+        if ($skipByInput !== []) {
+            ($skipByConfig !== []) and $message .= ', moreover %d step%s not included because %s';
             $count = count($skipByInput);
             $args[] = $count;
             $args[] = ($count === 1) ? ' is' : 's are';
@@ -526,7 +486,7 @@ class SelectedStepsFactory
     private function lastErrorMessage(bool $fatal): string
     {
         // phpcs:enable Generic.Metrics.CyclomaticComplexity
-        if ($this->maybeWantIgnoreConfig) {
+        if ($this->maybeWantIgnoreConfig > 0) {
             $error = ($this->inputErrors > 1)
                 ? "{$this->inputErrors} of the given step names have been ignored"
                 : 'One given step name has been ignored';
@@ -536,13 +496,13 @@ class SelectedStepsFactory
             return "{$error}. You might want to use '--ignore-skip-config' flag to avoid that.";
         }
 
-        if (!$this->inputErrors && !$this->configErrors && !$this->emptyOptOutInput) {
+        if (($this->inputErrors === 0) && ($this->configErrors === 0) && !$this->emptyOptOutInput) {
             return '';
         }
 
         $message = $fatal ? 'No valid step to run found.' : '';
 
-        if ($this->inputErrors) {
+        if ($this->inputErrors > 0) {
             $error = ($this->inputErrors > 1)
                 ? "Command input contains {$this->inputErrors} invalid steps names"
                 : 'Command input contains one invalid step name';
@@ -559,17 +519,17 @@ class SelectedStepsFactory
             return "{$message}\nCommand input was expecting one or more step names.";
         }
 
-        if ($this->configErrors) {
-            $also = $this->inputErrors ? 'also ' : '';
-            $error = $this->configErrors > 1
+        if ($this->configErrors > 0) {
+            $also = ($this->inputErrors > 0) ? 'also ' : '';
+            $error = ($this->configErrors > 1)
                 ? "Configuration {$also}contains {$this->configErrors} invalid steps settings"
                 : "Configuration {$also}contains one invalid step setting";
 
             if (!$fatal) {
-                $error .= $this->configErrors > 1
+                $error .= ($this->configErrors > 1)
                     ? ', they will be ignored'
                     : ' and it will be ignored';
-                $error .= $also ? ' as well.' : '.';
+                $error .= ($also !== '') ? ' as well.' : '.';
             }
 
             $message .= $fatal ? "\n{$error}." : "\n{$error}";

@@ -26,35 +26,12 @@ class DbChecker
     public const WPDB_ENV_VALID = 'WPDB_ENV_VALID';
     public const HEALTH_CHECK = 'health';
 
-    /**
-     * @var WordPressEnvBridge
-     */
-    private $env;
-
-    /**
-     * @var Io
-     */
-    private $io;
-
-    /**
-     * @var SystemProcess
-     */
-    private $process;
-
-    /**
-     * @var ExecutableFinder
-     */
-    private $finder;
-
-    /**
-     * @var bool|null
-     */
-    private $exists = null;
-
-    /**
-     * @var bool|null
-     */
-    private $installed = null;
+    private WordPressEnvBridge $env;
+    private Io $io;
+    private SystemProcess $process;
+    private ExecutableFinder $finder;
+    private ?bool $exists = null;
+    private ?bool $installed = null;
 
     /**
      * @param WordPressEnvBridge $env
@@ -84,7 +61,7 @@ class DbChecker
             $this->check();
         }
 
-        return (bool)$this->exists;
+        return (bool) $this->exists;
     }
 
     /**
@@ -96,7 +73,7 @@ class DbChecker
             $this->check();
         }
 
-        return (bool)$this->installed;
+        return (bool) $this->installed;
     }
 
     /**
@@ -106,7 +83,7 @@ class DbChecker
     {
         $this->check();
 
-        return (bool)$this->env->read(self::WPDB_ENV_VALID);
+        return (bool) $this->env->read(self::WPDB_ENV_VALID);
     }
 
     /**
@@ -118,8 +95,8 @@ class DbChecker
             return;
         }
 
-        /** @var array<string, string> $env */
-        $env = $this->env->readMany(
+        /** @var array<string, mixed> $data */
+        $data = $this->env->readMany(
             'DB_HOST',
             'DB_USER',
             'DB_NAME',
@@ -127,22 +104,26 @@ class DbChecker
             'DB_TABLE_PREFIX'
         );
 
-        if (!$env['DB_USER'] || !$env['DB_NAME']) {
+        $user = $this->readEnvVar('DB_USER', $data);
+        $dbname = $this->readEnvVar('DB_NAME', $data);
+
+        if (($user === null) || ($dbname === null)) {
             $this->write('Environment not ready, DB status can\'t be checked.');
             $this->setupEnv(false, false, false);
 
             return;
         }
 
-        empty($env['DB_HOST']) and $env['DB_HOST'] = 'localhost';
-        empty($env['DB_TABLE_PREFIX']) and $env['DB_TABLE_PREFIX'] = 'wp_';
+        $host = $this->readEnvVar('DB_HOST', $data) ?? 'localhost';
+        $password = $this->readEnvVar('DB_PASSWORD', $data);
+        $prefix = $this->readEnvVar('DB_TABLE_PREFIX', $data) ?? 'wp_';
 
         [$dbExists, $wpInstalled] = $this->tryConnection(
-            $env['DB_HOST'],
-            $env['DB_NAME'],
-            $env['DB_TABLE_PREFIX'],
-            $env['DB_USER'],
-            $env['DB_PASSWORD'] ?: ''
+            $host,
+            $dbname,
+            $prefix,
+            $user,
+            $password ?: ''
         );
 
         $this->setupEnv(true, $dbExists, $wpInstalled);
@@ -161,6 +142,21 @@ class DbChecker
     }
 
     /**
+     * @param "DB_HOST"|"DB_USER"|"DB_NAME"|"DB_PASSWORD"|"DB_TABLE_PREFIX" $key
+     * @param array<string, mixed> $data
+     * @return non-empty-string|null
+     */
+    private function readEnvVar(string $key, array $data): ?string
+    {
+        $value = $data[$key];
+        if (!is_string($value) || ($value === '')) {
+            $value = null;
+        }
+
+        return $value;
+    }
+
+    /**
      * @return bool
      */
     public function mysqlcheck(): bool
@@ -170,20 +166,24 @@ class DbChecker
         }
 
         $checker = $this->finder->find('mysqlcheck');
-        if (!$checker) {
+        if ($checker === null) {
             $this->writeError('Sorry, mysqlcheck not found, can not check DB health.');
 
             return false;
         }
         $user = $this->env->read('DB_USER');
         $password = $this->env->read('DB_PASSWORD');
+        /** @var string $dbName */
+        $dbName = $this->env->read('DB_NAME');
+        /** @var string $dbHost */
+        $dbHost = $this->env->read('DB_HOST');
         $command = sprintf(
             'mysqlcheck --no-defaults "%s" --check --default-character-set="utf8" --host="%s"',
-            (string)$this->env->read('DB_NAME'),
-            (string)$this->env->read('DB_HOST')
+            $dbName,
+            $dbHost
         );
-        $user and $command .= " --user=\"{$user}\"";
-        $password and $command .= " --password=\"{$password}\"";
+        is_string($user) && $user !== '' and $command .= " --user=\"{$user}\"";
+        is_string($password) && $password !== '' and $command .= " --password=\"{$password}\"";
         $command .= ' --default-character-set="utf8"';
         $this->io->writeCommentIfVerbose('- Checking database via mysqlcheck...');
         $ok = $this->process->executeSilently($command);
@@ -250,9 +250,9 @@ class DbChecker
         try {
             $db = @\mysqli_connect($host, $user, $password ?: '');
 
-            if (!$db || $db->connect_errno) {
+            if (!$db instanceof \mysqli || $db->connect_errno !== 0) {
                 $this->setupEnv(false, false, false);
-                $db and \mysqli_close($db);
+                $db instanceof \mysqli and \mysqli_close($db);
 
                 return [$dbExists, $wpInstalled];
             }
@@ -260,7 +260,7 @@ class DbChecker
             $dbExists = @\mysqli_select_db($db, $dbName);
             if ($dbExists) {
                 $result = @mysqli_query($db, "SELECT 1 FROM {$dbPrefix}users");
-                $wpInstalled = ($result instanceof \mysqli_result) && $result->field_count;
+                $wpInstalled = ($result instanceof \mysqli_result) && $result->field_count > 0;
             }
             @\mysqli_close($db);
 

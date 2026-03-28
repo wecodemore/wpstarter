@@ -22,20 +22,10 @@ namespace WeCodeMore\WpStarter\Config;
  */
 final class Result
 {
-    /**
-     * @var mixed
-     */
-    private $value;
-
-    /**
-     * @var \Throwable|null
-     */
-    private $error;
-
-    /**
-     * @var boolean
-     */
-    private $promise = false;
+    /** @var mixed */
+    private $value; // phpcs:ignore
+    private ?\Throwable $error;
+    private bool $promise = false;
 
     /**
      * @param mixed $value
@@ -97,12 +87,12 @@ final class Result
             return;
         }
 
-        if ($value instanceof \Throwable && !$error) {
+        if (($value instanceof \Throwable) && ($error === null)) {
             $error = $value;
             $value = null;
         }
 
-        $this->value = $error ? null : $value;
+        $this->value = ($error === null) ? $value : null;
         $this->error = $error;
     }
 
@@ -113,7 +103,7 @@ final class Result
     {
         $this->maybeResolve();
 
-        return !$this->error && ($this->value !== null);
+        return ($this->error === null) && ($this->value !== null);
     }
 
     /**
@@ -124,7 +114,7 @@ final class Result
     {
         $this->maybeResolve();
 
-        return !$this->error && ($this->value === $compare);
+        return ($this->error === null) && ($this->value === $compare);
     }
 
     /**
@@ -149,7 +139,7 @@ final class Result
 
         array_unshift($things, $thing);
 
-        return !$this->error && in_array($this->value, $things, true);
+        return ($this->error === null) && in_array($this->value, $things, true);
     }
 
     /**
@@ -170,7 +160,7 @@ final class Result
     {
         $this->maybeResolve();
 
-        if ($this->error) {
+        if ($this->error !== null) {
             throw $this->error;
         }
 
@@ -196,13 +186,13 @@ final class Result
 
             $resolved = $value;
             $error = null;
-            while ($resolved instanceof Result && !$error) {
+            while (($resolved instanceof Result) && ($error === null)) {
                 $resolved->maybeResolve();
                 $error = $resolved->error;
                 $resolved = $resolved->value;
             }
 
-            if ($error) {
+            if ($error instanceof \Throwable) {
                 $this->error = $error;
                 $this->value = null;
 
