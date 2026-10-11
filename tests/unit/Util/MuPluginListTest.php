@@ -59,4 +59,47 @@ class MuPluginListTest extends TestCase
 
         static::assertSame($expected, $muPluginsList->pluginsList());
     }
+
+    /**
+     * @test
+     */
+    public function testPluginListIsSortedByPathLikeWordPressDoes(): void
+    {
+        // Package names order is the opposite of the installation paths order.
+        $package1 = new CompletePackage('acme/mu-plugin', '1.0.0.0', '1');
+        $package1->setType('wordpress-muplugin');
+
+        $package2 = new CompletePackage('another/mu-plugin', '2.0.0.0', '2');
+        $package2->setType('wordpress-muplugin');
+
+        $muPluginsPath = $this->fixturesPath() . '/paths-root/public/wp-content/mu-plugins';
+
+        $finder = \Mockery::mock(PackageFinder::class);
+        $finder
+            ->expects('findByType')
+            ->once()
+            ->with('wordpress-muplugin')
+            ->andReturn([$package1, $package2]);
+
+        $finder
+            ->expects('findPathOf')
+            ->once()
+            ->with($package1)
+            ->andReturn("{$muPluginsPath}/dir2");
+        $finder
+            ->expects('findPathOf')
+            ->once()
+            ->with($package2)
+            ->andReturn("{$muPluginsPath}/dir1");
+
+        $expected = [
+            'another/mu-plugin' => "{$muPluginsPath}/dir1/mu-plugin.php",
+            'acme/mu-plugin_a-mu-plugin' => "{$muPluginsPath}/dir2/a-mu-plugin.php",
+            'acme/mu-plugin_b-mu-plugin' => "{$muPluginsPath}/dir2/b-mu-plugin.php",
+        ];
+
+        $muPluginsList = new MuPluginList($finder, $this->factoryPaths());
+
+        static::assertSame($expected, $muPluginsList->pluginsList());
+    }
 }

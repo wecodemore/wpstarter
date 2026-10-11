@@ -55,6 +55,9 @@ class MuPluginList
             }
         }
 
+        // WordPress loads MU plugins sorted by path, and so do we, regardless of packages order.
+        asort($list, SORT_STRING);
+
         return $list;
     }
 
