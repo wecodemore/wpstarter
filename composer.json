@@ -38,12 +38,12 @@
         "ext-SPL": "*",
         "composer-plugin-api": "^2.3",
         "composer/installers": "^2",
-        "symfony/dotenv": "^5.4 || ^6.4 || ^7.3.0"
+        "symfony/dotenv": "^5.4 || ^6.4 || ^7.3.0 || ^8.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",
         "composer/composer": "^2.8.10",
-        "symfony/process": "^5.4.47 || ^6 || ^7",
+        "symfony/process": "^5.4.47 || ^6 || ^7 || ^8",
         "wp-cli/wp-cli": "^2.12.0",
         "inpsyde/php-coding-standards": "^2.0.2",
         "phpstan/phpstan": "^2.1.22",
