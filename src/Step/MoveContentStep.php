@@ -13,6 +13,7 @@ namespace WeCodeMore\WpStarter\Step;
 
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Io\Io;
+use WeCodeMore\WpStarter\Util\Filesystem;
 use WeCodeMore\WpStarter\Util\Locator;
 use WeCodeMore\WpStarter\Util\Paths;
 
@@ -30,25 +31,10 @@ final class MoveContentStep implements OptionalStep, ConditionalStep
 {
     public const NAME = 'movecontent';
 
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Filesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var \WeCodeMore\WpStarter\Util\Paths
-     */
-    private $paths;
-
-    /**
-     * @var string
-     */
-    private $error = '';
-
-    /**
-     * @var string
-     */
-    private $reason = '';
+    private Filesystem $filesystem;
+    private Paths $paths;
+    private string $error = '';
+    private string $reason = '';
 
     /**
      * @param Locator $locator
@@ -92,7 +78,7 @@ final class MoveContentStep implements OptionalStep, ConditionalStep
             return false;
         }
 
-        if (!$paths->wpContent()) {
+        if ($paths->wpContent() === '') {
             $this->reason = 'could not determine WordPress content folder';
 
             return false;

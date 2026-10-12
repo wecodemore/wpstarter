@@ -91,7 +91,7 @@ class QuestionTest extends TestCase
         $question = Question::newWithValidator(
             ['Give me a valid URL'],
             static function (string $value): bool {
-                return (bool)filter_var($value, FILTER_VALIDATE_URL);
+                return (bool) filter_var($value, FILTER_VALIDATE_URL);
             },
             'https://example.org'
         );
@@ -116,7 +116,7 @@ class QuestionTest extends TestCase
         $question = Question::newWithValidator(
             ['Give me a valid URL'],
             static function (string $value): bool {
-                return (bool)filter_var($value, FILTER_VALIDATE_URL);
+                return (bool) filter_var($value, FILTER_VALIDATE_URL);
             },
             'meh'
         );

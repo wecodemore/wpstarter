@@ -108,7 +108,7 @@ class ConfigTest extends TestCase
     {
         $config = new Config(['hello' => 'Hello!'], $this->factoryValidator());
 
-        $config->appendValidator('hello', static function () {
+        $config->appendValidator('hello', static function (): void {
             throw new \Error('No hello!');
         });
 
@@ -125,7 +125,7 @@ class ConfigTest extends TestCase
     {
         $config = new Config(['hello' => 'Hello!'], $this->factoryValidator());
 
-        $config->appendValidator('hello', static function () {
+        $config->appendValidator('hello', static function (): void {
             throw new \Error('No hello!');
         });
 
@@ -143,7 +143,7 @@ class ConfigTest extends TestCase
         $config = new Config([], $this->factoryValidator());
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMsgRegex('/overwrite/');
+        $this->expectExceptionMessageMatches('/overwrite/');
 
         $config->appendValidator(Config::AUTOLOAD, 'strtoupper');
     }

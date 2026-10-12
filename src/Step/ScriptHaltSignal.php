@@ -13,18 +13,9 @@ namespace WeCodeMore\WpStarter\Step;
 
 final class ScriptHaltSignal
 {
-    /**
-     * @var string
-     */
-    private $reason;
-    /**
-     * @var bool
-     */
-    private $propagationStopped;
-    /**
-     * @var bool
-     */
-    private $stepHalted;
+    private string $reason;
+    private bool $propagationStopped;
+    private bool $stepHalted;
 
     /**
      * @param string $reason

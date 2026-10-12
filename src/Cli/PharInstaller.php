@@ -16,15 +16,8 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 class PharInstaller
 {
-    /**
-     * @var Io
-     */
-    private $io;
-
-    /**
-     * @var UrlDownloader
-     */
-    private $urlDownloader;
+    private Io $io;
+    private UrlDownloader $urlDownloader;
 
     /**
      * @param Io $io
@@ -46,13 +39,13 @@ class PharInstaller
         $url = $tool->pharUrl();
         $name = $tool->niceName();
 
-        if (!$url || !$name) {
+        if (($url === '') || ($name === '')) {
             $this->io->write(
                 sprintf(
                     "Skipping installation of PHP tool '%s'.\nName: %s, URL: %s.",
                     get_class($tool),
-                    $name ? "'{$name}'" : '(empty)',
-                    $url ? "'{$url}'" : '(empty)'
+                    ($name !== '') ? "'{$name}'" : '(empty)',
+                    ($url !== '') ? "'{$url}'" : '(empty)'
                 )
             );
 

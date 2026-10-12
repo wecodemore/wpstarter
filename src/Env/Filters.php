@@ -43,14 +43,17 @@ final class Filters
      */
     public static function resolveFilterName(string $name): string
     {
-        $cleanName = $name ? trim($name) : '';
-        if (!$cleanName) {
+        $cleanName = trim($name);
+        if ($cleanName === '') {
             return '';
         }
 
         $constant = 'FILTER_' . strtoupper($cleanName);
-        if ($constant !== 'FILTER_TABLE_PREFIX' && defined(__CLASS__ . "::{$constant}")) {
-            return (string)constant(__CLASS__ . "::{$constant}");
+        if (($constant !== 'FILTER_TABLE_PREFIX') && defined(__CLASS__ . "::{$constant}")) {
+            /** @var string $value */
+            $value = constant(__CLASS__ . "::{$constant}");
+
+            return $value;
         }
 
         return '';
@@ -131,7 +134,7 @@ final class Filters
             throw new \Exception('Invalid integer.');
         }
 
-        return (int)$value;
+        return (int) $value;
     }
 
     /**
@@ -144,7 +147,7 @@ final class Filters
             throw new \Exception('Invalid float.');
         }
 
-        return (float)$value;
+        return (float) $value;
     }
 
     /**
@@ -157,7 +160,7 @@ final class Filters
             throw new \Exception('Invalid scalar.');
         }
 
-        return htmlspecialchars(strip_tags((string)$value), ENT_QUOTES, 'UTF-8', false);
+        return htmlspecialchars(strip_tags((string) $value), ENT_QUOTES, 'UTF-8', false);
     }
 
     /**
@@ -170,7 +173,7 @@ final class Filters
             throw new \Exception('Invalid scalar.');
         }
 
-        return addslashes((string)$value);
+        return addslashes((string) $value);
     }
 
     /**
@@ -200,7 +203,6 @@ final class Filters
     private function filterOctalMod($value): int
     {
         if (is_int($value) && ($value >= 0) && ($value <= 0777)) {
-            /** @var int $value */
             return $value;
         }
 
@@ -208,7 +210,7 @@ final class Filters
             throw new \Exception('Invalid octal mod.');
         }
 
-        return (int)octdec($value);
+        return (int) octdec($value);
     }
 
     /**
@@ -217,10 +219,12 @@ final class Filters
      */
     private function filterTablePrefix($value): string
     {
-        if (!$value || !is_string($value)) {
+        if (!is_string($value) || ($value === '')) {
             return 'wp_';
         }
 
-        return (string)preg_replace('#\W#', '', $value);
+        $safeValue = preg_replace('#\W#', '', $value) ?? '';
+
+        return ($safeValue === '') ? 'wp_' : $safeValue;
     }
 }

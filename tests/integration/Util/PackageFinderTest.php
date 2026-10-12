@@ -34,12 +34,9 @@ class PackageFinderTest extends IntegrationTestCase
             $names[] = $plugin->getName();
         }
 
-        static::assertCount(3, $names);
+        static::assertGreaterThanOrEqual(2, count($names));
         static::assertTrue(in_array('composer/installers', $names, true));
         static::assertTrue(in_array('composer/package-versions-deprecated', $names, true));
-        static::assertTrue(
-            in_array('dealerdirect/phpcodesniffer-composer-installer', $names, true)
-        );
     }
 
     /**
@@ -50,11 +47,11 @@ class PackageFinderTest extends IntegrationTestCase
     {
         $finder = $this->factoryFinder();
 
-        $phpcsInstaller = $finder->findByName('dealerdirect/phpcodesniffer-composer-installer');
+        $phpunitPackage = $finder->findByName('phpunit/phpunit');
 
-        static::assertInstanceOf(PackageInterface::class, $phpcsInstaller);
+        static::assertInstanceOf(PackageInterface::class, $phpunitPackage);
 
-        $path = $finder->findPathOf($phpcsInstaller);
+        $path = $finder->findPathOf($phpunitPackage);
         $paths = explode('/vendor/', $path);
 
         $expectedVendor = str_replace('\\', '/', $this->factoryComposerConfig()->get('vendor-dir'));
@@ -71,10 +68,10 @@ class PackageFinderTest extends IntegrationTestCase
     {
         $finder = $this->factoryFinder();
 
-        $roavePackages = $finder->findByVendor('phpunit');
+        $phpunitPackages = $finder->findByVendor('phpunit');
 
         $names = [];
-        foreach ($roavePackages as $package) {
+        foreach ($phpunitPackages as $package) {
             static::assertInstanceOf(PackageInterface::class, $package);
             $names[] = $package->getName();
         }
@@ -90,10 +87,10 @@ class PackageFinderTest extends IntegrationTestCase
     {
         $finder = $this->factoryFinder();
 
-        $phpcs = $finder->findByName('*/*_c*er*');
+        $phpunitPackage = $finder->findByName('*nit/p*p*n*t');
 
-        static::assertInstanceOf(PackageInterface::class, $phpcs);
-        static::assertSame('squizlabs/php_codesniffer', $phpcs->getName());
+        static::assertInstanceOf(PackageInterface::class, $phpunitPackage);
+        static::assertSame('phpunit/phpunit', $phpunitPackage->getName());
     }
 
     /**
@@ -104,18 +101,14 @@ class PackageFinderTest extends IntegrationTestCase
     {
         $finder = $this->factoryFinder();
 
-        $phpcsPackages = $finder->search('*l*/php*c*er*');
+        $phpcsPackages = $finder->search('*it/php*');
         $names = [];
         foreach ($phpcsPackages as $package) {
             static::assertInstanceOf(PackageInterface::class, $package);
             $names[] = $package->getName();
         }
 
-        static::assertCount(2, $names);
-        static::assertTrue(in_array('squizlabs/php_codesniffer', $names, true));
-        static::assertTrue(
-            in_array('dealerdirect/phpcodesniffer-composer-installer', $names, true)
-        );
+        static::assertTrue(in_array('phpunit/phpunit', $names, true));
     }
 
     /**

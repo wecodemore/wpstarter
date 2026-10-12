@@ -162,7 +162,7 @@ class ValidatorTest extends TestCase
 
         static::assertFalse($validator->validateWpCliCommands(null)->notEmpty());
         static::assertFalse($validator->validateWpCliCommands('foo')->notEmpty());
-        static::assertFalse($validator->validateWpCliCommands([])->notEmpty());
+        static::assertTrue($validator->validateWpCliCommands([])->is([]));
         static::assertFalse($validator->validateWpCliCommands(true)->notEmpty());
 
         $phpList = $this->fixturesPath() . '/cli-commands-list.php';
@@ -204,7 +204,7 @@ class ValidatorTest extends TestCase
         $validator = $this->factoryValidator();
 
         static::assertFalse($validator->validateWpCliFiles(null)->notEmpty());
-        static::assertFalse($validator->validateWpCliFiles([])->notEmpty());
+        static::assertTrue($validator->validateWpCliFiles([])->is([]));
         static::assertFalse($validator->validateWpCliFiles(true)->notEmpty());
 
         $jsonFile = $this->fixturesPath() . '/cli-commands-list.json';

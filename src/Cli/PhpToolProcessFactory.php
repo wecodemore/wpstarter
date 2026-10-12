@@ -18,30 +18,11 @@ use WeCodeMore\WpStarter\Util\Paths;
 
 class PhpToolProcessFactory
 {
-    /**
-     * @var Paths
-     */
-    private $paths;
-
-    /**
-     * @var Io
-     */
-    private $io;
-
-    /**
-     * @var PharInstaller
-     */
-    private $pharInstaller;
-
-    /**
-     * @var PackageFinder
-     */
-    private $packageFinder;
-
-    /**
-     * @var PhpProcess
-     */
-    private $process;
+    private Paths $paths;
+    private Io $io;
+    private PharInstaller $pharInstaller;
+    private PackageFinder $packageFinder;
+    private PhpProcess $process;
 
     /**
      * @param Paths $paths
@@ -72,8 +53,8 @@ class PhpToolProcessFactory
      */
     public function create(PhpTool $command, ?string $phpPath = null): PhpToolProcess
     {
-        ($phpPath === null) and $phpPath = (new PhpExecutableFinder())->find();
-        if (!$phpPath) {
+        $phpPath ??= (new PhpExecutableFinder())->find();
+        if (($phpPath === '') || ($phpPath === false)) {
             throw new \RuntimeException(
                 sprintf(
                     'Failed installation for %s: PHP executable not found.',
@@ -85,20 +66,20 @@ class PhpToolProcessFactory
         $fsPath = $this->lookForPackage($command);
 
         // Installed via Composer, build executor and return
-        if ($fsPath) {
+        if ($fsPath !== '') {
             return new PhpToolProcess($this->process, $command, $fsPath, $this->paths, $this->io);
         }
 
         $targetPath = $command->pharTarget($this->paths);
 
-        if ($targetPath && file_exists($targetPath)) {
+        if (($targetPath !== '') && file_exists($targetPath)) {
             return new PhpToolProcess($this->process, $command, $targetPath, $this->paths, $this->io);
         }
 
         $pharUrl = $command->pharUrl();
 
         // If not installed via Composer and phar download is disabled, return nothing
-        if (!$pharUrl) {
+        if ($pharUrl === '') {
             throw new \RuntimeException(
                 sprintf(
                     'Failed installation for %s: '
@@ -110,7 +91,7 @@ class PhpToolProcessFactory
 
         $installedPath = $this->pharInstaller->install($command, $targetPath);
 
-        if (!$installedPath) {
+        if ($installedPath === '') {
             throw new \RuntimeException("Failed phar download from {$pharUrl}.");
         }
 
@@ -127,14 +108,14 @@ class PhpToolProcessFactory
     {
         $package = $this->packageFinder->findByName($command->packageName());
 
-        if (!$package) {
+        if ($package === null) {
             return '';
         }
 
         $version = $package->getVersion();
         $minVersion = $command->minVersion();
 
-        if ($minVersion && version_compare($version, $minVersion, '<')) {
+        if (($minVersion !== '') && version_compare($version, $minVersion, '<')) {
             $this->io->writeErrorBlock(
                 sprintf(
                     'Installed %s version %s is lower than minimum required %s.',
@@ -149,6 +130,6 @@ class PhpToolProcessFactory
 
         $path = $this->packageFinder->findPathOf($package);
 
-        return $path ? $command->filesystemBootstrap($path) : '';
+        return ($path !== '') ? $command->filesystemBootstrap($path) : '';
     }
 }

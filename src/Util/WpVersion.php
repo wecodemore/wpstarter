@@ -24,20 +24,9 @@ class WpVersion
     public const WP_PACKAGE_TYPE = 'wordpress-core';
     public const MIN_WP_VERSION = '4.8';
 
-    /**
-     * @var PackageFinder
-     */
-    private $packageFinder;
-
-    /**
-     * @var Io
-     */
-    private $io;
-
-    /**
-     * @var string|null
-     */
-    private $fallbackVersion;
+    private PackageFinder $packageFinder;
+    private Io $io;
+    private ?string $fallbackVersion;
 
     /**
      * @param string $version
@@ -46,9 +35,7 @@ class WpVersion
     public static function normalize(string $version): string
     {
         $pattern = '~^(?P<numbers>(?:[0-9]+)+(?:[0-9\.]+)?)+(?P<anything>.*?)?$~';
-        $matched = preg_match($pattern, $version, $matches);
-
-        if (!$matched) {
+        if (preg_match($pattern, $version, $matches) !== 1) {
             return '';
         }
 
@@ -93,7 +80,7 @@ class WpVersion
             }
         }
 
-        if (!$versions) {
+        if ($versions === []) {
             return $this->bail('no-wp');
         }
 
@@ -101,10 +88,12 @@ class WpVersion
             return $this->bail('more-wp');
         }
 
-        $fallback = $this->fallbackVersion ? static::normalize($this->fallbackVersion) : null;
+        $fallback = (($this->fallbackVersion !== '') && ($this->fallbackVersion !== null))
+            ? static::normalize($this->fallbackVersion)
+            : null;
         $version = static::normalize(reset($versions)) ?: $fallback;
 
-        if (!$version) {
+        if (($version === '') || ($version === null)) {
             return $this->bail('invalid-wp');
         }
 

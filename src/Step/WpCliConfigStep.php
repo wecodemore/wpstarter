@@ -24,15 +24,8 @@ final class WpCliConfigStep implements FileCreationStep
 {
     public const NAME = 'wpcliconfig';
 
-    /**
-     * @var Util\FileContentBuilder
-     */
-    private $builder;
-
-    /**
-     * @var Util\Filesystem
-     */
-    private $filesystem;
+    private Util\FileContentBuilder $builder;
+    private Util\Filesystem $filesystem;
 
     /**
      * @param Util\Locator $locator

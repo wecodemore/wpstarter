@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace WeCodeMore\WpStarter\Step;
 
+use Composer\Util\Filesystem;
 use WeCodeMore\WpStarter\Config\Config;
 use WeCodeMore\WpStarter\Env\WordPressEnvBridge;
 use WeCodeMore\WpStarter\Util\Locator;
@@ -23,10 +24,7 @@ final class FlushEnvCacheStep implements ConditionalStep
 {
     public const NAME = 'flushenvcache';
 
-    /**
-     * @var \Composer\Util\Filesystem
-     */
-    private $filesystem;
+    private Filesystem $filesystem;
 
     /**
      * @param Locator $locator

@@ -12,20 +12,9 @@ class WpConfigSectionEditor
     public const PREPEND = -1;
     public const REPLACE = 0;
 
-    /**
-     * @var Paths
-     */
-    private $paths;
-
-    /**
-     * @var string|null
-     */
-    private $wpPath;
-
-    /**
-     * @var ComposerFilesystem
-     */
-    private $filesystem;
+    private Paths $paths;
+    private ?string $wpPath = null;
+    private ComposerFilesystem $filesystem;
 
     /**
      * @param Paths $paths
@@ -38,7 +27,6 @@ class WpConfigSectionEditor
     }
 
     /**
-     * @param string $pathToFile
      * @param string $section
      * @param string $newContent
      * @return void
@@ -49,7 +37,6 @@ class WpConfigSectionEditor
     }
 
     /**
-     * @param string $pathToFile
      * @param string $section
      * @param string $newContent
      * @return void
@@ -60,7 +47,6 @@ class WpConfigSectionEditor
     }
 
     /**
-     * @param string $pathToFile
      * @param string $section
      * @param string $newContent
      * @return void
@@ -71,7 +57,6 @@ class WpConfigSectionEditor
     }
 
     /**
-     * @param string $pathToFile
      * @param string $section
      * @return void
      */
@@ -94,8 +79,8 @@ class WpConfigSectionEditor
             $matches
         );
 
-        $content = $matches && is_string($matches[1] ?? null) ? $matches[1] : null;
-        if (!$content) {
+        $content = ($matches !== [] && is_string($matches[1] ?? null)) ? $matches[1] : '';
+        if ($content === '') {
             return '';
         }
 
@@ -115,20 +100,16 @@ class WpConfigSectionEditor
         $content = $this->currentContent();
 
         $newContentLines = array_map('rtrim', explode("\n", $newContent));
-        $newContent = implode("\n    ", $newContentLines);
-
-        $newSection = "    " . trim($newContent);
-        if (trim($newContent) === '') {
-            $newSection = '';
-        }
+        $newContent = trim(implode("\n    ", $newContentLines));
+        $newSection = ($newContent === '') ? '' : "    {$newContent}";
 
         $editing = $this->wrapSectionInEditHash($newSection, $editMode);
-        $isReplace = $editMode === self::REPLACE;
+        $isReplace = ($editMode === self::REPLACE);
         if (!$isReplace && (strpos($content, $editing) !== false)) {
             return;
         }
 
-        if (!$editing) {
+        if ($editing === '') {
             if (!$isReplace) {
                 return;
             }
@@ -157,7 +138,7 @@ class WpConfigSectionEditor
         }
 
         $pathToFile = $this->wpConfigPath();
-        if (!file_put_contents($pathToFile, $replaced)) {
+        if (file_put_contents($pathToFile, $replaced) === false) {
             throw new \Exception("Error writing {$pathToFile} with edited {$section} section.");
         }
     }
@@ -167,7 +148,7 @@ class WpConfigSectionEditor
      */
     private function wpConfigPath(): string
     {
-        if ($this->wpPath) {
+        if ($this->wpPath !== null) {
             return $this->wpPath;
         }
 
@@ -182,13 +163,14 @@ class WpConfigSectionEditor
     }
 
     /**
-     * @return string
+     * @return non-empty-string
      */
     private function currentContent(): string
     {
         $pathToFile = $this->wpConfigPath();
         $content = file_get_contents($pathToFile);
-        if (!$content) {
+        $content = ($content === false) ? '' : trim($content);
+        if ($content === '') {
             throw new \Exception("Could not read {$pathToFile} content.");
         }
 

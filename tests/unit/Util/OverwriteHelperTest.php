@@ -25,7 +25,7 @@ class OverwriteHelperTest extends TestCase
      */
     public function testShouldOverwriteReturnTrueIfFileNotExists(): void
     {
-        $helper = $this->makeHelper([Config::PREVENT_OVERWRITE => true]);
+        $helper = $this->factoryHelper([Config::PREVENT_OVERWRITE => true]);
 
         static::assertTrue($helper->shouldOverwrite(__DIR__ . '/foo.bar'));
     }
@@ -35,7 +35,7 @@ class OverwriteHelperTest extends TestCase
      */
     public function testShouldOverwriteReturnTrueIfConfigIsTrue(): void
     {
-        $helper = $this->makeHelper([Config::PREVENT_OVERWRITE => true]);
+        $helper = $this->factoryHelper([Config::PREVENT_OVERWRITE => true]);
 
         static::assertFalse($helper->shouldOverwrite(__FILE__));
     }
@@ -45,7 +45,7 @@ class OverwriteHelperTest extends TestCase
      */
     public function testShouldOverwriteReturnFalseIfConfigIsFalse(): void
     {
-        $helper = $this->makeHelper([Config::PREVENT_OVERWRITE => false]);
+        $helper = $this->factoryHelper([Config::PREVENT_OVERWRITE => false]);
 
         static::assertTrue($helper->shouldOverwrite(__FILE__));
     }
@@ -55,7 +55,7 @@ class OverwriteHelperTest extends TestCase
      */
     public function testShouldOverwriteReturnTrueIfConfirmationAskedReturnsTrue(): void
     {
-        $helper = $this->makeHelper(
+        $helper = $this->factoryHelper(
             [Config::PREVENT_OVERWRITE => OptionalStep::ASK],
             true,
             __FILE__
@@ -69,7 +69,7 @@ class OverwriteHelperTest extends TestCase
      */
     public function testShouldOverwriteReturnFalseIfConfirmationAskedReturnsFalse(): void
     {
-        $helper = $this->makeHelper(
+        $helper = $this->factoryHelper(
             [Config::PREVENT_OVERWRITE => OptionalStep::ASK],
             false,
             __FILE__
@@ -85,12 +85,12 @@ class OverwriteHelperTest extends TestCase
     {
         $fileName = pathinfo(__FILE__, PATHINFO_FILENAME);
 
-        $helper1 = $this->makeHelper([Config::PREVENT_OVERWRITE => ['Util/*.php']]);
-        $helper2 = $this->makeHelper([Config::PREVENT_OVERWRITE => ["*/{$fileName}.*"]]);
-        $helper3 = $this->makeHelper([Config::PREVENT_OVERWRITE => ["*/{$fileName}.txt"]]);
-        $helper4 = $this->makeHelper([Config::PREVENT_OVERWRITE => ["{$fileName}.*"]]);
-        $helper5 = $this->makeHelper([Config::PREVENT_OVERWRITE => ['./Util/*.php']]);
-        $helper6 = $this->makeHelper([Config::PREVENT_OVERWRITE => ['*/*.*']]);
+        $helper1 = $this->factoryHelper([Config::PREVENT_OVERWRITE => ['Util/*.php']]);
+        $helper2 = $this->factoryHelper([Config::PREVENT_OVERWRITE => ["*/{$fileName}.*"]]);
+        $helper3 = $this->factoryHelper([Config::PREVENT_OVERWRITE => ["*/{$fileName}.txt"]]);
+        $helper4 = $this->factoryHelper([Config::PREVENT_OVERWRITE => ["{$fileName}.*"]]);
+        $helper5 = $this->factoryHelper([Config::PREVENT_OVERWRITE => ['./Util/*.php']]);
+        $helper6 = $this->factoryHelper([Config::PREVENT_OVERWRITE => ['*/*.*']]);
 
         static::assertFalse($helper1->shouldOverwrite(__FILE__));
         static::assertFalse($helper2->shouldOverwrite(__FILE__));
@@ -110,7 +110,7 @@ class OverwriteHelperTest extends TestCase
      * @param string $file
      * @return OverwriteHelper
      */
-    private function makeHelper(
+    private function factoryHelper(
         array $configs = [],
         bool $confirm = true,
         string $file = ''

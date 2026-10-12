@@ -3,11 +3,12 @@
 
     <file>./src</file>
     <file>./tests/integration</file>
+    <file>./tests/src</file>
     <file>./tests/unit</file>
 
     <arg value="sp"/>
     <arg name="colors"/>
-    <config name="testVersion" value="7.1-"/>
+    <config name="testVersion" value="7.4-"/>
 
     <rule ref="Inpsyde">
         <exclude name="WordPress.Security"/>
@@ -18,18 +19,24 @@
         <exclude name="WordPress.PHP.DiscouragedPHPFunctions"/>
         <exclude name="WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler"/>
         <exclude name="WordPress.WP.CapitalPDangit.Misspelled"/>
+        <exclude name="WordPress.WP.CapitalPDangit.MisspelledInText"/>
     </rule>
 
     <rule ref="Inpsyde.CodeQuality.Psr4">
         <properties>
-            <property
-                name="psr4"
-                type="array"
-                value="WeCodeMore\WpStarter=>src,WeCodeMore\WpStarter\Tests=>tests\src,WeCodeMore\WpStarter\Tests\Unit=>tests\unit,WeCodeMore\WpStarter\Tests\Integration=>tests\integration"/>
+            <property name="psr4" type="array">
+                <element key="WeCodeMore\WpStarter" value="src"/>
+                <element key="WeCodeMore\WpStarter\Tests" value="tests\src"/>
+                <element key="WeCodeMore\WpStarter\Tests\Unit" value="tests\unit"/>
+                <element key="WeCodeMore\WpStarter\Tests\Integration" value="tests\integration"/>
+            </property>
         </properties>
     </rule>
 
     <rule ref="Inpsyde.CodeQuality.FunctionLength">
+        <exclude-pattern>./tests/</exclude-pattern>
+    </rule>
+    <rule ref="Inpsyde.CodeQuality.ForbiddenPublicProperty">
         <exclude-pattern>./tests/</exclude-pattern>
     </rule>
 

@@ -18,15 +18,8 @@ use Composer\IO\IOInterface;
  */
 class Io
 {
-    /**
-     * @var IOInterface
-     */
-    private $io;
-
-    /**
-     * @var Formatter
-     */
-    private $formatter;
+    private IOInterface $io;
+    private Formatter $formatter;
 
     /**
      * @param IOInterface $io
@@ -39,7 +32,7 @@ class Io
     }
 
     /**
-     * @param  string $message
+     * @param string $message
      * @return void
      */
     public function writeSuccess(string $message): void
@@ -51,6 +44,8 @@ class Io
     /**
      * @param string ...$lines
      * @return void
+     *
+     * @no-named-arguments
      */
     public function writeSuccessBlock(string ...$lines): void
     {
@@ -58,7 +53,7 @@ class Io
     }
 
     /**
-     * @param  string $message
+     * @param string $message
      * @return bool
      */
     public function writeComment(string $message): bool
@@ -78,8 +73,8 @@ class Io
     public function writeCommentIfVerbose(string $line): bool
     {
         $lines = $this->formatter->ensureDefaultLinesLength($line);
-        foreach ($lines as $line) {
-            $this->io->write("  <comment>{$line}</comment>", true, IOInterface::VERBOSE);
+        foreach ($lines as $rowLine) {
+            $this->io->write("  <comment>{$rowLine}</comment>", true, IOInterface::VERBOSE);
         }
 
         return true;
@@ -88,6 +83,8 @@ class Io
     /**
      * @param string ...$lines
      * @return void
+     *
+     * @no-named-arguments
      */
     public function writeCommentBlock(string ...$lines): void
     {
@@ -101,8 +98,8 @@ class Io
     public function writeError(string $line): void
     {
         $lines = $this->formatter->ensureDefaultLinesLength($line);
-        foreach ($lines as $line) {
-            $this->io->writeError("  <fg=red>{$line}</>");
+        foreach ($lines as $aLine) {
+            $this->io->writeError("  <fg=red>{$aLine}</>");
         }
     }
 
@@ -118,6 +115,8 @@ class Io
     /**
      * @param string ...$lines
      * @return void
+     *
+     * @no-named-arguments
      */
     public function writeErrorBlock(string ...$lines): void
     {
@@ -131,8 +130,8 @@ class Io
     public function write(string $line): void
     {
         $lines = $this->formatter->ensureDefaultLinesLength($line);
-        foreach ($lines as $line) {
-            $this->io->write("  {$line}");
+        foreach ($lines as $aLine) {
+            $this->io->write("  {$aLine}");
         }
     }
 
@@ -156,8 +155,7 @@ class Io
     public function askConfirm(array $lines, bool $default = true): bool
     {
         $question = new Question($lines, ['y' => '[Y]es', 'n' => '[N]o'], $default ? 'y' : 'n');
-        $answer = $this->ask($question);
-        $answer or $answer = $question->defaultAnswerKey();
+        $answer = $this->ask($question) ?? $question->defaultAnswerKey();
 
         return $answer === 'y';
     }
@@ -169,13 +167,12 @@ class Io
      * @param Question $question
      * @return string|null
      *
-     * phpcs:disable Inpsyde.CodeQuality.ReturnTypeDeclaration
      * phpcs:disable Generic.Metrics.NestingLevel
      */
-    public function ask(Question $question)
+    public function ask(Question $question): ?string
     {
         $lines = $question->questionLines();
-        if (!$lines) {
+        if ($lines === []) {
             return null;
         }
 
@@ -208,7 +205,7 @@ class Io
             }
 
             $default = $question->defaultAnswerKey();
-            if ($default) {
+            if ($default !== '') {
                 $this->writeError($exception->getMessage());
                 $defaultText = $question->defaultAnswerText();
                 $this->writeError("Going to use default: \"{$defaultText}\".");
@@ -223,6 +220,8 @@ class Io
      * @param string $frontground
      * @param string ...$lines
      * @return void
+     *
+     * @no-named-arguments
      */
     public function writeFilledColorBlock(
         string $background,
@@ -238,6 +237,8 @@ class Io
      * @param string $frontground
      * @param string ...$lines
      * @return void
+     *
+     * @no-named-arguments
      */
     public function writeCenteredColorBlock(
         string $background,
@@ -253,6 +254,8 @@ class Io
      * @param string $frontground
      * @param string ...$lines
      * @return void
+     *
+     * @no-named-arguments
      */
     public function writeFilledErrorColorBlock(
         string $background,
@@ -292,7 +295,7 @@ class Io
      * @param bool $centered
      * @param bool $isError
      * @param string ...$lines
-     * @return bool
+     * @return void
      */
     private function writeColorBlock(
         string $background,
@@ -300,16 +303,14 @@ class Io
         bool $centered,
         bool $isError,
         string ...$lines
-    ): bool {
+    ): void {
 
         $before = "<bg={$background};fg={$frontground}>";
 
         $block = $centered
-            ? $this->formatter->createCenteredBlock($before, '</>', ...$lines)
-            : $this->formatter->createFilledBlock($before, '</>', ...$lines);
+            ? $this->formatter->createCenteredBlock($before, '</>', ...array_values($lines))
+            : $this->formatter->createFilledBlock($before, '</>', ...array_values($lines));
 
         $isError ? $this->io->writeError($block) : $this->io->write($block);
-
-        return !$isError;
     }
 }

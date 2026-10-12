@@ -36,9 +36,8 @@ class StepsTest extends TestCase
     public function testScriptByAlias(): void
     {
         $script = new class ($this) {
-            private static $done = false;
-            /** @var TestCase */
-            private static $case;
+            private static bool $done = false;
+            private static TestCase $case;
 
             public function __construct(TestCase $case)
             {

@@ -18,6 +18,8 @@ use WeCodeMore\WpStarter\Util\Filesystem;
  *
  * A single place that can be used to access validated configuration read from JSON configuration,
  * but also to pass arbitrary data across steps.
+ *
+ * @template-implements \ArrayAccess<non-falsy-string, Result>
  */
 final class Config implements \ArrayAccess
 {
@@ -85,7 +87,7 @@ final class Config implements \ArrayAccess
         self::REQUIRE_WP => true,
         self::SCRIPTS => [],
         self::SKIP_DB_CHECK => false,
-        self::SKIP_STEPS => null,
+        self::SKIP_STEPS => [],
         self::TEMPLATES_DIR => null,
         self::WP_CLI_COMMANDS => [],
         self::WP_CLI_FILES => [],
@@ -128,23 +130,17 @@ final class Config implements \ArrayAccess
         self::WP_VERSION => 'validateWpVersion',
     ];
 
-    /**
-     * @var array<string, Result>
-     */
-    private $configs;
+    /** @var array<string, Result> */
+    private array $configs;
+
+    /** @var array<mixed> */
+    private array $raw;
+
+    /** @var array<string, callable(mixed):Result> */
+    private array $validationMap = [];
 
     /**
-     * @var array
-     */
-    private $raw;
-
-    /**
-     * @var array<string, callable(mixed):Result>
-     */
-    private $validationMap = [];
-
-    /**
-     * @param array $configs
+     * @param array<mixed> $configs
      * @param Validator $validator
      */
     public function __construct(array $configs, Validator $validator)
@@ -154,7 +150,7 @@ final class Config implements \ArrayAccess
 
         /** @var string $key */
         foreach (self::VALIDATION_MAP as $key => $method) {
-            /** @var callable(mixed):Result $callable */
+            /** @var callable(mixed):Result $callback */
             $callback = [$validator, $method];
             $this->validationMap[$key] = $callback;
         }
@@ -191,11 +187,13 @@ final class Config implements \ArrayAccess
     /**
      * @param mixed $offset
      * @return bool
+     *
+     * @phpstan-assert-if-true non-falsy-string $offset
      */
-    #[\ReturnTypeWillChange]
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return is_string($offset)
+            && ($offset !== '')
             && (array_key_exists($offset, $this->raw) || array_key_exists($offset, $this->configs));
     }
 
@@ -203,8 +201,7 @@ final class Config implements \ArrayAccess
      * @param string $offset
      * @return Result
      */
-    #[\ReturnTypeWillChange]
-    public function offsetGet($offset)
+    public function offsetGet($offset): Result
     {
         if (!$this->offsetExists($offset)) {
             return Result::none();
@@ -228,10 +225,9 @@ final class Config implements \ArrayAccess
      * @param mixed $value
      * @return void
      */
-    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value): void
     {
-        if (!is_string($offset)) {
+        if (!is_string($offset) || ($offset === '')) {
             return;
         }
 
@@ -259,8 +255,7 @@ final class Config implements \ArrayAccess
      *
      * @param string $offset
      */
-    #[\ReturnTypeWillChange]
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         throw new \LogicException('Configs can\'t be unset on the fly.');
     }
@@ -269,16 +264,12 @@ final class Config implements \ArrayAccess
      * @param string $name
      * @param mixed $value
      * @return Result
-     *
-     * phpcs:disable Inpsyde.CodeQuality.ArgumentTypeDeclaration
      */
     private function validateValue(string $name, $value): Result
     {
-        // phpcs:enable Inpsyde.CodeQuality.ArgumentTypeDeclaration
-
-        /** @var null|callable(mixed):Result $method */
+        /** @var null|callable(mixed):Result $callback */
         $callback = $this->validationMap[$name] ?? null;
 
-        return $callback ? $callback($value) : Result::ok($value);
+        return is_callable($callback) ? $callback($value) : Result::ok($value);
     }
 }

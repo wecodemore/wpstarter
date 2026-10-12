@@ -137,7 +137,7 @@ class SelectedStepsFactoryTest extends TestCase
             $this->factoryPaths()
         );
 
-        $nameParts = str_split($stepName, (int)ceil(strlen($stepName) / 2));
+        $nameParts = str_split($stepName, (int) ceil(strlen($stepName) / 2));
         $alt1 = implode('_', $nameParts);
         $alt2 = implode('-', $nameParts);
         $names = [

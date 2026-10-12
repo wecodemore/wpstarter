@@ -20,21 +20,21 @@ class FileContentBuilder
     /**
      * Build a file content starting form a template and a set of replacement variables.
      *
-     * @param  Paths $paths
-     * @param  string $template
-     * @param  array $vars
+     * @param Paths $paths
+     * @param string $template
+     * @param array<mixed> $vars
      * @return string file content on success, false on failure
      */
     public function build(Paths $paths, string $template, array $vars = []): string
     {
         $template = $paths->template($template);
 
-        if (!$template || !is_file($template) || !is_readable($template)) {
+        if (($template === '') || !is_file($template) || !is_readable($template)) {
             throw new \Exception("Can't build file from template {$template}: file not found.");
         }
 
         $templateContent = @file_get_contents($template);
-        if (!$templateContent) {
+        if (($templateContent === false) || (trim($templateContent) === '')) {
             throw new \Exception("Can't build file from empty template {$template}.");
         }
 
@@ -42,8 +42,8 @@ class FileContentBuilder
     }
 
     /**
-     * @param  string $content
-     * @param  array $vars
+     * @param string $content
+     * @param array<mixed> $vars
      * @return string
      */
     public function render(string $content, array $vars): string
@@ -57,7 +57,7 @@ class FileContentBuilder
             }
 
             $patterns[] = "~\{{3}\s*{$key}\s*\}{3}~i";
-            $replacements[] = (string)$value;
+            $replacements[] = (string) $value;
         }
 
         $content = preg_replace($patterns, $replacements, $content);

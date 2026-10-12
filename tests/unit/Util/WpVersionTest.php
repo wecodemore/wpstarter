@@ -29,6 +29,31 @@ class WpVersionTest extends TestCase
     }
 
     /**
+     * @return list<array{string, string}>
+     */
+    public static function versionsDataProvider(): array
+    {
+        return [
+            ['0', '0.0.0'],
+            ['0.0', '0.0.0'],
+            ['0.0.0', '0.0.0'],
+            ['0.0.0.0', '0.0.0'],
+            ['1', '1.0.0'],
+            ['1.1', '1.1.0'],
+            ['1.2.3', '1.2.3'],
+            ['1.2.3.4', '1.2.3'],
+            ['1-alpha', '1.0.0'],
+            ['1.1-beta', '1.1.0'],
+            ['1.2.3-alpha1', '1.2.3'],
+            ['1.2.3-456', '1.2.3'],
+            ['1.2.3.4-789', '1.2.3'],
+            ['', ''],
+            ['a3.5', ''],
+            ['9.9.9999', '9.9.9999'],
+        ];
+    }
+
+    /**
      * @test
      */
     public function testDiscoverFindsNothingIfNoPackages(): void
@@ -143,30 +168,5 @@ class WpVersionTest extends TestCase
             ->andReturn([$package1, $package2]);
 
         static::assertSame('', $wpVer->discover());
-    }
-
-    /**
-     * @return list<array{string, string}>
-     */
-    public static function versionsDataProvider(): array
-    {
-        return [
-            ['0', '0.0.0'],
-            ['0.0', '0.0.0'],
-            ['0.0.0', '0.0.0'],
-            ['0.0.0.0', '0.0.0'],
-            ['1', '1.0.0'],
-            ['1.1', '1.1.0'],
-            ['1.2.3', '1.2.3'],
-            ['1.2.3.4', '1.2.3'],
-            ['1-alpha', '1.0.0'],
-            ['1.1-beta', '1.1.0'],
-            ['1.2.3-alpha1', '1.2.3'],
-            ['1.2.3-456', '1.2.3'],
-            ['1.2.3.4-789', '1.2.3'],
-            ['', ''],
-            ['a3.5', ''],
-            ['9.9.9999', '9.9.9999'],
-        ];
     }
 }

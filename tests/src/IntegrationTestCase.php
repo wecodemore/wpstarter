@@ -29,12 +29,8 @@ use WeCodeMore\WpStarter\Util\UrlDownloader;
 
 abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
 {
-    use PhpUnitCrossVersion;
-
-    /**
-     * @var OutputInterface[]
-     */
-    private $outputs = [];
+    /** @var array<int, CollectingOutput> */
+    private array $outputs = [];
 
     /**
      * @return void
@@ -51,7 +47,7 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      */
     protected function collectOutput(int $verbosity = OutputInterface::VERBOSITY_NORMAL): string
     {
-        if ($this->outputs[$verbosity] ?? null) {
+        if (isset($this->outputs[$verbosity])) {
             $output = $this->outputs[$verbosity]->output;
             $this->outputs[$verbosity]->output = '';
 
@@ -69,50 +65,9 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
         int $verbosity = OutputInterface::VERBOSITY_NORMAL
     ): OutputInterface {
 
-        if ($this->outputs[$verbosity] ?? null) {
-            return $this->outputs[$verbosity];
+        if (!isset($this->outputs[$verbosity])) {
+            $this->outputs[$verbosity] = new CollectingOutput($verbosity);
         }
-
-        $formatter = new OutputFormatter(false, Composer\Factory::createAdditionalStyles());
-
-        if (PHP_VERSION_ID < 702000) {
-            $this->outputs[$verbosity] = new class($verbosity, false, $formatter) extends Output
-            {
-                public $output = '';
-                public $lines = [];
-
-                /** @noinspection PhpSignatureMismatchDuringInheritanceInspection */
-                protected function doWrite($message, $newline)
-                {
-                    if (!$newline && $this->lines) {
-                        $last = array_pop($this->lines);
-                        $message = $last . $message;
-                    }
-
-                    $this->lines[] = $message;
-                    $this->output = implode("\n", $this->lines);
-                }
-            };
-
-            return $this->outputs[$verbosity];
-        }
-
-        $this->outputs[$verbosity] = new class($verbosity, false, $formatter) extends Output
-        {
-            public $output = '';
-            public $lines = [];
-
-            protected function doWrite(string $message, bool $newline)
-            {
-                if (!$newline && $this->lines) {
-                    $last = array_pop($this->lines);
-                    $message = $last . $message;
-                }
-
-                $this->lines[] = $message;
-                $this->output = implode("\n", $this->lines);
-            }
-        };
 
         return $this->outputs[$verbosity];
     }
@@ -138,7 +93,7 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      * @param string|null $cwd
      * @param int $verbosity
      * @param string $input
-     * @param array $extra
+     * @param array<string, mixed> $extra
      * @return Paths
      */
     protected function factoryPaths(
@@ -148,18 +103,12 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
         array $extra = []
     ): Paths {
 
-        return $cwd
-            ? Paths::withRoot(
-                $cwd,
-                $this->factoryComposerConfig($input, $verbosity, $cwd),
-                $extra,
-                new Composer\Util\Filesystem()
-            )
-            : new Paths(
-                $this->factoryComposerConfig($input, $verbosity, $cwd),
-                $extra,
-                new Composer\Util\Filesystem()
-            );
+        $config = $this->factoryComposerConfig($input, $verbosity, $cwd);
+        $filesystem = new Composer\Util\Filesystem();
+
+        return (($cwd !== null) && ($cwd !== ''))
+            ? Paths::withRoot($cwd, $config, $extra, $filesystem)
+            : new Paths($config, $extra, $filesystem);
     }
 
     /**
@@ -174,9 +123,12 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
         ?string $cwd = null
     ): Composer\Config {
 
+        $path = getenv('PACKAGE_PATH');
+        assert(is_string($path));
+
         return Composer\Factory::createConfig(
             $this->factoryComposerIo($input, $verbosity),
-            $cwd ?? getenv('PACKAGE_PATH')
+            $cwd ?? $path
         );
     }
 
@@ -218,26 +170,12 @@ abstract class IntegrationTestCase extends \PHPUnit\Framework\TestCase
      */
     protected function factoryUrlDownloader(): UrlDownloader
     {
-        $ver = Composer\Composer::RUNTIME_API_VERSION;
-        if (version_compare($ver, '2', '<')) {
-            /** @noinspection PhpUndefinedMethodInspection */
-            return UrlDownloader::newV1(
-                Factory::createRemoteFilesystem(
-                    $this->factoryComposerIo(),
-                    $this->factoryComposerConfig()
-                ),
-                new Filesystem(new ComposerFilesystem()),
-                false
-            );
-        }
-
-        return UrlDownloader::newV2(
+        return UrlDownloader::new(
             Factory::createHttpDownloader(
                 $this->factoryComposerIo(),
                 $this->factoryComposerConfig()
             ),
-            new Filesystem(new ComposerFilesystem()),
-            false
+            new Filesystem(new ComposerFilesystem())
         );
     }
 }

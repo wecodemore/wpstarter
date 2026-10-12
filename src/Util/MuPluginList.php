@@ -22,25 +22,11 @@ use WeCodeMore\WpStarter\Config\Config;
  */
 class MuPluginList
 {
-    /**
-     * @var PackageFinder
-     */
-    private $packageFinder;
-
-    /**
-     * @var Paths
-     */
-    private $paths;
-
-    /**
-     * @var ComposerFilesystem
-     */
-    private $filesystem;
-
-    /**
-     * @var list<string>|null
-     */
-    private $dropins = null;
+    private PackageFinder $packageFinder;
+    private Paths $paths;
+    private ComposerFilesystem $filesystem;
+    /** @var list<string>|null */
+    private ?array $dropins = null;
 
     /**
      * @param PackageFinder $packageFinder
@@ -60,7 +46,7 @@ class MuPluginList
 
     /**
      * @param Config $config
-     * @return array<string, string>
+     * @return array<non-falsy-string, non-falsy-string>
      */
     public function pluginsList(Config $config): array
     {
@@ -74,7 +60,7 @@ class MuPluginList
         $packages = $this->packageFinder->findByType('wordpress-muplugin');
         foreach ($packages as $package) {
             $paths = $this->pathsForPluginPackage($package);
-            if (!$paths) {
+            if ($paths === []) {
                 continue;
             }
 
@@ -82,6 +68,7 @@ class MuPluginList
             $multi = count($paths) > 1;
             foreach ($paths as $path) {
                 $packagesPaths[] = dirname($path);
+                /** @var non-falsy-string $key */
                 $key = $multi ? "{$name}_" . pathinfo($path, PATHINFO_FILENAME) : $name;
                 $list[$key] = $path;
             }
@@ -112,6 +99,7 @@ class MuPluginList
             $name = basename($muDirPath);
             $multi = count($morePaths) > 1;
             foreach ($morePaths as $path) {
+                /** @var non-falsy-string $key */
                 $key = $multi ? "{$name}_" . pathinfo($path, PATHINFO_FILENAME) : $name;
                 $list[$key] = $path;
             }
@@ -122,12 +110,12 @@ class MuPluginList
 
     /**
      * @param PackageInterface $package
-     * @return list<string>
+     * @return list<non-falsy-string>
      */
     private function pathsForPluginPackage(PackageInterface $package): array
     {
         $path = $this->packageFinder->findPathOf($package);
-        if (!$path) {
+        if ($path === '') {
             return [];
         }
 
@@ -147,7 +135,7 @@ class MuPluginList
      * @param string $path
      * @param bool $requireHeader
      * @param Config|null $config
-     * @return list<string>
+     * @return list<non-falsy-string>
      */
     private function mupluginsPathsInDir(
         string $path,
@@ -177,8 +165,9 @@ class MuPluginList
             if (!$file->isReadable()) {
                 continue;
             }
+            /** @var non-falsy-string $path */
             $path = $this->filesystem->normalizePath($file->getRealPath());
-            if ($config && $this->isDropinPath($path, $config)) {
+            if ($config !== null && $this->isDropinPath($path, $config)) {
                 continue;
             }
             if ($single || $this->isPluginFile($path)) {
@@ -195,20 +184,26 @@ class MuPluginList
      */
     private function isPluginFile(string $file): bool
     {
-        $data = null;
-        $handle = @fopen($file, 'r');
-        if ($handle) {
-            $data = @fread($handle, 8192);
-            @fclose($handle);
+        $data = false;
+        $handle = null;
+        try {
+            $handle = @fopen($file, 'r');
+            if (is_resource($handle)) {
+                $data = @fread($handle, 8192);
+            }
+        } catch (\Throwable $throwable) {
+            return false;
+        } finally {
+            is_resource($handle) and @fclose($handle);
         }
 
-        if (!$data) {
+        if ($data === false) {
             return false;
         }
 
         $data = str_replace("\r", "\n", $data);
 
-        return preg_match('/^[ \t\/*#@]*Plugin Name:(.*)$/mi', $data, $match) && !empty($match[1]);
+        return preg_match('/^[ \t\/*#@]*Plugin Name:(.*)$/mi', $data) === 1;
     }
 
     /**
@@ -218,7 +213,8 @@ class MuPluginList
      */
     private function isDropinPath(string $path, Config $config): bool
     {
-        $realpath = $this->filesystem->normalizePath(realpath($path));
+        $realpath = realpath($path);
+        $realpath = $realpath !== false ? $this->filesystem->normalizePath($realpath) : '';
 
         return in_array($realpath, $this->dropinsList($config), true);
     }
@@ -239,11 +235,11 @@ class MuPluginList
         /** @var array<string, string> $dropins */
         $dropins = $config[Config::DROPINS]->unwrapOrFallback([]);
         foreach ($dropins as $dropin) {
-            if (filter_var($dropin, FILTER_VALIDATE_URL)) {
+            if (filter_var($dropin, FILTER_VALIDATE_URL) !== false) {
                 continue;
             }
             $dropinPath = realpath($dropin);
-            $dropinPath and $this->dropins[] = $this->filesystem->normalizePath($dropinPath);
+            $dropinPath !== false and $this->dropins[] = $this->filesystem->normalizePath($dropinPath);
         }
 
         return $this->dropins;
