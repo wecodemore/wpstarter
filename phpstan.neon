@@ -17,3 +17,7 @@ parameters:
 			identifier: arrayValues.list
 			path: src/Io/Io.php
 			reportUnmatched: false
+		-
+			identifier: catch.neverThrown
+			path: src/Util/SelectedStepsFactory.php
+			reportUnmatched: false
