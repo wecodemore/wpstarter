@@ -28,7 +28,7 @@ jobs:
             fail-fast: false
             matrix:
                 php-ver: [ '7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5' ]
-                composer-ver: [ '~2.7.0', '^2' ]
+                composer-ver: [ '~2.10.0' ]
 
         steps:
             -   name: Checkout
@@ -45,7 +45,7 @@ jobs:
                 run:  |
                     composer remove --dev --no-update "*/*"
                     composer require --dev --no-update "composer/composer:${{ matrix.composer-ver }}"
-                    composer require --dev --no-update "symfony/process:^5.4||^6||^7"
+                    composer require --dev --no-update "symfony/process:^5.4||^6||^7||^8"
                     composer require --dev --no-update "phpstan/phpstan:^2"
                     composer require --dev --no-update "phpstan/phpstan-strict-rules:^2"
 

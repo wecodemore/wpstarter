@@ -62,11 +62,14 @@ class Question
 
     /**
      * @param string $answer
-     * @return bool
+     * @return string|null
      */
-    public function isValidAnswer(string $answer): bool
+    public function filterAnswer(string $answer): ?string
     {
-        return array_key_exists(strtolower(trim($answer)), $this->answers);
+        $answer = trim($answer);
+        $answer = strtolower($answer);
+
+        return array_key_exists($answer, $this->answers) ? $answer : null;
     }
 
     /**

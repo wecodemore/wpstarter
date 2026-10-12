@@ -233,7 +233,7 @@ final class ComposerPlugin implements
             if ($factory->isListMode()) {
                 $factory->selectAndFactory($this->locator, $this->composer);
 
-                return; // @phpstan-ignore finally.exitPoint
+                return;
             }
 
             if ($config[Config\Config::SKIP_DB_CHECK]->is(false)) {
@@ -261,7 +261,7 @@ final class ComposerPlugin implements
         } finally {
             restore_error_handler();
             if ($this->mode === self::MODE_COMMAND) {
-                exit($exit); // @phpstan-ignore finally.exitPoint
+                exit($exit);
             }
         }
     }

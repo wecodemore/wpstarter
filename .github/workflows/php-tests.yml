@@ -32,11 +32,11 @@ jobs:
             fail-fast: false
             matrix:
                 php-ver: [ '7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5' ]
-                composer-ver: [ '~2.7.0', '~2.8.0', '~2.9.0' ]
+                composer-ver: [ '~2.10.0' ]
 
         steps:
             -   name: Update "USE_COVERAGE" env var based on matrix
-                if: ${{ matrix.php-ver == '8.1' && matrix.composer-ver == '~2.8.0' }}
+                if: ${{ matrix.php-ver == '8.1' && matrix.composer-ver == '~2.10.0' }}
                 run: echo "USE_COVERAGE=yes" >> $GITHUB_ENV
 
             -   name: Checkout
@@ -61,6 +61,9 @@ jobs:
                 uses: ramsey/composer-install@v3
 
             -   name: Run tests
+                env:
+                    COMPOSER_AUTH: ''
+                    COMPOSER_HOME: ${{ runner.temp }}/composer-home-tests
                 run: ./vendor/bin/phpunit ${{ ((env.USE_COVERAGE == 'yes') && '--coverage-html=coverage-report') || '--no-coverage' }}
 
             -   name: Upload coverage report

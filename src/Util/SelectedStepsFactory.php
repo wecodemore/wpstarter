@@ -327,7 +327,7 @@ class SelectedStepsFactory
         foreach ($stepsToFactory as $stepName => $stepClass) {
             try {
                 $step = new $stepClass($locator, $composer);
-            } catch (\Throwable $throwable) { // @phpstan-ignore catch.neverThrown
+            } catch (\Throwable $throwable) {
                 $this->configErrors++;
                 continue;
             }

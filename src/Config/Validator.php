@@ -813,8 +813,8 @@ class Validator
         }
 
         if (is_array($script)) {
-            /** @var array{non-empty-string, non-empty-string} $script */
-            return $this->isValidEntityName($script[0])
+            return is_string($script[0])
+                && $this->isValidEntityName($script[0])
                 && $this->isValidEntityName($script[1], false);
         }
 

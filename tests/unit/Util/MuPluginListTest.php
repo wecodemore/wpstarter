@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace WeCodeMore\WpStarter\Tests\Unit\Util;
 
 use Composer\Package\CompletePackage;
+use Composer\Util\Filesystem as ComposerFilesystem;
 use WeCodeMore\WpStarter\Tests\TestCase;
 use WeCodeMore\WpStarter\Util\MuPluginList;
 use WeCodeMore\WpStarter\Util\PackageFinder;
@@ -55,8 +56,38 @@ class MuPluginListTest extends TestCase
             'test/mu-plugin-2_b-mu-plugin' => "{$muPluginsPath}/dir2/b-mu-plugin.php",
         ];
 
-        $muPluginsList = new MuPluginList($finder, $this->factoryPaths());
+        $muPluginsList = new MuPluginList(
+            $finder,
+            $this->factoryPaths(),
+            new ComposerFilesystem()
+        );
 
-        static::assertSame($expected, $muPluginsList->pluginsList());
+        $config = $this->factoryConfig();
+
+        static::assertSame($expected, $muPluginsList->pluginsList($config));
+    }
+
+    /**
+     * @test
+     */
+    public function testPluginListWithoutMuPluginsDir(): void
+    {
+        $finder = \Mockery::mock(PackageFinder::class);
+        $finder
+            ->expects('findByType')
+            ->once()
+            ->with('wordpress-muplugin')
+            ->andReturn([]);
+
+        $paths = $this->factoryPaths(
+            [
+                'wordpress-install-dir' => 'public/wp',
+                'wordpress-content-dir' => 'public',
+            ]
+        );
+
+        $muPluginsList = new MuPluginList($finder, $paths, new ComposerFilesystem());
+
+        static::assertSame([], $muPluginsList->pluginsList($this->factoryConfig()));
     }
 }
