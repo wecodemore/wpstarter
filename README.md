@@ -17,15 +17,12 @@ WP Starter is the easiest and fastest way to bootstrap WordPress sites entirely 
 # System Requirements
 
  - PHP 7.4+
- - [Composer](https://getcomposer.org/) 2.7+
+ - [Composer](https://getcomposer.org/) 2.10+
 
 ## Composer - PHP Support Table
 
 | Composer ↓ / PHP → | 7.4 | 8.0 | 8.1 | 8.2 | 8.3 | 8.4 | 8.5 |
 |:------------------:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-|        2.7         |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |
-|        2.8         |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |
-|        2.9         |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |
 |        2.10        |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |  ✔  |
 
 This table shows what versions the package is tested for (in CI, not necessarily in real world).
